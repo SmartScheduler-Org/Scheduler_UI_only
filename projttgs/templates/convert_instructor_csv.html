@@ -1,0 +1,667 @@
+{% extends "mainbase.html" %}
+{% block title %}SmartScheduler | Convert to Instructor CSV{% endblock %}
+{% block content %}
+
+<!-- MESSAGE POPUP -->
+{% if messages %}
+<div id="toast-container">
+  {% for message in messages %}
+    <div class="toast {{ message.tags }}">
+      {{ message }}
+      <span class="close-btn">&times;</span>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<section class="converter-section">
+  <div class="converter-inner">
+    <h1 class="converter-heading">
+      <i class="fas fa-file-csv"></i> Instructor CSV Converter
+    </h1>
+    <p class="converter-sub">
+      Upload a <strong>PDF</strong> or <strong>Excel (.xlsx)</strong> file containing instructor data.
+      We'll convert it to the exact CSV format needed for import.
+    </p>
+
+    <div class="expected-box">
+      <h3><i class="fas fa-info-circle"></i> Expected Columns</h3>
+      <p>Your file should have columns like:</p>
+      <div class="col-tags">
+        <span class="tag">uid / ID / Teacher ID</span>
+        <span class="tag">Name / Teacher Name</span>
+        <span class="tag">Designation / Position</span>
+        <span class="tag">Max Workload / Workload</span>
+      </div>
+      <p class="hint">Column names are flexible &mdash; we auto-detect them. If no headers are found, we assume the order: uid, name, designation, max_workload.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="converter-form">
+      {% csrf_token %}
+      <label class="file-upload-label" id="file-label">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <span id="file-text">Choose PDF or Excel file</span>
+        <input type="file" name="file" accept=".pdf,.xlsx,.xls" required id="file-input">
+      </label>
+
+      <button type="submit" class="convert-btn">
+        <i class="fas fa-magic"></i> Convert &amp; Download CSV
+      </button>
+    </form>
+
+    <a href="{% url 'admindash' %}" class="back-link">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- ─── DIVIDER ─── -->
+  <div class="section-divider">
+    <span class="divider-line"></span>
+    <span class="divider-text">OR</span>
+    <span class="divider-line"></span>
+  </div>
+
+  <!-- ─── MANUAL ENTRY FORM ─── -->
+  <div class="manual-entry-inner">
+    <h2 class="manual-heading">
+      <i class="fas fa-keyboard"></i> Manual Entry
+    </h2>
+    <p class="manual-sub">
+      Enter instructor data directly in the table below. Fill in as many rows as you need, then click <strong>Convert &amp; Download CSV</strong>.
+    </p>
+
+    <div class="table-controls-top">
+      <span class="row-count-label"><i class="fas fa-list-ol"></i> Rows: <span id="row-count">20</span></span>
+      <button type="button" class="add-rows-btn" id="add-rows-btn">
+        <i class="fas fa-plus-circle"></i> Add 5 Rows
+      </button>
+    </div>
+
+    <div class="table-scroll-wrap">
+      <table class="entry-table" id="entry-table">
+        <thead>
+          <tr>
+            <th class="th-num">#</th>
+            <th>UID / ID / Teacher ID</th>
+            <th>Name / Teacher Name</th>
+            <th>Designation / Position</th>
+            <th>Max Workload</th>
+            <th class="th-action"></th>
+          </tr>
+        </thead>
+        <tbody id="entry-tbody">
+        </tbody>
+      </table>
+    </div>
+
+    <div class="manual-btns">
+      <button type="button" class="convert-btn" id="manual-convert-btn">
+        <i class="fas fa-magic"></i> Convert &amp; Download CSV
+      </button>
+      <button type="button" class="clear-btn" id="clear-table-btn">
+        <i class="fas fa-eraser"></i> Clear All
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+:root {
+  --accent: #6366f1;
+  --pink: #ec4899;
+  --text: #e5e7eb;
+  --ai-glow: #8b5cf6;
+  --glass: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.12);
+}
+
+.converter-section {
+  position: relative;
+  padding: 20px 20px 60px;
+  text-align: center;
+  z-index: 1;
+}
+
+.converter-inner {
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.converter-heading {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(120deg, #fff, var(--accent), var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 14px;
+}
+
+.converter-heading i {
+  color: var(--accent);
+  -webkit-text-fill-color: var(--accent);
+}
+
+.converter-sub {
+  color: #cbd5f5;
+  font-size: 13px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* Expected columns box */
+.expected-box {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  text-align: left;
+  backdrop-filter: blur(10px);
+}
+
+.expected-box h3 {
+  color: #a5b4fc;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.expected-box p {
+  color: #cbd5f5;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.col-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tag {
+  background: rgba(99,102,241,0.2);
+  border: 1px solid rgba(99,102,241,0.4);
+  color: #c7d2fe;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.hint {
+  color: #94a3b8 !important;
+  font-size: 11px !important;
+  font-style: italic;
+}
+
+/* Upload form */
+.converter-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 20px 16px;
+  border: 2px dashed rgba(99,102,241,0.5);
+  border-radius: 12px;
+  background: var(--glass);
+  cursor: pointer;
+  transition: 0.3s;
+  color: #a5b4fc;
+  font-size: 15px;
+}
+
+.file-upload-label:hover {
+  border-color: var(--pink);
+  box-shadow: 0 0 20px rgba(236,72,153,0.3);
+}
+
+.file-upload-label i {
+  font-size: 26px;
+  color: var(--accent);
+}
+
+.file-upload-label input[type="file"] {
+  display: none;
+}
+
+.file-upload-label.has-file {
+  border-color: #10b981;
+  background: rgba(16,185,129,0.08);
+}
+
+/* Convert button */
+.convert-btn {
+  padding: 11px 34px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  box-shadow: 0 0 22px var(--ai-glow);
+  transition: 0.25s ease;
+}
+
+.convert-btn:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 0 30px var(--pink);
+}
+
+/* Back link */
+.back-link {
+  display: inline-block;
+  margin-top: 24px;
+  color: #a5b4fc;
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.back-link:hover {
+  color: #fff;
+}
+
+/* ─── DIVIDER ─── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 900px;
+  margin: 50px auto 40px;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+.divider-text {
+  color: #a5b4fc;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ─── MANUAL ENTRY ─── */
+.manual-entry-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.manual-heading {
+  font-size: 30px;
+  font-weight: 700;
+  background: linear-gradient(120deg, #fff, var(--accent), var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 10px;
+}
+
+.manual-heading i {
+  color: var(--accent);
+  -webkit-text-fill-color: var(--accent);
+}
+
+.manual-sub {
+  color: #cbd5f5;
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.table-controls-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.row-count-label {
+  color: #a5b4fc;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.row-count-label i { margin-right: 4px; }
+
+.add-rows-btn {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: rgba(99,102,241,0.15);
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.add-rows-btn:hover {
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--ai-glow);
+}
+
+.add-rows-btn i { margin-right: 4px; }
+
+/* Table */
+.table-scroll-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+}
+
+.entry-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.entry-table thead {
+  background: rgba(99,102,241,0.18);
+}
+
+.entry-table th {
+  padding: 12px 10px;
+  color: #c7d2fe;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.entry-table th.th-num {
+  width: 40px;
+  text-align: center;
+}
+
+.entry-table th.th-action {
+  width: 40px;
+}
+
+.entry-table td {
+  padding: 4px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.entry-table td.td-num {
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.entry-table input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: #e5e7eb;
+  font-size: 14px;
+  font-family: inherit;
+  transition: 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.entry-table input:focus {
+  border-color: var(--accent);
+  background: rgba(99,102,241,0.08);
+  box-shadow: 0 0 6px rgba(99,102,241,0.3);
+}
+
+.entry-table input::placeholder {
+  color: #475569;
+  font-size: 13px;
+}
+
+.entry-table .del-row-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.entry-table .del-row-btn:hover {
+  color: #ef4444;
+  background: rgba(239,68,68,0.12);
+}
+
+.entry-table tbody tr:hover {
+  background: rgba(99,102,241,0.06);
+}
+
+/* Buttons */
+.manual-btns {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.clear-btn {
+  padding: 14px 36px;
+  font-weight: 600;
+  font-size: 16px;
+  color: #e5e7eb;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--glass);
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.clear-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239,68,68,0.1);
+}
+
+.clear-btn i { margin-right: 4px; }
+
+/* Toast */
+#toast-container {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 999999;
+}
+
+.toast {
+  position: relative;
+  padding: 14px 45px 14px 18px;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  animation: toastIn 0.4s forwards ease-out;
+}
+
+.toast.success { background: #10b981; }
+.toast.error   { background: #ef4444; }
+
+.toast .close-btn {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  color: #fff;
+  opacity: 0.8;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-20px); }
+}
+
+@media(max-width:640px) {
+  .converter-heading { font-size: 26px; }
+  .convert-btn { font-size: 16px; padding: 12px 30px; }
+  .manual-heading { font-size: 24px; }
+  .table-controls-top { flex-direction: column; gap: 10px; }
+  .manual-btns { flex-direction: column; align-items: center; }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // File input label update
+  const fileInput = document.getElementById("file-input");
+  const fileText = document.getElementById("file-text");
+  const fileLabel = document.getElementById("file-label");
+
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+      fileText.textContent = fileInput.files[0].name;
+      fileLabel.classList.add("has-file");
+    } else {
+      fileText.textContent = "Choose PDF or Excel file";
+      fileLabel.classList.remove("has-file");
+    }
+  });
+
+  // Toast auto-dismiss
+  document.querySelectorAll(".toast").forEach((toast) => {
+    const closeBtn = toast.querySelector(".close-btn");
+    const timeout = setTimeout(() => {
+      toast.style.animation = "toastOut 0.5s forwards ease-in";
+      setTimeout(() => toast.remove(), 500);
+    }, 3000);
+    closeBtn.addEventListener("click", () => {
+      clearTimeout(timeout);
+      toast.style.animation = "toastOut 0.5s forwards ease-in";
+      setTimeout(() => toast.remove(), 500);
+    });
+  });
+
+  // ─── MANUAL ENTRY TABLE ───
+  const tbody = document.getElementById("entry-tbody");
+  const rowCountEl = document.getElementById("row-count");
+  let rowNum = 0;
+
+  function createRow() {
+    rowNum++;
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td class="td-num">' + rowNum + '</td>' +
+      '<td><input type="text" placeholder="e.g. T001" data-col="uid"></td>' +
+      '<td><input type="text" placeholder="e.g. Dr. Amit Sharma" data-col="name"></td>' +
+      '<td><input type="text" placeholder="e.g. Professor" data-col="designation"></td>' +
+      '<td><input type="text" placeholder="e.g. 25" data-col="max_workload"></td>' +
+      '<td><button type="button" class="del-row-btn" title="Delete row"><i class="fas fa-times"></i></button></td>';
+    tr.querySelector(".del-row-btn").addEventListener("click", function() {
+      tr.remove();
+      renumberRows();
+    });
+    tbody.appendChild(tr);
+    return tr;
+  }
+
+  function renumberRows() {
+    var rows = tbody.querySelectorAll("tr");
+    rowNum = rows.length;
+    rows.forEach(function(row, i) {
+      row.querySelector(".td-num").textContent = i + 1;
+    });
+    rowCountEl.textContent = rowNum;
+  }
+
+  // Init 20 rows
+  for (var i = 0; i < 20; i++) createRow();
+  rowCountEl.textContent = rowNum;
+
+  // Add 5 rows
+  document.getElementById("add-rows-btn").addEventListener("click", function() {
+    for (var i = 0; i < 5; i++) createRow();
+    rowCountEl.textContent = rowNum;
+    tbody.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  // Clear all
+  document.getElementById("clear-table-btn").addEventListener("click", function() {
+    tbody.querySelectorAll("input").forEach(function(inp) { inp.value = ""; });
+  });
+
+  // Convert & Download CSV
+  document.getElementById("manual-convert-btn").addEventListener("click", function() {
+    var tableRows = tbody.querySelectorAll("tr");
+    var csvRows = [["uid", "name", "designation", "max_workload"]];
+
+    tableRows.forEach(function(tr) {
+      var uid = tr.querySelector('[data-col="uid"]').value.trim();
+      var name = tr.querySelector('[data-col="name"]').value.trim();
+      var designation = tr.querySelector('[data-col="designation"]').value.trim();
+      var workload = tr.querySelector('[data-col="max_workload"]').value.trim();
+
+      if (uid && name) {
+        csvRows.push([uid, name, designation, workload]);
+      }
+    });
+
+    if (csvRows.length <= 1) {
+      alert("Please fill at least one row with UID and Name.");
+      return;
+    }
+
+    // Build CSV string
+    var csvContent = csvRows.map(function(r) {
+      return r.map(function(cell) {
+        if (cell.indexOf(",") !== -1 || cell.indexOf('"') !== -1 || cell.indexOf("\n") !== -1) {
+          return '"' + cell.replace(/"/g, '""') + '"';
+        }
+        return cell;
+      }).join(",");
+    }).join("\n");
+
+    // Download
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "instructors.csv";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+});
+</script>
+
+{% endblock %}

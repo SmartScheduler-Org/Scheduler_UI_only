@@ -1,0 +1,117 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+    .manage-fieldset {
+    width: 90%;
+    margin: auto;
+    padding: 20px 30px;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+}
+
+.back-btn {
+    padding: 8px 16px;
+    background: #ffffffdd;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.back-btn:hover {
+    background: white;
+    transform: translateY(-2px);
+}
+
+.edit-container {
+    margin-top: 25px;
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+    font-size: 18px;
+}
+
+.styled-table th {
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.styled-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    opacity: 0.9;
+}
+
+.styled-table tr:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transition: 0.2s;
+}
+
+.delete-btn {
+    padding: 5px 12px;
+    background: #ff4d4dcc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.delete-btn:hover {
+    background: #ff3333;
+    transform: scale(1.05);
+}
+
+</style>
+
+<fieldset class="manage-fieldset">
+
+    <a href="{% url 'addDepts' %}" class="back-btn-link">
+        <button class="back-btn">← Back to Add Departments</button>
+    </a>
+
+    <div class="edit-container">
+
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for dept in departments %}
+                <tr>
+                    <td>{{ dept.name }} ({{ dept.code }})</td>
+                    <td>
+                        <form action="{% url 'deletedepartment' dept.id %}" method="post">
+                            {% csrf_token %}
+                            <button class="delete-btn">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+
+        </table>
+
+    </div>
+
+</fieldset>
+
+
+
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "mainbase.html" %}
+{% block title %}Dashboard • SmartScheduler{% endblock %}
+{% block content %}
+
+<div class="dash-wrapper">
+
+    <h2 class="dash-welcome">Welcome, {{ user.username }} 👋</h2>
+
+    <div class="dash-grid">
+
+        <!-- TOTAL TEACHERS -->
+        <a href="#" class="dash-card">
+            <div class="dash-icon">👨‍🏫</div>
+            <h3>Total Teachers</h3>
+            <p>{{ teacher_count }}</p>
+        </a>
+
+        <!-- TOTAL DEPARTMENTS -->
+        <a href="#" class="dash-card">
+            <div class="dash-icon">🏢</div>
+            <h3>Departments</h3>
+            <p>{{ department_count }}</p>
+        </a>
+
+        <!-- TOTAL CLASSES -->
+        <a href="#" class="dash-card">
+            <div class="dash-icon">📚</div>
+            <h3>Total Classes</h3>
+            <p>{{ class_count }}</p>
+        </a>
+
+        <!-- PREVIOUS TIMETABLES -->
+        <a href="#" class="dash-card">
+            <div class="dash-icon">📅</div>
+            <h3>Your Timetables</h3>
+            <p>View History</p>
+        </a>
+
+    </div>
+</div>
+
+<style>
+:root{
+  --accent:#6366f1;
+  --pink:#ec4899;
+  --card-bg:rgba(15,23,42,0.9);
+  --border:rgba(148,163,184,0.4);
+  --text:#e5e7eb;
+}
+
+.dash-wrapper{
+  padding:40px 20px;
+  min-height:calc(100vh - 60px);
+  text-align:center;
+}
+
+.dash-welcome{
+  font-size:28px;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:28px;
+  text-shadow:0 0 12px rgba(255,255,255,0.3);
+}
+
+.dash-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:22px;
+  padding:10px;
+}
+
+/* CARDS */
+.dash-card{
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  padding:24px;
+  border-radius:20px;
+  text-decoration:none;
+  color:white;
+  transition:0.25s ease;
+  box-shadow:0 0 24px rgba(99,102,241,0.25);
+}
+
+.dash-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 0 35px var(--accent),0 0 55px var(--pink);
+}
+
+.dash-icon{
+  font-size:40px;
+  margin-bottom:10px;
+}
+
+.dash-card h3{
+  font-size:18px;
+  margin-bottom:6px;
+  color:#dbe1f7;
+}
+
+.dash-card p{
+  font-size:16px;
+  opacity:0.85;
+}
+
+/* RESPONSIVE */
+@media (max-width:500px){
+  .dash-welcome{
+    font-size:22px;
+  }
+  .dash-card{
+    padding:18px;
+  }
+}
+</style>
+
+{% endblock %}

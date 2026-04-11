@@ -1,0 +1,268 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block workflow_progress %}{% include 'workflow_stepper.html' with current_step=6 %}{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
+
+<style>
+/* ================= INFO ICON ================= */
+
+.info-icon-container {
+    position: absolute;
+    top: -5px;
+    right: 10px;
+    cursor: pointer;
+    z-index: 20;
+}
+
+.info-icon {
+    width: 24px;
+    height: 24px;
+    background: #6d5dfc;
+    assumed color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 0 8px rgba(109,93,252,0.5);
+}
+
+.info-tooltip {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    width: 280px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.25s;
+}
+
+.info-icon-container:hover .info-tooltip {
+    opacity: 1;
+}
+
+/* ================= ALERTS ================= */
+
+.alert-success {
+    background: #d4edda;
+    padding: 10px;
+    border-left: 5px solid #28a745;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    color: #155724;
+}
+
+.alert-error {
+    background: #f8d7da;
+    padding: 10px;
+    border-left: 5px solid #dc3545;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    color: #721c24;
+}
+
+.message-container {
+    margin-bottom: 20px;
+}
+
+.mapping-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: center;
+}
+
+.mapping-header .page-header-left {
+    max-width: 720px;
+}
+
+.mapping-header .right-block {
+    width: auto;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 18px;
+    min-width: max-content;
+}
+
+.mapping-header .nav-action-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+}
+
+@media (max-width: 900px) {
+    .mapping-header .right-block {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mapping-header .nav-action-group {
+        flex-wrap: wrap;
+    }
+}
+
+/* ================= TABLE ================= */
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.styled-table th {
+    color: #93c5fd;
+    font-weight: 600;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background: #b52a37;
+}
+</style>
+
+<!-- ================= MESSAGES ================= -->
+
+{% if messages %}
+<div class="message-container">
+    {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="page-header mapping-header">
+    <div class="page-header-left">
+        <h2>Map Teachers to Subjects</h2>
+        <p>Define which teachers can teach which subjects</p>
+    </div>
+
+    <div class="right-block">
+        <div class="nav-action-group">
+            <button class="submit-btn icon-only-btn" type="button" onclick="toggleMappings()" id="toggleBtn" aria-label="View current mappings" title="View current mappings">
+                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            </button>
+            <a href="{% url 'addCourses' %}" class="next-btn nav-circle-btn" aria-label="Previous">
+                <span class="nav-arrow">←</span>
+            </a>
+            <a href="{% url 'addSections' %}" class="next-btn nav-circle-btn" aria-label="Next">
+                <span class="nav-arrow">→</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- CSV Upload -->
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset>
+        <label><strong>Upload Teacher–Subject Mapping CSV:</strong></label>
+        <input type="file" name="csv_file" accept=".csv" required>
+        <div class="button-row">
+            <button type="submit" name="csv_upload" class="submit-btn">Upload CSV</button>
+            <a href="{% url 'convert_csv' %}" class="csv-convert-btn"><span class="csv-orb"></span> Convert CSV</a>
+        </div>
+        <small style="color:#ccc;">Format: <code>instructor_name,course_number</code></small>
+    </fieldset>
+</form>
+
+<!-- Mapping Table -->
+<div id="mappingContainer" style="display:none; margin-top:25px;">
+<fieldset>
+
+<h3>Current Teacher → Subject Mappings</h3>
+
+{% if mappings %}
+<table class="styled-table">
+<thead>
+<tr>
+    <th>Teacher UID</th>
+    <th>Teacher Name</th>
+    <th>Course Code</th>
+    <th>Course Name</th>
+    <th>Action</th>
+</tr>
+</thead>
+<tbody>
+
+{% for m in mappings %}
+    {% if m.course.course_number %}
+    <tr>
+        <td>{{ m.instructor.uid }}</td>
+        <td>{{ m.instructor.name }}</td>
+        <td>{{ m.course.course_number }}</td>
+        <td>{{ m.course.course_name }}</td>
+        <td>
+            <form method="post"
+                  action="{% url 'delete_teacher_course_mapping' m.course.course_number m.instructor.id %}">
+                {% csrf_token %}
+                <button class="delete-btn"
+                        onclick="return confirm('Remove mapping?');">
+                    Remove
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endif %}
+{% endfor %}
+
+</tbody>
+</table>
+{% else %}
+<p style="color:#ccc;">No mappings found.</p>
+{% endif %}
+
+</fieldset>
+</div>
+
+<script>
+function toggleMappings() {
+    const c = document.getElementById("mappingContainer");
+    const b = document.getElementById("toggleBtn");
+    const isHidden = c.style.display === "none";
+    if (c.style.display === "none") {
+        c.style.display = "block";
+    } else {
+        c.style.display = "none";
+    }
+    b.innerHTML = isHidden
+        ? '<i class="fa-solid fa-book" aria-hidden="true"></i>'
+        : '<i class="fa-solid fa-book-open" aria-hidden="true"></i>';
+    b.setAttribute("aria-label", isHidden ? "Hide current mappings" : "View current mappings");
+    b.setAttribute("title", isHidden ? "Hide current mappings" : "View current mappings");
+}
+</script>
+
+{% endblock %}

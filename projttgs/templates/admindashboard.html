@@ -1,0 +1,632 @@
+{% extends "mainbase.html" %}
+{% block title %}SmartScheduler | Smart Timetable Generator{% endblock %}
+{% block content %}
+
+<!-- MESSAGE POPUP -->
+{% if messages %}
+<div id="toast-container">
+  {% if messages %}
+      {% for message in messages %}
+          <div class="toast {{ message.tags }}">
+              {{ message }}
+              <span class="close-btn">&times;</span>
+          </div>
+      {% endfor %}
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- BACKGROUND -->
+<canvas id="stars"></canvas>
+<canvas id="waves"></canvas>
+
+<section class="hero">
+  <div class="hero-inner">
+
+     <h2 class="dash-welcome">Welcome, {{ user.username }} 👋</h2>
+     <br>
+
+    <!-- MAIN HEADING -->
+    <h1 class="hero-heading">
+      Welcome To SmartScheduler
+    </h1>
+
+    <!-- BUTTON -->
+     <br><br>
+    <a href="{% url 'addDepts' %}" class="glow-btn">
+      <span>Generate Timetable</span>
+    </a>
+
+  </div>
+
+  <!-- DASHBOARD AREA -->
+  <div class="dash-wrapper">
+       <br>
+     <div class="dash-grid">
+
+        <!-- TOTAL TEACHERS -->
+        <a href="{% url 'editinstructor' %}" class="dash-card">
+            <div class="dash-icon-wrap">
+                <i class="icon fas fa-chalkboard-teacher"></i>
+            </div>
+            <h3>Total Teachers</h3>
+            <p>{{ teacher_count }}</p>
+        </a>
+
+        <!-- TOTAL DEPARTMENTS -->
+        <a href="{% url 'editdepartment' %}" class="dash-card">
+            <div class="dash-icon-wrap">
+                <i class="icon fas fa-building"></i>
+            </div>
+            <h3>Departments</h3>
+            <p>{{ department_count }}</p>
+        </a>
+
+        <!-- TOTAL CLASSES -->
+        <a href="{% url 'editsection' %}" class="dash-card">
+            <div class="dash-icon-wrap">
+                <i class="icon fas fa-layer-group"></i>
+            </div>
+            <h3>Total Classes</h3>
+            <p>{{ class_count }}</p>
+        </a>
+
+        <!-- PREVIOUS TIMETABLES -->
+        <a href="{% url 'saved_timetable_list' %}" class="dash-card">
+            <div class="dash-icon-wrap">
+                <i class="icon fas fa-calendar-alt"></i>
+            </div>
+            <h3>Your Timetables</h3>
+            <p>View History</p>
+        </a>
+
+        <!-- CSV CONVERTER -->
+        <a href="{% url 'convert_csv' %}" class="dash-card">
+            <div class="dash-icon-wrap">
+                <i class="icon fas fa-file-csv"></i>
+            </div>
+            <h3>CSV Converter</h3>
+            <p>PDF/Excel → CSV</p>
+        </a>
+
+     </div>
+
+  </div>
+
+</section>
+
+<!-- ============ HOW IT WORKS / FLOW SECTION ============ -->
+<section class="flow-section" id="how">
+  <div class="flow-inner">
+    <h2 class="flow-title">How to generate your timetable?</h2>
+    <p class="flow-sub">
+      Follow this simple guided flow. Fill the data once and let SmartScheduler handle all clashes automatically.
+    </p>
+
+    <div class="flow-line"></div>
+
+    <div class="flow-grid">
+
+      <!-- STEP 1 -->
+      <div class="flow-card">
+        <div class="step-badge">01</div>
+        <div class="flow-icon">
+          <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <h3>Add Teachers</h3>
+        <p>Enter all faculty details, subjects they handle, and their availability.</p>
+        <a href="{% url 'addInstructors' %}" class="flow-link">Go to Teachers</a>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="flow-card">
+        <div class="step-badge">02</div>
+        <div class="flow-icon">
+          <i class="fas fa-door-open"></i>
+        </div>
+        <h3>Add Rooms</h3>
+        <p>Configure classrooms, labs, capacity, and room types for smart allocation.</p>
+        <a href="{% url 'editsection' %}" class="flow-link">Manage Rooms</a>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="flow-card">
+        <div class="step-badge">03</div>
+        <div class="flow-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <h3>Add Timings</h3>
+        <p>Define periods, working days, and time slots based on your institute rules.</p>
+        <a href="#" class="flow-link">Set Timings</a>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="flow-card">
+        <div class="step-badge">04</div>
+        <div class="flow-icon">
+          <i class="fas fa-book-open"></i>
+        </div>
+        <h3>Add Courses</h3>
+        <p>Map courses to teachers, credits, and weekly frequency for each subject.</p>
+        <a href="#" class="flow-link">Add Courses</a>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="flow-card">
+        <div class="step-badge">05</div>
+        <div class="flow-icon">
+          <i class="fas fa-sitemap"></i>
+        </div>
+        <h3>Add Departments</h3>
+        <p>Create departments and link them with courses and sections.</p>
+        <a href="{% url 'editdepartment' %}" class="flow-link">Departments</a>
+      </div>
+
+      <!-- STEP 6 -->
+      <div class="flow-card">
+        <div class="step-badge">06</div>
+        <div class="flow-icon">
+          <i class="fas fa-users-rectangle"></i>
+        </div>
+        <h3>Add Sections</h3>
+        <p>Configure batches/sections, semester, and strength for each class.</p>
+        <a href="{% url 'editsection' %}" class="flow-link">Sections</a>
+      </div>
+
+      <!-- STEP 7 -->
+      <div class="flow-card final-step">
+        <div class="step-badge">07</div>
+        <div class="flow-icon">
+          <i class="fas fa-wand-magic-sparkles"></i>
+        </div>
+        <h3>Generate Timetable</h3>
+        <p>Review your data and let our AI + Genetic Algorithm generate clash-free timetables in seconds.</p>
+        <a href="{% url 'addInstructors' %}" class="flow-link primary-link">
+          Generate Now →
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+
+/* POP-UP STYLE */
+/* 🎯 Toast Container (below navbar) */
+#toast-container {
+  position: fixed;
+  top: 90px; /* adjust depending on navbar height */
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 999999;
+}
+
+/* 🎯 Toast Box */
+.toast {
+  position: relative;
+  padding: 14px 45px 14px 18px;
+  border-radius: 12px;
+  color: #8b5cf6;
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  opacity: 0;
+  transform: translateY(20px);
+  animation: toastIn 0.4s forwards ease-out;
+}
+
+/* Toast types */
+.toast.success { background: #10b981; }
+.toast.error   { background: #ef4444; }
+.toast.warning { background: #f59e0b; }
+.toast.info    { background: #fdfdfd; }
+
+/* Close Button (X) */
+.toast .close-btn {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  color: #8b5cf6;
+  opacity: 0.8;
+  transition: 0.2s;
+}
+
+.toast .close-btn:hover {
+  opacity: 1;
+}
+
+/* Animation - entry */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Animation - exit */
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-20px); }
+}
+
+
+
+:root {
+  --accent:#6366f1;
+  --pink:#ec4899;
+  --text:#e5e7eb;
+  --ai-glow:#8b5cf6;
+  --glass: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.12);
+}
+
+/* HERO */
+.hero {
+  position: relative;
+  padding: 120px 20px 40px;
+  text-align: center;
+}
+
+.hero-heading {
+  font-size: 48px;
+  font-weight: 700;
+  background: linear-gradient(120deg, #fff, var(--accent), var(--pink));
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+/* BUTTON */
+.glow-btn {
+  position: relative;
+  display: inline-block;
+  padding: 14px 42px;
+  font-weight: 600;
+  font-size: 20px;
+  text-decoration: none;
+  color: #fff;
+  border-radius: 999px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  box-shadow: 0 0 22px var(--ai-glow);
+  transition: 0.25s ease;
+}
+
+.glow-btn span {
+  position: relative;
+  z-index: 2;
+}
+
+.glow-btn:before {
+  content:"";
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:100%;
+  height:100%;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: 0.5s;
+}
+
+.glow-btn:hover {
+  transform:translateY(-4px) scale(1.05);
+}
+
+.glow-btn:hover:before {
+  left:100%;
+}
+
+/* DASHBOARD */
+.dash-wrapper { margin-top: 60px; }
+
+.dash-welcome {
+  font-size: 28px;
+  color: var(--text);
+  text-shadow: 0 0 14px rgba(255,255,255,0.25);
+}
+
+/* GRID */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(210px,1fr));
+  gap: 25px;
+  padding: 0 15px;
+}
+
+/* CARDS */
+.dash-card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  padding: 26px;
+  border-radius: 20px;
+  color: white;
+  text-decoration: none;
+  backdrop-filter: blur(12px);
+  transition: 0.25s ease;
+  box-shadow: 0 0 22px rgba(99,102,241,0.20);
+}
+
+/* ICON WRAPPER */
+.dash-icon-wrap {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 12px rgba(140, 82, 255, 0.3);
+  transition: 0.3s ease;
+}
+
+/* ICONS */
+.icon {
+  font-size: 32px;
+  color: #b4b9ff;
+  text-shadow: 0 0 8px rgba(140,82,255,0.5);
+  transition: 0.3s ease-in-out;
+}
+
+/* ON HOVER */
+.dash-card:hover .dash-icon-wrap {
+  transform: scale(1.08);
+  box-shadow: 0 0 25px var(--accent), 0 0 35px var(--pink);
+}
+
+.dash-card:hover .icon {
+  color: #fff;
+  text-shadow: 0 0 14px rgba(255,255,255,0.8);
+}
+
+.dash-card h3 { font-size: 18px; margin-bottom: 6px; }
+
+.dash-card p { font-size: 16px; opacity: 0.9; }
+
+/* ============= FLOW SECTION ============= */
+.flow-section {
+  position: relative;
+  padding: 60px 20px 80px;
+  z-index: 1;
+}
+
+.flow-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.flow-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #f9fafb;
+  margin-bottom: 10px;
+}
+
+.flow-sub {
+  font-size: 15px;
+  color: #cbd5f5;
+  max-width: 620px;
+  margin: 0 auto 30px;
+}
+
+/* central faint line */
+.flow-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 160px;
+  width: 2px;
+  height: 320px;
+  background: linear-gradient(to bottom, transparent, rgba(129,140,248,0.7), transparent);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* steps grid */
+.flow-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 22px;
+  margin-top: 10px;
+}
+
+/* flow cards */
+.flow-card {
+  position: relative;
+  background: rgba(15,23,42,0.85);
+  border-radius: 18px;
+  padding: 20px 18px 18px;
+  border: 1px solid rgba(148,163,253,0.35);
+  box-shadow: 0 0 18px rgba(79,70,229,0.35);
+  text-align: left;
+  color: #e5e7eb;
+  overflow: hidden;
+  transform: translateY(25px);
+  opacity: 0;
+  transition: transform 0.45s ease, opacity 0.45s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* stagger via CSS variable */
+.flow-card:nth-child(1) { transition-delay: 0.05s; }
+.flow-card:nth-child(2) { transition-delay: 0.10s; }
+.flow-card:nth-child(3) { transition-delay: 0.15s; }
+.flow-card:nth-child(4) { transition-delay: 0.20s; }
+.flow-card:nth-child(5) { transition-delay: 0.25s; }
+.flow-card:nth-child(6) { transition-delay: 0.30s; }
+.flow-card:nth-child(7) { transition-delay: 0.35s; }
+
+.flow-card.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* subtle glow on hover */
+.flow-card:hover {
+  box-shadow: 0 0 24px rgba(129,140,248,0.7), 0 0 40px rgba(236,72,153,0.4);
+  border-color: rgba(236,72,153,0.8);
+}
+
+/* step badge */
+.step-badge {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a5b4fc;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(129,140,248,0.6);
+  background: rgba(15,23,42,0.9);
+}
+
+/* icon circle */
+.flow-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  background: radial-gradient(circle at 30% 0, #f9a8d4, #4f46e5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  box-shadow: 0 0 18px rgba(244,114,182,0.7);
+}
+
+.flow-icon i {
+  color: #f9fafb;
+  font-size: 20px;
+}
+
+.flow-card h3 {
+  font-size: 17px;
+  margin-bottom: 6px;
+}
+
+.flow-card p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #cbd5f5;
+  margin-bottom: 12px;
+}
+
+/* mini link button */
+.flow-link {
+  font-size: 13px;
+  text-decoration: none;
+  color: #a5b4fc;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.flow-link.primary-link {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  color: #fff;
+  box-shadow: 0 0 18px rgba(129,140,248,0.7);
+}
+
+.flow-link.primary-link:hover {
+  transform: translateY(-1px);
+}
+
+/* special highlight for final card */
+.final-step {
+  background: radial-gradient(circle at top left, rgba(236,72,153,0.25), rgba(15,23,42,0.9));
+}
+
+/* CANVAS BG */
+#stars, #waves {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#stars { z-index: 0; }
+#waves { z-index: -1; opacity:0.4; }
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .hero-heading { font-size: 36px; }
+  .hero { padding-top: 100px; }
+  .flow-line { display:none; }
+  .flow-card { text-align:left; }
+}
+
+@media(max-width:480px){
+  .hero-heading { font-size: 30px; }
+  .glow-btn { font-size: 16px; padding: 12px 30px; }
+  .flow-title { font-size: 24px; }
+}
+</style>
+
+<!-- POP-UP ANIMATION -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const toasts = document.querySelectorAll(".toast");
+
+    toasts.forEach((toast) => {
+
+        const closeBtn = toast.querySelector(".close-btn");
+
+        // Auto-hide after 3 seconds
+        const timeout = setTimeout(() => {
+            toast.style.animation = "toastOut 0.5s forwards ease-in";
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+
+        // Manual close button
+        closeBtn.addEventListener("click", () => {
+            clearTimeout(timeout);
+            toast.style.animation = "toastOut 0.5s forwards ease-in";
+            setTimeout(() => toast.remove(), 500);
+        });
+    });
+});
+</script>
+
+
+<!-- STARFIELD -->
+<script>
+/* same starfield script kept */
+</script>
+
+<!-- WAVES -->
+<script>
+/* same waves script kept */
+</script>
+
+<!-- FLOW SCROLL ANIMATION -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".flow-card");
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.2 }
+  );
+
+  cards.forEach((card) => observer.observe(card));
+});
+</script>
+
+{% endblock %}

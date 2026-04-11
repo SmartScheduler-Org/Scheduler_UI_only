@@ -1,0 +1,1001 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartScheduler | Generating</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --bg-mid: #050816;
+            --bg-edge: #111827;
+            --cyan: #52e6ff;
+            --blue: #4f7cff;
+            --teal: #28d8b2;
+            --pink: #ec4899;
+            --gold: #ffcb70;
+            --white: #f8fbff;
+            --soft: rgba(226, 232, 240, 0.74);
+            --line: rgba(148, 163, 184, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            overflow: auto;
+            font-family: "Poppins", "Segoe UI", sans-serif;
+            color: var(--white);
+            background: radial-gradient(
+                circle at top,
+                var(--bg-edge) 0,
+                var(--bg-deep) 45%,
+                var(--bg-deep) 100%
+            );
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        body::before {
+            background-image:
+                linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+            background-size: 54px 54px;
+            mask-image: radial-gradient(circle at center, black 28%, transparent 84%);
+            opacity: 0.7;
+        }
+
+        body::after {
+            background:
+                radial-gradient(circle at center, transparent 0 34%, rgba(255,255,255,0.03) 34.5%, transparent 35.1%),
+                radial-gradient(circle at center, transparent 0 46%, rgba(255,255,255,0.025) 46.4%, transparent 47%);
+            opacity: 0.65;
+        }
+
+        .scene {
+            position: relative;
+            min-height: 100svh;
+            padding: 26px 32px 22px;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 16px;
+            isolation: isolate;
+        }
+
+        .beam,
+        .beam::before {
+            position: fixed;
+            pointer-events: none;
+            inset: auto;
+            filter: blur(28px);
+        }
+
+        .beam {
+            top: -80px;
+            left: -40px;
+            width: 380px;
+            height: 380px;
+            border-radius: 999px;
+            background: rgba(79, 70, 229, 0.7);
+            animation: float1 16s infinite alternate ease-in-out;
+        }
+
+        .beam::before {
+            content: "";
+            right: -72vw;
+            top: 14vh;
+            width: 420px;
+            height: 420px;
+            border-radius: 999px;
+            background: rgba(236, 72, 153, 0.55);
+            animation: float2 18s infinite alternate ease-in-out;
+        }
+
+        .beam-cyan {
+            position: fixed;
+            top: 40%;
+            right: 10%;
+            width: 260px;
+            height: 260px;
+            border-radius: 999px;
+            background: rgba(34, 211, 238, 0.45);
+            filter: blur(40px);
+            opacity: 0.6;
+            pointer-events: none;
+            animation: float3 20s infinite alternate ease-in-out;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-mark {
+            width: 44px;
+            height: 52px;
+            display: grid;
+            place-items: center;
+            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.5));
+        }
+        .brand-mark svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .brand-copy {
+            display: grid;
+            gap: 4px;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: rgba(191,219,254,0.68);
+        }
+
+        .pipeline {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+            color: #dbeafe;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .pipeline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 0 0 16px rgba(239,68,68,0.9);
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(320px, 1fr) minmax(300px, 440px);
+            gap: 28px;
+            align-items: center;
+        }
+
+        .kicker {
+            margin-bottom: 10px;
+            color: rgba(147,197,253,0.82);
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .logo-word {
+            margin: 0;
+            font-size: clamp(42px, 7vw, 86px);
+            line-height: 0.94;
+            font-weight: 700;
+            letter-spacing: -0.055em;
+        }
+
+        .logo-word span {
+            display: block;
+            color: transparent;
+            background: linear-gradient(120deg, #ffffff 2%, #9defff 35%, #7dd3fc 58%, #4cf3b3 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(125,211,252,0.14);
+        }
+
+        .headline {
+            margin: 12px 0 10px;
+            font-size: clamp(24px, 2.6vw, 36px);
+            line-height: 1.28;
+            font-weight: 700;
+            max-width: 860px;
+            color: #ffffff;
+            min-height: 96px;
+            transition: opacity 0.45s ease, transform 0.45s ease;
+            will-change: opacity, transform;
+        }
+
+        .headline .accent {
+            color: #4cf3b3;
+            text-shadow: 0 0 18px rgba(76,243,179,0.18);
+        }
+
+        .headline.is-fading {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        .subcopy {
+            display: none;
+        }
+
+        .status-rail {
+            margin-top: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.04);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+            color: #dbeafe;
+            font-size: 12px;
+        }
+
+        .bar-signal {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 18px;
+        }
+
+        .bar-signal span {
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--cyan), var(--blue));
+            animation: bars 1.3s ease-in-out infinite;
+        }
+
+        .bar-signal span:nth-child(1) { height: 8px; }
+        .bar-signal span:nth-child(2) { height: 14px; animation-delay: 0.15s; }
+        .bar-signal span:nth-child(3) { height: 18px; animation-delay: 0.28s; }
+        .bar-signal span:nth-child(4) { height: 12px; animation-delay: 0.42s; }
+
+        .visual {
+            position: relative;
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            max-width: 420px;
+            width: 100%;
+            margin-left: auto;
+        }
+
+        .visual::before,
+        .visual::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            inset: 8%;
+            border: 1px solid rgba(125,211,252,0.1);
+        }
+
+        .visual::after {
+            inset: 18%;
+            border-style: dashed;
+            animation: spinReverse 22s linear infinite;
+        }
+
+        .halo {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+        }
+
+        .halo-ring,
+        .halo-ring::before {
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .halo-ring {
+            inset: 10%;
+            border: 1px solid rgba(82,230,255,0.14);
+            animation: spin 14s linear infinite;
+        }
+
+        .halo-ring::before {
+            content: "";
+            inset: 22px;
+            border: 1px solid rgba(40,216,178,0.12);
+        }
+
+        .halo-ring.secondary {
+            inset: 20%;
+            border-style: dashed;
+            animation: spinReverse 12s linear infinite;
+        }
+
+        .scan-orbit {
+            position: absolute;
+            inset: 14%;
+            border-radius: 50%;
+            border-top: 2px solid rgba(82,230,255,0.86);
+            filter: drop-shadow(0 0 12px rgba(82,230,255,0.46));
+            animation: spin 2.8s linear infinite;
+        }
+
+        .core {
+            position: relative;
+            width: min(190px, 42vw);
+            aspect-ratio: 1;
+            border-radius: 30px;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.24), transparent 34%),
+                linear-gradient(145deg, rgba(79,124,255,0.24), rgba(82,230,255,0.16), rgba(40,216,178,0.14));
+            box-shadow:
+                0 26px 70px rgba(2,6,23,0.46),
+                inset 0 0 0 1px rgba(255,255,255,0.06),
+                0 0 60px rgba(82,230,255,0.08);
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .core::before {
+            content: "";
+            position: absolute;
+            inset: 12px;
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .core::after {
+            content: "";
+            position: absolute;
+            inset: -40% -10%;
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.08), transparent);
+            transform: rotate(18deg);
+            animation: sweep 3.4s linear infinite;
+        }
+
+        .core-grid {
+            width: 86px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            z-index: 1;
+        }
+
+        .core-grid span {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(157,239,255,0.94), rgba(79,124,255,0.92));
+            box-shadow: 0 0 16px rgba(82,230,255,0.34);
+            animation: pulseBlock 1.7s ease-in-out infinite alternate;
+        }
+
+        .core-grid span:nth-child(2),
+        .core-grid span:nth-child(5),
+        .core-grid span:nth-child(8) {
+            animation-delay: 0.2s;
+        }
+
+        .core-grid span:nth-child(3),
+        .core-grid span:nth-child(6),
+        .core-grid span:nth-child(9) {
+            animation-delay: 0.4s;
+        }
+
+        .bottom-panel {
+            display: grid;
+            grid-template-columns: minmax(320px, 1.1fr) minmax(320px, 0.9fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .status-stack {
+            display: grid;
+            gap: 10px;
+        }
+
+        .phase-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .phase {
+            margin: 0;
+            font-size: clamp(20px, 2.3vw, 30px);
+            line-height: 1.1;
+            font-weight: 600;
+            max-width: 560px;
+        }
+
+        .percent {
+            font-size: clamp(30px, 3.6vw, 44px);
+            line-height: 1;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+        }
+
+        .hint {
+            margin: 0;
+            color: var(--soft);
+            font-size: 14px;
+        }
+
+        .progress-track {
+            position: relative;
+            width: 100%;
+            height: 14px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(15, 23, 42, 0.7);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .progress-fill {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 8%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--blue), var(--cyan), var(--teal));
+            box-shadow: 0 0 28px rgba(82,230,255,0.34);
+            transition: width 0.45s ease;
+        }
+
+        .progress-fill::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -20px;
+            width: 48px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.72), transparent);
+            transform: skewX(-18deg);
+        }
+
+        .candidate-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .candidate {
+            position: relative;
+            padding: 12px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.035);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+
+        .candidate::before {
+            content: "";
+            position: absolute;
+            inset: auto -10% -60% auto;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(82,230,255,0.12), transparent 66%);
+            filter: blur(6px);
+        }
+
+        .candidate-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #dbeafe;
+        }
+
+        .candidate-state {
+            color: rgba(191,219,254,0.66);
+        }
+
+        .candidate-chart {
+            position: relative;
+            height: 58px;
+            border-radius: 14px;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.045) 0,
+                    rgba(255,255,255,0.045) 1px,
+                    transparent 1px,
+                    transparent 42px
+                );
+        }
+
+        .candidate-chart::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.03));
+        }
+
+        .candidate-chart svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .candidate-chart path {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 260;
+            stroke-dashoffset: 260;
+            animation: draw 2.6s ease-out infinite alternate;
+            filter: drop-shadow(0 0 12px rgba(82,230,255,0.28));
+        }
+
+        .candidate.one path {
+            stroke: url(#candidateLineA);
+        }
+
+        .candidate.two path {
+            stroke: url(#candidateLineB);
+            animation-delay: 0.35s;
+        }
+
+        .candidate-meta {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 11px;
+            color: rgba(191,219,254,0.72);
+        }
+
+        .side-metrics {
+            display: grid;
+            gap: 10px;
+            align-self: stretch;
+        }
+
+        .metric {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.04);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .metric-label {
+            margin-bottom: 6px;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(147,197,253,0.72);
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .metric-sub {
+            margin-top: 4px;
+            color: rgba(191,219,254,0.66);
+            font-size: 12px;
+        }
+
+        .error-state {
+            display: none;
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(127, 29, 29, 0.24);
+            box-shadow: inset 0 0 0 1px rgba(248,113,113,0.26);
+            color: #fecaca;
+            font-size: 14px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes spinReverse {
+            to { transform: rotate(-360deg); }
+        }
+
+        @keyframes drift {
+            from { transform: translate3d(-2%, -2%, 0) scale(1); }
+            to { transform: translate3d(4%, 3%, 0) scale(1.08); }
+        }
+
+        @keyframes float1 {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(80px, 60px) scale(1.1); }
+        }
+
+        @keyframes float2 {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(-60px, -50px) scale(1.08); }
+        }
+
+        @keyframes float3 {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(-40px, 50px) scale(1.15); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(0.84); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+
+        @keyframes bars {
+            0%, 100% { transform: scaleY(0.7); opacity: 0.68; }
+            50% { transform: scaleY(1.1); opacity: 1; }
+        }
+
+        @keyframes pulseBlock {
+            from { opacity: 0.54; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1.08); }
+        }
+
+        @keyframes sweep {
+            0% { transform: translateY(-120%) rotate(18deg); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(140%) rotate(18deg); opacity: 0; }
+        }
+
+        @keyframes draw {
+            0% { stroke-dashoffset: 260; opacity: 0.55; }
+            40% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+
+        @media (max-width: 980px) {
+            .scene {
+                padding: 22px 18px 18px;
+                gap: 16px;
+            }
+
+            .hero,
+            .bottom-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .visual {
+                max-width: 340px;
+                width: 100%;
+                margin: 0 auto 6px;
+            }
+        }
+
+        @media (max-height: 860px) {
+            .scene {
+                padding-top: 18px;
+                padding-bottom: 16px;
+                gap: 12px;
+            }
+
+            .hero {
+                gap: 18px;
+            }
+
+            .logo-word {
+                font-size: clamp(38px, 6.2vw, 72px);
+            }
+
+            .headline {
+                font-size: clamp(18px, 1.9vw, 24px);
+                margin-top: 10px;
+            }
+
+            .visual {
+                max-width: 330px;
+            }
+
+            .bottom-panel {
+                gap: 14px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                overflow-y: auto;
+            }
+
+            .candidate-row {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .phase-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="beam"></div>
+    <div class="beam-cyan"></div>
+
+    <main class="scene">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg7" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg7)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
+                <div class="brand-copy">
+                    <div class="brand-title">SmartScheduler</div>
+                    <div class="brand-subtitle">Smart Academic Scheduling</div>
+                </div>
+            </div>
+            <div class="pipeline">
+                <span class="pipeline-dot"></span>
+                generation pipeline active
+            </div>
+        </header>
+
+        <section class="hero">
+            <div>
+                <div class="kicker">Autonomous Timetable Synthesis</div>
+                <h1 class="logo-word"><span>SmartScheduler</span></h1>
+                <p class="headline" id="heroHeadline">SmartScheduler cuts down the hours normally lost in <span class="accent">manual timetable planning</span>.</p>
+                <p class="subcopy" id="heroSubcopy">SmartScheduler cuts down the hours normally lost in manual timetable planning.</p>
+                <div class="status-rail">
+                    <div class="status-chip">
+                        <span class="bar-signal" aria-hidden="true">
+                            <span></span><span></span><span></span><span></span>
+                        </span>
+                        live optimization feed
+                    </div>
+                    <div class="status-chip">2 candidate timetables in build</div>
+                </div>
+            </div>
+
+            <div class="visual" aria-hidden="true">
+                <div class="halo">
+                    <div class="halo-ring"></div>
+                    <div class="halo-ring secondary"></div>
+                    <div class="scan-orbit"></div>
+                </div>
+                <div class="core">
+                    <div class="core-grid">
+                        <span></span><span></span><span></span>
+                        <span></span><span></span><span></span>
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bottom-panel">
+            <div class="status-stack">
+                <div class="phase-row">
+                    <p class="phase" id="phaseText">Initializing generation core...</p>
+                    <div class="percent" id="percentText">08%</div>
+                </div>
+                <p class="hint" id="hintText">Preparing section, room, and course graph.</p>
+                <div class="progress-track" aria-hidden="true">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="candidate-row">
+                    <article class="candidate one">
+                        <div class="candidate-head">
+                            <span>Candidate 01</span>
+                            <span class="candidate-state">stability scan</span>
+                        </div>
+                        <div class="candidate-chart">
+                            <svg viewBox="0 0 280 72" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="candidateLineA" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#4f7cff"></stop>
+                                        <stop offset="55%" stop-color="#52e6ff"></stop>
+                                        <stop offset="100%" stop-color="#28d8b2"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M8 53 C28 40, 44 12, 72 18 S118 66, 148 38 S190 10, 220 24 S254 44, 272 16"></path>
+                            </svg>
+                        </div>
+                        <div class="candidate-meta">
+                            <span>conflict load resolving</span>
+                            <span>path A</span>
+                        </div>
+                    </article>
+
+                    <article class="candidate two">
+                        <div class="candidate-head">
+                            <span>Candidate 02</span>
+                            <span class="candidate-state">resource scan</span>
+                        </div>
+                        <div class="candidate-chart">
+                            <svg viewBox="0 0 280 72" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="candidateLineB" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ffcb70"></stop>
+                                        <stop offset="46%" stop-color="#28d8b2"></stop>
+                                        <stop offset="100%" stop-color="#52e6ff"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M8 24 C30 10, 56 18, 76 34 S122 58, 152 32 S194 4, 220 18 S250 42, 272 12"></path>
+                            </svg>
+                        </div>
+                        <div class="candidate-meta">
+                            <span>room harmony optimizing</span>
+                            <span>path B</span>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="error-state" id="errorState"></div>
+            </div>
+
+            <aside class="side-metrics">
+                <div class="metric">
+                    <div class="metric-label">Engine</div>
+                    <div class="metric-value">GA Core</div>
+                    <div class="metric-sub">constraint evolution active</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">PSO Layer</div>
+                    <div class="metric-value">{% if use_pso %}ON{% else %}OFF{% endif %}</div>
+                    <div class="metric-sub">hybrid optimization mode</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Output</div>
+                    <div class="metric-value">2 Schedules</div>
+                    <div class="metric-sub">final options will open automatically</div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    {{ use_pso|json_script:"use-pso-data" }}
+    <script>
+        const phases = [
+            ["Initializing generation core...", "Preparing section, room, and course graph."],
+            ["Mapping faculty workloads...", "Balancing teaching assignments with room availability."],
+            ["Resolving clashes across sections...", "Scanning slot overlaps and lab dependencies."],
+            ["Refining the two strongest candidates...", "Scoring timetable paths for stability and resource fit."],
+            ["Finalizing generated schedules...", "Packaging both timetable options for review."]
+        ];
+
+        const phaseText = document.getElementById("phaseText");
+        const hintText = document.getElementById("hintText");
+        const heroHeadline = document.getElementById("heroHeadline");
+        const progressFill = document.getElementById("progressFill");
+        const percentText = document.getElementById("percentText");
+        const errorState = document.getElementById("errorState");
+        const usePso = JSON.parse(document.getElementById("use-pso-data").textContent);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+        const heroMessages = [
+            'SmartScheduler cuts down the hours normally lost in <span class="accent">manual timetable planning</span>.',
+            '<span class="accent">Manual scheduling</span> often creates hidden clashes between teachers, rooms, and sections.',
+            'SmartScheduler checks constraints together, so <span class="accent">conflicts are caught early</span>.',
+            'Instead of editing endless spreadsheets, you get <span class="accent">optimized timetable options</span> in one flow.',
+            '<span class="accent">Room allocation</span>, section balance, and faculty load are coordinated automatically.',
+            'Manual processes slow down every time <span class="accent">one subject or teacher changes</span>.',
+            'SmartScheduler helps you <span class="accent">regenerate faster</span> without rebuilding everything from scratch.',
+            'It reduces repetitive <span class="accent">coordination work</span> across departments and planning teams.',
+            'Better timetable logic means <span class="accent">fewer overlaps</span>, fewer adjustments, and smoother operations.',
+            'While manual planning is error-prone and time-heavy, SmartScheduler is built for <span class="accent">speed, clarity, and control</span>.'
+        ];
+
+        let phaseIndex = 0;
+        let visualProgress = 8;
+        let heroIndex = 0;
+        let generationStarted = false;
+
+        function tickPhase() {
+            phaseIndex = (phaseIndex + 1) % phases.length;
+            phaseText.textContent = phases[phaseIndex][0];
+            hintText.textContent = phases[phaseIndex][1];
+        }
+
+        function animateProgress() {
+            visualProgress = Math.min(92, visualProgress + (visualProgress < 56 ? 8 : 3));
+            progressFill.style.width = `${visualProgress}%`;
+            percentText.textContent = `${String(Math.round(visualProgress)).padStart(2, "0")}%`;
+        }
+
+        function rotateHeroMessage() {
+            heroHeadline.classList.add("is-fading");
+            window.setTimeout(() => {
+                heroIndex = (heroIndex + 1) % heroMessages.length;
+                heroHeadline.innerHTML = heroMessages[heroIndex];
+                heroHeadline.classList.remove("is-fading");
+            }, 240);
+        }
+
+        const phaseTimer = window.setInterval(tickPhase, 1800);
+        const progressTimer = window.setInterval(animateProgress, 900);
+        const heroTimer = window.setInterval(rotateHeroMessage, 5000);
+
+        async function startGeneration() {
+            if (generationStarted) {
+                return;
+            }
+            generationStarted = true;
+
+            const payload = new URLSearchParams();
+            if (usePso) {
+                payload.append("use_pso", "on");
+            }
+
+            try {
+                const response = await fetch("{% url 'generate_timetables' %}", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                        "X-CSRFToken": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: payload.toString()
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Generation failed with status ${response.status}`);
+                }
+
+                progressFill.style.width = "100%";
+                percentText.textContent = "100%";
+                phaseText.textContent = "Timetable generation complete";
+                hintText.textContent = "Opening the generated timetable options now.";
+                window.clearInterval(phaseTimer);
+                window.clearInterval(progressTimer);
+                window.clearInterval(heroTimer);
+
+                const destination = response.redirected ? response.url : "{% url 'timetables_page' %}";
+                window.setTimeout(() => {
+                    window.location.href = destination;
+                }, 450);
+            } catch (error) {
+                window.clearInterval(phaseTimer);
+                window.clearInterval(progressTimer);
+                window.clearInterval(heroTimer);
+                phaseText.textContent = "Generation interrupted";
+                hintText.textContent = "The engine could not finish this run.";
+                errorState.style.display = "block";
+                errorState.textContent = "Timetable generation failed. Please try again.";
+                console.error(error);
+            }
+        }
+
+        window.setTimeout(startGeneration, 350);
+    </script>
+<script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>

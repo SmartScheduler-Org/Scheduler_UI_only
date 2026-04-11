@@ -1,0 +1,1112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Scheduler.IO | Generate Timetable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07111f;
+            --bg-soft: #101c31;
+            --panel: rgba(10, 19, 36, 0.76);
+            --panel-strong: rgba(15, 28, 50, 0.92);
+            --line: rgba(173, 197, 255, 0.14);
+            --text: #f7fbff;
+            --muted: rgba(226, 235, 255, 0.72);
+            --accent: #5eead4;
+            --accent-2: #7c9cff;
+            --accent-3: #f7b267;
+            --danger-soft: rgba(255, 214, 153, 0.18);
+            --danger-text: #ffe8b5;
+            --shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Manrope", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(94, 234, 212, 0.16), transparent 28%),
+                radial-gradient(circle at top right, rgba(124, 156, 255, 0.22), transparent 32%),
+                linear-gradient(180deg, #06101b 0%, #09172b 45%, #0b1321 100%);
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        body::before {
+            background-image:
+                linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: radial-gradient(circle at center, black 24%, transparent 86%);
+            opacity: 0.45;
+        }
+
+        body::after {
+            background:
+                radial-gradient(circle at 20% 20%, rgba(124, 156, 255, 0.18), transparent 24%),
+                radial-gradient(circle at 82% 14%, rgba(94, 234, 212, 0.12), transparent 20%),
+                radial-gradient(circle at 76% 74%, rgba(247, 178, 103, 0.12), transparent 18%);
+            animation: drift 16s ease-in-out infinite alternate;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 999px;
+            filter: blur(24px);
+            pointer-events: none;
+            opacity: 0.7;
+            z-index: 0;
+        }
+
+        .orb-a {
+            top: 80px;
+            left: -30px;
+            width: 260px;
+            height: 260px;
+            background: rgba(94, 234, 212, 0.12);
+            animation: floatA 18s ease-in-out infinite alternate;
+        }
+
+        .orb-b {
+            right: -20px;
+            top: 260px;
+            width: 320px;
+            height: 320px;
+            background: rgba(124, 156, 255, 0.14);
+            animation: floatB 22s ease-in-out infinite alternate;
+        }
+
+        .orb-c {
+            left: 24%;
+            bottom: 70px;
+            width: 220px;
+            height: 220px;
+            background: rgba(247, 178, 103, 0.12);
+            animation: floatC 20s ease-in-out infinite alternate;
+        }
+
+        .shell {
+            position: relative;
+            z-index: 1;
+            width: min(1240px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 24px 0 48px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: rgba(6, 15, 28, 0.72);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 50px;
+            display: grid;
+            place-items: center;
+            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.5));
+        }
+        .brand-mark svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .brand-copy {
+            display: grid;
+            gap: 2px;
+        }
+
+        .brand-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+        }
+
+        .brand-meta {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .status-pill,
+        .user-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--accent);
+            box-shadow: 0 0 16px rgba(94, 234, 212, 0.7);
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+            gap: 26px;
+            align-items: stretch;
+            margin-bottom: 28px;
+        }
+
+        .hero-panel,
+        .control-panel,
+        .guide-panel {
+            border: 1px solid var(--line);
+            border-radius: 30px;
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow);
+        }
+
+        .hero-panel {
+            position: relative;
+            overflow: hidden;
+            padding: 34px;
+            min-height: 520px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hero-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(135deg, rgba(124, 156, 255, 0.16), transparent 35%),
+                radial-gradient(circle at 85% 20%, rgba(94, 234, 212, 0.22), transparent 22%),
+                linear-gradient(140deg, rgba(247, 178, 103, 0.08), transparent 58%);
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 34px 34px;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.55), transparent 88%);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: #d8f8ff;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #5eead4, #7c9cff);
+            box-shadow: 0 0 14px rgba(94, 234, 212, 0.6);
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .hero-title {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(44px, 6.4vw, 86px);
+            line-height: 0.95;
+            letter-spacing: -0.06em;
+        }
+
+        .hero-title span {
+            display: block;
+            color: transparent;
+            background: linear-gradient(110deg, #ffffff 2%, #c7f9ff 32%, #7c9cff 70%, #5eead4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .hero-text {
+            margin: 0;
+            max-width: 760px;
+            font-size: 19px;
+            line-height: 1.7;
+            color: var(--muted);
+        }
+
+        .hero-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+
+        .metric {
+            padding: 18px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            transform: translateY(14px);
+            opacity: 0;
+            animation: riseIn 0.9s ease forwards;
+        }
+
+        .metric:nth-child(2) {
+            animation-delay: 0.12s;
+        }
+
+        .metric:nth-child(3) {
+            animation-delay: 0.24s;
+        }
+
+        .metric-label {
+            color: rgba(224, 234, 255, 0.68);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .metric-copy {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .control-panel {
+            padding: 28px;
+            display: grid;
+            gap: 20px;
+            align-content: start;
+            background: linear-gradient(180deg, rgba(13, 24, 44, 0.94), rgba(8, 16, 30, 0.92));
+        }
+
+        .panel-heading {
+            display: grid;
+            gap: 10px;
+        }
+
+        .panel-kicker {
+            color: #bfe9ff;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 30px;
+            line-height: 1.08;
+            letter-spacing: -0.05em;
+        }
+
+        .panel-copy {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .notice,
+        .flash {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 219, 161, 0.22);
+            background: linear-gradient(135deg, rgba(255, 222, 173, 0.18), rgba(247, 178, 103, 0.08));
+            color: var(--danger-text);
+        }
+
+        .notice-icon,
+        .flash-icon {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 auto;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: rgba(255,255,255,0.08);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .notice strong,
+        .flash strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+            letter-spacing: 0.02em;
+        }
+
+        .notice span,
+        .flash span {
+            display: block;
+            color: rgba(255, 238, 208, 0.88);
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: 12px;
+        }
+
+        .controls {
+            display: grid;
+            gap: 18px;
+            padding: 20px;
+            border-radius: 22px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .toggle {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 14px;
+            align-items: start;
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+        }
+
+        .toggle:hover {
+            transform: translateY(-2px);
+            border-color: rgba(124, 156, 255, 0.35);
+            background: rgba(124, 156, 255, 0.08);
+        }
+
+        .toggle input {
+            width: 22px;
+            height: 22px;
+            margin-top: 3px;
+            accent-color: #5eead4;
+        }
+
+        .toggle-title {
+            display: block;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .toggle-copy {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 62px;
+            padding: 18px 24px;
+            border: 0;
+            border-radius: 18px;
+            cursor: pointer;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #07111f;
+            background: linear-gradient(135deg, #5eead4, #7c9cff 58%, #f7b267);
+            box-shadow: 0 24px 48px rgba(32, 61, 112, 0.4);
+            transition: transform 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease;
+        }
+
+        .cta:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 28px 56px rgba(32, 61, 112, 0.48);
+            filter: saturate(1.06);
+        }
+
+        .cta:disabled {
+            cursor: not-allowed;
+            opacity: 0.52;
+            box-shadow: none;
+        }
+
+        .cta-arrow {
+            font-size: 18px;
+            transition: transform 0.28s ease;
+        }
+
+        .cta:hover:not(:disabled) .cta-arrow {
+            transform: translateX(4px);
+        }
+
+        .footnote {
+            color: rgba(226, 235, 255, 0.58);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .guide-panel {
+            padding: 28px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .guide-header {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .guide-title {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 30px;
+            letter-spacing: -0.05em;
+        }
+
+        .guide-copy {
+            margin: 8px 0 0;
+            color: var(--muted);
+            max-width: 700px;
+            line-height: 1.7;
+        }
+
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .guide-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 210px;
+            padding: 22px 20px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+        }
+
+        .guide-card::before {
+            content: "";
+            position: absolute;
+            inset: auto -18% -26% auto;
+            width: 120px;
+            height: 120px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(124,156,255,0.24), transparent 68%);
+            pointer-events: none;
+        }
+
+        .guide-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(124, 156, 255, 0.34);
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18);
+        }
+
+        .guide-step {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            background: rgba(255,255,255,0.07);
+            color: #c9f8ff;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .guide-card h3 {
+            margin: 0 0 10px;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .guide-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+            font-size: 14px;
+        }
+
+        .footer {
+            padding: 18px 6px 0;
+            text-align: center;
+            color: rgba(226, 235, 255, 0.48);
+            font-size: 13px;
+            letter-spacing: 0.04em;
+        }
+
+        #loading {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(3, 8, 18, 0.82);
+            backdrop-filter: blur(10px);
+        }
+
+        #loading.active {
+            display: grid;
+            place-items: center;
+        }
+
+        .loading-card {
+            width: min(420px, calc(100% - 28px));
+            padding: 28px;
+            border-radius: 26px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(10, 18, 34, 0.92);
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .loading-ring {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 18px;
+            border-radius: 999px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            border-right-color: var(--accent-2);
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-card h3 {
+            margin: 0 0 10px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 28px;
+        }
+
+        .loading-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        @keyframes drift {
+            from { transform: translate3d(0, 0, 0) scale(1); }
+            to { transform: translate3d(0, 18px, 0) scale(1.03); }
+        }
+
+        @keyframes floatA {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(60px, 20px, 0); }
+        }
+
+        @keyframes floatB {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-70px, 30px, 0); }
+        }
+
+        @keyframes floatC {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(20px, -26px, 0); }
+        }
+
+        @keyframes riseIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.75); opacity: 0.7; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1100px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .guide-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .shell {
+                width: min(100% - 20px, 1240px);
+                padding-top: 14px;
+            }
+
+            .topbar {
+                padding: 14px;
+            }
+
+            .topbar,
+            .guide-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .top-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .hero-panel,
+            .control-panel,
+            .guide-panel {
+                border-radius: 24px;
+                padding: 22px;
+            }
+
+            .hero-panel {
+                min-height: auto;
+            }
+
+            .hero-title {
+                font-size: clamp(38px, 13vw, 58px);
+            }
+
+            .hero-text {
+                font-size: 17px;
+            }
+
+            .hero-metrics,
+            .guide-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if generator_unavailable %}
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background:
+                radial-gradient(circle at top left, rgba(123, 63, 228, 0.28), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(86, 8, 212, 0.28), transparent 30%),
+                linear-gradient(135deg, #12081f 0%, #1f1233 45%, #2d0f5c 100%);
+        }
+
+        .shell {
+            width: min(720px, 100%);
+            padding: 0;
+        }
+
+        .oops-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .oops-card::before,
+        .oops-card::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+            filter: blur(10px);
+        }
+
+        .oops-card::before {
+            width: 180px;
+            height: 180px;
+            top: -40px;
+            right: -30px;
+            background: rgba(255, 209, 102, 0.14);
+            animation: unavailableFloat 5s ease-in-out infinite alternate;
+        }
+
+        .oops-card::after {
+            width: 140px;
+            height: 140px;
+            left: -30px;
+            bottom: -35px;
+            background: rgba(110, 231, 255, 0.12);
+            animation: unavailableFloat 4.2s ease-in-out infinite alternate-reverse;
+        }
+
+        .oops-label {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f8dca4;
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .oops-title {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(38px, 7vw, 56px);
+            line-height: 0.98;
+            letter-spacing: -0.06em;
+        }
+
+        .oops-title span {
+            display: block;
+            color: transparent;
+            background: linear-gradient(120deg, #ffffff 5%, #e9d5ff 42%, #f8dca4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 14px 22px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f8dca4, #ffffff);
+            color: #271246;
+            text-decoration: none;
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.24);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 34px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes unavailableFloat {
+            from { transform: translateY(0px) scale(1); }
+            to { transform: translateY(12px) scale(1.06); }
+        }
+    </style>
+
+    <div class="shell">
+        <section class="control-panel oops-card" style="padding: 38px; text-align: center; background: rgba(23, 10, 41, 0.9);">
+            <div class="panel-heading" style="gap: 16px; position: relative; z-index: 1;">
+                <div class="oops-label">Feature Restricted</div>
+                <h1 class="oops-title">
+                    Oopss...
+                    <span>Access unavailable</span>
+                </h1>
+                <p class="panel-copy" style="font-size: 18px; max-width: 520px; margin: 0 auto;">
+                    You are not able to access this feature right now. Please contact your administrator.
+                </p>
+                <div>
+                    <a href="javascript:history.back()" class="back-btn">
+                        <span>←</span>
+                        <span>Go Back</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>
+    {% else %}
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="orb orb-c"></div>
+
+    <div id="loading">
+        <div class="loading-card">
+            <div class="loading-ring"></div>
+            <h3>Generating Timetable</h3>
+            <p>The engine is preparing sections, slots, rooms, and faculty constraints. This can take a moment.</p>
+        </div>
+    </div>
+
+    <div class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg8" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg8)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
+                <div class="brand-copy">
+                    <div class="brand-title">Scheduler.IO</div>
+                    <div class="brand-meta">Timetable Control Center</div>
+                </div>
+            </div>
+
+            <div class="top-actions">
+                <div class="status-pill">
+                    <span class="status-dot"></span>
+                    <span>Generation workspace ready</span>
+                </div>
+                <div class="user-pill">
+                    <span>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="hero">
+            <div class="hero-panel">
+                <div class="hero-grid"></div>
+
+                <div class="hero-copy">
+                    <div class="eyebrow">Intelligent Timetable Builder</div>
+                    <h1 class="hero-title">
+                        Build a timetable
+                        <span>that feels intentional.</span>
+                    </h1>
+                    <p class="hero-text">
+                        Validate your departments, teachers, rooms, timings, courses, and sections, then launch the
+                        generator. The workflow below is designed to keep scheduling clear, quick, and controlled.
+                    </p>
+                </div>
+
+                <div class="hero-metrics">
+                    <div class="metric">
+                        <div class="metric-label">Input Quality</div>
+                        <div class="metric-value">Faculty + Rooms</div>
+                        <div class="metric-copy">Best results come from clean mappings between instructors, courses, and space availability.</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Optimization</div>
+                        <div class="metric-value">GA + PSO</div>
+                        <div class="metric-copy">Hybrid search can explore strong schedules first, then refine them with cleaner balancing.</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Output</div>
+                        <div class="metric-value">Editable Flow</div>
+                        <div class="metric-copy">Once generated, timetables can still be reviewed, adjusted, substituted, and saved.</div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="control-panel">
+                <div class="panel-heading">
+                    <div class="panel-kicker">Launch Panel</div>
+                    <h2 class="panel-title">Generate Timetable</h2>
+                    <p class="panel-copy">
+                        Start the generator from here. If the private core engine is unavailable, the site stays usable
+                        and this feature pauses gracefully.
+                    </p>
+                </div>
+
+                {% if messages %}
+                <div class="flash-stack">
+                    {% for message in messages %}
+                    <div class="flash">
+                        <div class="flash-icon">!</div>
+                        <div>
+                            <strong>Notice</strong>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if generator_unavailable %}
+                <div class="notice">
+                    <div class="notice-icon">!</div>
+                    <div>
+                        <strong>Generator unavailable</strong>
+                        <span>{{ generator_unavailable_message }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <form action="{% url 'subscription_gate' %}" method="post" id="generate-form">
+                    {% csrf_token %}
+
+                    <div class="controls">
+                        <label class="toggle">
+                            <input type="checkbox" name="use_pso" checked>
+                            <span>
+                                <span class="toggle-title">Enable PSO Optimization</span>
+                                <span class="toggle-copy">
+                                    Use the hybrid GA + PSO refinement pass to push promising schedules toward more balanced results.
+                                </span>
+                            </span>
+                        </label>
+
+                        <button type="submit" class="cta" {% if generator_unavailable %}disabled{% endif %}>
+                            <span>Generate Timetables</span>
+                            <span class="cta-arrow">→</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="footnote">
+                    Before generating, make sure section-course mapping, faculty assignments, room categories, and timing slots are all configured correctly.
+                </div>
+            </aside>
+        </section>
+
+        <section class="guide-panel">
+            <div class="guide-header">
+                <div>
+                    <h2 class="guide-title">Recommended Setup Flow</h2>
+                    <p class="guide-copy">
+                        Follow this sequence before you generate. It reduces clashes, improves slot quality, and makes later edits much easier.
+                    </p>
+                </div>
+            </div>
+
+            <div class="guide-grid">
+                <article class="guide-card">
+                    <div class="guide-step">1</div>
+                    <h3>Add Teachers</h3>
+                    <p>Enter instructors first so courses can be mapped to real faculty availability and workload rules.</p>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-step">2</div>
+                    <h3>Add Rooms</h3>
+                    <p>Create lecture and lab spaces with the right categories to avoid invalid room allocations later.</p>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-step">3</div>
+                    <h3>Add Timings</h3>
+                    <p>Set the meeting-time grid carefully because the generator depends directly on these slots.</p>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-step">4</div>
+                    <h3>Add Courses</h3>
+                    <p>Define subjects with correct room requirements and faculty mappings so the engine sees the true constraints.</p>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-step">5</div>
+                    <h3>Add Departments</h3>
+                    <p>Departments organize rooms, sections, and course ownership, which keeps scheduling data coherent.</p>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-step">6</div>
+                    <h3>Add Sections</h3>
+                    <p>Attach the right courses to the right sections before generation so required lecture and lab load is accurate.</p>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-step">7</div>
+                    <h3>Generate</h3>
+                    <p>Run the generator only after the base academic structure is complete and constraint data looks clean.</p>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-step">8</div>
+                    <h3>Review & Save</h3>
+                    <p>Inspect generated output, apply edits if needed, and save the final version once the timetable is acceptable.</p>
+                </article>
+            </div>
+        </section>
+
+        <footer class="footer">
+            All Rights Reserved
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("generate-form");
+            const submitButton = form ? form.querySelector(".cta") : null;
+            const loading = document.getElementById("loading");
+
+            if (!form || !submitButton || submitButton.disabled) {
+                return;
+            }
+
+            form.addEventListener("submit", function () {
+                loading.classList.add("active");
+            });
+        });
+    </script>
+    <script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>
+    {% endif %}

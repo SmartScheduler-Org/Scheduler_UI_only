@@ -1,0 +1,556 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartScheduler | Timetables</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-top: #111827;
+            --bg-bottom: #020617;
+            --card: rgba(15, 23, 42, 0.88);
+            --card-border: rgba(148, 163, 184, 0.14);
+            --muted: rgba(226, 232, 240, 0.72);
+            --text: #f8fafc;
+            --cyan: #7dd3fc;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+            --green: #10f2a4;
+            --blue: #38bdf8;
+            --amber: #f59e0b;
+            --red: #fb7185;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Poppins", sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top, var(--bg-top) 0, var(--bg-bottom) 48%, var(--bg-bottom) 100%);
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        body::before {
+            background-image:
+                linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 84%);
+        }
+
+        body::after {
+            background:
+                radial-gradient(circle at 10% 12%, rgba(79,70,229,0.32), transparent 22%),
+                radial-gradient(circle at 86% 18%, rgba(236,72,153,0.18), transparent 18%),
+                radial-gradient(circle at 80% 72%, rgba(34,211,238,0.16), transparent 18%);
+        }
+
+        .page-shell {
+            width: min(1220px, calc(100vw - 40px));
+            margin: 0 auto;
+            padding: 36px 0 48px;
+        }
+
+        .page-head {
+            text-align: center;
+            margin-bottom: 34px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+            color: var(--cyan);
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple), var(--blue));
+            box-shadow: 0 0 14px rgba(56,189,248,0.45);
+        }
+
+        h1 {
+            margin: 16px 0 8px;
+            font-size: clamp(34px, 4.2vw, 52px);
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+
+        .subhead {
+            max-width: 760px;
+            margin: 0 auto;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 22px;
+            align-items: start;
+        }
+
+        .tt-card {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(20, 20, 30, 0.92), rgba(15, 23, 42, 0.88));
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow:
+                0 20px 44px rgba(2, 6, 23, 0.48),
+                0 0 0 1px rgba(255,255,255,0.04) inset,
+                0 0 28px rgba(99,102,241,0.05);
+            border: 1px solid var(--card-border);
+        }
+
+        .tt-card::before {
+            content: "";
+            position: absolute;
+            inset: -40% auto auto -10%;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(79,70,229,0.16), transparent 72%);
+            filter: blur(16px);
+        }
+
+        .tt-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -10% -42% auto;
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, rgba(34,211,238,0.12), transparent 70%);
+            filter: blur(18px);
+        }
+
+        .card-top {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .card-index {
+            color: rgba(191, 219, 254, 0.7);
+            font-size: 12px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .view-link {
+            text-decoration: none;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #5b21ed, #6dd5fa);
+            border: none;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(91, 33, 237, 0.22);
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 16px 32px rgba(56, 189, 248, 0.24);
+        }
+
+        .section-title {
+            position: relative;
+            z-index: 1;
+            margin: 0 0 12px;
+            font-size: 16px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--cyan);
+        }
+
+        .chart-wrap {
+            position: relative;
+            z-index: 1;
+            padding: 14px 12px 8px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.025);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+            margin-bottom: 16px;
+        }
+
+        .summary-strip {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .mini-stat {
+            padding: 10px 10px 9px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .mini-stat-label {
+            color: rgba(191,219,254,0.7);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .mini-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .reco-box {
+            position: relative;
+            z-index: 1;
+            margin-top: 6px;
+            background: linear-gradient(180deg, rgba(50, 30, 77, 0.92), rgba(39, 21, 67, 0.9));
+            padding: 16px;
+            border-radius: 18px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+        }
+
+        .optimal-msg {
+            color: var(--green);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .reco-title {
+            display: block;
+            color: var(--cyan);
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 420px;
+        }
+
+        th {
+            padding: 10px 8px;
+            background: rgba(35, 5, 46, 0.92);
+            color: #8fe8ff;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            color: #f8fafc;
+        }
+
+        td:last-child {
+            color: #b8f6ff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            border-radius: 28px;
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .page-shell {
+                width: calc(100vw - 24px);
+                padding: 28px 0 40px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tt-card {
+                padding: 18px;
+                border-radius: 22px;
+            }
+
+            .summary-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .card-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .view-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page-shell">
+        <header class="page-head">
+            <div class="eyebrow">SmartScheduler Output</div>
+            <h1>Select a Timetable</h1>
+            <p class="subhead">
+                Compare the generated timetable candidates through cleaner visual metrics and choose the schedule that best matches stability, workload balance, and resource usage.
+            </p>
+        </header>
+
+        {% if indexes %}
+        <section class="cards-grid">
+            {% for i in indexes %}
+            {% with stat=stats_json|index:forloop.counter0 %}
+            {% with block=reco_blocks|index:forloop.counter0 %}
+            <article class="tt-card">
+                <div class="card-top">
+                    <div>
+                        <div class="card-index">Candidate {{ i }}</div>
+                    </div>
+                    <a class="view-link" href="{% url 'show_timetable' i %}">
+                        <button class="view-btn">View Timetable {{ i }}</button>
+                    </a>
+                </div>
+
+                <h2 class="section-title">Statistics Overview</h2>
+
+                <div class="summary-strip">
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Fitness</div>
+                        <div class="mini-stat-value">{{ stat.fitness_value }}</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Conflicts</div>
+                        <div class="mini-stat-value">{{ stat.no_of_conflicts }}</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Generation</div>
+                        <div class="mini-stat-value">{{ stat.generation_number }}</div>
+                    </div>
+                </div>
+
+                <div class="chart-wrap">
+                    <canvas id="chart{{ i }}" height="210"></canvas>
+                </div>
+
+                <div class="reco-box">
+                    <div class="optimal-msg">{{ block.optimal_msg }}</div>
+                    <b class="reco-title">{{ block.title }}:</b>
+                    <div class="table-wrap">
+                        <table>
+                            <tr>
+                                <th>Day</th>
+                                <th>Slot</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Benefit</th>
+                            </tr>
+                            {% for r in block.rows %}
+                            <tr>
+                                <td>{{ r.day }}</td>
+                                <td>{{ r.slot }}</td>
+                                <td>{{ r.course }}</td>
+                                <td>{{ r.section }}</td>
+                                <td>{{ r.benefit }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </article>
+            {% endwith %}
+            {% endwith %}
+            {% endfor %}
+        </section>
+        {% else %}
+        <div class="empty-state">No timetable data is available right now. Generate a timetable to continue.</div>
+        {% endif %}
+    </main>
+
+    <script>
+        const fullData = {{ stats_json|safe }};
+
+        function normalizeTo10(value, maxValue) {
+            const scaled = (value / maxValue) * 10;
+            return parseFloat(scaled.toFixed(2));
+        }
+
+        fullData.forEach((stats, index) => {
+            const id = index + 1;
+
+            const labels = [
+                "Fitness",
+                "Generations",
+                "Conflicts",
+                "Teacher Load",
+                "Resource Util",
+                "Student Load"
+            ];
+
+            const maxFit = 1;
+            const maxGen = 200;
+            const maxConflict = Math.max(...fullData.map(s => s.no_of_conflicts), 1);
+
+            const values = [
+                normalizeTo10(stats.fitness_value, maxFit),
+                normalizeTo10(stats.generation_number, maxGen),
+                Math.max(0, 10 - normalizeTo10(stats.no_of_conflicts, maxConflict)),
+                stats.teacher_workload,
+                stats.resource_utilisation,
+                stats.student_workload
+            ];
+
+            const ctx = document.getElementById("chart" + id);
+            if (!ctx) return;
+
+            const gradientBlue = ctx.getContext("2d").createLinearGradient(0, 0, 0, 240);
+            gradientBlue.addColorStop(0, "rgba(99, 102, 241, 0.95)");
+            gradientBlue.addColorStop(1, "rgba(59, 130, 246, 0.58)");
+
+            const gradientGreen = ctx.getContext("2d").createLinearGradient(0, 0, 0, 240);
+            gradientGreen.addColorStop(0, "rgba(34, 211, 238, 0.95)");
+            gradientGreen.addColorStop(1, "rgba(59, 130, 246, 0.56)");
+
+            const gradientPurple = ctx.getContext("2d").createLinearGradient(0, 0, 0, 240);
+            gradientPurple.addColorStop(0, "rgba(168, 85, 247, 0.96)");
+            gradientPurple.addColorStop(1, "rgba(99, 102, 241, 0.56)");
+
+            const gradientAmber = ctx.getContext("2d").createLinearGradient(0, 0, 0, 240);
+            gradientAmber.addColorStop(0, "rgba(236, 72, 153, 0.92)");
+            gradientAmber.addColorStop(1, "rgba(168, 85, 247, 0.52)");
+
+            const gradientRed = ctx.getContext("2d").createLinearGradient(0, 0, 0, 240);
+            gradientRed.addColorStop(0, "rgba(244, 114, 182, 0.92)");
+            gradientRed.addColorStop(1, "rgba(236, 72, 153, 0.5)");
+
+            const gradientCyan = ctx.getContext("2d").createLinearGradient(0, 0, 0, 240);
+            gradientCyan.addColorStop(0, "rgba(125, 211, 252, 0.95)");
+            gradientCyan.addColorStop(1, "rgba(99, 102, 241, 0.54)");
+
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            gradientCyan,
+                            gradientAmber,
+                            gradientRed,
+                            gradientGreen,
+                            gradientPurple,
+                            gradientBlue
+                        ],
+                        borderRadius: 12,
+                        borderSkipped: false,
+                        barPercentage: 0.64,
+                        categoryPercentage: 0.68
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1200,
+                        easing: "easeOutQuart"
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: "rgba(15, 23, 42, 0.95)",
+                            borderColor: "rgba(125, 211, 252, 0.22)",
+                            borderWidth: 1,
+                            titleColor: "#f8fafc",
+                            bodyColor: "#cbd5e1",
+                            padding: 12,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 10,
+                            ticks: {
+                                color: "rgba(226, 232, 240, 0.86)",
+                                stepSize: 1,
+                                font: {
+                                    size: 11,
+                                    weight: "600"
+                                }
+                            },
+                            grid: {
+                                color: "rgba(255,255,255,0.12)",
+                                drawBorder: false
+                            },
+                            border: {
+                                display: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: "rgba(248, 250, 252, 0.92)",
+                                maxRotation: 20,
+                                minRotation: 20,
+                                font: {
+                                    size: 11,
+                                    weight: "600"
+                                }
+                            },
+                            grid: {
+                                display: false
+                            },
+                            border: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+<script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>

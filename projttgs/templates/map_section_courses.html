@@ -1,0 +1,368 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block workflow_progress %}{% include 'workflow_stepper.html' with current_step=8 %}{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
+
+<style>
+/* ======================================= */
+/* INFO ICON + TOOLTIP INSIDE FORM FIELDSET */
+/* ======================================= */
+
+.info-icon-container {
+    position: absolute;
+    top: -5px;
+    right: 10px;
+    cursor: pointer;
+    z-index: 20;
+}
+
+.info-icon {
+    width: 24px;
+    height: 24px;
+    background: #6d5dfc;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.2s ease;
+    box-shadow: 0 0 8px rgba(109,93,252,0.5);
+}
+
+.info-icon:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(109,93,252,0.8);
+}
+
+.info-tooltip {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    width: 260px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.4;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-in-out;
+    z-index: 999;
+}
+
+.info-tooltip::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 10px;
+    width: 10px;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-left: 1px solid rgba(255,255,255,0.25);
+    border-top: 1px solid rgba(255,255,255,0.25);
+    transform: rotate(45deg);
+    backdrop-filter: blur(10px);
+}
+
+.info-icon-container:hover .info-tooltip {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.subjects-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.subjects-header .page-header-left {
+    max-width: 620px;
+}
+
+.subjects-header .page-header-left h2 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.05;
+}
+
+.subjects-header .page-header-left p {
+    margin: 8px 0 0;
+    color: rgba(255,255,255,0.78);
+    font-size: 14px;
+    max-width: 520px;
+}
+
+.subjects-header .right-block {
+    width: auto;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 18px;
+    min-width: max-content;
+}
+
+.subjects-header .nav-action-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+}
+
+.subjects-header .generate-cta {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 18px 7px 11px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.95) !important;
+    color: #1e1b4b !important;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    overflow: visible;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: genBtnPulse 2s ease-in-out infinite;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15), 0 0 20px rgba(249,115,22,0.15);
+    isolation: auto;
+}
+
+.subjects-header .generate-cta .gen-orb {
+    position: relative;
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: conic-gradient(
+        #f97316 0deg,
+        #f43f5e 72deg,
+        #ec4899 144deg,
+        #a855f7 216deg,
+        #6366f1 288deg,
+        #f97316 360deg
+    );
+    animation: genOrbSpin 2.5s linear infinite;
+    box-shadow: 0 0 10px rgba(249,115,22,0.6), 0 0 20px rgba(244,63,94,0.35);
+}
+
+.subjects-header .generate-cta .gen-orb::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.90);
+    display: block;
+}
+
+.subjects-header .generate-cta .gen-orb::before {
+    content: '▶';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: #f97316;
+    z-index: 2;
+}
+
+@keyframes genOrbSpin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes genBtnPulse {
+    0%   { box-shadow: 0 2px 10px rgba(0,0,0,0.15), 0 0 8px rgba(249,115,22,0); background: rgba(255,255,255,0.95) !important; }
+    50%  { box-shadow: 0 2px 18px rgba(249,115,22,0.65), 0 0 35px rgba(244,63,94,0.5), 0 0 55px rgba(249,115,22,0.25); background: rgba(249,115,22,0.12) !important; }
+    100% { box-shadow: 0 2px 10px rgba(0,0,0,0.15), 0 0 8px rgba(249,115,22,0); background: rgba(255,255,255,0.95) !important; }
+}
+
+.subjects-header .generate-cta:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 4px 20px rgba(249,115,22,0.4), 0 0 35px rgba(244,63,94,0.3) !important;
+    background: #fff !important;
+}
+
+/* Remove old pseudo-elements */
+.subjects-header .generate-cta::before,
+.subjects-header .generate-cta::after {
+    display: none !important;
+}
+
+.subjects-header .generate-cta span {
+    position: relative;
+    z-index: 2;
+    letter-spacing: 0.04em;
+}
+
+.subjects-header .generate-cta .generate-ring {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .subjects-header {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+    }
+
+    .subjects-header .right-block {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .subjects-header .nav-action-group {
+        flex-wrap: wrap;
+    }
+}
+
+fieldset {
+    padding-top: 22px !important;
+    padding-bottom: 20px !important;
+}
+
+.form-wrapper fieldset {
+    margin-top: 10px;
+}
+
+.checkbox-scroll {
+    max-height: 240px;
+    border-radius: 16px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.checkbox-scroll label {
+    margin: 0;
+    padding: 8px 0;
+    color: rgba(255,255,255,0.92);
+    font-size: 14px;
+}
+
+.button-row {
+    margin-top: 16px !important;
+}
+
+label strong {
+    font-size: 14px;
+    letter-spacing: 0.02em;
+}
+
+</style>
+
+<!-- ================= PAGE HEADER ================= -->
+
+<div class="page-header subjects-header">
+    <div class="page-header-left">
+        <h2>Map Courses to Sections</h2>
+        <p>Upload a CSV or assign courses manually with a simpler, faster workflow.</p>
+    </div>
+
+    <div class="right-block">
+        <div class="nav-action-group">
+            <a href="{% url 'addSections' %}" class="next-btn nav-circle-btn" aria-label="Previous">
+                <span class="nav-arrow">←</span>
+            </a>
+            <a href="{% url 'view_section_courses' %}" class="next-btn icon-only-btn" aria-label="View section courses" title="View section courses">
+                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'generate_timetable_loading' %}" class="next-btn generate-cta">
+                <span class="gen-orb"></span>
+                <span>Generate</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ================= CSV UPLOAD ================= -->
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset style="position:relative;">
+
+        <div class="info-icon-container">
+            <span class="info-icon">i</span>
+            <div class="info-tooltip">
+                <strong>CSV Format</strong><br>
+                section_id,course_number<br>
+                CE31 3rd Sem,CS001<br>
+                CE31 3rd Sem,CS002
+            </div>
+        </div>
+
+        <label><strong>Upload section-course CSV</strong></label>
+        <input type="file" name="csv_file" accept=".csv" required>
+
+        <div class="button-row">
+            <button type="submit" name="csv_upload" class="submit-btn">
+                Upload CSV
+            </button>
+            <a href="{% url 'convert_csv' %}" class="csv-convert-btn"><span class="csv-orb"></span> Convert CSV</a>
+        </div>
+
+    </fieldset>
+</form>
+
+<!-- ================= MANUAL MAPPING ================= -->
+
+<div class="form-wrapper">
+<form method="post">
+{% csrf_token %}
+<fieldset style="position:relative;">
+
+<div class="info-icon-container">
+    <span class="info-icon">i</span>
+    <div class="info-tooltip">
+        <strong>Manual Mapping</strong><br>
+        Select a section and choose the courses you want to attach.
+    </div>
+</div>
+
+<label><strong>Select section</strong></label>
+<select name="section_id" class="form-control" required>
+    <option value="">Choose a section</option>
+    {% for s in sections %}
+        <option value="{{ s.section_id }}">{{ s.section_id }}</option>
+    {% endfor %}
+</select>
+
+<br>
+
+<label><strong>Select courses</strong></label>
+<div class="checkbox-scroll">
+    {% for c in courses %}
+        <label style="display:block;">
+            <input type="checkbox" name="courses" value="{{ c.id }}">
+            {{ c.course_number }} — {{ c.course_name }}
+        </label>
+    {% endfor %}
+</div>
+
+<div class="button-row">
+    <button type="submit" name="manual_add" class="submit-btn">
+        Save Mapping
+    </button>
+</div>
+
+</fieldset>
+</form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,115 @@
+
+/* ======================================= */
+/* INFO ICON + TOOLTIP INSIDE FORM FIELDSET */
+/* ======================================= */
+
+/* Position the info icon INSIDE the form fieldset */
+.info-icon-container {
+    position: absolute;
+    top: -5px;             /* adjust vertically */
+    right: 10px;           /* adjust horizontally */
+    cursor: pointer;
+    z-index: 20;
+}
+
+/* Info icon style */
+.info-icon {
+    width: 24px;
+    height: 24px;
+    background: #6d5dfc;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.2s ease;
+    box-shadow: 0 0 8px rgba(109,93,252,0.5);
+}
+
+.info-icon:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(109,93,252,0.8);
+}
+
+/* Tooltip box */
+.info-tooltip {
+    display: block;          /* default state for animation — hidden via opacity */
+    position: absolute;
+    top: 30px;
+    right: 0;
+    width: 250px;
+
+    padding: 12px;
+    border-radius: 8px;
+
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.4;
+
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+
+    opacity: 0;               /* start hidden */
+    pointer-events: none;     /* avoid accidental hover blocking */
+    transition: opacity 0.25s ease-in-out;
+    z-index: 999;
+}
+
+/* Tooltip arrow */
+.info-tooltip::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 10px;
+
+    width: 10px;
+    height: 10px;
+
+    background: rgba(255,255,255,0.1);
+    border-left: 1px solid rgba(255,255,255,0.25);
+    border-top: 1px solid rgba(255,255,255,0.25);
+
+    transform: rotate(45deg);
+    backdrop-filter: blur(10px);
+}
+
+/* Show tooltip on hover */
+.info-icon-container:hover .info-tooltip {
+    opacity: 1;
+    pointer-events: auto;    /* allow selection inside tooltip */
+}
+
+/* Bold text inside tooltip */
+.info-tooltip strong {
+    color: #fff;
+    font-size: 14px;
+}
+
+
+
+.alert-success {
+    background: #d4edda;
+    padding: 10px;
+    border-left: 5px solid #28a745;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    color: #155724;
+}
+
+.alert-error {
+    background: #f8d7da;
+    padding: 10px;
+    border-left: 5px solid #dc3545;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    color: #721c24;
+}
+
+.message-container {
+    margin-bottom: 20px;
+}

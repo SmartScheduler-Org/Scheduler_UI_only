@@ -1,0 +1,123 @@
+
+{% extends "mainbase.html" %}
+{% load static %}  
+{% block workflow_progress %}{% include 'workflow_stepper.html' with current_step=1 %}{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}"> 
+<link rel="stylesheet" href="{% static 'all_csv_fileCSS.css' %}"> 
+
+
+
+
+{% if messages %}
+<div class="message-container">
+    {% for message in messages %}
+        <div class="alert
+            {% if message.tags == 'success' %} alert-success
+            {% elif message.tags == 'error' %} alert-error
+            {% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- PAGE HEADER WITH NEXT + STEP -->
+<div class="page-header">
+    <div class="page-header-left">
+        <h2>Add Departments</h2>
+        
+    </div>
+
+    <div class="right-block">
+        <div class="nav-action-group">
+            <a href="{% url 'editdepartment' %}" class="edit-btn icon-only-btn" aria-label="View or edit departments" title="View or edit departments">
+                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'addInstructors' %}" class="next-btn nav-circle-btn" aria-label="Next">
+                <span class="nav-arrow">→</span>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset>
+
+        <div class="form-row">
+            <label><strong>Upload Department CSV:</strong></label>
+            <input type="file" name="csv_file" accept=".csv" required class="form-control">
+        </div>
+
+        <div class="button-row">
+            <button type="submit" name="csv_upload" class="submit-btn">
+                Upload CSV
+            </button>
+            <a href="{% url 'convert_csv' %}" class="csv-convert-btn"><span class="csv-orb"></span> Convert CSV</a>
+        </div>
+
+    </fieldset>
+</form>
+
+
+<div class="form-wrapper">
+
+    <form method="post" style="margin-top: 20px;">
+        {% csrf_token %}
+        <fieldset style="position: relative;">
+
+            <!-- ⭐ INFO ICON INSIDE THE FORM ⭐ -->
+            <div class="info-icon-container" style="margin-top: 10px; margin-right: 5px;">
+                <span class="info-icon">i</span>
+                <div class="info-tooltip">
+                    <strong>Section Input Guide</strong><br>
+                    • Section ID → Unique ID (e.g., CS-A, IT-1)<br>
+                    • Department → Select department<br>
+                    • Classes Per Week → Deprecated<br>
+                    <br>
+                    Leave other fields blank; they are auto-filled during timetable generation.
+                </div>
+            </div>
+            <!-- ⭐ END INFO ICON ⭐ -->
+
+        {% for field in form %}
+            <div style="margin-bottom: 18px;">
+
+                <label><strong>{{ field.label }}:</strong></label>
+
+                {% if field.name == "courses" %}
+                    <div class="checkbox-scroll" style=" justify-content: space-between; align-items: center;">
+                        {{ field }}
+                    </div>
+                {% else %}
+                    {{ field }}
+                {% endif %}
+
+                {% if field.help_text %}
+                    <small style="color:#ccc;">{{ field.help_text }}</small>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="button-row">
+            <button type="submit" name="add_department" class="submit-btn">Add Department</button>
+        </div>
+
+        </fieldset>
+    </form>
+</div>
+
+
+<!-- FORM -->
+
+
+{% endblock %}
+
+
+
+
+

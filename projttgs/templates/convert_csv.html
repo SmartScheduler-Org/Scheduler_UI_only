@@ -1,0 +1,1300 @@
+{% extends "mainbase.html" %}
+{% block title %}SmartScheduler | CSV Converter{% endblock %}
+{% block content %}
+
+{% if messages %}
+<div id="toast-container">
+  {% for message in messages %}
+    <div class="toast {{ message.tags }}">
+      {{ message }}
+      <span class="close-btn">&times;</span>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<section class="converter-section">
+  <div class="converter-inner">
+    <h1 class="converter-heading">
+      <i class="fas fa-file-csv"></i> CSV Converter
+    </h1>
+    <p class="converter-sub">
+      Upload a <strong>PDF / Excel</strong> or enter data manually — we'll convert it to the exact CSV format.
+    </p>
+
+    <!-- ─── ENTITY TABS ─── -->
+    <div class="entity-tabs" id="entity-tabs">
+      <button class="etab active" data-type="instructors"><i class="fas fa-chalkboard-teacher"></i> Instructors</button>
+      <button class="etab" data-type="courses"><i class="fas fa-book"></i> Courses</button>
+      <button class="etab" data-type="rooms"><i class="fas fa-door-open"></i> Rooms</button>
+      <button class="etab" data-type="timings"><i class="fas fa-clock"></i> Timings</button>
+      <button class="etab" data-type="departments"><i class="fas fa-building"></i> Departments</button>
+      <button class="etab" data-type="sections"><i class="fas fa-layer-group"></i> Sections</button>
+      <button class="etab" data-type="section_courses"><i class="fas fa-link"></i> Section-Course</button>
+      <button class="etab" data-type="teacher_courses"><i class="fas fa-user-tag"></i> Teacher-Course</button>
+    </div>
+
+    <!-- ─── EXPECTED COLUMNS BOX ─── -->
+    <div class="expected-box" id="expected-box"></div>
+
+    <!-- ─── PDF / EXCEL UPLOAD ─── -->
+    <form method="POST" enctype="multipart/form-data" class="converter-form" id="upload-form">
+      {% csrf_token %}
+      <input type="hidden" name="entity_type" id="entity-type-input" value="instructors">
+      <label class="file-upload-label" id="file-label">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <span id="file-text">Choose PDF or Excel file</span>
+        <input type="file" name="file" accept=".pdf,.xlsx,.xls" required id="file-input">
+      </label>
+      <button type="submit" class="convert-btn">
+        <i class="fas fa-magic"></i> Convert &amp; Download CSV
+      </button>
+    </form>
+
+    <a href="{% url 'admindash' %}" class="back-link">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- ─── DIVIDER ─── -->
+  <div class="section-divider">
+    <span class="divider-line"></span>
+    <span class="divider-text">OR</span>
+    <span class="divider-line"></span>
+  </div>
+
+  <!-- ─── MANUAL ENTRY ─── -->
+  <div class="manual-entry-inner">
+    <h2 class="manual-heading">
+      <i class="fas fa-keyboard"></i> Manual Entry
+    </h2>
+    <p class="manual-sub">
+      Enter data directly or use <strong>voice commands</strong> to fill the table hands-free.
+    </p>
+
+    <!-- ─── VOICE CONTROL PANEL ─── -->
+    <div class="voice-panel" id="voice-panel">
+      <div class="voice-panel-top">
+        <button type="button" class="voice-main-btn" id="voice-main-btn">
+          <i class="fas fa-microphone"></i> <span id="voice-btn-text">Start Voice Input</span>
+        </button>
+        <span class="voice-status" id="voice-status"></span>
+      </div>
+      <div class="voice-transcript" id="voice-transcript"></div>
+      <details class="voice-help">
+        <summary><i class="fas fa-question-circle"></i> How to use voice commands</summary>
+        <div class="voice-help-body">
+          <p><strong>Single row fill:</strong></p>
+          <ul>
+            <li><em>"ID is T001"</em> — fills Teacher ID in the next empty row</li>
+            <li><em>"name is Dr Amit Sharma"</em> — fills the Name field</li>
+            <li><em>"designation is Professor"</em> — fills Designation</li>
+            <li><em>"workload is 25"</em> — fills Max Workload</li>
+          </ul>
+          <p><strong>Fill full row at once:</strong></p>
+          <ul>
+            <li><em>"T001 comma Dr Amit comma Professor comma 25"</em> — fills all columns in order</li>
+          </ul>
+          <p><strong>Batch fill (multiple rows):</strong></p>
+          <ul>
+            <li><em>"IDs are T001, T002, T003"</em> — fills T001, T002, T003 in 3 separate rows</li>
+            <li><em>"names are Amit, Priya, Rahul"</em> — fills Name in 3 rows</li>
+          </ul>
+          <p><strong>Navigation:</strong></p>
+          <ul>
+            <li><em>"next row"</em> — move to the next row</li>
+            <li><em>"stop"</em> — stop voice input</li>
+          </ul>
+          <p class="voice-tip"><i class="fas fa-lightbulb"></i> Keep speaking — voice stays active until you click Stop or say "stop".</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="table-controls-top">
+      <span class="row-count-label"><i class="fas fa-list-ol"></i> Rows: <span id="row-count">20</span></span>
+      <button type="button" class="add-rows-btn" id="add-rows-btn">
+        <i class="fas fa-plus-circle"></i> Add 5 Rows
+      </button>
+    </div>
+
+    <div class="table-scroll-wrap">
+      <table class="entry-table" id="entry-table">
+        <thead id="entry-thead"></thead>
+        <tbody id="entry-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="manual-btns">
+      <button type="button" class="convert-btn" id="manual-convert-btn">
+        <i class="fas fa-magic"></i> Convert &amp; Download CSV
+      </button>
+      <button type="button" class="clear-btn" id="clear-table-btn">
+        <i class="fas fa-eraser"></i> Clear All
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+:root {
+  --accent: #6366f1;
+  --pink: #ec4899;
+  --text: #e5e7eb;
+  --ai-glow: #8b5cf6;
+  --glass: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.12);
+}
+
+.converter-section {
+  position: relative;
+  padding: 20px 20px 60px;
+  text-align: center;
+  z-index: 1;
+}
+
+.converter-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.converter-heading {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(120deg, #fff, var(--accent), var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 8px;
+}
+
+.converter-heading i {
+  color: var(--accent);
+  -webkit-text-fill-color: var(--accent);
+}
+
+.converter-sub {
+  color: #cbd5f5;
+  font-size: 13px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* ─── ENTITY TABS ─── */
+.entity-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.etab {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a5b4fc;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.etab i { margin-right: 4px; font-size: 11px; }
+
+.etab:hover {
+  background: rgba(99,102,241,0.15);
+  border-color: var(--accent);
+}
+
+.etab.active {
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 12px var(--ai-glow);
+}
+
+/* ─── EXPECTED BOX ─── */
+.expected-box {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  text-align: left;
+  backdrop-filter: blur(10px);
+}
+
+.expected-box h3 {
+  color: #a5b4fc;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.expected-box .col-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.expected-box .tag {
+  background: rgba(99,102,241,0.2);
+  border: 1px solid rgba(99,102,241,0.4);
+  color: #c7d2fe;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ─── UPLOAD FORM ─── */
+.converter-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 20px 16px;
+  border: 2px dashed rgba(99,102,241,0.5);
+  border-radius: 12px;
+  background: var(--glass);
+  cursor: pointer;
+  transition: 0.3s;
+  color: #a5b4fc;
+  font-size: 14px;
+}
+
+.file-upload-label:hover {
+  border-color: var(--pink);
+  box-shadow: 0 0 20px rgba(236,72,153,0.3);
+}
+
+.file-upload-label i { font-size: 26px; color: var(--accent); }
+.file-upload-label input[type="file"] { display: none; }
+
+.file-upload-label.has-file {
+  border-color: #10b981;
+  background: rgba(16,185,129,0.08);
+}
+
+.convert-btn {
+  padding: 11px 34px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  box-shadow: 0 0 22px var(--ai-glow);
+  transition: 0.25s ease;
+}
+
+.convert-btn:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 0 30px var(--pink);
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 20px;
+  color: #a5b4fc;
+  text-decoration: none;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.back-link:hover { color: #fff; }
+
+/* ─── DIVIDER ─── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 900px;
+  margin: 40px auto 30px;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+.divider-text {
+  color: #a5b4fc;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+/* ─── MANUAL ENTRY ─── */
+.manual-entry-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.manual-heading {
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(120deg, #fff, var(--accent), var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 8px;
+}
+
+.manual-heading i { color: var(--accent); -webkit-text-fill-color: var(--accent); }
+
+.manual-sub {
+  color: #cbd5f5;
+  font-size: 13px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.table-controls-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.row-count-label { color: #a5b4fc; font-size: 13px; font-weight: 600; }
+.row-count-label i { margin-right: 4px; }
+
+.add-rows-btn {
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: rgba(99,102,241,0.15);
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.add-rows-btn:hover {
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--ai-glow);
+}
+
+.add-rows-btn i { margin-right: 4px; }
+
+/* Table */
+.table-scroll-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+}
+
+.entry-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px;
+}
+
+.entry-table thead { background: rgba(99,102,241,0.18); }
+
+.entry-table th {
+  padding: 10px 8px;
+  color: #c7d2fe;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.entry-table th.th-num { width: 36px; text-align: center; }
+.entry-table th.th-action { width: 36px; }
+
+.entry-table td {
+  padding: 3px 3px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.entry-table td.td-num {
+  text-align: center;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.entry-table input {
+  width: 100%;
+  padding: 8px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+  color: #e5e7eb;
+  font-size: 13px;
+  font-family: inherit;
+  transition: 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.entry-table input:focus {
+  border-color: var(--accent);
+  background: rgba(99,102,241,0.08);
+  box-shadow: 0 0 6px rgba(99,102,241,0.3);
+}
+
+.entry-table input::placeholder { color: #475569; font-size: 12px; }
+
+.entry-table .del-row-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.entry-table .del-row-btn:hover {
+  color: #ef4444;
+  background: rgba(239,68,68,0.12);
+}
+
+.entry-table tbody tr:hover { background: rgba(99,102,241,0.06); }
+
+/* ─── VOICE PANEL ─── */
+.voice-panel {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  text-align: left;
+  backdrop-filter: blur(10px);
+}
+
+.voice-panel-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.voice-main-btn {
+  padding: 9px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  box-shadow: 0 0 14px rgba(124,58,237,0.4);
+  transition: 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.voice-main-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 22px rgba(124,58,237,0.6);
+}
+
+.voice-main-btn.listening {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 0 18px rgba(239,68,68,0.5);
+  animation: micPulse 1s infinite;
+}
+
+.voice-main-btn.listening i {
+  animation: micBounce 0.6s infinite alternate;
+}
+
+@keyframes micPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes micBounce {
+  from { transform: scale(1); }
+  to { transform: scale(1.2); }
+}
+
+.voice-status {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.voice-status.active { color: #ef4444; font-weight: 600; }
+.voice-status.success { color: #10b981; }
+
+.voice-transcript {
+  margin-top: 8px;
+  min-height: 0;
+  max-height: 60px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: #a5b4fc;
+  font-style: italic;
+  transition: 0.3s;
+}
+
+.voice-transcript:empty { margin-top: 0; }
+
+/* Voice help */
+.voice-help {
+  margin-top: 10px;
+}
+
+.voice-help summary {
+  color: #a5b4fc;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.voice-help summary::-webkit-details-marker { display: none; }
+
+.voice-help summary i { font-size: 13px; }
+
+.voice-help-body {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.voice-help-body p {
+  color: #c7d2fe;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+
+.voice-help-body p:first-child { margin-top: 0; }
+
+.voice-help-body ul {
+  margin: 0 0 0 16px;
+  padding: 0;
+}
+
+.voice-help-body li {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.voice-help-body em {
+  color: #facc15;
+  font-style: normal;
+  font-family: monospace;
+  font-size: 11px;
+  background: rgba(250,204,21,0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.voice-tip {
+  color: #facc15 !important;
+  font-size: 11px !important;
+  margin-top: 8px !important;
+}
+
+.voice-tip i { margin-right: 4px; }
+
+/* Highlight row being filled by voice */
+.entry-table tbody tr.voice-active {
+  background: rgba(99,102,241,0.1);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.manual-btns {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.clear-btn {
+  padding: 11px 30px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #e5e7eb;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--glass);
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.clear-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239,68,68,0.1);
+}
+
+.clear-btn i { margin-right: 4px; }
+
+/* Toast */
+#toast-container {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 999999;
+}
+
+.toast {
+  position: relative;
+  padding: 14px 45px 14px 18px;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  animation: toastIn 0.4s forwards ease-out;
+}
+
+.toast.success { background: #10b981; }
+.toast.error   { background: #ef4444; }
+
+.toast .close-btn {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  color: #fff;
+  opacity: 0.8;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-20px); }
+}
+
+@media(max-width:640px) {
+  .converter-heading { font-size: 22px; }
+  .convert-btn { font-size: 14px; padding: 10px 26px; }
+  .manual-heading { font-size: 20px; }
+  .table-controls-top { flex-direction: column; gap: 8px; }
+  .manual-btns { flex-direction: column; align-items: center; }
+  .etab { font-size: 11px; padding: 6px 10px; }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  // ─── ENTITY CONFIGS ───
+  var ENTITIES = {
+    instructors: {
+      label: "Instructors",
+      columns: ["uid", "name", "designation", "max_workload"],
+      headers: ["UID / Teacher ID", "Name / Teacher Name", "Designation / Position", "Max Workload"],
+      placeholders: ["e.g. T001", "e.g. Dr. Amit Sharma", "e.g. Professor", "e.g. 25"],
+      required: ["uid", "name"]
+    },
+    courses: {
+      label: "Courses",
+      columns: ["department_code", "course_number", "course_name", "room_required", "required_lab_category", "classes_per_week"],
+      headers: ["Dept Code", "Course Number", "Course Name", "Room Required", "Lab Category", "Classes/Week"],
+      placeholders: ["e.g. CSE", "e.g. CS101", "e.g. Data Structures", "e.g. Lecture Hall", "e.g. General", "e.g. 3"],
+      required: ["course_number", "course_name"]
+    },
+    rooms: {
+      label: "Rooms",
+      columns: ["r_number", "department", "seating_capacity", "room_type", "lab_category"],
+      headers: ["Room Number", "Department", "Seating Capacity", "Room Type", "Lab Category"],
+      placeholders: ["e.g. R101", "e.g. CSE", "e.g. 60", "e.g. Lecture Hall", "e.g. General"],
+      required: ["r_number"]
+    },
+    timings: {
+      label: "Timings",
+      columns: ["pid", "time", "day"],
+      headers: ["Period ID", "Time Slot (1-9)", "Day (1-5 or Mon-Fri)"],
+      placeholders: ["e.g. P1", "e.g. 1", "e.g. Monday"],
+      required: ["pid"]
+    },
+    departments: {
+      label: "Departments",
+      columns: ["name", "code"],
+      headers: ["Department Name", "Department Code"],
+      placeholders: ["e.g. Computer Science", "e.g. CSE"],
+      required: ["name", "code"]
+    },
+    sections: {
+      label: "Sections",
+      columns: ["section_id", "department", "student_strength"],
+      headers: ["Section ID", "Department Code", "Student Strength"],
+      placeholders: ["e.g. CSE-A", "e.g. CSE", "e.g. 70"],
+      required: ["section_id"]
+    },
+    section_courses: {
+      label: "Section-Course Mapping",
+      columns: ["section_id", "course_number"],
+      headers: ["Section ID", "Course Number"],
+      placeholders: ["e.g. CSE-A", "e.g. CS101"],
+      required: ["section_id", "course_number"]
+    },
+    teacher_courses: {
+      label: "Teacher-Course Mapping",
+      columns: ["instructor", "course_number"],
+      headers: ["Instructor (Name or UID)", "Course Number"],
+      placeholders: ["e.g. T001 or Dr. Amit", "e.g. CS101"],
+      required: ["instructor", "course_number"]
+    }
+  };
+
+  var currentType = "instructors";
+  var rowNum = 0;
+
+  var tbody = document.getElementById("entry-tbody");
+  var thead = document.getElementById("entry-thead");
+  var rowCountEl = document.getElementById("row-count");
+  var entityInput = document.getElementById("entity-type-input");
+  var expectedBox = document.getElementById("expected-box");
+
+  // ─── RENDER EXPECTED COLUMNS BOX ───
+  function renderExpectedBox() {
+    var cfg = ENTITIES[currentType];
+    var html = '<h3><i class="fas fa-info-circle"></i> Required Columns — ' + cfg.label + '</h3><div class="col-tags">';
+    for (var i = 0; i < cfg.headers.length; i++) {
+      html += '<span class="tag">' + cfg.headers[i] + '</span>';
+    }
+    html += '</div>';
+    expectedBox.innerHTML = html;
+  }
+
+  // ─── BUILD TABLE HEAD ───
+  function buildThead() {
+    var cfg = ENTITIES[currentType];
+    var html = '<tr><th class="th-num">#</th>';
+    for (var i = 0; i < cfg.headers.length; i++) {
+      html += '<th>' + cfg.headers[i] + '</th>';
+    }
+    html += '<th class="th-action"></th></tr>';
+    thead.innerHTML = html;
+  }
+
+  // ─── CREATE ROW ───
+  function createRow() {
+    rowNum++;
+    var cfg = ENTITIES[currentType];
+    var tr = document.createElement("tr");
+    var html = '<td class="td-num">' + rowNum + '</td>';
+    for (var i = 0; i < cfg.columns.length; i++) {
+      html += '<td><input type="text" placeholder="' + cfg.placeholders[i] + '" data-col="' + cfg.columns[i] + '"></td>';
+    }
+    html += '<td><button type="button" class="del-row-btn" title="Delete row"><i class="fas fa-times"></i></button></td>';
+    tr.innerHTML = html;
+    tr.querySelector(".del-row-btn").addEventListener("click", function() {
+      tr.remove();
+      renumberRows();
+    });
+    tbody.appendChild(tr);
+    return tr;
+  }
+
+  function renumberRows() {
+    var rows = tbody.querySelectorAll("tr");
+    rowNum = rows.length;
+    rows.forEach(function(row, i) {
+      row.querySelector(".td-num").textContent = i + 1;
+    });
+    rowCountEl.textContent = rowNum;
+  }
+
+  // ─── REBUILD TABLE FOR ENTITY TYPE ───
+  function rebuildTable() {
+    tbody.innerHTML = "";
+    rowNum = 0;
+    buildThead();
+    for (var i = 0; i < 20; i++) createRow();
+    rowCountEl.textContent = rowNum;
+  }
+
+  // ─── TAB SWITCHING ───
+  document.querySelectorAll(".etab").forEach(function(tab) {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".etab").forEach(function(t) { t.classList.remove("active"); });
+      tab.classList.add("active");
+      currentType = tab.getAttribute("data-type");
+      entityInput.value = currentType;
+      renderExpectedBox();
+      rebuildTable();
+    });
+  });
+
+  // ─── FILE INPUT ───
+  var fileInput = document.getElementById("file-input");
+  var fileText = document.getElementById("file-text");
+  var fileLabel = document.getElementById("file-label");
+
+  fileInput.addEventListener("change", function() {
+    if (fileInput.files.length > 0) {
+      fileText.textContent = fileInput.files[0].name;
+      fileLabel.classList.add("has-file");
+    } else {
+      fileText.textContent = "Choose PDF or Excel file";
+      fileLabel.classList.remove("has-file");
+    }
+  });
+
+  // ─── TOASTS ───
+  document.querySelectorAll(".toast").forEach(function(toast) {
+    var closeBtn = toast.querySelector(".close-btn");
+    var timeout = setTimeout(function() {
+      toast.style.animation = "toastOut 0.5s forwards ease-in";
+      setTimeout(function() { toast.remove(); }, 500);
+    }, 3000);
+    closeBtn.addEventListener("click", function() {
+      clearTimeout(timeout);
+      toast.style.animation = "toastOut 0.5s forwards ease-in";
+      setTimeout(function() { toast.remove(); }, 500);
+    });
+  });
+
+  // ─── ADD 5 ROWS ───
+  document.getElementById("add-rows-btn").addEventListener("click", function() {
+    for (var i = 0; i < 5; i++) createRow();
+    rowCountEl.textContent = rowNum;
+    tbody.lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  // ─── CLEAR ALL ───
+  document.getElementById("clear-table-btn").addEventListener("click", function() {
+    tbody.querySelectorAll("input").forEach(function(inp) { inp.value = ""; });
+  });
+
+  // ─── MANUAL CONVERT & DOWNLOAD ───
+  document.getElementById("manual-convert-btn").addEventListener("click", function() {
+    var cfg = ENTITIES[currentType];
+    var cols = cfg.columns;
+    var csvRows = [cols.slice()];
+
+    tbody.querySelectorAll("tr").forEach(function(tr) {
+      var rowData = [];
+      var hasRequired = true;
+      for (var i = 0; i < cols.length; i++) {
+        var inp = tr.querySelector('[data-col="' + cols[i] + '"]');
+        var val = inp ? inp.value.trim() : "";
+        rowData.push(val);
+        if (cfg.required.indexOf(cols[i]) !== -1 && !val) {
+          hasRequired = false;
+        }
+      }
+      if (hasRequired) {
+        csvRows.push(rowData);
+      }
+    });
+
+    if (csvRows.length <= 1) {
+      alert("Please fill at least one row with the required fields.");
+      return;
+    }
+
+    var csvContent = csvRows.map(function(r) {
+      return r.map(function(cell) {
+        if (cell.indexOf(",") !== -1 || cell.indexOf('"') !== -1 || cell.indexOf("\n") !== -1) {
+          return '"' + cell.replace(/"/g, '""') + '"';
+        }
+        return cell;
+      }).join(",");
+    }).join("\n");
+
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = currentType + ".csv";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // ─── SMART VOICE RECOGNITION ───
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognition = null;
+  var isListening = false;
+  var voiceRowIndex = 0; // which row we're currently filling
+
+  var voiceBtn = document.getElementById("voice-main-btn");
+  var voiceBtnText = document.getElementById("voice-btn-text");
+  var voiceStatus = document.getElementById("voice-status");
+  var voiceTranscript = document.getElementById("voice-transcript");
+  var voicePanel = document.getElementById("voice-panel");
+
+  // Field aliases: maps spoken keywords → column data-col name
+  function getFieldAliases() {
+    var aliases = {};
+    var cfg = ENTITIES[currentType];
+    var cols = cfg.columns;
+    var hdrs = cfg.headers;
+    // Build a map: various spoken words → column name
+    for (var i = 0; i < cols.length; i++) {
+      var col = cols[i];
+      var hdr = hdrs[i].toLowerCase();
+      // Add the column itself
+      aliases[col.toLowerCase()] = col;
+      // Add each word from the header
+      hdr.split(/[\s\/\(\)]+/).forEach(function(w) {
+        if (w.length > 1) aliases[w] = col;
+      });
+    }
+    // Extra common spoken aliases
+    aliases["id"] = cols[0];
+    aliases["ids"] = cols[0];
+    aliases["teacher id"] = cols[0];
+    aliases["uid"] = cols[0];
+    if (cols.indexOf("name") !== -1) {
+      aliases["names"] = "name";
+      aliases["teacher name"] = "name";
+      aliases["teacher names"] = "name";
+    }
+    if (cols.indexOf("designation") !== -1) {
+      aliases["designations"] = "designation";
+      aliases["position"] = "designation";
+      aliases["positions"] = "designation";
+    }
+    if (cols.indexOf("max_workload") !== -1) {
+      aliases["workload"] = "max_workload";
+      aliases["workloads"] = "max_workload";
+      aliases["max workload"] = "max_workload";
+    }
+    if (cols.indexOf("department_code") !== -1) {
+      aliases["department"] = "department_code";
+      aliases["dept"] = "department_code";
+    }
+    if (cols.indexOf("department") !== -1) {
+      aliases["dept"] = "department";
+      aliases["departments"] = "department";
+    }
+    if (cols.indexOf("course_number") !== -1) {
+      aliases["course"] = "course_number";
+      aliases["courses"] = "course_number";
+      aliases["course number"] = "course_number";
+    }
+    if (cols.indexOf("course_name") !== -1) {
+      aliases["course name"] = "course_name";
+      aliases["subject"] = "course_name";
+    }
+    if (cols.indexOf("section_id") !== -1) {
+      aliases["section"] = "section_id";
+      aliases["sections"] = "section_id";
+    }
+    if (cols.indexOf("instructor") !== -1) {
+      aliases["teacher"] = "instructor";
+      aliases["teachers"] = "instructor";
+    }
+    if (cols.indexOf("seating_capacity") !== -1) {
+      aliases["capacity"] = "seating_capacity";
+      aliases["seats"] = "seating_capacity";
+    }
+    if (cols.indexOf("room_type") !== -1) {
+      aliases["room type"] = "room_type";
+      aliases["type"] = "room_type";
+    }
+    if (cols.indexOf("r_number") !== -1) {
+      aliases["room"] = "r_number";
+      aliases["room number"] = "r_number";
+    }
+    if (cols.indexOf("student_strength") !== -1) {
+      aliases["strength"] = "student_strength";
+      aliases["students"] = "student_strength";
+    }
+    if (cols.indexOf("classes_per_week") !== -1) {
+      aliases["classes"] = "classes_per_week";
+      aliases["frequency"] = "classes_per_week";
+    }
+    if (cols.indexOf("pid") !== -1) {
+      aliases["period"] = "pid";
+    }
+    if (cols.indexOf("time") !== -1) {
+      aliases["slot"] = "time";
+    }
+    if (cols.indexOf("day") !== -1) {
+      aliases["days"] = "day";
+    }
+    return aliases;
+  }
+
+  function highlightRow(idx) {
+    tbody.querySelectorAll("tr").forEach(function(r) { r.classList.remove("voice-active"); });
+    var rows = tbody.querySelectorAll("tr");
+    if (idx < rows.length) {
+      rows[idx].classList.add("voice-active");
+      rows[idx].scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  function flashInput(inp) {
+    inp.style.borderColor = "#10b981";
+    inp.style.background = "rgba(16,185,129,0.12)";
+    setTimeout(function() {
+      inp.style.borderColor = "transparent";
+      inp.style.background = "rgba(255,255,255,0.05)";
+    }, 1200);
+  }
+
+  function setStatus(text, cls) {
+    voiceStatus.textContent = text;
+    voiceStatus.className = "voice-status" + (cls ? " " + cls : "");
+  }
+
+  function addTranscript(text) {
+    voiceTranscript.textContent = '"' + text + '"';
+  }
+
+  // Find the next empty row starting from voiceRowIndex
+  function getNextEmptyRow(col) {
+    var rows = tbody.querySelectorAll("tr");
+    for (var i = voiceRowIndex; i < rows.length; i++) {
+      var inp = rows[i].querySelector('[data-col="' + col + '"]');
+      if (inp && !inp.value.trim()) return i;
+    }
+    // If no empty found from current index, return current
+    return voiceRowIndex;
+  }
+
+  function processTranscript(transcript) {
+    var text = transcript.toLowerCase().trim();
+    addTranscript(transcript);
+
+    // "stop" command
+    if (/^stop$/i.test(text) || /^stop voice$/i.test(text)) {
+      stopVoice();
+      return;
+    }
+
+    // "next row" command
+    if (/^next\s*row$/i.test(text)) {
+      voiceRowIndex++;
+      var allRows = tbody.querySelectorAll("tr");
+      if (voiceRowIndex >= allRows.length) voiceRowIndex = allRows.length - 1;
+      highlightRow(voiceRowIndex);
+      setStatus("Row " + (voiceRowIndex + 1), "active");
+      return;
+    }
+
+    var cfg = ENTITIES[currentType];
+    var aliases = getFieldAliases();
+    var allRows = tbody.querySelectorAll("tr");
+
+    // Pattern 1: "field is value" or "field are val1, val2, val3"
+    var fieldMatch = text.match(/^(.+?)\s+(?:is|are|equals?)\s+(.+)$/i);
+    if (fieldMatch) {
+      var spokenField = fieldMatch[1].trim();
+      var spokenValues = fieldMatch[2].trim();
+      var colName = aliases[spokenField];
+
+      if (!colName) {
+        // Try partial match
+        var keys = Object.keys(aliases);
+        for (var k = 0; k < keys.length; k++) {
+          if (spokenField.indexOf(keys[k]) !== -1 || keys[k].indexOf(spokenField) !== -1) {
+            colName = aliases[keys[k]];
+            break;
+          }
+        }
+      }
+
+      if (colName) {
+        // Split values by comma, "and", period
+        var values = spokenValues.split(/[,\.]+|\band\b/i).map(function(s) { return s.trim(); }).filter(Boolean);
+
+        if (values.length === 1) {
+          // Single value → fill in current row
+          var rowIdx = getNextEmptyRow(colName);
+          if (rowIdx < allRows.length) {
+            var inp = allRows[rowIdx].querySelector('[data-col="' + colName + '"]');
+            if (inp) {
+              inp.value = values[0];
+              flashInput(inp);
+              highlightRow(rowIdx);
+              setStatus('Filled "' + colName + '" in row ' + (rowIdx + 1), "success");
+            }
+          }
+        } else {
+          // Multiple values → fill across rows (batch)
+          var startIdx = getNextEmptyRow(colName);
+          for (var v = 0; v < values.length; v++) {
+            var ri = startIdx + v;
+            if (ri >= allRows.length) {
+              // Add more rows if needed
+              for (var x = 0; x < 5; x++) createRow();
+              rowCountEl.textContent = rowNum;
+              allRows = tbody.querySelectorAll("tr");
+            }
+            var inp2 = allRows[ri].querySelector('[data-col="' + colName + '"]');
+            if (inp2) {
+              inp2.value = values[v];
+              flashInput(inp2);
+            }
+          }
+          highlightRow(startIdx);
+          setStatus('Filled "' + colName + '" in rows ' + (startIdx + 1) + '-' + (startIdx + values.length), "success");
+        }
+        return;
+      }
+    }
+
+    // Pattern 2: comma-separated values → fill entire row in order
+    var parts = transcript.split(/[,\.]+|\band\b/i).map(function(s) { return s.trim(); }).filter(Boolean);
+    if (parts.length >= 2) {
+      var rowIdx2 = voiceRowIndex;
+      if (rowIdx2 >= allRows.length) {
+        for (var x2 = 0; x2 < 5; x2++) createRow();
+        rowCountEl.textContent = rowNum;
+        allRows = tbody.querySelectorAll("tr");
+      }
+      var inputs = allRows[rowIdx2].querySelectorAll("input[data-col]");
+      for (var p = 0; p < inputs.length && p < parts.length; p++) {
+        inputs[p].value = parts[p];
+        flashInput(inputs[p]);
+      }
+      highlightRow(rowIdx2);
+      voiceRowIndex++;
+      setStatus("Filled row " + (rowIdx2 + 1) + ", now on row " + (voiceRowIndex + 1), "success");
+      return;
+    }
+
+    // Pattern 3: single value → fill first empty cell in current row
+    if (parts.length === 1 && parts[0]) {
+      var rowIdx3 = voiceRowIndex;
+      if (rowIdx3 < allRows.length) {
+        var inputs3 = allRows[rowIdx3].querySelectorAll("input[data-col]");
+        for (var j = 0; j < inputs3.length; j++) {
+          if (!inputs3[j].value.trim()) {
+            inputs3[j].value = parts[0];
+            flashInput(inputs3[j]);
+            highlightRow(rowIdx3);
+            setStatus('Filled in row ' + (rowIdx3 + 1), "success");
+            return;
+          }
+        }
+        // Row full, move to next
+        voiceRowIndex++;
+        setStatus("Row " + (rowIdx3 + 1) + " full, moved to row " + (voiceRowIndex + 1), "success");
+      }
+    }
+  }
+
+  function startVoice() {
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please use Chrome or Edge.");
+      return;
+    }
+    if (isListening) { stopVoice(); return; }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = true;
+
+    isListening = true;
+    voiceBtn.classList.add("listening");
+    voiceBtnText.textContent = "Stop Voice Input";
+    voiceRowIndex = 0;
+    // Find first empty row
+    var allRows = tbody.querySelectorAll("tr");
+    for (var i = 0; i < allRows.length; i++) {
+      var firstInp = allRows[i].querySelector("input[data-col]");
+      if (firstInp && !firstInp.value.trim()) { voiceRowIndex = i; break; }
+    }
+    highlightRow(voiceRowIndex);
+    setStatus("Listening... (Row " + (voiceRowIndex + 1) + ")", "active");
+
+    recognition.onresult = function(event) {
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          processTranscript(event.results[i][0].transcript.trim());
+        }
+      }
+      if (isListening) {
+        setStatus("Listening... (Row " + (voiceRowIndex + 1) + ")", "active");
+      }
+    };
+
+    recognition.onend = function() {
+      // Auto-restart if still supposed to be listening
+      if (isListening) {
+        try { recognition.start(); } catch(e) {}
+      }
+    };
+
+    recognition.onerror = function(event) {
+      if (event.error === "not-allowed") {
+        alert("Microphone access denied. Please allow microphone permission.");
+        stopVoice();
+      } else if (event.error === "no-speech") {
+        // Ignore, will auto-restart
+      } else if (event.error === "aborted") {
+        // Ignore
+      }
+    };
+
+    recognition.start();
+  }
+
+  function stopVoice() {
+    isListening = false;
+    if (recognition) {
+      recognition.abort();
+      recognition = null;
+    }
+    voiceBtn.classList.remove("listening");
+    voiceBtnText.textContent = "Start Voice Input";
+    setStatus("Stopped", "");
+    tbody.querySelectorAll("tr").forEach(function(r) { r.classList.remove("voice-active"); });
+  }
+
+  voiceBtn.addEventListener("click", function() {
+    if (isListening) stopVoice(); else startVoice();
+  });
+
+  // Hide voice panel if not supported
+  if (!SpeechRecognition) {
+    voicePanel.style.display = "none";
+  }
+
+  // ─── INIT ───
+  renderExpectedBox();
+  rebuildTable();
+});
+</script>
+
+{% endblock %}

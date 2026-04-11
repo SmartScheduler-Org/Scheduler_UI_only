@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add Slot</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body class="p-4">
+
+<h2>Add New Slot</h2>
+
+<form method="POST">
+  {% csrf_token %}
+
+  <label>Day</label>
+  <select name="day" class="form-control">
+    <option>Monday</option>
+    <option>Tuesday</option>
+    <option>Wednesday</option>
+    <option>Thursday</option>
+    <option>Friday</option>
+  </select>
+
+  <label class="mt-2">Slot</label>
+  <select name="slot" class="form-control">
+    <option value="1">Slot 1</option>
+    <option value="2">Slot 2</option>
+    <option value="3">Slot 3</option>
+    <option value="4">Slot 4</option>
+    <option value="5">Slot 5</option>
+    <option value="6">Slot 6</option>
+    <option value="7">Slot 7</option>
+    <option value="8">Slot 8</option>
+    <option value="9">Slot 9</option>
+  </select>
+
+  <label class="mt-2">Course</label>
+  <select name="course" class="form-control">
+    {% for c in courses %}
+      <option value="{{ c.pk }}">{{ c.course_name }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="mt-2">Teacher</label>
+  <select name="teacher" class="form-control">
+    {% for t in teachers %}
+      <option value="{{ t.pk }}">{{ t.name }}</option>
+    {% endfor %}
+  </select>
+
+  <label class="mt-2">Room</label>
+  <select name="room" class="form-control">
+    {% for r in rooms %}
+      <option value="{{ r.pk }}">{{ r.r_number }}</option>
+    {% endfor %}
+  </select>
+
+  <button class="btn btn-success mt-3">Add Slot</button>
+</form>
+
+<script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>

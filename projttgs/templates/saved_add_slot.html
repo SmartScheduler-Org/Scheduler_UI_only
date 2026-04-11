@@ -1,0 +1,118 @@
+<!-- Page where you can add a slot to a SAVED timetable -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Slot (Saved Timetable)</title>
+
+    <style>
+        body {
+            background: #f5f7f7;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .container {
+            width: 450px;
+            margin: 50px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #257a7a;
+            font-weight: 650;
+        }
+
+        label {
+            font-weight: 600;
+            color: #444;
+        }
+
+        select, button, input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 20px;
+            background: #5b21ed;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #4a1ac9;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Add Slot – {{ section }}</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Day</label>
+        <select name="day" required>
+            <option value="">Select Day</option>
+            <option>Monday</option>
+            <option>Tuesday</option>
+            <option>Wednesday</option>
+            <option>Thursday</option>
+            <option>Friday</option>
+        </select>
+
+        <label>Slot Number</label>
+        <select name="slot" required>
+            <option value="">Select Slot</option>
+            <option value="1">Slot 1</option>
+            <option value="2">Slot 2</option>
+            <option value="3">Slot 3</option>
+            <option value="4">Slot 4</option>
+            <option value="5">Slot 5 (Lunch)</option>
+            <option value="6">Slot 6</option>
+            <option value="7">Slot 7</option>
+            <option value="8">Slot 8</option>
+            <option value="9">Slot 9</option>
+        </select>
+
+        <label>Course</label>
+        <select name="course">
+            {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.course_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Teacher</label>
+        <select name="teacher">
+            {% for t in teachers %}
+            <option value="{{ t.id }}">{{ t.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Room</label>
+        <select name="room">
+            {% for r in rooms %}
+            <option value="{{ r.id }}">{{ r.r_number }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Add Slot</button>
+    </form>
+
+</div>
+
+<script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>

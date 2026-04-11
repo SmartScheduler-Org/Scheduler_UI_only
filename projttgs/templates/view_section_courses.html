@@ -1,0 +1,102 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
+
+<style>
+.mapping-wrapper {
+    width: min(1100px, 92%);
+    margin: 24px auto;
+}
+
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.top-actions h2,
+.top-actions p {
+    margin: 0;
+}
+
+.action-btn {
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(12px);
+    transition: 0.2s ease;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+}
+
+.section-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+}
+
+.section-card {
+    padding: 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(14px);
+}
+
+.section-card h3 {
+    margin: 0 0 12px;
+}
+
+.course-list {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.course-list li + li {
+    margin-top: 6px;
+}
+
+.empty-text {
+    opacity: 0.8;
+}
+</style>
+
+<div class="mapping-wrapper">
+    <div class="top-actions">
+        <div>
+            <h2>Section Course Mappings</h2>
+            <p>View all subjects currently mapped to each section.</p>
+        </div>
+        <a href="{% url 'map_section_courses' %}" class="action-btn">Back to Mapping</a>
+    </div>
+
+    <div class="section-grid">
+        {% for section in section_mappings %}
+            <div class="section-card">
+                <h3>{{ section.section_id }}</h3>
+                {% if section.courses %}
+                    <ul class="course-list">
+                        {% for course in section.courses %}
+                            <li>{{ course.course_number }} - {{ course.course_name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-text">No subjects mapped yet.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

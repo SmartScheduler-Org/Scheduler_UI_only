@@ -1,0 +1,274 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block workflow_progress %}{% include 'workflow_stepper.html' with current_step=2 %}{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
+
+<style>
+/* ======================================= */
+/* INFO ICON + TOOLTIP INSIDE FORM FIELDSET */
+/* ======================================= */
+
+.info-icon-container {
+    position: absolute;
+    top: -5px;
+    right: 10px;
+    cursor: pointer;
+    z-index: 20;
+}
+
+.info-icon {
+    width: 24px;
+    height: 24px;
+    background: #6d5dfc;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.2s ease;
+    box-shadow: 0 0 8px rgba(109,93,252,0.5);
+}
+
+.info-icon:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(109,93,252,0.8);
+}
+
+.info-tooltip {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    width: 260px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.4;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-in-out;
+    z-index: 999;
+}
+
+.info-tooltip::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 10px;
+    width: 10px;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-left: 1px solid rgba(255,255,255,0.25);
+    border-top: 1px solid rgba(255,255,255,0.25);
+    transform: rotate(45deg);
+    backdrop-filter: blur(10px);
+}
+
+.info-icon-container:hover .info-tooltip {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Alerts */
+.alert-success {
+    background: #d4edda;
+    padding: 10px;
+    border-left: 5px solid #28a745;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    color: #155724;
+}
+
+.alert-error {
+    background: #f8d7da;
+    padding: 10px;
+    border-left: 5px solid #dc3545;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    color: #721c24;
+}
+
+.message-container {
+    margin-bottom: 20px;
+}
+
+.instructor-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: center;
+}
+
+.instructor-header .page-header-left {
+    max-width: 720px;
+}
+
+.instructor-header .right-block {
+    width: auto;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 18px;
+    min-width: max-content;
+}
+
+.instructor-header .nav-action-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+}
+
+.instructor-header .icon-only-btn {
+    transform: none;
+}
+
+@media (max-width: 900px) {
+    .instructor-header .right-block {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .instructor-header .nav-action-group {
+        flex-wrap: wrap;
+    }
+}
+</style>
+
+{% if messages %}
+<div class="message-container">
+    {% for message in messages %}
+        <div class="alert 
+            {% if message.tags == 'success' %} alert-success
+            {% elif message.tags == 'error' %} alert-error
+            {% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ================= PAGE HEADER ================= -->
+
+<div class="page-header instructor-header">
+    <div class="page-header-left">
+        <h2>Add Teachers</h2>
+        
+    </div>
+
+    <div class="right-block">
+        <div class="nav-action-group">
+            <a href="{% url 'editinstructor' %}" class="edit-btn icon-only-btn" aria-label="View or edit teachers" title="View or edit teachers">
+                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'addDepts' %}" class="next-btn nav-circle-btn" aria-label="Previous">
+                <span class="nav-arrow">←</span>
+            </a>
+            <a href="{% url 'addRooms' %}" class="next-btn nav-circle-btn" aria-label="Next">
+                <span class="nav-arrow">→</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ================= API POPUP ================= -->
+
+{% if popup_data %}
+<div class="popup-backdrop">
+    <div class="popup-card">
+        <h3>Fetched Teachers</h3>
+
+        <div class="scroll-box">
+            {% for t in popup_data %}
+                <div class="teacher-row">
+                    <strong>UID:</strong> {{ t.teacherId }}<br>
+                    <strong>Name:</strong> {{ t.teacherName }}
+                    <hr>
+                </div>
+            {% endfor %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="confirm_add_api"
+                    class="submit-btn"
+                    style="background:#4caf50;color:white;">
+                Add All Teachers
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- ================= CSV UPLOAD ================= -->
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset>
+        <div class="erp-fetch-row">
+            <button type="submit" name="fetch_api" class="submit-btn erp-fetch-btn"
+                    style="background: linear-gradient(135deg, #14b8a6, #06b6d4 55%, #3b82f6); border: 1px solid rgba(45, 212, 191, 0.34); box-shadow: 0 18px 40px rgba(6, 182, 212, 0.24), 0 0 40px rgba(45, 212, 191, 0.18);">
+                <span class="erp-fetch-glow"></span>
+                <span class="erp-fetch-icon">✦</span>
+                <span class="erp-fetch-text">Pull Teachers From ERP</span>
+            </button>
+        </div>
+
+        <label><strong>Upload Teachers CSV:</strong></label>
+        <input type="file" name="csv_file" accept=".csv" required>
+
+        <div class="button-row">
+            <button type="submit" name="csv_upload" class="submit-btn">
+                Upload CSV
+            </button>
+            <a href="{% url 'convert_csv' %}" class="csv-convert-btn"><span class="csv-orb"></span> Convert CSV</a>
+        </div>
+
+        <small style="color:#aaa;">
+            CSV Format: <code>uid,name,designation,max_workload</code>
+        </small>
+    </fieldset>
+</form>
+
+<!-- ================= MANUAL ADD ================= -->
+
+<div class="form-wrapper">
+<form method="post" style="margin-top: 20px;">
+    {% csrf_token %}
+    <fieldset style="position: relative;">
+
+        <div class="info-icon-container">
+            <span class="info-icon">i</span>
+            <div class="info-tooltip">
+                <strong>Teacher Input Guide</strong><br>
+                • UID → Institute / ERP ID<br>
+                • Name → Full teacher name<br>
+                • Designation → Professor / Associate / Assistant<br><br>
+                • Max Workload → Maximum teaching load per week<br><br>
+                Subjects are assigned in the Courses step.
+            </div>
+        </div>
+
+        <p>{{ form.uid.label_tag }} {{ form.uid }}</p>
+        <p>{{ form.name.label_tag }} {{ form.name }}</p>
+        <p>{{ form.designation.label_tag }} {{ form.designation }}</p>
+        <p>{{ form.max_workload.label_tag }} {{ form.max_workload }}</p>
+
+        <div class="button-row">
+            <button type="submit" name="add_teacher" class="submit-btn">
+                Add Teacher
+            </button>
+        </div>
+
+    </fieldset>
+</form>
+</div>
+
+{% endblock %}

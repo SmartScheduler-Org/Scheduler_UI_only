@@ -1,0 +1,877 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Timetable Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+	<link rel="stylesheet" href="./static/homepage.css">
+
+   
+  </head>
+
+  <body>
+    <!-- Animated gradient blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- NAVBAR -->
+    <header class="nav">
+      <div class="container nav-inner">
+        <div class="nav-left">
+          <div class="nav-logo-mark"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg3" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg3)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
+          <div>
+            <div class="nav-title"><span style="color:#a3e635">Smart</span><span style="color:#22c55e">Scheduler</span></div>
+            <div style="font-size: 11px; color: var(--muted)">
+              Smart Academic Scheduling
+            </div>
+          </div>
+        </div>
+
+        <nav class="nav-links">
+          <a class="nav-link" href="{% url 'about' %}">About Us</a>
+        <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
+
+          {% comment %} <a class="nav-link" href="#demo">Live dem</a> {% endcomment %}
+        </nav>
+
+        <div class="nav-actions">
+          <div class="chip">Genetic Algorithm · AI</div>
+          <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
+            <svg class="theme-icon sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="theme-icon moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button class="btn-primary">
+            <span class="icon">⚡</span>
+           <a href="{% url 'role' %}" ><span>Try generator</span></a>
+          </button>
+        </div>
+      </div>
+    </header>
+
+<script>
+const themeToggle = document.getElementById("themeToggle");
+themeToggle.addEventListener("click", () => {
+  document.documentElement.classList.toggle("light");
+  localStorage.setItem("theme", document.documentElement.classList.contains("light") ? "light" : "dark");
+});
+</script>
+
+<style>
+.theme-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid rgba(148,163,184,0.3);
+  background: rgba(255,255,255,0.08);
+  color: #e5e7eb; cursor: pointer; transition: all 0.25s ease;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.15); transform: scale(1.08); }
+.theme-icon.moon { display: none; }
+.theme-icon.sun { display: block; }
+html.light .theme-icon.sun { display: none; }
+html.light .theme-icon.moon { display: block; }
+html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0,0,0,0.05); color: #334155; }
+</style>
+
+    <!-- HERO -->
+    <main>
+      <section class="hero">
+        <div class="container hero-grid">
+          <!-- Left -->
+          <div class="hero-left">
+            <div class="hero-eyebrow">
+              Built for Colleges · Schools · Institutes
+            </div>
+            <h1 class="hero-title">
+              <span class="hero-gradient">Timetables without chaos.</span><br />
+              Done in seconds.
+            </h1>
+
+            <p class="hero-sub">
+              AI engine auto-fixes clashes, manages labs & workload — one-click
+              smart scheduling.
+            </p>
+
+            {% comment %} <!-- Auto typing line -->
+            <div class="typing-wrapper">
+              <div class="typing-label">Powered by</div>
+              <div>
+                <span id="typing-text"></span>
+                <span class="typing-cursor"></span>
+              </div>
+            </div> {% endcomment %}
+
+            <div class="hero-cta-row">
+              <button class="btn-primary">
+                <span class="icon">▶</span>
+               <a href="{% url 'login' %}" ><span>Try Magic</span></a>
+              </button>
+              <button class="btn-outline">
+                <span>Open sample timetable</span>
+              </button>
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <div class="hero-tagline">
+                  No installation · Runs in browser · Export to PDF
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: AI Timetable Panel -->
+          <div class="hero-right">
+            <div class="hero-panel" id="hero-panel">
+              <!-- Code editor typing area -->
+              <div class="hero-editor">
+                <div class="hero-editor-header">
+                  <span class="hero-editor-dot red"></span>
+                  <span class="hero-editor-dot yellow"></span>
+                  <span class="hero-editor-dot green"></span>
+                  <span>timetable_engine.py</span>
+                </div>
+                <div class="hero-editor-body">
+                  <span class="editor-prefix">smartscheduler@engine:~$</span>
+                  <span id="editor-typing"></span>
+                  <span class="editor-cursor"></span>
+                </div>
+              </div>
+
+              <div class="hero-panel-header">
+                <div class="pill">Realtime AI preview</div>
+                <div class="hero-panel-badge">
+                  <span class="status-dot"></span>
+                  <span>Schedule engine active</span>
+                </div>
+              </div>
+
+              <div class="hero-table">
+                <div class="hero-table-header">
+                  <div>Class</div>
+                  <div>Subject</div>
+                  <div>Faculty</div>
+                  <div>Slot</div>
+                </div>
+
+                <div class="hero-table-row">
+                  <div>B.Tech CSE – 5A</div>
+                  <div class="badge-soft">OS</div>
+                  <div>Dr. Sharma</div>
+                  <div class="time-chip">10:00 – 11:00</div>
+                </div>
+
+                <div class="hero-table-row">
+                  <div>BCA – 3B</div>
+                  <div
+                    class="badge-soft"
+                    style="
+                      background: rgba(52, 211, 153, 0.08);
+                      color: #6ee7b7;
+                      border-color: rgba(52, 211, 153, 0.7);
+                    "
+                  >
+                    DBMS Lab
+                  </div>
+                  <div>Prof. Rao</div>
+                  <div class="time-chip">11:00 – 01:00</div>
+                </div>
+
+                <div class="hero-table-row">
+                  <div>B.Sc IT – 1C</div>
+                  <div
+                    class="badge-soft"
+                    style="
+                      background: rgba(248, 250, 252, 0.06);
+                      color: #e5e7eb;
+                      border-color: rgba(148, 163, 184, 0.7);
+                    "
+                  >
+                    Maths
+                  </div>
+                  <div>Ms. Kapoor</div>
+                  <div class="time-chip">09:00 – 10:00</div>
+                </div>
+              </div>
+
+              <div class="hero-ai-bubble">
+                <span class="emoji">🤖</span>
+                <div>
+                  <div style="font-weight: 500; margin-bottom: 3px">
+                    AI Suggestion
+                  </div>
+                  <div style="color: var(--muted)">
+                    I’ve removed 3 faculty clashes and re-balanced Friday loads
+                    across departments.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURES -->
+     <section id="features" class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Why AI Timetabling?</div>
+      <div class="section-title">Smarter. Faster. Automatic.</div>
+      <p class="section-sub">
+        Zero conflicts. Auto workload balance. Lab-ready schedules.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-title">Clash-Free Scheduling</div>
+        <div class="feature-body">
+          Auto-fixes teacher & room conflicts.
+        </div>
+        <div class="feature-tag">No clashes</div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">⚙️</div>
+        <div class="feature-title">Genetic Algorithm</div>
+        <div class="feature-body">
+          Finds the most optimized timetable.
+        </div>
+        <div class="feature-tag">Optimized</div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Balanced Load</div>
+        <div class="feature-body">
+          Fair distribution for all faculty.
+        </div>
+        <div class="feature-tag">Fair & smart</div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">🧪</div>
+        <div class="feature-title">Lab Support</div>
+        <div class="feature-body">
+          Handles long labs & shared spaces.
+        </div>
+        <div class="feature-tag">STEM-ready</div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">One-Click Update</div>
+        <div class="feature-body">
+          Generate again instantly after changes.
+        </div>
+        <div class="feature-tag">Instant</div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon">📥</div>
+        <div class="feature-title">Export & Share</div>
+        <div class="feature-body">
+          Export PDF or share online views.
+        </div>
+        <div class="feature-tag">Publish ready</div>
+      </div>
+    </div>
+
+    <div class="cta-strip">
+      <div>
+        <div class="cta-text-main">Want this for your institution?</div>
+        <div class="cta-text-sub">Fully customizable branding & rules.</div>
+      </div>
+      <button class="btn-outline">
+        <span>Book a walkthrough</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+
+      <!-- HOW IT WORKS (STEP FLOW) -->
+      <section id="how" class="section">
+  <div class="container">
+    <div class="section-layout">
+      <div class="reveal">
+        <div class="section-kicker">AI Process Flow</div>
+        <h2 class="section-title-large">How it works.</h2>
+        <p class="section-sub" style="margin: 0 0 16px 0; text-align: left">
+          Simple 3-step automated scheduling pipeline.
+        </p>
+
+        <div class="process-steps">
+          <div class="process-step" data-step="STEP 01">
+            <div class="process-step-title">Input setup</div>
+            <div class="process-step-body">
+              Load subjects, teachers, rooms & constraints from ERP.
+            </div>
+          </div>
+
+          <div class="process-step" data-step="STEP 02">
+            <div class="process-step-title">AI Generation</div>
+            <div class="process-step-body">
+              GA engine evaluates & produces the best clash-free timetable.
+            </div>
+          </div>
+
+          <div class="process-step" data-step="STEP 03">
+            <div class="process-step-title">Live results</div>
+            <div class="process-step-body">
+              Auto-generated teacher & student views instantly.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-image-wrap reveal parallax-img">
+        <img
+          class="section-image"
+          src="https://plus.unsplash.com/premium_photo-1680509034814-e733c5f873ac?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGFpJTIwd29ya2luZ3xlbnwwfHwwfHx8MA%3D%3D"
+          alt="Futuristic AI dashboard visual"
+        />
+        <div class="image-glass-label">AI scheduling · Live preview</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+      <!-- COMPARISON SECTION -->
+      <section class="section">
+        <div class="container reveal">
+          <div class="section-kicker">Why our model feels next-gen</div>
+          <h2 class="section-title-large">
+            Not just faster — fundamentally smarter than existing tools.
+          </h2>
+          <p class="section-sub" style="margin: 0; text-align: left">
+            Traditional timetable tools behave like spreadsheets. Timetable
+            Studio behaves like an
+            <span class="highlight-text">AI co-ordinator</span> that understands
+            labs, electives, workload and NEP 2020 flexibility.
+          </p>
+
+          <div class="compare-grid">
+            <div class="compare-card">
+              <div class="compare-heading">
+                Legacy / Manual process
+                <span class="pill-negative">Old</span>
+              </div>
+              <ul class="compare-list">
+                <li>
+                  <span class="compare-icon-bad">⚠️</span
+                  ><span
+                    >Weeks of manual iterations and back-and-forth
+                    changes.</span
+                  >
+                </li>
+                <li>
+                  <span class="compare-icon-bad">⚠️</span
+                  ><span
+                    >Teacher and room clashes discovered only after classes
+                    start.</span
+                  >
+                </li>
+                <li>
+                  <span class="compare-icon-bad">⚠️</span
+                  ><span
+                    >Lab slots adjusted manually, often compromising
+                    continuity.</span
+                  >
+                </li>
+                <li>
+                  <span class="compare-icon-bad">⚠️</span
+                  ><span
+                    >No separate optimized views for teachers and
+                    students.</span
+                  >
+                </li>
+                <li>
+                  <span class="compare-icon-bad">⚠️</span
+                  ><span
+                    >Hard to align with NEP 2020’s flexible credit-based
+                    model.</span
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="compare-card">
+              <div class="compare-heading">
+                Timetable Studio (AI model)
+                <span class="pill-positive">New</span>
+              </div>
+              <ul class="compare-list">
+                <li>
+                  <span class="compare-icon-good">✅</span
+                  ><span
+                    ><span class="highlight-text">Generates in seconds</span>
+                    with every run optimized.</span
+                  >
+                </li>
+                <li>
+                  <span class="compare-icon-good">✅</span
+                  ><span
+                    >Actively removes clashes before timetable is
+                    finalized.</span
+                  >
+                </li>
+                <li>
+                  <span class="compare-icon-good">✅</span
+                  ><span
+                    >Lab classes grouped into continuous, logically ordered
+                    blocks.</span
+                  >
+                </li>
+                <li>
+                  <span class="compare-icon-good">✅</span
+                  ><span
+                    >Teacher & student-wise timetables auto-generated
+                    separately.</span
+                  >
+                </li>
+                <li>
+                  <span class="compare-icon-good">✅</span
+                  ><span
+                    >Built with
+                    <span class="highlight-text">NEP 2020</span> credit
+                    structure & electives in mind.</span
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LAB & WORKLOAD SECTION -->
+      <section class="section">
+        <div class="container">
+          <div class="section-layout">
+            <div class="reveal">
+              <div class="section-kicker">Lab classes & faculty wellbeing</div>
+              <h2 class="section-title-large">
+                Optimized labs and balanced teacher workload.
+              </h2>
+              <p
+                class="section-sub"
+                style="margin: 0 0 16px 0; text-align: left"
+              >
+                The engine doesn’t just fill empty boxes — it understands the
+                reality of labs, fatigue and fairness across faculty.
+              </p>
+
+              <div class="two-col-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Lab optimization</div>
+                  <div class="metric-value">Continuous & conflict-free</div>
+                  <div class="mini-tag">
+                    Long blocks are aligned, overlapping labs are removed, and
+                    shared lab spaces are scheduled intelligently.
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Teacher workload</div>
+                  <div class="metric-value">Evenly distributed</div>
+                  <div class="mini-tag">
+                    No more overloaded Fridays or empty Mondays — weekly hours
+                    are spread fairly for each faculty.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-image-wrap reveal parallax-img">
+              <img
+                class="section-image"
+                src="https://images.unsplash.com/photo-1630959305606-3123a081dada?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fGxhYm9yYXRvcnl8ZW58MHx8MHx8fDA%3D"
+                alt="Futuristic lab and analytics hologram"
+              />
+              <div class="image-glass-label">Lab slots · Workload heatmap</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TEACHER / STUDENT VIEWS (DEMO) -->
+      <section id="demo" class="section">
+        <div class="container reveal">
+          <div class="section-kicker">Live demo style views</div>
+          <h2 class="section-title-large">
+            Different tables for teachers and students, from the same engine.
+          </h2>
+          <p class="section-sub" style="margin: 0; text-align: left">
+            The same generated timetable can be sliced into multiple
+            perspectives — each stakeholder sees only what matters to them.
+          </p>
+
+          <div class="views-grid">
+            <div class="view-card">
+              <div class="view-title">Faculty timetable view</div>
+              <p style="margin-bottom: 8px">
+                Every teacher gets a clean weekly view with their classes, labs
+                and free slots for mentoring.
+              </p>
+              <table class="mini-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Slot</th>
+                    <th>Class</th>
+                    <th>Course</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Mon</td>
+                    <td>10–11</td>
+                    <td>CSE 5A</td>
+                    <td>OS</td>
+                  </tr>
+                  <tr>
+                    <td>Tue</td>
+                    <td>11–1</td>
+                    <td>CSE 3B</td>
+                    <td>DBMS Lab</td>
+                  </tr>
+                  <tr>
+                    <td>Thu</td>
+                    <td>09–10</td>
+                    <td>IT 1C</td>
+                    <td>Maths</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="view-card">
+              <div class="view-title">Student timetable view</div>
+              <p style="margin-bottom: 8px">
+                Students see their class-wise timetable with elective and lab
+                blocks highlighted.
+              </p>
+              <table class="mini-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>10–11</th>
+                    <th>11–12</th>
+                    <th>12–1</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Mon</td>
+                    <td>OS</td>
+                    <td>OS</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>Tue</td>
+                    <td colspan="2">DBMS Lab</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>Wed</td>
+                    <td>Elective</td>
+                    <td>Elective</td>
+                    <td>-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NEP 2020 + ERP SECTION -->
+      <section class="section">
+  <div class="container">
+    <div class="section-layout">
+      <div class="reveal">
+        <div class="section-kicker">NEP 2020 & ERP</div>
+        <h2 class="section-title-large">NEP-ready & fully integrated.</h2>
+
+        <p class="section-sub" style="margin: 0 0 12px 0; text-align: left">
+          Built for flexible credits, electives & modern workflows.
+        </p>
+
+        <p
+          style="
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 10px;
+          "
+        >
+          Syncs with ERP to auto-manage courses, rooms & faculty — aligned with
+          NEP 2020 rules.
+        </p>
+
+        <div class="erp-chips">
+          <div class="erp-chip">API ERP Sync</div>
+          <div class="erp-chip">Credit structure</div>
+          <div class="erp-chip">Open electives</div>
+          <div class="erp-chip">Multi-discipline</div>
+        </div>
+      </div>
+
+      <div class="section-image-wrap reveal parallax-img">
+        <img
+          class="section-image"
+          src="https://images.unsplash.com/photo-1763568258299-0bac211f204e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          alt="ERP integration and holographic NEP dashboard"
+        />
+        <div class="image-glass-label">ERP sync · NEP ready</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+    </main>
+
+
+
+   <section id="faq" class="section">
+  <div class="container">
+    <h2 class="faq-heading reveal">Frequently Asked Questions</h2>
+    <p class="faq-sub reveal">Quick answers to common queries.</p>
+
+    <div class="faq-wrapper">
+      <div class="faq-item">
+        <button class="faq-question">
+          How fast is the timetable generation?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          It generates a full optimized timetable in 3–8 seconds.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Does it support labs and electives?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          Yes — handles long labs, shared spaces and elective batch allocation.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Can we export as PDF?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          You can export department, student and teacher-wise PDF instantly.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          Does it integrate with ERP?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          Supports API-based ERP syncing to keep data always updated.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+    <!-- FOOTER -->
+   <footer class="footer-new">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <div class="footer-logo"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg4" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg4)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
+      <h3 class="footer-title">SmartScheduler</h3>
+      <p class="footer-sub">Smart Academic Timetabling</p>
+    </div>
+
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#demo">Demo</a>
+      <a href="#">Contact</a>
+    </div>
+
+    <div class="footer-social">
+      <a href="#"><span>🐦</span></a>
+      <a href="#"><span>💼</span></a>
+      <a href="#"><span>📷</span></a>
+      <a href="#"><span>🔗</span></a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © 2025 SmartScheduler. Built with ❤️ by Team SmartScheduler.
+  </div>
+</footer>
+
+
+
+    <!-- GSAP for animations (CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+      gsap.registerPlugin(ScrollTrigger);
+
+      // Advanced parallax + scale + rotate animations for section images
+      gsap.utils.toArray(".parallax-img").forEach((img, i) => {
+        gsap.fromTo(
+          img,
+          { opacity: 0, scale: 0.88, rotate: i % 2 === 0 ? -2 : 2, y: 60 },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            rotate: 0,
+            duration: 1.4,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: img,
+              start: "top 80%",
+              end: "bottom 30%",
+              scrub: true,
+            },
+          }
+        );
+      });
+
+      // Scrolling parallax movement for inner <img>
+      gsap.utils.toArray(".section-image").forEach((innerImg, i) => {
+        gsap.to(innerImg, {
+          scale: 1.15,
+          yPercent: -10,
+          ease: "none",
+          scrollTrigger: {
+            trigger: innerImg,
+            scrub: 1.1,
+          },
+        });
+      });
+
+      // LEFT SIDE "Powered by" typing
+      const leftPhrases = [
+        "Genetic Algorithm engine",
+        "Constraint-based scheduler",
+        "Multi-department optimizer",
+        "NEP 2020-ready logic",
+      ];
+
+      const typingTextEl = document.getElementById("typing-text");
+      let leftPhraseIndex = 0;
+      let leftCharIndex = 0;
+      let leftDeleting = false;
+
+      function typeLeft() {
+        const current = leftPhrases[leftPhraseIndex];
+
+        if (!leftDeleting) {
+          leftCharIndex++;
+          typingTextEl.textContent = current.slice(0, leftCharIndex);
+
+          if (leftCharIndex === current.length) {
+            setTimeout(() => {
+              leftDeleting = true;
+            }, 1200);
+          }
+        } else {
+          leftCharIndex--;
+          typingTextEl.textContent = current.slice(0, leftCharIndex);
+
+          if (leftCharIndex === 0) {
+            leftDeleting = false;
+            leftPhraseIndex = (leftPhraseIndex + 1) % leftPhrases.length;
+          }
+        }
+
+        const speed = leftDeleting ? 50 : 90;
+        setTimeout(typeLeft, speed);
+      }
+
+      if (typingTextEl) {
+        typeLeft();
+      }
+
+      // RIGHT PANEL "code editor" typing (subject placement log)
+      const editorEl = document.getElementById("editor-typing");
+      const editorLines = [
+        "placing OS for CSE 5A at 10:00...",
+        "fixing clash for DBMS Lab (BCA 3B)...",
+        "balancing Friday workload across faculty...",
+        "locking Maths for B.Sc IT 1C at 09:00...",
+      ];
+      let edLineIndex = 0;
+      let edCharIndex = 0;
+      let edDeleting = false;
+
+      function typeEditor() {
+        const current = editorLines[edLineIndex];
+
+        if (!edDeleting) {
+          edCharIndex++;
+          editorEl.textContent = current.slice(0, edCharIndex);
+
+          if (edCharIndex === current.length) {
+            setTimeout(() => {
+              edDeleting = true;
+            }, 1400);
+          }
+        } else {
+          edCharIndex--;
+          editorEl.textContent = current.slice(0, edCharIndex);
+
+          if (edCharIndex === 0) {
+            edDeleting = false;
+            edLineIndex = (edLineIndex + 1) % editorLines.length;
+          }
+        }
+
+        const speed = edDeleting ? 45 : 85;
+        setTimeout(typeEditor, speed);
+      }
+
+      if (editorEl) {
+        typeEditor();
+      }
+
+
+
+
+      // FAQ Open/Close
+document.querySelectorAll(".faq-item").forEach((item) => {
+  item.addEventListener("click", () => {
+    item.classList.toggle("active");
+  });
+});
+
+// GSAP reveal
+gsap.utils.toArray(".reveal, .faq-item").forEach((el) => {
+  gsap.to(el, {
+    opacity: 1,
+    y: 0,
+    duration: 1.1,
+    ease: "power3.out",
+    scrollTrigger: {
+      trigger: el,
+      start: "top 85%",
+    },
+  });
+});
+
+    </script>
+    <script src="./static/chatbot.js"></script>
+  </body>
+</html>

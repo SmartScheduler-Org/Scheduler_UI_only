@@ -1,0 +1,148 @@
+<!-- Page where SAVED timetable entries are present, here you can download,delete and view a saved timetable -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Saved Timetables | Scheduler.IO</title>
+
+<style>
+    body {
+        background: #0e0e16;
+        font-family: 'Poppins', sans-serif;
+        color: #eae6ff;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1 {
+        text-align: center;
+        margin-top: 40px;
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: #b497ff;
+    }
+
+    .container {
+        width: 90%;
+        max-width: 850px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .timetable-card {
+        background: #171724;
+        padding: 22px;
+        border-radius: 14px;
+        margin: 20px 0;
+        border: 1px solid #2d2d43;
+        transition: all 0.2s ease;
+    }
+
+    .timetable-card:hover {
+        border-color: #6e3bd9;
+        background: #1d1c2b;
+        transform: translateY(-3px);
+    }
+
+    .date {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #d4ccff;
+        margin-bottom: 10px;
+    }
+
+    .btn-view {
+        display: inline-block;
+        padding: 10px 22px;
+        font-size: 0.95rem;
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #5b21ed, #7c4dff);
+        transition: 0.25s ease;
+    }
+
+    .btn-view:hover {
+        background: linear-gradient(135deg, #6230e8, #8966ff);
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #aaa8c8;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .tt-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+    .btn-view {
+        padding: 8px 16px;
+        background: #7b2ff7;
+        border-radius: 6px;
+        color: white;
+        font-weight: 600;
+    }
+
+    .btn-delete {
+        padding: 8px 16px;
+        background: #ff4f6b;
+        border-radius: 6px;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .btn-download {
+    padding: 8px 16px;
+    background: #6a5acd;   /* soft purple */
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: 8px;
+}
+
+.btn-download:hover {
+    background: #7c6df0;
+    text-decoration: none;
+}
+
+
+</style>
+
+</head>
+<body>
+
+<h1>Saved Timetables</h1>
+
+<div class="container">
+
+    {% if timetables %}
+        {% for t in timetables %}
+        <div class="timetable-card">
+            <div class="date">Saved on: {{ t.created_at|date:"d M Y" }} at {{ t.created_at|date:"h:i A" }}</div>
+            <a href="{% url 'saved_timetable' t.id %}" class="btn-view">View Timetable</a>
+            <a href="{% url 'download_timetable' t.id %}" class="btn-download">Download</a>
+            <a href="{% url 'delete_saved_timetable' t.id %}" class="btn-delete">Delete</a>
+
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-data">
+            No saved timetables yet.
+        </div>
+    {% endif %}
+
+</div>
+
+<script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>

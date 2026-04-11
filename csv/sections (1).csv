@@ -1,0 +1,34 @@
+section_id,department_code,student_strength
+CE31 3rd Sem,CS,70
+CE32 3rd Sem,CS,70
+CE Hindi 3rd Sem,CS,35
+IT 3rd Sem,CS,70
+CE Datascience 3rd Sem,CS,70
+CE51 5th Sem,CS,70
+CE52 5th Sem,CS,70
+IT 5th Sem,CS,70
+CE Datascience 5th Sem,CS,70
+CE Hindi 5th Sem,CS,35
+CE71 7th Sem,CS,70
+CE72 7th Sem,CS,70
+CE Hindi 7th Sem,CS,35
+IT 7th Sem,CS,70
+CE-DS 7th Sem,CS,70
+MTech 1st Sem,CS,35
+MTech 3rd Sem,CS,35
+CE11 1st Sem,CS,70
+CE12 1st Sem,CS,70
+IT 1st Sem,CS,70
+CE DS 1st Sem,CS,70
+CE Hindi 1st Sem,CS,35
+BCA 1st Sem,CS,70
+BCA 3rd Sem,CS,70
+BCA 5th Sem,CS,70
+MCA 1st Sem,CS,35
+MCA 1st Bridge,CS,35
+MCA 3rd Sem,CS,35
+BSc AM 1st Sem,CS,35
+BSc AM 3rd Sem,CS,35
+BSc AM 5th Sem,CS,35
+MSc AM 1st Sem,CS,35
+MSc AM 3rd Sem,CS,35

@@ -1,0 +1,580 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartScheduler | Subscription</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: rgba(15, 23, 42, 0.86);
+            --panel-border: rgba(148, 163, 184, 0.22);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #f97316;
+            --accent-strong: #ea580c;
+            --success: #22c55e;
+            --danger: #fb7185;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(249, 115, 22, 0.25), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.18), transparent 30%),
+                linear-gradient(135deg, #020617 0%, #111827 48%, #0f172a 100%);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .shell {
+            width: min(860px, 100%);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .top-grid {
+            display: grid;
+            grid-template-columns: 0.92fr 1.08fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 28px;
+            padding: 28px;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 24px 80px rgba(2, 6, 23, 0.38);
+        }
+
+        .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: #fdba74;
+            margin-bottom: 16px;
+        }
+
+        h1, h2 {
+            margin: 0 0 12px;
+            line-height: 1.08;
+        }
+
+        h1 {
+            font-size: clamp(34px, 5vw, 54px);
+        }
+
+        h2 {
+            font-size: 28px;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .panel-block {
+            padding: 18px;
+            border-radius: 22px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.62);
+        }
+
+        .price {
+            margin-top: 8px;
+            font-size: 40px;
+            color: #fff7ed;
+        }
+
+        .plan-stack {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 14px;
+        }
+
+        .plan-option input {
+            display: none;
+        }
+
+        .plan-card {
+            display: block;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 24px;
+            padding: 0;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+                rgba(9, 17, 35, 0.86);
+            cursor: pointer;
+            overflow: hidden;
+            transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-1px);
+            border-color: rgba(56, 189, 248, 0.35);
+            box-shadow: 0 18px 38px rgba(2, 8, 23, 0.26);
+        }
+
+        .plan-option input:checked + .plan-card {
+            border-color: rgba(56, 189, 248, 0.72);
+            box-shadow: 0 24px 46px rgba(14, 165, 233, 0.16);
+            background:
+                linear-gradient(180deg, rgba(56, 189, 248, 0.12), rgba(255,255,255,0.03)),
+                rgba(9, 17, 35, 0.92);
+        }
+
+        .plan-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 18px 18px 14px;
+        }
+
+        .plan-heading {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .plan-name {
+            display: block;
+            font-size: 22px;
+            color: #f8fafc;
+            margin: 0 0 5px;
+            line-height: 1.15;
+            font-weight: 700;
+        }
+
+        .plan-tagline {
+            display: block;
+            font-size: 13px;
+            color: #93c5fd;
+            line-height: 1.35;
+        }
+
+        .plan-price {
+            display: block;
+            font-size: 20px;
+            color: #f8fafc;
+            white-space: nowrap;
+            line-height: 1;
+            text-align: right;
+            flex-shrink: 0;
+            font-weight: 800;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .plan-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            padding: 14px 18px 18px;
+            border-top: 1px solid rgba(148, 163, 184, 0.12);
+            background: rgba(255,255,255,0.025);
+        }
+
+        .meta-chip {
+            display: flex;
+            align-items: center;
+            min-height: 42px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            line-height: 1.3;
+            color: #dbeafe;
+            background: rgba(15, 23, 42, 0.76);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .meta-chip.is-locked {
+            color: #cbd5e1;
+        }
+
+        .meta-chip.is-allowed {
+            color: #dcfce7;
+            border-color: rgba(34, 197, 94, 0.18);
+            background: rgba(20, 83, 45, 0.22);
+        }
+
+        .active-plan {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .flash-list {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .flash {
+            padding: 14px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+        }
+
+        .flash.success { background: rgba(34, 197, 94, 0.14); color: #dcfce7; }
+        .flash.error { background: rgba(244, 63, 94, 0.14); color: #ffe4e6; }
+        .flash.info { background: rgba(59, 130, 246, 0.14); color: #dbeafe; }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #fff7ed;
+            font-size: 15px;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 16px;
+            background: rgba(2, 6, 23, 0.55);
+            color: var(--text);
+            padding: 16px 18px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: rgba(249, 115, 22, 0.7);
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+        }
+
+        .actions {
+            display: grid;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .button {
+            border: 0;
+            border-radius: 16px;
+            padding: 15px 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: white;
+            box-shadow: 0 18px 40px rgba(249, 115, 22, 0.2);
+        }
+
+        .button-secondary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 18px 40px rgba(34, 197, 94, 0.2);
+        }
+
+        .button[disabled] {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 10px;
+        }
+
+        .status {
+            min-height: 22px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #f8fafc;
+        }
+
+        .status.error { color: #fecdd3; }
+        .status.success { color: #bbf7d0; }
+
+        .mini-copy {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        @media (max-width: 820px) {
+            .top-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 24px;
+            }
+
+            .plan-stack {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <section class="card">
+            <div class="eyebrow">Choose Your Plan</div>
+            <div class="plan-stack">
+                {% for plan in plans %}
+                <label class="plan-option">
+                    <input type="radio" name="plan_code" value="{{ plan.code }}" form="subscription-form" {% if plan.code == selected_plan_code %}checked{% endif %}>
+                        <span class="plan-card">
+                            <span class="plan-top">
+                                <span class="plan-heading">
+                                    <span class="plan-name">{{ plan.name }}</span>
+                                    <span class="plan-tagline">{{ plan.tagline }}</span>
+                                </span>
+                                <span class="plan-price">Rs. {{ plan.price_rupees }}</span>
+                            </span>
+                            <span class="plan-meta">
+                                <span class="meta-chip">{{ plan.generation_limit }} generation{{ plan.generation_limit|pluralize }}</span>
+                                <span class="meta-chip {% if plan.can_edit_delete %}is-allowed{% else %}is-locked{% endif %}">
+                                    {% if plan.can_edit_delete %}Edit/Delete enabled{% else %}Edit/Delete locked{% endif %}
+                                </span>
+                                <span class="meta-chip {% if plan.can_substitute %}is-allowed{% else %}is-locked{% endif %}">
+                                    {% if plan.can_substitute %}Substitute enabled{% else %}Substitute locked{% endif %}
+                                </span>
+                                <span class="meta-chip is-locked">Drag-drop locked</span>
+                            </span>
+                        </span>
+                    </label>
+                {% endfor %}
+            </div>
+        </section>
+
+        <div class="top-grid">
+        <section class="card">
+            <div>
+                <div class="eyebrow">SmartScheduler Access Gate</div>
+                <h1>Generation Access</h1>
+                <p class="mini-copy">Use a pass key or complete payment.</p>
+            </div>
+
+            <div class="panel-block">
+                <div class="eyebrow">Access Fee</div>
+                <h2>{{ razorpay_name }}</h2>
+                <div class="price" id="selected-plan-price">Rs. {% for plan in plans %}{% if plan.code == selected_plan_code %}{{ plan.price_rupees }}{% endif %}{% endfor %}</div>
+                <p class="mini-copy" id="selected-plan-tagline">{% for plan in plans %}{% if plan.code == selected_plan_code %}{{ plan.tagline }}{% endif %}{% endfor %}</p>
+
+                {% if active_plan and remaining_generations > 0 %}
+                <div class="active-plan">
+                    <strong style="display:block; margin-bottom:6px;">Current Plan: {{ active_plan.plan_name }}</strong>
+                    <span style="color:#dcfce7;">{{ remaining_generations }} generation{{ remaining_generations|pluralize }} remaining</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="card">
+            {% if messages %}
+            <div class="flash-list">
+                {% for message in messages %}
+                <div class="flash {{ message.tags|default:'info' }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'subscription_gate' %}" id="subscription-form">
+                {% csrf_token %}
+                <input type="hidden" name="use_pso" value="{% if use_pso %}1{% else %}0{% endif %}">
+                {% if active_plan and remaining_generations > 0 %}
+                <div class="actions">
+                    <button type="submit" name="continue_current_plan" value="1" class="button button-secondary">Use Current Plan</button>
+                </div>
+                {% endif %}
+
+                <label for="pass_key">Pass Key</label>
+                <input id="pass_key" name="pass_key" type="password" placeholder="Enter pass key" autocomplete="off">
+                <div class="hint">{{ pass_key_hint }}</div>
+
+                <div class="actions">
+                    <button type="submit" class="button button-primary">Start With Pass Key</button>
+                    <button type="button" id="pay-button" class="button button-secondary">Pay For Selected Plan</button>
+                </div>
+            </form>
+
+            <div id="payment-status" class="status"></div>
+
+            {% if not payment_verification_ready %}
+            <div class="hint">Razorpay secret abhi configure nahi hai, isliye payment verification tab complete hoga jab backend secret add ho jayega.</div>
+            {% endif %}
+        </section>
+        </div>
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        (function () {
+            const payButton = document.getElementById("pay-button");
+            const statusNode = document.getElementById("payment-status");
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            const usePso = "{% if use_pso %}1{% else %}0{% endif %}";
+            const imageUrl = window.location.origin + "{% static 'img/logo.jpeg' %}";
+            const priceNode = document.getElementById("selected-plan-price");
+            const taglineNode = document.getElementById("selected-plan-tagline");
+            const planInputs = Array.from(document.querySelectorAll('input[name="plan_code"]'));
+            const planMap = {
+                {% for plan in plans %}
+                "{{ plan.code }}": { price: "{{ plan.price_rupees }}", tagline: "{{ plan.tagline|escapejs }}" }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            };
+
+            function setStatus(message, kind) {
+                statusNode.textContent = message || "";
+                statusNode.className = "status" + (kind ? " " + kind : "");
+            }
+
+            function selectedPlanCode() {
+                const active = planInputs.find((input) => input.checked);
+                return active ? active.value : "{{ selected_plan_code }}";
+            }
+
+            function refreshPlanSummary() {
+                const currentPlan = planMap[selectedPlanCode()];
+                if (!currentPlan) {
+                    return;
+                }
+                if (priceNode) {
+                    priceNode.textContent = `Rs. ${currentPlan.price}`;
+                }
+                if (taglineNode) {
+                    taglineNode.textContent = currentPlan.tagline;
+                }
+                if (payButton) {
+                    payButton.textContent = `Pay Rs. ${currentPlan.price} To Continue`;
+                }
+            }
+
+            async function createOrder() {
+                const response = await fetch("{% url 'create_razorpay_order' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: new URLSearchParams({ use_pso: usePso, plan_code: selectedPlanCode() })
+                });
+                return response.json();
+            }
+
+            if (!payButton) {
+                return;
+            }
+
+            planInputs.forEach((input) => {
+                input.addEventListener("change", refreshPlanSummary);
+            });
+            refreshPlanSummary();
+
+            payButton.addEventListener("click", async function () {
+                payButton.disabled = true;
+                setStatus("Preparing Razorpay checkout...", "");
+
+                try {
+                    const order = await createOrder();
+
+                    if (!order.ok) {
+                        throw new Error(order.message || "Unable to start payment.");
+                    }
+
+                    const razorpay = new Razorpay({
+                        key: order.key,
+                        amount: order.amount,
+                        currency: order.currency,
+                        name: order.name,
+                        image: imageUrl,
+                        description: "SmartScheduler generation unlock",
+                        order_id: order.order_id,
+                        handler: async function (paymentResponse) {
+                            try {
+                                setStatus("Verifying payment...", "");
+                                const verifyResponse = await fetch("{% url 'verify_razorpay_payment' %}", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": csrfToken
+                                    },
+                                    body: JSON.stringify({
+                                        razorpay_order_id: paymentResponse.razorpay_order_id,
+                                        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                                        razorpay_signature: paymentResponse.razorpay_signature
+                                    })
+                                });
+
+                                const verifyPayload = await verifyResponse.json();
+                                if (!verifyResponse.ok || !verifyPayload.ok) {
+                                    throw new Error(verifyPayload.message || "Payment verification failed.");
+                                }
+
+                                setStatus("Payment successful. Redirecting...", "success");
+                                window.location.href = verifyPayload.redirect_url || "{% url 'generate_timetable_loading' %}";
+                            } catch (verifyError) {
+                                setStatus(verifyError.message || "Unable to verify payment right now.", "error");
+                                payButton.disabled = false;
+                            }
+                        },
+                        prefill: {
+                            name: "SmartScheduler User",
+                            contact: ""
+                        },
+                        notes: {
+                            source: "subscription_gate"
+                        },
+                        theme: {
+                            color: "#ea580c"
+                        },
+                        modal: {
+                            ondismiss: function () {
+                                setStatus("Payment window closed before completion.", "error");
+                                payButton.disabled = false;
+                            }
+                        }
+                    });
+
+                    razorpay.on("payment.failed", function (response) {
+                        const failureMessage = (response && response.error && response.error.description)
+                            ? response.error.description
+                            : "Payment failed. Please try again.";
+                        setStatus(failureMessage, "error");
+                        payButton.disabled = false;
+                    });
+
+                    setStatus("Redirecting to Razorpay checkout...", "");
+                    razorpay.open();
+                } catch (error) {
+                    setStatus(error.message || "Unable to start payment right now.", "error");
+                    payButton.disabled = false;
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

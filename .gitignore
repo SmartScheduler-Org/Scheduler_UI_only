@@ -1,0 +1,14 @@
+.tmp/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+db.sqlite3
+*.gz
+*.br
+.env
+Scheduler_UI/projttgs/.env

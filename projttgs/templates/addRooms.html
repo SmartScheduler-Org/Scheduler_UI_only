@@ -1,0 +1,234 @@
+
+{% extends "mainbase.html" %}
+{% load static %}
+{% block workflow_progress %}{% include 'workflow_stepper.html' with current_step=3 %}{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}"> 
+<style>
+/* ======================================= */
+/* INFO ICON + TOOLTIP INSIDE FORM FIELDSET */
+/* ======================================= */
+
+/* Position the info icon INSIDE the form fieldset */
+.info-icon-container {
+    position: absolute;
+    top: -5px;             /* adjust vertically */
+    right: 10px;           /* adjust horizontally */
+    cursor: pointer;
+    z-index: 20;
+}
+
+/* Info icon style */
+.info-icon {
+    width: 24px;
+    height: 24px;
+    background: #6d5dfc;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.2s ease;
+    box-shadow: 0 0 8px rgba(109,93,252,0.5);
+}
+
+.info-icon:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(109,93,252,0.8);
+}
+
+/* Tooltip box */
+.info-tooltip {
+    display: block;          /* default state for animation — hidden via opacity */
+    position: absolute;
+    top: 30px;
+    right: 0;
+    width: 250px;
+
+    padding: 12px;
+    border-radius: 8px;
+
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.4;
+
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+
+    opacity: 0;               /* start hidden */
+    pointer-events: none;     /* avoid accidental hover blocking */
+    transition: opacity 0.25s ease-in-out;
+    z-index: 999;
+}
+
+/* Tooltip arrow */
+.info-tooltip::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 10px;
+
+    width: 10px;
+    height: 10px;
+
+    background: rgba(255,255,255,0.1);
+    border-left: 1px solid rgba(255,255,255,0.25);
+    border-top: 1px solid rgba(255,255,255,0.25);
+
+    transform: rotate(45deg);
+    backdrop-filter: blur(10px);
+}
+
+/* Show tooltip on hover */
+.info-icon-container:hover .info-tooltip {
+    opacity: 1;
+    pointer-events: auto;    /* allow selection inside tooltip */
+}
+
+/* Bold text inside tooltip */
+.info-tooltip strong {
+    color: #fff;
+    font-size: 14px;
+}
+
+
+
+.alert-success {
+    background: #d4edda;
+    padding: 10px;
+    border-left: 5px solid #28a745;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    color: #155724;
+}
+
+.alert-error {
+    background: #f8d7da;
+    padding: 10px;
+    border-left: 5px solid #dc3545;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    color: #721c24;
+}
+
+.message-container {
+    margin-bottom: 20px;
+}
+
+.page-header .icon-only-btn {
+    position: relative;
+    top: 0;
+}
+
+.page-header .nav-circle-btn {
+    transform: none;
+}
+
+.page-header .nav-circle-btn + .nav-circle-btn {
+    margin-left: 0;
+}
+</style>
+
+
+<!-- PAGE HEADER WITH NEXT + STEP -->
+ {% if messages %}
+    <div class="message-container">
+        {% for message in messages %}
+            <div class="alert 
+                {% if message.tags == 'success' %} alert-success 
+                {% elif message.tags == 'error' %} alert-error 
+                {% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+<div class="page-header">
+
+
+    <div class="page-header-left">
+        <h2>Add Rooms</h2>
+       
+    </div>
+
+    <div class="right-block">
+        <div class="nav-action-group">
+            <a href="{% url 'editrooms' %}" class="edit-btn icon-only-btn" aria-label="View or edit rooms" title="View or edit rooms">
+                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'addInstructors' %}" class="next-btn nav-circle-btn" aria-label="Previous">
+                <span class="nav-arrow">←</span>
+            </a>
+            <a href="{% url 'addTimings' %}" class="next-btn nav-circle-btn" aria-label="Next">
+                <span class="nav-arrow">→</span>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<!-- CSV Upload Form (Styled like Add Room Form) -->
+<form method="post" enctype="multipart/form-data" >
+    {% csrf_token %}
+    <fieldset>
+
+        <div class="form-row">
+            <label><strong>Upload Rooms CSV:</strong></label>
+            <input type="file" name="csv_file" accept=".csv" required class="form-control">
+        </div>
+
+        <div class="button-row">
+            <button type="submit" name="csv_upload" class="submit-btn">
+                Upload CSV
+            </button>
+            <a href="{% url 'convert_csv' %}" class="csv-convert-btn"><span class="csv-orb"></span> Convert CSV</a>
+        </div>
+
+        <small style="color:#ccc;">
+            CSV Format: <code>r_number,department_code,seating_capacity,room_type</code>
+        </small>
+
+    </fieldset>
+</form>
+
+
+<!-- FORM -->
+<div class="form-wrapper">
+
+    <form method="post" style="margin-top: 20px;">
+        {% csrf_token %}
+        <fieldset style="position: relative;">
+
+            <!-- ⭐ INFO ICON INSIDE THE FORM ⭐ -->
+            <div class="info-icon-container" style="margin-top: 10px; margin-right: 5px;">
+                <span class="info-icon">i</span>
+                <div class="info-tooltip">
+                    <strong>Room Input Guide</strong><br>
+                    • Room ID → Unique ID (Class Room Code)<br>
+                    • Department → Select from existing departments<br>
+                    • Capacity → Number of students in a class<br>
+                    • Room Type → Type of Room (e.g. Lecture Hall, Classroom, etc.)<br>
+                </div>
+            </div>
+            <!-- ⭐ END INFO ICON ⭐ -->
+
+        {{ form.as_p }}
+
+        <div class="button-row">
+            <button type="submit"  name="add_room" class="submit-btn">Add Room</button>
+        </div>
+
+        </fieldset>
+    </form>
+</div>
+
+
+
+
+{% endblock %}
