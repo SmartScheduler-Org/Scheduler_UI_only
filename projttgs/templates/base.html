@@ -1,4 +1,5 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
@@ -8,11 +9,12 @@
     <title>{% block title %}Home{% endblock %}</title>
    <link rel="stylesheet" href="{% static 'navbar.css' %}">
  <link rel="stylesheet" href="{% static 'base.css' %}"> 
-    <link rel="stylesheet" href="{% static 'homepage.css' %}"> 
-     <link
+    <link rel="stylesheet" href="{% static 'homepage.css' %}">
+    <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +35,7 @@
         {% endblock %}
     </div>
 
-     {% include 'footer.html' %}
+     {% include 'mainfotter.html' %}
     <script src="{% static 'chatbot.js' %}"></script>
 </body>
 </html>

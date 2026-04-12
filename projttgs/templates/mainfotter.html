@@ -1,61 +1,188 @@
+<style>
+  .site-footer-ref {
+    position: relative;
+    z-index: 10;
+    margin-top: 32px;
+    border-top: 1px solid rgba(148, 163, 184, 0.22);
+    background: linear-gradient(180deg, #071225 0%, #030915 100%);
+    width: 100%;
+  }
 
-    <!-- FOOTER -->
-   <footer class="footer-new">
-  <div class="footer-container">
-    <div class="footer-brand">
-      <div class="footer-logo"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg6" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg6)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
-      <h3 class="footer-title">SmartScheduler</h3>
-      <p class="footer-sub">Smart Academic Timetabling</p>
+  .site-footer-ref .site-footer-inner {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 30px 18px 18px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .site-footer-ref .footer-logo-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .site-footer-ref .footer-logo-mark {
+    width: 38px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .site-footer-ref .footer-logo-mark svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .site-footer-ref .footer-title {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .site-footer-ref .footer-subtitle {
+    margin-top: 2px;
+    color: #9aa7bc;
+    font-size: 18px;
+  }
+
+  .site-footer-ref .site-footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px 24px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-footer-ref .site-footer-nav a {
+    color: #d2dae7;
+    font-size: 18px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .site-footer-ref .site-footer-nav a:hover {
+    color: #ffffff;
+  }
+
+  .site-footer-ref .site-footer-social {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .site-footer-ref .site-footer-social a {
+    color: #d2dae7;
+    font-size: 30px;
+    line-height: 1;
+    text-decoration: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+
+  .site-footer-ref .site-footer-social a:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  .site-footer-ref .footer-bottom {
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+    padding: 12px 16px 14px;
+    text-align: center;
+  }
+
+  .site-footer-ref .site-footer-copy {
+    margin: 0;
+    color: #9aa7bc;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  @media (min-width: 992px) {
+    .site-footer-ref .site-footer-inner {
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      justify-items: stretch;
+      text-align: left;
+      gap: 20px;
+      padding: 28px 24px 18px;
+    }
+
+    .site-footer-ref .footer-logo-section {
+      justify-content: flex-start;
+    }
+
+    .site-footer-ref .site-footer-nav {
+      justify-content: center;
+    }
+
+    .site-footer-ref .site-footer-social {
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .site-footer-ref .site-footer-nav a {
+      font-size: 14px;
+    }
+
+    .site-footer-ref .site-footer-social a {
+      font-size: 24px;
+    }
+
+    .site-footer-ref .footer-title {
+      font-size: 18px;
+    }
+
+    .site-footer-ref .footer-subtitle {
+      font-size: 11px;
+    }
+
+    .site-footer-ref .site-footer-copy {
+      font-size: 11px;
+    }
+  }
+</style>
+
+<!-- FOOTER -->
+<footer class="site-footer-ref">
+  <div class="site-footer-inner">
+    <div class="footer-logo-section">
+      <div class="footer-logo-mark"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg1" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg1)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
+      <div>
+        <div class="footer-title"><span style="color:#a3e635">Smart</span><span style="color:#22c55e">Scheduler</span></div>
+        <div class="footer-subtitle">Smart Academic Scheduling</div>
+      </div>
     </div>
 
-    <div class="footer-links">
-      <a href="#features">Features</a>
-      <a href="#how">How it works</a>
-      <a href="#demo">Demo</a>
-      <a href="#">Contact</a>
-    </div>
+    <nav class="site-footer-nav" aria-label="Footer navigation">
+      <a href="{% url 'help' %}">Help</a>
+      <a href="{% url 'contact' %}">Contact us</a>
+      <a href="{% url 'home' %}#features">Our Services</a>
+      <a href="#">Privacy Policy</a>
+      <a href="{% url 'terms' %}">Terms &amp; Conditions</a>
+      <a href="#">Career</a>
+    </nav>
 
-    <div class="footer-social">
-      <a href="#"><span>🐦</span></a>
-      <a href="#"><span>💼</span></a>
-      <a href="#"><span>📷</span></a>
-      <a href="#"><span>🔗</span></a>
+    <div class="site-footer-social" aria-label="Social links">
+      <a href="#" title="Facebook" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+      <a href="#" title="Instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+      <a href="#" title="YouTube" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+      <a href="#" title="X" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
     </div>
   </div>
 
   <div class="footer-bottom">
-    © 2025 SmartScheduler. Built with ❤️ by Team SmartScheduler.
+    <p class="site-footer-copy">
+      SMARTSCHEDULER Copyright &copy; {% now "Y" %} SmartScheduler - All rights reserved.
+    </p>
   </div>
 </footer>
-
-
-
-    <!-- GSAP for animations (CDN) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-
-    <script>
-
-      // FAQ Open/Close
-document.querySelectorAll(".faq-item").forEach((item) => {
-  item.addEventListener("click", () => {
-    item.classList.toggle("active");
-  });
-});
-
-// GSAP reveal
-gsap.utils.toArray(".reveal, .faq-item").forEach((el) => {
-  gsap.to(el, {
-    opacity: 1,
-    y: 0,
-    duration: 1.1,
-    ease: "power3.out",
-    scrollTrigger: {
-      trigger: el,
-      start: "top 85%",
-    },
-  });
-});
-
-</script>
