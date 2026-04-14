@@ -1840,3 +1840,218 @@ def convert_csv(request):
     return render(request, "convert_csv.html", {
         "entity_configs_json": entity_configs_json,
     })
+
+
+# ============================================================
+# TEACHER PREFERENCE VIEWS  (added by integration)
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+# ============================================================
+import csv as _csv
+import io  as _io
+import re  as _re
+from django.http        import HttpResponse
+from django.core.mail   import send_mail as _send_mail
+from django.conf        import settings  as _settings
+
+_EMAIL_RE = _re.compile(r'[\w\.\+\-]+@[\w\.\-]+\.[a-zA-Z]{2,}')
+
+def teacher_pref_form(request):
+    """Standalone form page teachers open from their email link."""
+    return render(request, 'teacher_pref_form.html')
+
+def send_preferences_page(request):
+    """HOD page: enter emails → choose Gmail/Outlook/SMTP → send."""
+    return render(request, 'send_preferences.html')
+
+def teacher_responses_page(request):
+    """HOD page: view all submitted preferences."""
+    from .models import TeacherPreference
+    import json as _json
+    subs = list(TeacherPreference.objects.all().order_by('-submitted_at').values(
+        'id','name','email','designation','subjects','classes','years','submitted_at'
+    ))
+    for s in subs:
+        s['submitted_at'] = s['submitted_at'].strftime('%d %b %Y, %I:%M %p')
+    return render(request, 'teacher_responses.html', {
+        'submissions_json': _json.dumps(subs),
+        'total': len(subs),
+    })
+
+@csrf_exempt
+def teacher_pref_submit(request):
+    """AJAX: save submitted teacher preference form."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        from .models import TeacherPreference
+        import json as _json
+        data        = _json.loads(request.body)
+        name        = data.get('name', '').strip()
+        email       = data.get('email', '').strip()
+        designation = data.get('designation', '').strip()
+        subjects    = data.get('subjects', [])
+        classes     = data.get('classes', [])
+        years       = data.get('years', [])
+
+        errors = []
+        if not name:                      errors.append('Name is required.')
+        if not email or '@' not in email: errors.append('Valid email is required.')
+        if not designation:               errors.append('Designation is required.')
+        if not subjects:                  errors.append('Select at least one subject.')
+        if len(subjects) > 3:            errors.append('Maximum 3 subjects allowed.')
+        if not classes:                   errors.append('Select at least one class.')
+        if not years:                     errors.append('Select at least one year.')
+        if errors:
+            return JsonResponse({'ok': False, 'errors': errors}, status=400)
+
+        sub = TeacherPreference.objects.create(
+            name=name, email=email, designation=designation,
+            subjects=subjects, classes=classes, years=years,
+        )
+
+        # Send confirmation email to the teacher via SMTP
+        try:
+            body = f"""SmartScheduler — Teaching Preference Confirmation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name        : {name}
+Email       : {email}
+Designation : {designation}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Subjects Selected:
+{chr(10).join('  • ' + s for s in subjects)}
+
+Classes Selected:
+{chr(10).join('  • ' + c for c in classes)}
+
+Year Preference:
+{chr(10).join('  • ' + y for y in years)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Submitted via SmartScheduler Teacher Preference Portal"""
+
+            _send_mail(
+                subject=f'SmartScheduler — Preferences Received: {name}',
+                message=body,
+                from_email=_settings.EMAIL_HOST_USER,
+                recipient_list=[email, _settings.EMAIL_HOST_USER],
+                fail_silently=True,
+            )
+        except Exception:
+            pass  # Don't block submission if email fails
+
+        return JsonResponse({'ok': True, 'id': sub.id})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def send_pref_links_smtp(request):
+    """AJAX: send form links via SMTP to all entered emails."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        import json as _json
+        data   = _json.loads(request.body)
+        emails = data.get('emails', [])
+        base   = request.build_absolute_uri('/teacher-pref-form/')
+
+        sent, failed = [], []
+        for email in emails:
+            email = email.strip().lower()
+            if not _EMAIL_RE.match(email):
+                failed.append(email); continue
+            link = f"{base}?email={email}"
+            body = f"""Dear Teacher,
+
+You are invited to fill your teaching preferences for the upcoming semester on SmartScheduler.
+
+Click the link below to open your preference form:
+{link}
+
+The form covers:
+  • Your designation (Professor / Associate / Assistant)
+  • Top 3 subjects you'd like to teach
+  • Classes / sections you're comfortable with
+  • Year of study preference
+
+Please submit at your earliest convenience.
+
+Thank you,
+SmartScheduler Scheduling Team"""
+            try:
+                _send_mail(
+                    subject='SmartScheduler — Please Fill In Your Teaching Preferences',
+                    message=body,
+                    from_email=_settings.EMAIL_HOST_USER,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                sent.append(email)
+            except Exception as e:
+                failed.append(email)
+
+        return JsonResponse({'ok': True, 'sent': sent, 'failed': failed})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def parse_emails_view(request):
+    """AJAX: extract emails from uploaded CSV/TXT/PDF file."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        uploaded = request.FILES.get('file')
+        if not uploaded:
+            return JsonResponse({'ok': False, 'error': 'No file uploaded.'}, status=400)
+        filename = uploaded.name.lower()
+        raw_text = ''
+        if filename.endswith('.csv'):
+            content = uploaded.read()
+            try:    text = content.decode('utf-8')
+            except: text = content.decode('latin-1', errors='replace')
+            reader   = _csv.reader(_io.StringIO(text))
+            raw_text = ' '.join(cell for row in reader for cell in row)
+        elif filename.endswith('.txt'):
+            content = uploaded.read()
+            try:    raw_text = content.decode('utf-8')
+            except: raw_text = content.decode('latin-1', errors='replace')
+        elif filename.endswith('.pdf'):
+            try:
+                from pypdf import PdfReader
+                reader   = PdfReader(_io.BytesIO(uploaded.read()))
+                raw_text = '\n'.join(p.extract_text() or '' for p in reader.pages)
+            except Exception as e:
+                return JsonResponse({'ok': False, 'error': f'PDF error: {e}'}, status=400)
+        else:
+            return JsonResponse({'ok': False, 'error': 'Upload CSV, TXT, or PDF.'}, status=400)
+
+        found = _EMAIL_RE.findall(raw_text)
+        seen, emails = set(), []
+        for e in found:
+            e = e.lower().strip('.')
+            if e not in seen:
+                seen.add(e); emails.append(e)
+        if not emails:
+            return JsonResponse({'ok': False, 'error': 'No email addresses found in file.'}, status=400)
+        return JsonResponse({'ok': True, 'emails': emails, 'count': len(emails)})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
+def export_preferences_csv(request):
+    """Download all teacher preferences as CSV."""
+    from .models import TeacherPreference
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="teacher_preferences.csv"'
+    writer = _csv.writer(response)
+    writer.writerow(['Name','Email','Designation','Subjects','Classes','Years','Submitted At'])
+    for s in TeacherPreference.objects.all():
+        writer.writerow([
+            s.name, s.email, s.designation,
+            ', '.join(s.subjects), ', '.join(s.classes), ', '.join(s.years),
+            s.submitted_at.strftime('%d %b %Y %H:%M')
+        ])
+    return response
