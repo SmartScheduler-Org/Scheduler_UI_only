@@ -1,0 +1,192 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block title %}SmartScheduler | Send Preference Mail{% endblock %}
+{% block content %}
+<style>
+.pref-page{max-width:700px;margin:0 auto;padding:2.5rem 1rem 5rem}
+.back-link{display:inline-flex;align-items:center;gap:.4rem;font-size:.84rem;color:var(--muted,#8899aa);text-decoration:none;margin-bottom:1.5rem;transition:color .2s}
+.back-link:hover{color:var(--text,#e8edf5)}
+.pref-eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa;margin-bottom:.9rem;padding:.3rem .9rem;border:1px solid rgba(124,92,252,.25);border-radius:20px;background:rgba(124,92,252,.08)}
+.pref-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:pb 2s infinite}
+.pref-title{font-size:clamp(1.8rem,4vw,2.4rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.4rem;color:var(--text,#e8edf5)}
+.pref-title em{font-style:normal;color:#a78bfa}
+.pref-desc{font-size:.9rem;color:var(--muted,#8899aa);line-height:1.6;margin-bottom:2rem}
+.pref-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:1.8rem;margin-bottom:1.3rem}
+.pref-label{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#8899aa);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.drop-zone{border:2px dashed rgba(255,255,255,.1);border-radius:14px;padding:1.8rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(255,255,255,.02)}
+.drop-zone:hover,.drop-zone.over{border-color:rgba(124,92,252,.5);background:rgba(124,92,252,.07)}
+.drop-zone input{display:none}
+.dz-icon{font-size:2rem;margin-bottom:.5rem}
+.dz-text{font-size:.84rem;color:var(--muted,#8899aa)}
+.dz-text strong{color:#a78bfa;cursor:pointer}
+.dz-result{margin-top:.7rem;font-size:.82rem;font-weight:600}
+.dz-ok{color:#10d97e}.dz-err{color:#f43f5e}
+.pref-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:1rem;font-family:'Poppins',sans-serif;font-size:.9rem;color:var(--text,#e8edf5);resize:vertical;min-height:120px;outline:none;transition:border-color .2s}
+.pref-textarea::placeholder{color:var(--muted,#8899aa)}
+.pref-textarea:focus{border-color:rgba(124,92,252,.5);background:rgba(124,92,252,.04)}
+.field-hint{font-size:.74rem;color:var(--muted,#8899aa);margin-top:.45rem}
+.pref-btns{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.3rem}
+.pref-btn{flex:1;min-width:130px;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.3rem;border-radius:12px;font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:transform .18s,box-shadow .18s;font-family:'Poppins',sans-serif}
+.pref-btn:hover{transform:translateY(-2px)}
+.pref-btn svg{width:16px;height:16px;flex-shrink:0}
+.btn-gmail{background:linear-gradient(135deg,#ea4335,#c0392b);color:#fff}
+.btn-gmail:hover{box-shadow:0 8px 28px rgba(234,67,53,.4)}
+.btn-outlook{background:linear-gradient(135deg,#0078d4,#005a9e);color:#fff}
+.btn-outlook:hover{box-shadow:0 8px 28px rgba(0,120,212,.4)}
+.btn-smtp{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+.btn-smtp:hover{box-shadow:0 8px 28px rgba(34,197,94,.4)}
+.pref-status{display:none;margin-top:1.1rem;padding:.9rem 1.1rem;border-radius:12px;font-size:.86rem;font-weight:500;line-height:1.6;border:1px solid transparent}
+.pref-status.loading{background:rgba(124,92,252,.1);border-color:rgba(124,92,252,.2);color:#a78bfa}
+.pref-status.success{background:rgba(16,217,126,.08);border-color:rgba(16,217,126,.2);color:#10d97e}
+.pref-status.error{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.2);color:#f43f5e}
+.smtp-note{display:flex;align-items:flex-start;gap:.7rem;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:1rem 1.1rem;font-size:.8rem;color:#86efac;line-height:1.5}
+.smtp-note svg{width:17px;height:17px;flex-shrink:0;margin-top:.1rem}
+@keyframes pb{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+
+<div class="pref-page">
+  <a href="{% url 'admindash' %}" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Dashboard
+  </a>
+
+  <div class="pref-eyebrow">Teacher Preferences</div>
+  <h1 class="pref-title">Send <em>Preference</em> Mail</h1>
+  <p class="pref-desc">Enter teacher emails or import from a file. Each teacher gets their own unique form link. Use <strong>Send via Server</strong> to deliver directly, or open Gmail/Outlook compose windows manually.</p>
+
+  <!-- File Import -->
+  <div class="pref-card">
+    <div class="pref-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import from File (CSV / TXT / PDF)
+    </div>
+    <div class="drop-zone" id="dz" onclick="document.getElementById('fi').click()">
+      <input type="file" id="fi" accept=".csv,.txt,.pdf"/>
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">Drop file here or <strong>click to browse</strong></div>
+      <div class="dz-result" id="dz-result"></div>
+    </div>
+  </div>
+
+  <!-- Email textarea + Buttons -->
+  <div class="pref-card">
+    <div class="pref-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Teacher Email(s)
+    </div>
+    <textarea class="pref-textarea" id="emails-input"
+      placeholder="teacher1@college.edu&#10;teacher2@college.edu, teacher3@college.edu&#10;&#10;One per line or comma-separated"></textarea>
+    <div class="field-hint">💡 Each teacher gets a personalised form link. When they submit — their data appears instantly in View Responses.</div>
+
+    <div class="pref-btns">
+      <!-- SMTP — recommended -->
+      <button class="pref-btn btn-smtp" onclick="sendSMTP()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send via Server
+      </button>
+      <!-- Gmail compose -->
+      <button class="pref-btn btn-gmail" onclick="sendCompose('gmail')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg>
+        Gmail
+      </button>
+      <!-- Outlook compose -->
+      <button class="pref-btn btn-outlook" onclick="sendCompose('outlook')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 4h-15A2.5 2.5 0 0 0 2 6.5v11A2.5 2.5 0 0 0 4.5 20h15a2.5 2.5 0 0 0 2.5-2.5v-11A2.5 2.5 0 0 0 19.5 4zM12 13.5 4.5 8H19.5L12 13.5z"/></svg>
+        Outlook
+      </button>
+    </div>
+    <div class="pref-status" id="pref-status"></div>
+  </div>
+
+  <div class="smtp-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Send via Server</strong> uses your configured SMTP (Gmail App Password in .env) to deliver directly — no browser popups. Gmail/Outlook buttons open compose windows as fallback. Make sure <code>EMAIL_HOST_USER</code> and <code>EMAIL_HOST_PASSWORD</code> are set in your <code>.env</code> file.</span>
+  </div>
+</div>
+
+<script>
+const dz=document.getElementById('dz'),fi=document.getElementById('fi'),dzR=document.getElementById('dz-result'),txa=document.getElementById('emails-input');
+['dragenter','dragover'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.add('over');}));
+['dragleave','drop'].forEach(e=>dz.addEventListener(e,()=>dz.classList.remove('over')));
+dz.addEventListener('drop',ev=>{ev.preventDefault();if(ev.dataTransfer.files[0])uploadFile(ev.dataTransfer.files[0]);});
+fi.addEventListener('change',()=>{if(fi.files[0])uploadFile(fi.files[0]);});
+
+async function uploadFile(file){
+  dzR.className='dz-result';dzR.textContent='⏳ Parsing…';
+  const fd=new FormData();fd.append('file',file);
+  try{
+    const r=await fetch('/api/pref/parse-emails/',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.ok&&d.emails.length){txa.value=d.emails.join('\n');dzR.className='dz-result dz-ok';dzR.textContent='✅ Found '+d.count+' email(s) from "'+file.name+'"';}
+    else{dzR.className='dz-result dz-err';dzR.textContent=d.error||'⚠️ No emails found.';}
+  }catch{dzR.className='dz-result dz-err';dzR.textContent='❌ Upload failed.';}
+}
+
+function parseEmails(raw){
+  return [...new Set(raw.split(/[\n,]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@')&&e.includes('.')))];
+}
+function buildLink(email){
+  return window.location.origin+'/teacher-pref-form/?email='+encodeURIComponent(email);
+}
+
+// ── SMTP send (recommended) ──────────────────────────────────
+async function sendSMTP(){
+  const emails=parseEmails(txa.value);
+  if(!emails.length){alert('Please enter at least one valid email.');return;}
+  const bar=document.getElementById('pref-status');
+  bar.className='pref-status loading';bar.style.display='block';
+  bar.innerHTML='📤 Sending to <strong>'+emails.length+'</strong> teacher(s) via server…';
+  try{
+    const r=await fetch('/api/pref/send-links/',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({emails})
+    });
+    const d=await r.json();
+    if(d.ok){
+      const sc=d.sent.length,fc=d.failed.length;
+      bar.className='pref-status success';
+      bar.innerHTML='✅ Sent to <strong>'+sc+'</strong> teacher(s)!'+(fc?'<br><span style="color:#fca5a5">⚠️ Failed: '+d.failed.join(', ')+'</span>':'')+'<br><small>'+d.sent.join(' · ')+'</small>';
+      txa.value='';dzR.textContent='';dzR.className='dz-result';
+    }else{
+      bar.className='pref-status error';
+      bar.innerHTML='❌ '+( d.error||'Send failed. Check your .env EMAIL settings.');
+    }
+  }catch{
+    bar.className='pref-status error';
+    bar.innerHTML='❌ Server error. Check EMAIL_HOST_USER & EMAIL_HOST_PASSWORD in .env';
+  }
+  setTimeout(()=>{bar.style.display='none';},9000);
+}
+
+// ── Gmail / Outlook compose (fallback) ──────────────────────
+function openGmail(email,link){
+  const s=encodeURIComponent('SmartScheduler — Please Fill In Your Teaching Preferences');
+  const b=encodeURIComponent('Dear Teacher,\n\nPlease fill your teaching preferences:\n'+link+'\n\nThank you,\nSmartScheduler Team');
+  window.open('https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(email)+'&su='+s+'&body='+b,'_blank');
+}
+function openMailto(email,link){
+  const s=encodeURIComponent('SmartScheduler — Please Fill In Your Teaching Preferences');
+  const b=encodeURIComponent('Dear Teacher,\n\nPlease fill your teaching preferences:\n'+link+'\n\nThank you,\nSmartScheduler Team');
+  const a=document.createElement('a');a.href='mailto:'+email+'?subject='+s+'&body='+b;
+  a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);
+}
+function sendCompose(client){
+  const emails=parseEmails(txa.value);
+  if(!emails.length){alert('Please enter at least one valid email.');return;}
+  const bar=document.getElementById('pref-status');
+  bar.className='pref-status loading';bar.style.display='block';
+  bar.innerHTML='📬 Opening compose for <strong>'+emails.length+'</strong> teacher(s)…';
+  const delay=client==='gmail'?900:700;
+  emails.forEach((email,idx)=>{
+    const link=buildLink(email);
+    setTimeout(()=>{if(client==='gmail')openGmail(email,link);else openMailto(email,link);},idx*delay);
+  });
+  setTimeout(()=>{
+    bar.className='pref-status success';
+    bar.innerHTML=' Compose opened for <strong>'+emails.length+'</strong> teacher(s)! Hit Send in each tab.';
+    txa.value='';dzR.textContent='';dzR.className='dz-result';
+  },emails.length*delay+300);
+  setTimeout(()=>{bar.style.display='none';},emails.length*delay+8000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block title %}SmartScheduler | Teacher Responses{% endblock %}
+{% block content %}
+<style>
+.resp-page{max-width:1100px;margin:0 auto;padding:2rem 1rem 5rem}
+.resp-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.6rem}
+.back-link{display:inline-flex;align-items:center;gap:.4rem;font-size:.84rem;color:var(--muted,#8899aa);text-decoration:none;transition:color .2s}
+.back-link:hover{color:var(--text,#e8edf5)}
+.export-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.1rem;border-radius:10px;font-size:.8rem;font-weight:600;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);color:#22d3ee;text-decoration:none;transition:background .2s}
+.export-btn:hover{background:rgba(6,182,212,.2)}
+.resp-eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#22d3ee;margin-bottom:.8rem;padding:.3rem .9rem;border:1px solid rgba(6,182,212,.25);border-radius:20px;background:rgba(6,182,212,.07)}
+.resp-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:#22d3ee;animation:rb 2s infinite}
+.resp-title{font-size:clamp(1.6rem,3.5vw,2.2rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.4rem;color:var(--text,#e8edf5)}
+.resp-title em{font-style:normal;color:#22d3ee}
+.resp-desc{font-size:.88rem;color:var(--muted,#8899aa);line-height:1.6;margin-bottom:1.6rem}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1.1rem 1.3rem}
+.stat-num{font-size:1.9rem;font-weight:800;letter-spacing:-.04em}
+.sn-purple{color:#a78bfa}.sn-cyan{color:#22d3ee}.sn-green{color:#10d97e}
+.stat-label{font-size:.75rem;color:var(--muted,#8899aa);margin-top:.2rem;font-weight:500}
+.filter-bar{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.3rem}
+.search-wrap{flex:1;min-width:200px;position:relative}
+.search-wrap svg{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted,#8899aa);pointer-events:none}
+.search-wrap input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.65rem 1rem .65rem 2.4rem;font-family:'Poppins',sans-serif;font-size:.86rem;color:var(--text,#e8edf5);outline:none;transition:border-color .2s}
+.search-wrap input::placeholder{color:var(--muted,#8899aa)}
+.search-wrap input:focus{border-color:rgba(124,92,252,.4)}
+.filter-select{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.65rem 1rem;font-family:'Poppins',sans-serif;font-size:.86rem;color:var(--text,#e8edf5);outline:none;cursor:pointer}
+.filter-select option{background:#0d1526}
+.clear-btn{padding:.65rem 1.2rem;border-radius:10px;font-size:.84rem;font-weight:600;cursor:pointer;border:1px solid rgba(124,92,252,.25);background:rgba(124,92,252,.1);color:#a78bfa;font-family:'Poppins',sans-serif;transition:background .2s}
+.clear-btn:hover{background:rgba(124,92,252,.22)}
+.table-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.08)}
+th{padding:.85rem 1.1rem;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#8899aa);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+td{padding:.85rem 1.1rem;font-size:.86rem;vertical-align:top}
+.td-num{font-size:.78rem;color:var(--muted,#8899aa);font-weight:600}
+.td-name{font-weight:600;color:var(--text,#e8edf5)}
+.td-email{font-size:.78rem;color:var(--muted,#8899aa)}
+.desg-badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;white-space:nowrap}
+.dp{background:rgba(124,92,252,.12);color:#a78bfa;border:1px solid rgba(124,92,252,.25)}
+.da{background:rgba(6,182,212,.1);color:#22d3ee;border:1px solid rgba(6,182,212,.22)}
+.das{background:rgba(16,217,126,.08);color:#10d97e;border:1px solid rgba(16,217,126,.2)}
+.tag-list{display:flex;flex-wrap:wrap;gap:.3rem}
+.tag{font-size:.68rem;font-weight:600;padding:.16rem .5rem;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--muted,#8899aa)}
+.td-date{font-size:.75rem;color:var(--muted,#8899aa);white-space:nowrap}
+.table-footer{padding:.9rem 1.3rem;border-top:1px solid rgba(255,255,255,.06);font-size:.75rem;color:var(--muted,#8899aa);display:flex;align-items:center;justify-content:space-between}
+.empty-state{text-align:center;padding:3.5rem 1rem}
+.empty-icon{font-size:2.8rem;margin-bottom:.8rem;opacity:.5}
+.empty-title{font-size:1rem;font-weight:600;color:var(--muted,#8899aa)}
+@keyframes rb{0%,100%{opacity:1}50%{opacity:.4}}
+@media(max-width:700px){.stats-row{grid-template-columns:1fr 1fr}th:nth-child(n+5),td:nth-child(n+5){display:none}}
+</style>
+
+<div class="resp-page">
+  <div class="resp-topbar">
+    <a href="{% url 'admindash' %}" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to Dashboard
+    </a>
+    <a href="{% url 'export_pref_csv' %}" class="export-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </a>
+  </div>
+
+  <div class="resp-eyebrow">Teacher Data</div>
+  <h1 class="resp-title">All <em>Responses</em></h1>
+  <p class="resp-desc">Real-time view of all submitted teaching preferences.</p>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num sn-purple" id="stat-total">{{ total }}</div><div class="stat-label">Total Submissions</div></div>
+    <div class="stat-card"><div class="stat-num sn-cyan"   id="stat-showing">{{ total }}</div><div class="stat-label">Showing Now</div></div>
+    <div class="stat-card"><div class="stat-num sn-green"  id="stat-latest">—</div><div class="stat-label">Latest Submission</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-inp" placeholder="Search name or email…" oninput="filterTable()"/>
+    </div>
+    <select class="filter-select" id="desg-filter" onchange="filterTable()">
+      <option value="">All Designations</option>
+      <option>Professor</option>
+      <option>Associate Professor</option>
+      <option>Assistant Professor</option>
+    </select>
+    <button class="clear-btn" onclick="clearFilters()">Clear</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>Designation</th><th>Subjects</th><th>Classes</th><th>Year</th><th>Submitted</th></tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="table-footer">
+      <span id="footer-count">—</span>
+      <a href="{% url 'export_pref_csv' %}" style="color:#22d3ee;text-decoration:none">⬇ Download CSV</a>
+    </div>
+  </div>
+</div>
+
+<script>
+var allRows={{ submissions_json|safe }};
+function dc(d){if(!d)return '';var l=d.toLowerCase();if(l.includes('associate'))return 'da';if(l.includes('assistant'))return 'das';return 'dp';}
+function renderRows(rows){
+  var tb=document.getElementById('table-body');
+  document.getElementById('stat-showing').textContent=rows.length;
+  document.getElementById('footer-count').textContent='Showing '+rows.length+' of '+allRows.length+' submission(s)';
+  if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No submissions yet — send preference mails to teachers first.</div></div></td></tr>';return;}
+  tb.innerHTML=rows.map(function(s,i){
+    var sj=(s.subjects||[]).map(function(x){return '<span class="tag">'+x+'</span>';}).join('')||'<span class="td-email">—</span>';
+    var cl=(s.classes||[]).map(function(x){return '<span class="tag">'+x+'</span>';}).join('')||'<span class="td-email">—</span>';
+    var yr=(s.years||[]).map(function(x){return '<span class="tag">'+x+'</span>';}).join('')||'<span class="td-email">—</span>';
+    return '<tr><td class="td-num">'+String(i+1).padStart(2,'0')+'</td><td><div class="td-name">'+(s.name||'—')+'</div><div class="td-email">'+(s.email||'')+'</div></td><td><span class="desg-badge '+dc(s.designation)+'">'+(s.designation||'—')+'</span></td><td><div class="tag-list">'+sj+'</div></td><td><div class="tag-list">'+cl+'</div></td><td><div class="tag-list">'+yr+'</div></td><td class="td-date">'+(s.submitted_at||'—')+'</td></tr>';
+  }).join('');
+}
+function filterTable(){
+  var q=document.getElementById('search-inp').value.toLowerCase().trim();
+  var d=document.getElementById('desg-filter').value;
+  renderRows(allRows.filter(function(s){return(!q||(s.name||'').toLowerCase().includes(q)||(s.email||'').toLowerCase().includes(q))&&(!d||s.designation===d);}));
+}
+function clearFilters(){document.getElementById('search-inp').value='';document.getElementById('desg-filter').value='';renderRows(allRows);}
+if(allRows.length) document.getElementById('stat-latest').textContent=allRows[0].submitted_at||'—';
+renderRows(allRows);
+</script>
+{% endblock %}
