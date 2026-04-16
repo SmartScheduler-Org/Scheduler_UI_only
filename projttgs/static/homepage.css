@@ -1015,6 +1015,29 @@
   color: #a5b4fc;
 }
 
+.faq-answer strong {
+  color: #e5e7eb;
+  font-weight: 600;
+}
+
+.faq-answer em {
+  color: #c4b5fd;
+  font-style: normal;
+}
+
+.faq-answer code {
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 5px;
+  padding: 1px 6px;
+  color: #a5b4fc;
+}
+
+html.light .faq-answer strong { color: #1e293b; }
+html.light .faq-answer code { background: rgba(99,102,241,0.08); color: #4f46e5; }
+
 
 
  /* FOOTER */

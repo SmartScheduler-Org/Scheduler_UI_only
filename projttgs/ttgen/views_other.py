@@ -266,16 +266,23 @@ def teachertimetable(request): return render(request, 'teachertimetable.html')
 
 # CONTACT FORM
 def contact(request):
+    sent = False
     if request.method == 'POST':
-        message = request.POST['message']
-        send_mail(
-            'Contact',
-            message,
-            settings.EMAIL_HOST_USER,
-            ['studyyou40@gmail.com'],
-            fail_silently=False
-        )
-    return render(request, 'contact.html')
+        name    = request.POST.get('name', '')
+        email   = request.POST.get('email', '')
+        message = request.POST.get('message', '')
+        try:
+            send_mail(
+                f'SmartScheduler Contact: {name} <{email}>',
+                message,
+                settings.EMAIL_HOST_USER,
+                ['ankitymca27@gmail.com'],
+                fail_silently=False,
+            )
+            sent = True
+        except Exception:
+            pass
+    return render(request, 'contact.html', {'sent': sent})
 
 
 # ADMIN DASHBOARD
