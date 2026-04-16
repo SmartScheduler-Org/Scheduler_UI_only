@@ -4,7 +4,8 @@ from django.urls import reverse
 from .forms import *
 from .models import *
 from account.models import Profile
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
@@ -268,22 +269,21 @@ def teachertimetable(request): return render(request, 'teachertimetable.html')
 def contact(request):
     sent = False
     if request.method == 'POST':
-        name    = request.POST.get('name', '')
-        email   = request.POST.get('email', '')
-        message = request.POST.get('message', '')
+        name        = request.POST.get('name', '').strip()
+        email       = request.POST.get('email', '').strip()
+        institution = request.POST.get('institution', '').strip() or 'Not provided'
+        topic       = request.POST.get('topic', '').strip() or 'General'
+        message     = request.POST.get('message', '').strip()
         try:
-            send_mail(
-                f'SmartScheduler Contact: {name} <{email}>',
-                message,
-                settings.EMAIL_HOST_USER,
-                ['ankitymca27@gmail.com'],
-                fail_silently=False,
-            )
+            html_body  = render_to_string('contact_email.html', {'name': name, 'email': email, 'institution': institution, 'topic': topic, 'message': message})
+            plain_body = f"From: {name} <{email}>\nInstitution: {institution}\nTopic: {topic}\n\n{message}"
+            msg = EmailMultiAlternatives(subject=f'[SmartScheduler] {topic} — {name}', body=plain_body, from_email=settings.EMAIL_HOST_USER, to=['studyyou40@gmail.com'], reply_to=[email])
+            msg.attach_alternative(html_body, "text/html")
+            msg.send(fail_silently=False)
             sent = True
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Contact Mail Error] {e}")
     return render(request, 'contact.html', {'sent': sent})
-
 
 # ADMIN DASHBOARD
 @login_required
