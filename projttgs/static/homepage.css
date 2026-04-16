@@ -1003,11 +1003,13 @@
   padding: 0 20px 16px;
   color: var(--muted);
   line-height: 1.6;
-  display: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
 }
 
 .faq-item.active .faq-answer {
-  display: block;
+  max-height: 180px;
 }
 
 .faq-item.active .faq-icon {
@@ -1164,119 +1166,6 @@
   color: var(--muted);
 }
 
-/* Minimal footer variant (used by mainfotter.html) */
-.footer-new.footer-minimal {
-  margin-top: 36px;
-  padding: 0;
-  backdrop-filter: none;
-  background: linear-gradient(
-    180deg,
-    rgba(2, 6, 23, 0.9) 0%,
-    rgba(3, 7, 18, 0.97) 100%
-  );
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
-}
-
-.footer-new.footer-minimal::before {
-  content: "";
-  display: block;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0.5),
-    rgba(99, 102, 241, 0.45),
-    rgba(236, 72, 153, 0.4)
-  );
-}
-
-.footer-minimal .footer-minimal-inner {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 30px 20px 34px;
-  text-align: center;
-}
-
-.footer-minimal .footer-social-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 26px;
-}
-
-.footer-minimal .footer-social-row a {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.72);
-  transition: color 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
-}
-
-.footer-minimal .footer-social-row a:hover {
-  color: #f8fafc;
-  border-color: rgba(56, 189, 248, 0.75);
-  transform: translateY(-2px);
-}
-
-.footer-minimal .footer-nav-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 28px 40px;
-  margin-bottom: 22px;
-}
-
-.footer-minimal .footer-nav-row a {
-  color: #94a3b8;
-  font-size: 15px;
-  letter-spacing: 0.01em;
-  transition: color 0.22s ease;
-}
-
-.footer-minimal .footer-nav-row a:hover {
-  color: #e2e8f0;
-}
-
-.footer-minimal .footer-nav-row a[aria-disabled="true"] {
-  cursor: default;
-  opacity: 0.8;
-  pointer-events: none;
-}
-
-.footer-minimal .footer-copy-row {
-  margin: 0;
-  color: #64748b;
-  font-size: 15px;
-  letter-spacing: 0.02em;
-}
-
-@media (max-width: 700px) {
-  .footer-minimal .footer-social-row {
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .footer-minimal .footer-nav-row {
-    gap: 14px 20px;
-    margin-bottom: 16px;
-  }
-
-  .footer-minimal .footer-nav-row a {
-    font-size: 14px;
-  }
-
-  .footer-minimal .footer-copy-row {
-    font-size: 12px;
-    line-height: 1.6;
-  }
-}
-
 /* ====== LIGHT MODE OVERRIDES ====== */
 html.light body {
   background: #f5f5f5;
@@ -1341,37 +1230,6 @@ html.light .footer-links a { color: #475569; }
 html.light .footer-links a:hover { color: #1e293b; text-shadow: none; }
 html.light .footer-bottom { color: #64748b; }
 
-html.light .footer-new.footer-minimal {
-  background: linear-gradient(
-    180deg,
-    rgba(241, 245, 249, 0.95) 0%,
-    rgba(248, 250, 252, 1) 100%
-  );
-}
-
-html.light .footer-minimal .footer-social-row a {
-  color: #475569;
-  border-color: rgba(100, 116, 139, 0.35);
-  background: rgba(255, 255, 255, 0.9);
-}
-
-html.light .footer-minimal .footer-social-row a:hover {
-  color: #0f172a;
-  border-color: rgba(59, 130, 246, 0.7);
-}
-
-html.light .footer-minimal .footer-nav-row a {
-  color: #475569;
-}
-
-html.light .footer-minimal .footer-nav-row a:hover {
-  color: #0f172a;
-}
-
-html.light .footer-minimal .footer-copy-row {
-  color: #64748b;
-}
-
 /* FAQ in light mode */
 html.light .faq-item {
   background: #ffffff;
@@ -1379,4 +1237,3 @@ html.light .faq-item {
 }
 html.light .faq-question { color: #1e293b; }
 html.light .faq-answer { color: #64748b; }
-

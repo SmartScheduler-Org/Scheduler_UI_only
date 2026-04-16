@@ -16,12 +16,3 @@ admin.site.register(Instructor)
 admin.site.register(MeetingTime)
 admin.site.register(SavedTimetable)
 admin.site.register(ScheduledSlot)
-
-from .models import TeacherPreference
-
-@admin.register(TeacherPreference)
-class TeacherPreferenceAdmin(admin.ModelAdmin):
-    list_display  = ('name', 'email', 'designation', 'submitted_at')
-    list_filter   = ('designation',)
-    search_fields = ('name', 'email')
-    readonly_fields = ('submitted_at',)
