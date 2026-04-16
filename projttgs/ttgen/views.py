@@ -9,6 +9,7 @@ Default behavior:
 
 import importlib.util
 import json
+import logging
 import os
 from pathlib import Path
 import hashlib
@@ -16,6 +17,7 @@ import hmac
 from functools import wraps
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model, login
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -24,6 +26,8 @@ from django.views.decorators.csrf import csrf_exempt
 from . import views_other as public_core
 from .models import UserAccessPlan
 from .views_other import *  # noqa: F401,F403
+
+logger = logging.getLogger(__name__)
 
 _GENERATOR_VIEW_NAMES = (
     "generate",
@@ -43,6 +47,8 @@ _GENERATOR_VIEW_NAMES = (
 
 GENERATION_ACCESS_SESSION_KEY = "generation_access_granted"
 GENERATION_PENDING_OPTIONS_SESSION_KEY = "generation_pending_options"
+DEMO_MODE_SESSION_KEY = "demo_generation_active"
+SUBSCRIPTION_FLOW_MODE_SESSION_KEY = "subscription_flow_mode"
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_5GzZRGBccnVG1H")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
 SUBSCRIPTION_PASS_KEY = os.environ.get("SUBSCRIPTION_PASS_KEY", "smartymcajcbosejbb")
@@ -69,8 +75,8 @@ PLAN_CONFIGS = {
         "generation_limit": 6,
         "can_edit_delete": True,
         "can_substitute": True,
-        "can_drag_drop": False,
-        "tagline": "6 generations + edit/delete/substitute",
+        "can_drag_drop": True,
+        "tagline": "6 generations + edit/delete/substitute/drag-drop",
     },
 }
 
@@ -151,11 +157,44 @@ def _set_pending_generation_options(request):
 
 def _grant_generation_access(request, source):
     options = _get_pending_generation_options(request)
+    _set_demo_mode(request, False)
+    request.session[SUBSCRIPTION_FLOW_MODE_SESSION_KEY] = "generate"
     request.session[GENERATION_ACCESS_SESSION_KEY] = {
         "source": source,
         "use_pso": options["use_pso"],
     }
     request.session.modified = True
+
+
+def _set_demo_mode(request, active):
+    request.session[DEMO_MODE_SESSION_KEY] = bool(active)
+    request.session.modified = True
+
+
+def _demo_mode_active(request):
+    return bool(request.session.get(DEMO_MODE_SESSION_KEY, False))
+
+
+def _set_subscription_flow_mode(request, mode):
+    request.session[SUBSCRIPTION_FLOW_MODE_SESSION_KEY] = mode
+    request.session.modified = True
+
+
+def _subscription_flow_mode(request):
+    mode = request.session.get(SUBSCRIPTION_FLOW_MODE_SESSION_KEY, "generate")
+    return mode if mode in {"generate", "subscribe_only"} else "generate"
+
+
+def _subscribe_only_flow_active(request):
+    return _subscription_flow_mode(request) == "subscribe_only"
+
+
+def _render_subscription_success_modal(request):
+    return render(request, "subscription_success_embed.html")
+
+
+def _render_pass_key_redirect_modal(request, redirect_url):
+    return render(request, "pass_key_redirect_embed.html", {"redirect_url": redirect_url})
 
 
 def _create_razorpay_order_for_request(request):
@@ -167,6 +206,7 @@ def _create_razorpay_order_for_request(request):
         "notes": {
             "product": "SmartScheduler Generation Unlock",
             "plan_code": selected_plan["code"],
+            "user_id": str(request.user.id) if getattr(request.user, "is_authenticated", False) else "",
         },
     }
 
@@ -184,6 +224,46 @@ def _create_razorpay_order_for_request(request):
     return order_data
 
 
+def _fetch_razorpay_order(order_id):
+    response = public_core.requests.get(
+        f"https://api.razorpay.com/v1/orders/{order_id}",
+        auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+        timeout=30,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def _resolve_callback_user_and_plan(request, razorpay_order_id):
+    user = request.user if getattr(request.user, "is_authenticated", False) else None
+    plan_code = request.session.get("selected_plan_code", "")
+
+    if user and plan_code in PLAN_CONFIGS:
+        return user, plan_code
+
+    try:
+        order_data = _fetch_razorpay_order(razorpay_order_id)
+    except Exception:
+        return user, plan_code if plan_code in PLAN_CONFIGS else PLAN_BASIC
+
+    notes = order_data.get("notes") or {}
+    user_id = notes.get("user_id")
+    resolved_plan_code = notes.get("plan_code", "")
+
+    if resolved_plan_code not in PLAN_CONFIGS:
+        resolved_plan_code = plan_code if plan_code in PLAN_CONFIGS else PLAN_BASIC
+
+    if not user and user_id:
+        UserModel = get_user_model()
+        try:
+            user = UserModel.objects.get(pk=user_id)
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        except UserModel.DoesNotExist:
+            user = None
+
+    return user, resolved_plan_code
+
+
 def _build_generation_loading_url(request):
     options = _get_pending_generation_options(request)
     use_pso_value = "1" if options["use_pso"] else "0"
@@ -193,6 +273,32 @@ def _build_generation_loading_url(request):
 def _generation_access_granted(request):
     access = request.session.get(GENERATION_ACCESS_SESSION_KEY)
     return isinstance(access, dict)
+
+
+def _generation_access_source(request):
+    access = request.session.get(GENERATION_ACCESS_SESSION_KEY)
+    if isinstance(access, dict):
+        return access.get("source", "")
+    return ""
+
+
+def _pass_key_bypass_active(request):
+    return _generation_access_source(request) == "pass_key"
+
+
+def _clear_pass_key_access(request):
+    if _pass_key_bypass_active(request):
+        request.session.pop(GENERATION_ACCESS_SESSION_KEY, None)
+        request.session.modified = True
+
+
+def demo_generate_start(request):
+    _set_pending_generation_options(request)
+    _set_demo_mode(request, True)
+    request.session.pop(GENERATION_ACCESS_SESSION_KEY, None)
+    request.session.modified = True
+    messages.info(request, "Demo generation started. Only preview sections will be fully visible.")
+    return redirect(_build_generation_loading_url(request))
 
 
 def _remaining_generations(user):
@@ -239,12 +345,9 @@ def _permission_denied_response(request, message):
     return redirect("subscription_gate")
 
 
-def _apply_plan_purchase(request, plan_code, razorpay_order_id, razorpay_payment_id):
-    if not request.user.is_authenticated:
-        raise ValueError("Authentication required to apply purchased plan.")
-
+def _apply_plan_purchase_for_user(user, plan_code, razorpay_order_id, razorpay_payment_id):
     plan_config = PLAN_CONFIGS[plan_code]
-    access_plan = _get_user_access_plan(request.user)
+    access_plan = _get_user_access_plan(user)
     if access_plan is None:
         raise ValueError("Unable to load user access plan.")
 
@@ -262,6 +365,12 @@ def _apply_plan_purchase(request, plan_code, razorpay_order_id, razorpay_payment
     access_plan.save()
 
 
+def _apply_plan_purchase(request, plan_code, razorpay_order_id, razorpay_payment_id):
+    if not request.user.is_authenticated:
+        raise ValueError("Authentication required to apply purchased plan.")
+    _apply_plan_purchase_for_user(request.user, plan_code, razorpay_order_id, razorpay_payment_id)
+
+
 def _redirect_to_subscription(request):
     messages.info(request, "Please enter the pass key or complete payment to continue.")
     return redirect("subscription_gate")
@@ -270,7 +379,7 @@ def _redirect_to_subscription(request):
 def _guard_generation_view(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
-        if not _has_generate_credit(request.user) and not _generation_access_granted(request):
+        if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
         return view_func(request, *args, **kwargs)
 
@@ -280,7 +389,7 @@ def _guard_generation_view(view_func):
 def _wrap_generate_loading(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
-        if not _has_generate_credit(request.user) and not _generation_access_granted(request):
+        if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
         return view_func(request, *args, **kwargs)
 
@@ -290,12 +399,13 @@ def _wrap_generate_loading(view_func):
 def _wrap_generate_timetables(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
-        if not _has_generate_credit(request.user) and not _generation_access_granted(request):
+        if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
-        if not _consume_generation_credit(request.user):
-            return _redirect_to_subscription(request)
-        request.session.pop(GENERATION_ACCESS_SESSION_KEY, None)
-        request.session.modified = True
+        if not _demo_mode_active(request):
+            access_source = _generation_access_source(request)
+            if access_source != "pass_key":
+                if not _consume_generation_credit(request.user):
+                    return _redirect_to_subscription(request)
         return view_func(request, *args, **kwargs)
 
     return wrapped
@@ -304,9 +414,9 @@ def _wrap_generate_timetables(view_func):
 def _wrap_edit_delete(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
-        if _has_edit_delete_access(request.user):
+        if _has_edit_delete_access(request.user) or _pass_key_bypass_active(request):
             return view_func(request, *args, **kwargs)
-        return _permission_denied_response(request, "Please upgrade your plan to use edit and delete features.")
+        return _permission_denied_response(request, "Please upgrade your plan to use editing features.")
 
     return wrapped
 
@@ -314,7 +424,7 @@ def _wrap_edit_delete(view_func):
 def _wrap_substitute(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
-        if _has_substitute_access(request.user):
+        if _has_substitute_access(request.user) or _pass_key_bypass_active(request):
             return view_func(request, *args, **kwargs)
         return _permission_denied_response(request, "Please upgrade your plan to use substitute features.")
 
@@ -324,7 +434,7 @@ def _wrap_substitute(view_func):
 def _wrap_drag_drop(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
-        if _has_drag_drop_access(request.user):
+        if _has_drag_drop_access(request.user) or _pass_key_bypass_active(request):
             return view_func(request, *args, **kwargs)
         return _permission_denied_response(request, "Please upgrade your plan to access drag-and-drop scheduling.")
 
@@ -333,7 +443,15 @@ def _wrap_drag_drop(view_func):
 
 def subscription_gate(request):
     _set_pending_generation_options(request)
+    _set_demo_mode(request, False)
+    requested_mode = request.POST.get("flow_mode") if request.method == "POST" else request.GET.get("mode")
+    if requested_mode == "subscribe_only":
+        _set_subscription_flow_mode(request, "subscribe_only")
+    elif requested_mode == "generate":
+        _set_subscription_flow_mode(request, "generate")
     access_plan = _get_user_access_plan(request.user) if request.user.is_authenticated else None
+    selected_plan = _selected_plan_config(request)
+    preloaded_order = None
 
     if request.method == "POST" and request.POST.get("continue_current_plan") == "1" and _has_generate_credit(request.user):
         _grant_generation_access(request, "active_plan")
@@ -347,10 +465,18 @@ def subscription_gate(request):
         submitted_pass_key = request.POST.get("pass_key", "").strip()
         if submitted_pass_key and submitted_pass_key == SUBSCRIPTION_PASS_KEY:
             _grant_generation_access(request, "pass_key")
+            if _subscribe_only_flow_active(request):
+                return _render_pass_key_redirect_modal(request, _build_generation_loading_url(request))
             messages.success(request, "Pass key verified. Generation is starting now.")
             return redirect(_build_generation_loading_url(request))
         if submitted_pass_key:
             messages.error(request, "Invalid pass key. Please try again or choose a plan.")
+
+    if request.method == "GET" and RAZORPAY_KEY_SECRET:
+        try:
+            preloaded_order = _create_razorpay_order_for_request(request)
+        except Exception:
+            preloaded_order = None
 
     context = {
         "pass_key_hint": "Enter your pass key to unlock instant generation.",
@@ -360,8 +486,13 @@ def subscription_gate(request):
         "payment_verification_ready": bool(RAZORPAY_KEY_SECRET),
         "plans": [PLAN_CONFIGS[PLAN_BASIC], PLAN_CONFIGS[PLAN_PRO]],
         "selected_plan_code": _selected_plan_code_from_request(request),
+        "selected_plan": selected_plan,
         "active_plan": access_plan,
         "remaining_generations": _remaining_generations(request.user) if request.user.is_authenticated else 0,
+        "preloaded_order_id": preloaded_order.get("id") if preloaded_order else "",
+        "preloaded_order_amount": preloaded_order.get("amount", selected_plan["price_paise"]) if preloaded_order else selected_plan["price_paise"],
+        "preloaded_order_currency": preloaded_order.get("currency", "INR") if preloaded_order else "INR",
+        "subscription_flow_mode": _subscription_flow_mode(request),
     }
     return render(request, "subscription.html", context)
 
@@ -467,6 +598,17 @@ def verify_razorpay_payment(request):
             },
             status=401,
         )
+    if _subscribe_only_flow_active(request):
+        request.session["razorpay_payment_id"] = razorpay_payment_id
+        request.session.modified = True
+        return JsonResponse(
+            {
+                "ok": True,
+                "subscribed": True,
+                "redirect_url": reverse("generate"),
+            }
+        )
+
     _grant_generation_access(request, "payment")
     request.session["razorpay_payment_id"] = razorpay_payment_id
     request.session.modified = True
@@ -481,56 +623,56 @@ def verify_razorpay_payment(request):
 
 @csrf_exempt
 def razorpay_payment_callback(request):
-    if request.method != "POST":
-        return redirect("subscription_gate")
-
-    if not request.user.is_authenticated:
-        messages.error(
-            request,
-            "Login session was not found after payment. Please login again and verify payment from Subscription page.",
-        )
-        return redirect("subscription_gate")
-
-    razorpay_order_id = request.POST.get("razorpay_order_id", "")
-    razorpay_payment_id = request.POST.get("razorpay_payment_id", "")
-    razorpay_signature = request.POST.get("razorpay_signature", "")
-    expected_order_id = request.session.get("razorpay_order_id", "")
-
-    if not RAZORPAY_KEY_SECRET:
-        messages.error(request, "Razorpay secret is not configured yet.")
-        return redirect("subscription_gate")
-
-    if not razorpay_order_id or not razorpay_payment_id or not razorpay_signature:
-        messages.error(request, "Payment details are incomplete.")
-        return redirect("subscription_gate")
-
-    if expected_order_id and razorpay_order_id != expected_order_id:
-        messages.error(request, "Order mismatch detected.")
-        return redirect("subscription_gate")
-
-    generated_signature = hmac.new(
-        RAZORPAY_KEY_SECRET.encode("utf-8"),
-        f"{razorpay_order_id}|{razorpay_payment_id}".encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-
-    if not hmac.compare_digest(generated_signature, razorpay_signature):
-        messages.error(request, "Payment signature verification failed.")
-        return redirect("subscription_gate")
-
-    plan_code = request.session.get("selected_plan_code", PLAN_BASIC)
-    if plan_code not in PLAN_CONFIGS:
-        plan_code = PLAN_BASIC
     try:
-        _apply_plan_purchase(request, plan_code, razorpay_order_id, razorpay_payment_id)
-    except ValueError:
-        messages.error(request, "Unable to link payment to your account. Please login and retry payment.")
+        if request.method != "POST":
+            return redirect("subscription_gate")
+
+        razorpay_order_id = request.POST.get("razorpay_order_id", "")
+        razorpay_payment_id = request.POST.get("razorpay_payment_id", "")
+        razorpay_signature = request.POST.get("razorpay_signature", "")
+        expected_order_id = request.session.get("razorpay_order_id", "")
+
+        if not RAZORPAY_KEY_SECRET:
+            messages.error(request, "Razorpay secret is not configured yet.")
+            return redirect("subscription_gate")
+
+        if not razorpay_order_id or not razorpay_payment_id or not razorpay_signature:
+            messages.error(request, "Payment details are incomplete.")
+            return redirect("subscription_gate")
+
+        if expected_order_id and razorpay_order_id != expected_order_id:
+            messages.error(request, "Order mismatch detected.")
+            return redirect("subscription_gate")
+
+        generated_signature = hmac.new(
+            RAZORPAY_KEY_SECRET.encode("utf-8"),
+            f"{razorpay_order_id}|{razorpay_payment_id}".encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+        if not hmac.compare_digest(generated_signature, razorpay_signature):
+            messages.error(request, "Payment signature verification failed.")
+            return redirect("subscription_gate")
+
+        resolved_user, plan_code = _resolve_callback_user_and_plan(request, razorpay_order_id)
+        if resolved_user is None:
+            messages.error(request, "Could not resolve the user for this payment.")
+            return redirect("subscription_gate")
+
+        _apply_plan_purchase_for_user(resolved_user, plan_code, razorpay_order_id, razorpay_payment_id)
+        if _subscribe_only_flow_active(request):
+            _set_subscription_flow_mode(request, "generate")
+            messages.success(request, "Subscription activated successfully.")
+            return _render_subscription_success_modal(request)
+        _grant_generation_access(request, "payment")
+        request.session["razorpay_payment_id"] = razorpay_payment_id
+        request.session.modified = True
+        messages.success(request, "Payment successful. Generation is starting now.")
+        return redirect(_build_generation_loading_url(request))
+    except Exception:
+        logger.exception("Razorpay callback failed")
+        messages.error(request, "Payment was received but the callback could not finish. Please try again.")
         return redirect("subscription_gate")
-    _grant_generation_access(request, "payment")
-    request.session["razorpay_payment_id"] = razorpay_payment_id
-    request.session.modified = True
-    messages.success(request, "Payment successful. Generation is starting now.")
-    return redirect(_build_generation_loading_url(request))
 
 
 def _load_external_views_main():
@@ -566,10 +708,17 @@ except ModuleNotFoundError as exc:
 
 
 if _views_main and hasattr(_views_main, "generate"):
-    generate = getattr(_views_main, "generate")
+    _generate_view = getattr(_views_main, "generate")
 else:
-    def generate(request):
+    def _generate_view(request):
         return _render_generator_unavailable_page(request)
+
+
+def generate(request):
+    _set_subscription_flow_mode(request, "generate")
+    _set_demo_mode(request, False)
+    _clear_pass_key_access(request)
+    return _generate_view(request)
 
 
 for _view_name in _GENERATOR_VIEW_NAMES:
