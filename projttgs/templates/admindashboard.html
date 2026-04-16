@@ -1,5 +1,29 @@
 {% extends "mainbase.html" %}
 {% block title %}SmartScheduler | Smart Timetable Generator{% endblock %}
+{% block workflow_progress %}
+<div class="admin-shortcuts-wrap">
+  <div class="container">
+    <div class="admin-shortcuts-shell">
+      {% if has_active_subscription %}
+      <a href="{% url 'generate' %}" class="admin-shortcut admin-shortcut-subscribe">
+        Create Timetable
+      </a>
+      {% else %}
+      <button type="button" class="admin-shortcut admin-shortcut-subscribe js-open-subscription-modal">
+        Subscribe
+      </button>
+      {% endif %}
+      <a href="{% url 'demo_generate_start' %}" class="admin-shortcut admin-shortcut-demo">
+        Demo Generation
+      </a>
+      <a href="{% url 'convert_csv' %}" class="admin-shortcut admin-shortcut-csv">
+        <span class="admin-csv-orb"></span>
+        CSV
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
 {% block content %}
 
 <!-- MESSAGE POPUP -->
@@ -87,24 +111,6 @@
             </div>
             <h3>CSV Converter</h3>
             <p>PDF/Excel → CSV</p>
-        </a>
-
-        <!-- SEND PREFERENCE MAIL -->
-        <a href="{% url 'send_preferences' %}" class="dash-card" style="background:linear-gradient(135deg,rgba(124,92,252,.18),rgba(124,92,252,.04));border-color:rgba(124,92,252,.4);">
-            <div class="dash-icon-wrap" style="background:rgba(124,92,252,.2);border-color:rgba(124,92,252,.5);">
-                <i class="icon fas fa-paper-plane" style="color:#c4b5fd;"></i>
-            </div>
-            <h3 style="color:#c4b5fd;">Send Preference Mail</h3>
-            <p>Email form links to teachers</p>
-        </a>
-
-        <!-- VIEW TEACHER RESPONSES -->
-        <a href="{% url 'teacher_responses' %}" class="dash-card" style="background:linear-gradient(135deg,rgba(6,182,212,.15),rgba(6,182,212,.03));border-color:rgba(6,182,212,.4);">
-            <div class="dash-icon-wrap" style="background:rgba(6,182,212,.18);border-color:rgba(6,182,212,.45);">
-                <i class="icon fas fa-table" style="color:#67e8f9;"></i>
-            </div>
-            <h3 style="color:#67e8f9;">View Responses</h3>
-            <p>All submitted preferences</p>
         </a>
 
      </div>
@@ -281,10 +287,139 @@
   --border: rgba(255,255,255,0.12);
 }
 
+.admin-shortcuts-wrap {
+  position: relative;
+  z-index: 90;
+  margin-top: 10px;
+
+}
+
+.admin-shortcuts-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+   gap: 18px;
+  width: fit-content;
+    margin: 0 auto;
+  padding: 14px 20px;
+  border: 1px solid rgba(148,163,184,0.16);
+  border-radius: 999px;
+  background: rgba(10,15,35,0.72);
+  box-shadow: 0 20px 50px rgba(2,6,23,0.34);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.admin-shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 10px 30px;
+  border: 0;
+  border-radius: 18px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+.admin-shortcut:hover {
+  transform: translateY(-2px) scale(1.04);
+  filter: brightness(1.04);
+}
+
+.admin-shortcut-subscribe {
+  background: linear-gradient(135deg, #10b981, #22c55e);
+  box-shadow: 0 0 18px rgba(16,185,129,0.46);
+  flex: 1 1 0;
+}
+
+.admin-shortcut-subscribe:hover {
+  box-shadow: 0 0 28px rgba(34,197,94,0.72);
+}
+
+.admin-shortcut-demo {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  box-shadow: 0 0 18px rgba(249,115,22,0.46);
+  flex: 1.25 1 0;
+}
+
+.admin-shortcut-demo:hover {
+  box-shadow: 0 0 28px rgba(249,115,22,0.72);
+}
+
+.admin-shortcut-csv {
+  position: relative;
+  gap: 6px;
+    min-height: 54px;
+  padding: 5px 16px 5px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.95);
+  color: #1e1b4b;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  overflow: visible;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 0 12px rgba(99,102,241,0.1);
+  animation: adminCsvAttentionPulse 2s ease-in-out infinite;
+  flex: 0 0 auto;
+}
+
+.admin-shortcut-csv:hover {
+  background: #fff;
+  color: #1e1b4b;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.16), 0 0 18px rgba(99,102,241,0.18);
+}
+
+.admin-csv-orb {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b, #10b981, #3b82f6);
+  animation: adminCsvOrbSpin 3s linear infinite;
+  box-shadow: 0 0 8px rgba(99,102,241,0.5), 0 0 16px rgba(236,72,153,0.3);
+}
+
+.admin-csv-orb::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+}
+
+@keyframes adminCsvAttentionPulse {
+  0% {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 0 6px rgba(34,197,94,0);
+    background: rgba(255,255,255,0.95);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(34,197,94,0.35), 0 0 20px rgba(34,197,94,0.22), 0 0 30px rgba(34,197,94,0.12);
+    background: rgba(34,197,94,0.14);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 0 6px rgba(34,197,94,0);
+    background: rgba(255,255,255,0.95);
+  }
+}
+
+@keyframes adminCsvOrbSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* HERO */
 .hero {
   position: relative;
-  padding: 120px 20px 40px;
+  padding: 72px 20px 40px;
   text-align: center;
 }
 
@@ -343,6 +478,7 @@
 .dash-welcome {
   font-size: 28px;
   color: var(--text);
+  margin: 0 0 12px;
   text-shadow: 0 0 14px rgba(255,255,255,0.25);
 }
 
@@ -578,8 +714,18 @@
 
 /* RESPONSIVE */
 @media(max-width:768px){
+  .admin-shortcuts-shell {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 28px;
+  }
+  .admin-shortcut {
+    width: 100%;
+  }
   .hero-heading { font-size: 36px; }
-  .hero { padding-top: 100px; }
+  .hero { padding-top: 72px; }
   .flow-line { display:none; }
   .flow-card { text-align:left; }
 }
