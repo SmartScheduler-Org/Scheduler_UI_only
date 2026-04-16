@@ -1,1 +1,0 @@
-{"nodes": [{"id": "settings_py", "label": "settings.py", "file_type": "code", "source_file": "settings.py", "source_location": "L1"}], "edges": [{"source": "settings_py", "target": "os", "relation": "imports", "confidence": "EXTRACTED", "source_file": "settings.py", "source_location": "L1", "weight": 1.0}], "raw_calls": []}
