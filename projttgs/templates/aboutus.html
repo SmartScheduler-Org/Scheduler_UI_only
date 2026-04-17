@@ -361,7 +361,7 @@
     <!-- NAVBAR -->
     <header class="nav">
       <div class="container nav-inner">
-        <div class="nav-left">
+        <a class="nav-left" href="{% url 'home' %}" style="text-decoration:none; color:inherit;">
           <div class="nav-logo-mark">
             <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
               <defs><linearGradient id="ssLg" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs>
@@ -370,14 +370,15 @@
             </svg>
           </div>
           <div>
-            <div class="nav-title"><a href="{% url 'home' %}"><span style="color:#a3e635">Smart</span><span style="color:#22c55e">Scheduler</span></a></div>
+            <div class="nav-title"><span style="color:#a3e635">Smart</span><span style="color:#22c55e">Scheduler</span></div>
             <div style="font-size:11px; color:var(--muted)">Smart Academic Scheduling</div>
           </div>
-        </div>
+        </a>
 
         <nav class="nav-links">
           <a class="nav-link active" href="{% url 'about' %}">About Us</a>
           <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
+          <a class="nav-link" href="{% url 'home' %}#demo">Live Demo</a>
         </nav>
 
         <div class="nav-actions">
