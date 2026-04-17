@@ -69,7 +69,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "ttgen.context_processors.subscription_nav",
+               ## "ttgen.context_processors.subscription_nav",
             ],
         },
     },
@@ -164,7 +164,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False").lower() in {"1", "true", "yes", "on"}
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False").lower() in {"1", "true", "yes", "on"}
 CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False").lower() in {"1", "true", "yes", "on"}
-X_FRAME_OPTIONS = "SAMEORIGIN"
+##X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
