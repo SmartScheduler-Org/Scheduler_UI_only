@@ -12,8 +12,8 @@
 
     <nav class="nav-links" id="navMenu">
       <a class="nav-link" href="{% url 'home' %}">Home</a>
-      <a class="nav-link" href="#how">About Us</a>
-      <a class="nav-link" href="#demo">Live demo</a>
+      <a class="nav-link" href="{% url 'about' %}">About Us</a>
+      <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
     </nav>
 
     <div class="nav-actions">
@@ -36,9 +36,9 @@
 
   <!-- Mobile dropdown menu -->
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#features">Home</a>
-    <a href="#how">About US</a>
-    <a href="#demo">Live demo</a>
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'about' %}">About Us</a>
+    <a href="{% url 'contact' %}">Contact Us</a>
   </div>
 </header>
 
