@@ -33,8 +33,6 @@
       html.light .nav-link:hover { color: #1e293b; }
       html.light .nav-title { color: #1e293b; }
       html.light .nav-logo-mark { filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.3)); }
-      html.light .nav-link.active { color: #1e293b; }
-      html.light .nav-link.active::after { width: 100%; }
 
       html.light .chip {
         background: rgba(241,245,249,0.9);
@@ -129,7 +127,6 @@
         color: #1e293b;
       }
       html.light .mobile-menu a { color: #334155; }
-      html.light .mobile-menu button { color: #334155; }
 
       html.light .hamburger span { background: #1e293b; }
 

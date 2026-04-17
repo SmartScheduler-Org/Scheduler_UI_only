@@ -133,6 +133,60 @@
 
       html.light .hamburger span { background: #1e293b; }
 
+      /* Register page (auth-card) light mode */
+      html.light .auth-card {
+        background: rgba(255,255,255,0.95);
+        border-color: rgba(100,116,139,0.2);
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        color: #1e293b;
+      }
+      html.light .auth-title { color: #1e293b; }
+      html.light .auth-sub { color: #64748b; }
+      html.light .auth-card input {
+        background: rgba(241,245,249,0.95);
+        border-color: rgba(100,116,139,0.3);
+        color: #1e293b;
+      }
+      html.light .auth-card input::placeholder { color: #94a3b8; }
+      html.light .auth-card label { color: #475569; }
+      html.light .auth-card p { color: #475569; }
+      html.light .auth-links { color: #64748b; }
+      html.light .auth-links a { color: #6366f1; }
+      html.light .auth-error {
+        background: rgba(244,63,94,0.1);
+        border-color: rgba(244,63,94,0.4);
+        color: #dc2626;
+      }
+
+      /* Login page form text light mode (gradient title to solid dark) */
+      html.light .login-title {
+        background: none !important;
+        -webkit-background-clip: unset !important;
+        background-clip: unset !important;
+        -webkit-text-fill-color: #1e293b !important;
+        color: #1e293b !important;
+      }
+      html.light .login-right { color: #1e293b; }
+      html.light .login-right .links a { color: #6366f1; }
+      html.light .login-right .error-msg {
+        background: rgba(244,63,94,0.1);
+        border-color: rgba(244,63,94,0.4);
+        color: #dc2626;
+      }
+
+      /* Site footer light mode */
+      html.light .site-footer-ref {
+        background: linear-gradient(180deg, #e8eef6 0%, #dde5f0 100%);
+        border-top-color: rgba(100,116,139,0.25);
+      }
+      html.light .site-footer-ref .footer-title { color: #1e293b; }
+      html.light .site-footer-ref .footer-subtitle { color: #64748b; }
+      html.light .site-footer-ref .site-footer-nav a { color: #334155; }
+      html.light .site-footer-ref .site-footer-nav a:hover { color: #1e293b; }
+      html.light .site-footer-ref .site-footer-social a { color: #475569; }
+      html.light .site-footer-ref .site-footer-copy { color: #64748b; }
+      html.light .site-footer-ref .footer-bottom { border-top-color: rgba(100,116,139,0.2); }
+
       * {
         margin: 0;
         padding: 0;
