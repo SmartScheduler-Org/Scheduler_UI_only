@@ -214,6 +214,7 @@ def index(request): return render(request, 'index.html')
 def about(request): return render(request, 'aboutus.html')
 def help(request): return render(request, 'help.html')
 def terms(request): return render(request, 'terms.html')
+def privacy(request): return render(request, 'privacy.html')
 def role(request):
     if request.user.is_authenticated:
         profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -1847,3 +1848,4 @@ def convert_csv(request):
     return render(request, "convert_csv.html", {
         "entity_configs_json": entity_configs_json,
     })
+
