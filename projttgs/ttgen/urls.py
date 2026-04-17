@@ -7,7 +7,6 @@ urlpatterns = [
     path('about', views.about, name='about'),
     path('help', views.help, name='help'),
     path('terms', views.terms, name='terms'),
-    path('privacy', views.privacy, name='privacy'),
     path('contact', views.contact, name='contact'),
 
     path('admin_dashboard', views.admindash, name='admindash'),
@@ -55,7 +54,6 @@ urlpatterns = [
 
 
     path('generate/', views.generate, name='generate'),
-    path("generate/demo/", views.demo_generate_start, name="demo_generate_start"),
     path("auth/role/subscription/", views.subscription_gate, name="subscription_gate"),
     path("auth/role/subscription/create-order/", views.create_razorpay_order, name="create_razorpay_order"),
     path("auth/role/subscription/verify-payment/", views.verify_razorpay_payment, name="verify_razorpay_payment"),
@@ -101,4 +99,12 @@ urlpatterns = [
 
 
 
+    # ── Teacher Preference Feature ──────────────────────────────
+    path('teacher-pref-form/',      views.teacher_pref_form,         name='teacher_pref_form'),
+    path('send-preferences/',       views.send_preferences_page,     name='send_preferences'),
+    path('teacher-responses/',      views.teacher_responses_page,    name='teacher_responses'),
+    path('api/pref/submit/',        views.teacher_pref_submit,       name='pref_submit'),
+    path('api/pref/send-links/',    views.send_pref_links_smtp,      name='pref_send_links'),
+    path('api/pref/parse-emails/',  views.parse_emails_view,         name='pref_parse_emails'),
+    path('export/preferences/csv/', views.export_preferences_csv,    name='export_pref_csv'),
 ]

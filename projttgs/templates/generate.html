@@ -497,24 +497,6 @@
             transition: transform 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease;
         }
 
-        .cta-row {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .cta-secondary {
-            color: var(--text);
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(173, 197, 255, 0.16);
-            box-shadow: none;
-        }
-
-        .cta-secondary:hover:not(:disabled) {
-            background: rgba(255,255,255,0.12);
-            box-shadow: 0 20px 40px rgba(12, 19, 33, 0.28);
-        }
-
         .cta:hover:not(:disabled) {
             transform: translateY(-2px) scale(1.01);
             box-shadow: 0 28px 56px rgba(32, 61, 112, 0.48);
@@ -540,12 +522,6 @@
             color: rgba(226, 235, 255, 0.58);
             font-size: 13px;
             line-height: 1.6;
-        }
-
-        @media (max-width: 720px) {
-            .cta-row {
-                grid-template-columns: 1fr;
-            }
         }
 
         .guide-panel {
@@ -1036,16 +1012,10 @@
                             </span>
                         </label>
 
-                        <div class="cta-row">
-                            <button type="submit" class="cta" {% if generator_unavailable %}disabled{% endif %}>
-                                <span>Generate Timetables</span>
-                                <span class="cta-arrow">→</span>
-                            </button>
-                            <button type="submit" formaction="{% url 'demo_generate_start' %}" class="cta cta-secondary" {% if generator_unavailable %}disabled{% endif %}>
-                                <span>Demo Generation</span>
-                                <span class="cta-arrow">↗</span>
-                            </button>
-                        </div>
+                        <button type="submit" class="cta" {% if generator_unavailable %}disabled{% endif %}>
+                            <span>Generate Timetables</span>
+                            <span class="cta-arrow">→</span>
+                        </button>
                     </div>
                 </form>
 

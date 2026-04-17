@@ -362,9 +362,7 @@
                                 <span class="meta-chip {% if plan.can_substitute %}is-allowed{% else %}is-locked{% endif %}">
                                     {% if plan.can_substitute %}Substitute enabled{% else %}Substitute locked{% endif %}
                                 </span>
-                                <span class="meta-chip {% if plan.can_drag_drop %}is-allowed{% else %}is-locked{% endif %}">
-                                    {% if plan.can_drag_drop %}Drag-drop enabled{% else %}Drag-drop locked{% endif %}
-                                </span>
+                                <span class="meta-chip is-locked">Drag-drop locked</span>
                             </span>
                         </span>
                     </label>
@@ -407,7 +405,6 @@
             <form method="post" action="{% url 'subscription_gate' %}" id="subscription-form">
                 {% csrf_token %}
                 <input type="hidden" name="use_pso" value="{% if use_pso %}1{% else %}0{% endif %}">
-                <input type="hidden" name="flow_mode" value="{{ subscription_flow_mode }}">
                 {% if active_plan and remaining_generations > 0 %}
                 <div class="actions">
                     <button type="submit" name="continue_current_plan" value="1" class="button button-secondary">Use Current Plan</button>
@@ -440,19 +437,10 @@
             const statusNode = document.getElementById("payment-status");
             const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
             const usePso = "{% if use_pso %}1{% else %}0{% endif %}";
-            const flowMode = "{{ subscription_flow_mode|escapejs }}";
-            const imageUrl = "https://bitebox.site/biteboxlogo.png";
+            const imageUrl = window.location.origin + "{% static 'img/logo.jpeg' %}";
             const priceNode = document.getElementById("selected-plan-price");
             const taglineNode = document.getElementById("selected-plan-tagline");
             const planInputs = Array.from(document.querySelectorAll('input[name="plan_code"]'));
-            let preparedOrder = {
-                ok: Boolean("{{ preloaded_order_id|escapejs }}"),
-                order_id: "{{ preloaded_order_id|escapejs }}",
-                amount: Number("{{ preloaded_order_amount }}"),
-                currency: "{{ preloaded_order_currency|escapejs }}",
-                key: "{{ razorpay_key_id|escapejs }}",
-                name: "{{ razorpay_name|escapejs }}"
-            };
             const planMap = {
                 {% for plan in plans %}
                 "{{ plan.code }}": { price: "{{ plan.price_rupees }}", tagline: "{{ plan.tagline|escapejs }}" }{% if not forloop.last %},{% endif %}
@@ -492,25 +480,9 @@
                         "Content-Type": "application/x-www-form-urlencoded",
                         "X-CSRFToken": csrfToken
                     },
-                    body: new URLSearchParams({ use_pso: usePso, plan_code: selectedPlanCode(), flow_mode: flowMode })
+                    body: new URLSearchParams({ use_pso: usePso, plan_code: selectedPlanCode() })
                 });
                 return response.json();
-            }
-
-            async function prepareOrderForSelectedPlan() {
-                try {
-                    const order = await createOrder();
-                    if (order.ok) {
-                        preparedOrder = order;
-                        setStatus("", "");
-                    } else {
-                        preparedOrder = null;
-                        setStatus(order.message || "Unable to prepare payment.", "error");
-                    }
-                } catch (error) {
-                    preparedOrder = null;
-                    setStatus("Unable to prepare payment right now.", "error");
-                }
             }
 
             if (!payButton) {
@@ -518,31 +490,20 @@
             }
 
             planInputs.forEach((input) => {
-                input.addEventListener("change", function () {
-                    refreshPlanSummary();
-                    preparedOrder = null;
-                    setStatus("Refreshing payment session...", "");
-                    prepareOrderForSelectedPlan();
-                });
+                input.addEventListener("change", refreshPlanSummary);
             });
             refreshPlanSummary();
-            if (!preparedOrder.ok) {
-                prepareOrderForSelectedPlan();
-            }
 
             payButton.addEventListener("click", async function () {
                 payButton.disabled = true;
-                setStatus("Opening Razorpay checkout...", "");
+                setStatus("Preparing Razorpay checkout...", "");
 
                 try {
-                    let order = preparedOrder;
-                    if (!order || !order.ok) {
-                        order = await createOrder();
-                    }
+                    const order = await createOrder();
+
                     if (!order.ok) {
                         throw new Error(order.message || "Unable to start payment.");
                     }
-                    preparedOrder = null;
 
                     const razorpay = new Razorpay({
                         key: order.key,
@@ -552,8 +513,34 @@
                         image: imageUrl,
                         description: "SmartScheduler generation unlock",
                         order_id: order.order_id,
-                        callback_url: window.location.origin + "{% url 'razorpay_payment_callback' %}",
-                        redirect: true,
+                        handler: async function (paymentResponse) {
+                            try {
+                                setStatus("Verifying payment...", "");
+                                const verifyResponse = await fetch("{% url 'verify_razorpay_payment' %}", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": csrfToken
+                                    },
+                                    body: JSON.stringify({
+                                        razorpay_order_id: paymentResponse.razorpay_order_id,
+                                        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                                        razorpay_signature: paymentResponse.razorpay_signature
+                                    })
+                                });
+
+                                const verifyPayload = await verifyResponse.json();
+                                if (!verifyResponse.ok || !verifyPayload.ok) {
+                                    throw new Error(verifyPayload.message || "Payment verification failed.");
+                                }
+
+                                setStatus("Payment successful. Redirecting...", "success");
+                                window.location.href = verifyPayload.redirect_url || "{% url 'generate_timetable_loading' %}";
+                            } catch (verifyError) {
+                                setStatus(verifyError.message || "Unable to verify payment right now.", "error");
+                                payButton.disabled = false;
+                            }
+                        },
                         prefill: {
                             name: "SmartScheduler User",
                             contact: ""
@@ -566,16 +553,18 @@
                         },
                         modal: {
                             ondismiss: function () {
+                                setStatus("Payment window closed before completion.", "error");
                                 payButton.disabled = false;
-                                const retry = window.confirm("Payment Cancelled. Do you want to retry?");
-                                if (retry) {
-                                    payButton.click();
-                                } else {
-                                    setStatus("Payment window closed before completion.", "error");
-                                }
-                                prepareOrderForSelectedPlan();
                             }
                         }
+                    });
+
+                    razorpay.on("payment.failed", function (response) {
+                        const failureMessage = (response && response.error && response.error.description)
+                            ? response.error.description
+                            : "Payment failed. Please try again.";
+                        setStatus(failureMessage, "error");
+                        payButton.disabled = false;
                     });
 
                     setStatus("Redirecting to Razorpay checkout...", "");
@@ -583,7 +572,6 @@
                 } catch (error) {
                     setStatus(error.message || "Unable to start payment right now.", "error");
                     payButton.disabled = false;
-                    prepareOrderForSelectedPlan();
                 }
             });
         })();

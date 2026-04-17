@@ -36,55 +36,6 @@ h1 {
     font-weight: 650;
 }
 
-.page-utility-bar {
-    position: sticky;
-    top: 14px;
-    z-index: 60;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    width: min(1380px, calc(100% - 36px));
-    margin: 16px auto 0;
-}
-
-.utility-btn {
-    width: 52px;
-    height: 52px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    border-radius: 18px;
-    background: rgba(15, 23, 42, 0.78);
-    color: #f8fafc;
-    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.24);
-    backdrop-filter: blur(14px);
-    text-decoration: none;
-    cursor: pointer;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
-}
-
-.utility-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 22px 44px rgba(15, 23, 42, 0.32);
-    background: rgba(15, 23, 42, 0.92);
-    color: #ffffff;
-    text-decoration: none;
-}
-
-.utility-btn svg {
-    width: 22px;
-    height: 22px;
-}
-
-.utility-btn.is-close {
-    background: rgba(127, 29, 29, 0.88);
-}
-
-.utility-btn.is-close:hover {
-    background: rgba(153, 27, 27, 0.96);
-}
-
 .secHead {
   margin-top: 40px;
   text-align: center;
@@ -178,137 +129,6 @@ h1 {
 
 .slot-cell:hover .action-buttons {
     opacity: 1;
-}
-
-.plan-alert-popup {
-    border-radius: 26px !important;
-    padding: 20px 20px 18px !important;
-    background:
-        radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.14), transparent 24%),
-        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
-    border: 1px solid rgba(37, 122, 122, 0.12) !important;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.16) !important;
-}
-
-.plan-alert-title {
-    color: #0f3d56 !important;
-    font-size: 28px !important;
-    font-weight: 800 !important;
-    letter-spacing: -0.02em !important;
-}
-
-.plan-alert-html {
-    margin-top: 6px !important;
-    color: #35566d !important;
-    font-size: 15px !important;
-    line-height: 1.6 !important;
-}
-
-.plan-alert-button {
-    border-radius: 999px !important;
-    background: linear-gradient(135deg, #257a7a 0%, #1f9d8f 100%) !important;
-    color: #ffffff !important;
-    padding: 12px 24px !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    box-shadow: 0 16px 32px rgba(37, 122, 122, 0.22) !important;
-}
-
-.demo-banner {
-    max-width: 1100px;
-    margin: 18px auto 0;
-    padding: 14px 18px;
-    border-radius: 18px;
-    color: #0f3d56;
-    background: linear-gradient(135deg, #ecfeff 0%, #eff6ff 100%);
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    box-shadow: 0 14px 36px rgba(14, 165, 233, 0.08);
-}
-
-.demo-banner strong {
-    display: block;
-    margin-bottom: 4px;
-    font-size: 16px;
-}
-
-.demo-preview-card {
-    position: relative;
-}
-
-.demo-preview-card.is-locked {
-    overflow: hidden;
-}
-
-.demo-preview-card.is-locked .export-watermark,
-.demo-preview-card.is-locked > div:last-child {
-    filter: blur(11px);
-    pointer-events: none;
-    user-select: none;
-}
-
-.demo-lock-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 28px;
-    background: rgba(7, 17, 31, 0.42);
-}
-
-.demo-preview-card.is-locked .demo-lock-overlay {
-    display: flex;
-}
-
-.demo-lock-card {
-    max-width: 440px;
-    padding: 24px 24px 20px;
-    text-align: center;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 22px 60px rgba(15, 23, 42, 0.22);
-}
-
-.demo-lock-card strong {
-    display: block;
-    color: #0f172a;
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.demo-lock-card p {
-    color: #475569;
-    font-size: 15px;
-}
-
-.demo-locked-surface {
-    position: relative;
-    overflow: hidden;
-}
-
-.demo-locked-surface > * {
-    filter: blur(11px);
-    pointer-events: none;
-    user-select: none;
-}
-
-.demo-locked-surface::after {
-    content: "Subscribe to view / download / edit / drag and drop";
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    text-align: center;
-    color: #0f172a;
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    background: rgba(255,255,255,0.76);
-    z-index: 4;
 }
 
 .action-button {
@@ -1347,23 +1167,7 @@ body.drag-drop-active .drag-mode-badge {
         }, 2200);
     }
 
-    function showPlanUpgradeMessage(title, message) {
-        Swal.fire({
-            icon: "info",
-            title: title,
-            html: `<div style="font-weight:600; color:#0f766e; margin-bottom:8px;">Current plan does not include this action.</div><div>${message}</div>`,
-            confirmButtonText: "Got it",
-            customClass: {
-                popup: "plan-alert-popup",
-                title: "plan-alert-title",
-                htmlContainer: "plan-alert-html",
-                confirmButton: "plan-alert-button",
-            },
-            buttonsStyling: false,
-        });
-    }
-
-function initDragAndDrop() {
+    function initDragAndDrop() {
         const toggleBtn = document.getElementById("dragDropToggle");
         if (!toggleBtn) return;
 
@@ -1382,10 +1186,6 @@ function initDragAndDrop() {
         }
 
         toggleBtn.addEventListener("click", function() {
-            if (!window.planPermissions.canDragDrop) {
-                showPlanUpgradeMessage("Drag & Drop Locked", "Please upgrade your plan to access drag-and-drop scheduling.");
-                return;
-            }
             dragEnabled = !dragEnabled;
             currentDrag = null;
             syncDragState();
@@ -1503,69 +1303,12 @@ function initDragAndDrop() {
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        window.planPermissions = {
-            canEditDelete: {{ can_edit_delete|yesno:"true,false" }},
-            canSubstitute: {{ can_substitute|yesno:"true,false" }},
-            canDragDrop: {{ can_drag_drop|yesno:"true,false" }}
-        };
-
         const initialView = ["section", "room", "workload", "teacher"].includes(window.location.hash.replace("#", ""))
             ? window.location.hash.replace("#", "")
             : "section";
-        const openFullScreenButton = document.getElementById("openFullScreenButton");
-
-        if (openFullScreenButton) {
-            openFullScreenButton.addEventListener("click", function () {
-                const targetUrl = window.location.href;
-                try {
-                    if (window.top && window.top !== window) {
-                        window.top.location.href = targetUrl;
-                        return;
-                    }
-                } catch (error) {}
-
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen().catch(() => {
-                        window.location.href = targetUrl;
-                    });
-                    return;
-                }
-
-                window.location.href = targetUrl;
-            });
-        }
 
         showView(initialView);
         initDragAndDrop();
-
-        document.querySelectorAll(".btn-add, .btn-update, .btn-delete").forEach((link) => {
-            link.addEventListener("click", function(event) {
-                if (window.planPermissions.canEditDelete) {
-                    return;
-                }
-                event.preventDefault();
-                showPlanUpgradeMessage("Editing Locked", "Please upgrade your plan to use editing features.");
-            });
-        });
-
-        document.querySelectorAll(".btn-substitute").forEach((link) => {
-            link.addEventListener("click", function(event) {
-                if (window.planPermissions.canSubstitute) {
-                    return;
-                }
-                event.preventDefault();
-                showPlanUpgradeMessage("Substitute Locked", "Please upgrade your plan to use substitute features.");
-            });
-        });
-
-        {% if demo_mode %}
-        document.querySelectorAll(".save-tt-link, .btn-save-tt, .room-pdf-btn").forEach((item) => {
-            item.addEventListener("click", function(event) {
-                event.preventDefault();
-                showPlanUpgradeMessage("Preview Only", "Subscribe to view / download / edit / drag and drop.");
-            });
-        });
-        {% endif %}
 
         {% if messages %}
             {% for message in messages %}
@@ -1610,31 +1353,7 @@ function initDragAndDrop() {
     </div>
 </div>
 
-<div class="page-utility-bar">
-    <button type="button" class="utility-btn" id="openFullScreenButton" title="Open full screen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <polyline points="9 21 3 21 3 15"></polyline>
-            <line x1="21" y1="3" x2="14" y2="10"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
-        </svg>
-    </button>
-    <a href="{% url 'admindash' %}" class="utility-btn is-close" title="Close and go to dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-    </a>
-</div>
-
 <h1>Scheduler | Generated Timetable</h1>
-
-{% if demo_mode %}
-<div class="demo-banner">
-    <strong>Demo Preview Active</strong>
-    Only the top 2  sections are fully visible. Subscribe to unlock the full timetable, downloads, editing, and drag-and-drop.
-</div>
-{% endif %}
 
 {% if index %}
 <div class="top-actions">
@@ -1676,7 +1395,7 @@ function initDragAndDrop() {
 {# ===================== SECTION TIMETABLES ===================== #}
 <div id="section-view">
 {% for table in tables %}
-  <div id="section-tt-{{ forloop.counter }}" class="export-surface demo-preview-card {% if demo_mode and table.demo_locked %}is-locked{% endif %}">
+  <div id="section-tt-{{ forloop.counter }}" class="export-surface">
   <div class="export-watermark">
     <div class="export-watermark__grid">
       <span>SmartScheduler</span>
@@ -1698,7 +1417,7 @@ function initDragAndDrop() {
     {{ table.section.section_id }} ({{ table.section.department.dept_name }})
   </h2>
 
-  <!-- {% if table.subject_counts %}
+  {% if table.subject_counts %}
     <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #f7fbff; border: 1px solid #d6e9f8; border-radius: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
         <div style="font-weight: 700; color: #0d47a1;">
@@ -1734,7 +1453,7 @@ function initDragAndDrop() {
         {% endfor %}
       </div>
     </div>
-  {% endif %} -->
+  {% endif %}
 
   <div style="text-align:center; margin-bottom: 15px;">
       <a href="/add_slot/{{ table.section.section_id }}/" class="action-button btn-add"
@@ -1849,14 +1568,6 @@ function initDragAndDrop() {
     </tbody>
   </table>
   </div>
-  {% if demo_mode and table.demo_locked %}
-  <div class="demo-lock-overlay">
-    <div class="demo-lock-card">
-      <strong>Preview Locked</strong>
-      <p>Subscribe to view / download / edit / drag and drop</p>
-    </div>
-  </div>
-  {% endif %}
   </div>
 
 {% endfor %}
@@ -1864,7 +1575,7 @@ function initDragAndDrop() {
 </div>
 
 {# ===================== ROOMS TABLE  ===================== #}
-<div id="room-view" style="display:none;" {% if demo_mode %}class="demo-locked-surface"{% endif %}>
+<div id="room-view" style="display:none;">
 <div class="room-view-toolbar">
   <div>
     <h2 class="room-view-title">Room Timetables</h2>
@@ -1972,7 +1683,7 @@ function initDragAndDrop() {
 
 
 {# ===================== TEACHER WORKLOAD SUMMARY ===================== #}
-<div id="workload-view" style="display:none;" {% if demo_mode %}class="demo-locked-surface"{% endif %}>
+<div id="workload-view" style="display:none;">
 <h1 class="secHead" style="margin-top: 60px;">Teacher Workload Summary</h1>
 
 <table class="table2" style="width:70%; margin-bottom:40px;">
@@ -2028,7 +1739,7 @@ function initDragAndDrop() {
 </div>
 
 {# ===================== TEACHER TIMETABLES ===================== #}
-<div id="teacher-view" style="display:none;" {% if demo_mode %}class="demo-locked-surface"{% endif %}>
+<div id="teacher-view" style="display:none;">
 <h1 class="secHead" style="margin-top: 60px;">Teacher Timetables</h1>
 
 {% for ttable in teacher_tables %}
