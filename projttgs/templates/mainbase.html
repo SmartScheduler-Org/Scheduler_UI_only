@@ -17,6 +17,13 @@
     />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+
+    <!-- tab icon -->
+     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
+    <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
+
+
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Asset&family=Notable&display=swap" rel="stylesheet">
@@ -25,6 +32,26 @@
 
 <body>
     {% include 'navbarmain.html' %} 
+    <div id="pageLoadIndicator" class="page-load-indicator" aria-hidden="true">
+      <div class="page-load-pill">
+        <div class="page-load-spinner">
+          <div class="page-load-logo">
+            <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="pageLoadLgMain" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#38bdf8"/>
+                  <stop offset=".5" stop-color="#0ea5e9"/>
+                  <stop offset="1" stop-color="#0c3557"/>
+                </linearGradient>
+              </defs>
+              <path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#pageLoadLgMain)"/>
+              <path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/>
+            </svg>
+          </div>
+        </div>
+        <span class="page-load-text">Loading SmartScheduler...</span>
+      </div>
+    </div>
      <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
@@ -39,5 +66,164 @@
 
      {% include 'mainfotter.html' %}
     <script src="{% static 'chatbot.js' %}"></script>
+    <style>
+      .page-load-indicator {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-16px);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1000000;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+      }
+
+      .page-load-indicator.is-visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .page-load-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px 10px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        background: rgba(7, 15, 32, 0.9);
+        box-shadow: 0 16px 40px rgba(2, 6, 23, 0.42);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      .page-load-spinner {
+        position: relative;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+      }
+
+      .page-load-spinner::before {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2.5px solid rgba(56, 189, 248, 0.2);
+        border-top-color: #38bdf8;
+        border-right-color: #22c55e;
+        animation: pageLoadSpin 0.85s linear infinite;
+        box-shadow: 0 0 18px rgba(14, 165, 233, 0.32);
+      }
+
+      .page-load-logo {
+        width: 26px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+      }
+
+      .page-load-logo svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .page-load-text {
+        color: #e2e8f0;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      @keyframes pageLoadSpin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page-load-indicator {
+          top: 12px;
+        }
+
+        .page-load-pill {
+          padding: 9px 12px 9px 10px;
+          gap: 10px;
+        }
+
+        .page-load-text {
+          font-size: 12px;
+        }
+      }
+
+      html.light .page-load-pill {
+        background: rgba(255,255,255,0.94);
+        border-color: rgba(148,163,184,0.24);
+        box-shadow: 0 16px 36px rgba(148,163,184,0.2);
+      }
+
+      html.light .page-load-text {
+        color: #334155;
+      }
+    </style>
+    <script>
+      (function () {
+        const loader = document.getElementById("pageLoadIndicator");
+        if (!loader) return;
+
+        let showTimer = null;
+
+        function showPageLoader() {
+          if (showTimer) {
+            window.clearTimeout(showTimer);
+          }
+          showTimer = window.setTimeout(() => {
+            loader.classList.add("is-visible");
+            loader.setAttribute("aria-hidden", "false");
+          }, 120);
+        }
+
+        function hidePageLoader() {
+          if (showTimer) {
+            window.clearTimeout(showTimer);
+            showTimer = null;
+          }
+          loader.classList.remove("is-visible");
+          loader.setAttribute("aria-hidden", "true");
+        }
+
+        function shouldSkipLoaderForLink(link) {
+          const href = (link.getAttribute("href") || "").trim();
+          if (!href || href === "#" || href.startsWith("#")) return true;
+          if (href.startsWith("javascript:")) return true;
+          if (link.hasAttribute("download")) return true;
+          if (link.target && link.target.toLowerCase() === "_blank") return true;
+          if (link.dataset.noPageLoader === "true") return true;
+          return false;
+        }
+
+        document.addEventListener("click", (event) => {
+          const link = event.target.closest("a[href]");
+          if (!link) return;
+          if (event.defaultPrevented) return;
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          if (shouldSkipLoaderForLink(link)) return;
+          showPageLoader();
+        });
+
+        document.addEventListener("submit", (event) => {
+          const form = event.target;
+          if (!(form instanceof HTMLFormElement)) return;
+          if (event.defaultPrevented) return;
+          if (form.dataset.noPageLoader === "true") return;
+          showPageLoader();
+        });
+
+        window.addEventListener("pageshow", hidePageLoader);
+        window.addEventListener("load", hidePageLoader);
+      })();
+    </script>
 </body>
 </html>

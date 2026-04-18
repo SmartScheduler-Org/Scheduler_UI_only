@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html> 
 <html lang="en">
   <script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
@@ -5,13 +6,16 @@
     <meta charset="UTF-8" />
     <title>AI Timetable Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
+    <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
 
     <!-- Google Font -->
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-	<link rel="stylesheet" href="./static/homepage.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+	<link rel="stylesheet" href="{% static 'homepage.css' %}">
 
    
   </head>
@@ -25,7 +29,7 @@
     <!-- NAVBAR -->
     <header class="nav">
       <div class="container nav-inner">
-        <div class="nav-left">
+        <a class="nav-left" href="{% url 'home' %}" style="text-decoration:none; color:inherit;">
           <div class="nav-logo-mark"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg3" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg3)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
           <div>
             <div class="nav-title"><span style="color:#a3e635">Smart</span><span style="color:#22c55e">Scheduler</span></div>
@@ -33,17 +37,21 @@
               Smart Academic Scheduling
             </div>
           </div>
-        </div>
+        </a>
 
         <nav class="nav-links">
           <a class="nav-link" href="{% url 'about' %}">About Us</a>
-        <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
-
-          {% comment %} <a class="nav-link" href="#demo">Live dem</a> {% endcomment %}
+          <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
+          <a class="nav-link" href="{% url 'home' %}#demo">Live Demo</a>
         </nav>
 
         <div class="nav-actions">
           <div class="chip">Genetic Algorithm · AI</div>
+          <!-- <div class="chip">Genetic Algorithm · AI</div>
+          <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
+            <svg class="theme-icon sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="theme-icon moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button> -->
           <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
             <svg class="theme-icon sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             <svg class="theme-icon moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -58,10 +66,12 @@
 
 <script>
 const themeToggle = document.getElementById("themeToggle");
-themeToggle.addEventListener("click", () => {
-  document.documentElement.classList.toggle("light");
-  localStorage.setItem("theme", document.documentElement.classList.contains("light") ? "light" : "dark");
-});
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    document.documentElement.classList.toggle("light");
+    localStorage.setItem("theme", document.documentElement.classList.contains("light") ? "light" : "dark");
+  });
+}
 </script>
 
 <style>
@@ -635,8 +645,6 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
 
     </main>
 
-
-
    <section id="faq" class="section">
   <div class="container">
     <h2 class="faq-heading reveal">Frequently Asked Questions</h2>
@@ -644,41 +652,41 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
 
     <div class="faq-wrapper">
       <div class="faq-item">
-        <button class="faq-question">
+        <button class="faq-question" type="button" aria-expanded="false">
           How fast is the timetable generation?
           <span class="faq-icon">+</span>
         </button>
-        <div class="faq-answer">
+        <div class="faq-answer" hidden>
           It generates a full optimized timetable in 3–8 seconds.
         </div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-question">
+        <button class="faq-question" type="button" aria-expanded="false">
           Does it support labs and electives?
           <span class="faq-icon">+</span>
         </button>
-        <div class="faq-answer">
+        <div class="faq-answer" hidden>
           Yes — handles long labs, shared spaces and elective batch allocation.
         </div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-question">
+        <button class="faq-question" type="button" aria-expanded="false">
           Can we export as PDF?
           <span class="faq-icon">+</span>
         </button>
-        <div class="faq-answer">
+        <div class="faq-answer" hidden>
           You can export department, student and teacher-wise PDF instantly.
         </div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-question">
+        <button class="faq-question" type="button" aria-expanded="false">
           Does it integrate with ERP?
           <span class="faq-icon">+</span>
         </button>
-        <div class="faq-answer">
+        <div class="faq-answer" hidden>
           Supports API-based ERP syncing to keep data always updated.
         </div>
       </div>
@@ -689,33 +697,7 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
 
 
     <!-- FOOTER -->
-   <footer class="footer-new">
-  <div class="footer-container">
-    <div class="footer-brand">
-      <div class="footer-logo"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg4" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg4)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
-      <h3 class="footer-title">SmartScheduler</h3>
-      <p class="footer-sub">Smart Academic Timetabling</p>
-    </div>
-
-    <div class="footer-links">
-      <a href="#features">Features</a>
-      <a href="#how">How it works</a>
-      <a href="#demo">Demo</a>
-      <a href="#">Contact</a>
-    </div>
-
-    <div class="footer-social">
-      <a href="#"><span>🐦</span></a>
-      <a href="#"><span>💼</span></a>
-      <a href="#"><span>📷</span></a>
-      <a href="#"><span>🔗</span></a>
-    </div>
-  </div>
-
-  <div class="footer-bottom">
-    © 2025 SmartScheduler. Built with ❤️ by Team SmartScheduler.
-  </div>
-</footer>
+    {% include 'mainfotter.html' %}
 
 
 
@@ -847,13 +829,38 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
         typeEditor();
       }
 
-
-
-
       // FAQ Open/Close
-document.querySelectorAll(".faq-item").forEach((item) => {
-  item.addEventListener("click", () => {
-    item.classList.toggle("active");
+const faqItems = document.querySelectorAll(".faq-item");
+faqItems.forEach((item) => {
+  const question = item.querySelector(".faq-question");
+  const answer = item.querySelector(".faq-answer");
+  if (!question) return;
+  if (answer) {
+    answer.hidden = true;
+  }
+
+  question.addEventListener("click", () => {
+    const isOpen = item.classList.contains("active");
+
+    faqItems.forEach((otherItem) => {
+      otherItem.classList.remove("active");
+      const otherQuestion = otherItem.querySelector(".faq-question");
+      const otherAnswer = otherItem.querySelector(".faq-answer");
+      if (otherQuestion) {
+        otherQuestion.setAttribute("aria-expanded", "false");
+      }
+      if (otherAnswer) {
+        otherAnswer.hidden = true;
+      }
+    });
+
+    if (!isOpen) {
+      item.classList.add("active");
+      question.setAttribute("aria-expanded", "true");
+      if (answer) {
+        answer.hidden = false;
+      }
+    }
   });
 });
 
@@ -872,6 +879,6 @@ gsap.utils.toArray(".reveal, .faq-item").forEach((el) => {
 });
 
     </script>
-    <script src="./static/chatbot.js"></script>
+    <script src="{% static 'chatbot.js' %}"></script>
   </body>
 </html>

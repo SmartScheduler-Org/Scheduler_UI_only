@@ -37,7 +37,7 @@
   const KB = [
     // ─── GENERAL / WHAT IS SCHEDULOAI ───
     {
-      tags: ["scheduloai", "introduction", "explain", "overview"],
+      tags: ["smartscheduler", "scheduloai", "introduction", "explain", "overview"],
       answer: "**SmartScheduler** is an AI-powered automatic timetable generation platform built specifically for colleges, schools, and institutes.\n\n**The Problem We Solve:**\nCreating academic timetables manually takes weeks of painful back-and-forth — juggling teacher availability, room conflicts, lab slots, and workload balancing. Most coordinators dread it every semester.\n\n**Our Solution:**\nSmartScheduler uses a hybrid **Genetic Algorithm + Particle Swarm Optimization (PSO)** engine that generates a complete, clash-free, optimized timetable in just **3-8 seconds**. You simply input your departments, teachers, rooms, courses, sections, and time slots — and the AI handles everything else.\n\n**What makes us different:**\n• Zero conflicts — guaranteed by hard constraint validation\n• Fair workload — AI distributes hours evenly across faculty\n• Lab-smart — handles 4-slot continuous labs with room-category matching\n• 9 solutions — choose the best from 9 optimized candidates\n• Edit after generation — add, swap, or substitute any slot\n• PDF export — one-click professional timetable downloads\n\nBuilt with ❤️ by Sanjeevan, Ishaanvi, Tushar & Pramod.\n📞 Questions? Call **8406043847**",
       priority: 1
     },

@@ -7,6 +7,7 @@ urlpatterns = [
     path('about', views.about, name='about'),
     path('help', views.help, name='help'),
     path('terms', views.terms, name='terms'),
+    path('privacy', views.privacy, name='privacy'),
     path('contact', views.contact, name='contact'),
 
     path('admin_dashboard', views.admindash, name='admindash'),
@@ -54,6 +55,7 @@ urlpatterns = [
 
 
     path('generate/', views.generate, name='generate'),
+    path("generate/demo/", views.demo_generate_start, name="demo_generate_start"),
     path("auth/role/subscription/", views.subscription_gate, name="subscription_gate"),
     path("auth/role/subscription/create-order/", views.create_razorpay_order, name="create_razorpay_order"),
     path("auth/role/subscription/verify-payment/", views.verify_razorpay_payment, name="verify_razorpay_payment"),
