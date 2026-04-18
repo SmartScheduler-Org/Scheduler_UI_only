@@ -32,7 +32,7 @@
         {% csrf_token %}
 
         <p><label>Username</label>
-          <input type="text" name="username" placeholder="Enter username" required>
+          <input type="text" name="username" id="usernameInput" placeholder="Enter username" required pattern="[A-Za-z0-9]+" title="Only letters and numbers are allowed">
         </p>
 
         <p><label>Email</label>
@@ -214,6 +214,29 @@ function typeLoop() {
   setTimeout(typeLoop, del ? 45 : 80);
 }
 typeLoop();
+
+// Username validation — only alphabets and numbers
+const usernameInput = document.getElementById('usernameInput');
+usernameInput.addEventListener('input', function() {
+  const val = this.value;
+  if (/[^A-Za-z0-9]/.test(val)) {
+    this.value = val.replace(/[^A-Za-z0-9]/g, '');
+    // Show popup
+    let popup = document.getElementById('username-popup');
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.id = 'username-popup';
+      popup.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:14px 22px;border-radius:10px;background:#ef4444;color:#fff;font-weight:600;font-size:0.95rem;box-shadow:0 4px 20px rgba(0,0,0,0.4);animation:slideIn 0.3s ease';
+      popup.textContent = 'Username can only contain letters and numbers';
+      document.body.appendChild(popup);
+      setTimeout(function() {
+        popup.style.transition = 'opacity 0.5s';
+        popup.style.opacity = '0';
+        setTimeout(function() { popup.remove(); }, 500);
+      }, 3000);
+    }
+  }
+});
 </script>
 
 {% endblock %}
