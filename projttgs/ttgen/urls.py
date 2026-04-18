@@ -80,12 +80,19 @@ urlpatterns = [
     path('saved_timetables/<int:tid>/', views.saved_timetable, name='saved_timetable'),
     path("saved_timetable/delete/<int:tid>/", views.delete_saved_timetable, name="delete_saved_timetable"),
 
+    path('set_institution_code/', views.set_institution_code, name='set_institution_code'),
+    path('toggle_publish/<int:tid>/', views.toggle_publish_timetable, name='toggle_publish_timetable'),
+    path('published_timetable/<int:tid>/', views.view_published_timetable, name='view_published_timetable'),
+
     path('download_timetable/<int:tid>/', views.download_saved_timetable_pdf, name='download_timetable'),
     
     # Saved timetable slot editing
     path("saved/<int:tid>/add/<str:section>/", views.saved_add_slot, name="saved_add_slot"),
     path("saved/<int:tid>/update/<str:section>/<str:day>/<int:slot>/", views.saved_update_slot, name="saved_update_slot"),
     path("saved/<int:tid>/delete/<str:section>/<str:day>/<int:slot>/", views.saved_delete_slot, name="saved_delete_slot"),
+    path("saved/<int:tid>/move/<str:section>/<str:day>/<int:slot>/", views.saved_move_slot_dragdrop, name="saved_move_slot"),
+    path("saved/<int:tid>/substitute/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_teacher, name="saved_substitute_teacher"),
+    path("saved/<int:tid>/substitute_lab/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_lab_teacher, name="saved_substitute_lab_teacher"),
 
     path("substitute_teacher/<str:section>/<str:day>/<int:slot>/",views.substitute_teacher,name="substitute_teacher"),
     path("substitute_lab/<str:section>/<str:day>/<int:slot>/",views.substitute_lab_teacher,name="substitute_lab_teacher"),

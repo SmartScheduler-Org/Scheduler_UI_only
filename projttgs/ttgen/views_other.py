@@ -264,6 +264,42 @@ def teacherlogin(request): return render(request, 'teacherlogin.html')
 def deanlogin(request): return render(request, 'deanlogin.html')
 def teachertimetable(request): return render(request, 'teachertimetable.html')
 
+
+@login_required
+def set_institution_code(request):
+    if request.method == 'POST':
+        code = request.POST.get('institution_code', '').strip().upper()
+        if not code:
+            messages.error(request, "Institution code cannot be empty.")
+            return redirect('saved_timetable_list')
+        if len(code) > 20:
+            messages.error(request, "Institution code is too long (max 20 characters).")
+            return redirect('saved_timetable_list')
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        profile.institution_code = code
+        profile.save()
+        messages.success(request, f"Institution code set to: {code}")
+    return redirect('saved_timetable_list')
+
+
+@login_required
+def toggle_publish_timetable(request, tid):
+    try:
+        timetable = SavedTimetable.objects.get(id=tid, user=request.user)
+    except SavedTimetable.DoesNotExist:
+        messages.error(request, "Timetable not found.")
+        return redirect('saved_timetable_list')
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if not profile.institution_code:
+        messages.error(request, "Please set your institution code before publishing.")
+        return redirect('saved_timetable_list')
+    timetable.is_published = not timetable.is_published
+    timetable.save(update_fields=['is_published'])
+    status = "published" if timetable.is_published else "unpublished"
+    messages.success(request, f"Timetable {status} successfully.")
+    return redirect('saved_timetable_list')
+
+
 # CONTACT FORM
 def contact(request):
     if request.method == 'POST':
@@ -281,6 +317,9 @@ def contact(request):
 # ADMIN DASHBOARD
 @login_required
 def admindash(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if profile.role == 'teacher':
+        return redirect('teachertimetable_list')
     return render(request, 'admindashboard.html')
 
 
@@ -410,6 +449,10 @@ for _runtime_view_name in (
     "saved_delete_slot",
     "saved_add_slot",
     "saved_update_slot",
+    "saved_move_slot_dragdrop",
+    "saved_substitute_teacher",
+    "saved_substitute_lab_teacher",
+    "view_published_timetable",
 ):
     if _runtime_view_name not in globals():
         def _fallback_runtime_view(request, *args, **kwargs):
@@ -967,7 +1010,7 @@ def addRooms(request):
         first = True
 
         for row in reader:
-            if not row or len(row) < 5:
+            if not row or len(row) < 4:
                 continue
 
             if first:
@@ -982,17 +1025,14 @@ def addRooms(request):
                 )
                 cap_index = header.index("seating_capacity") if "seating_capacity" in header else 2
                 type_index = header.index("room_type") if "room_type" in header else 3
-                if "lab_category" not in header:
-                    messages.error(request, "Missing required column: lab_category")
-                    return redirect("addRooms")
-                category_index = header.index("lab_category")
+                category_index = header.index("lab_category") if "lab_category" in header else None
                 continue
 
             r_number = row[rid_index].strip()
             department_value = row[dept_index].strip()
             seating_capacity = row[cap_index].strip()
             room_type = row[type_index].strip()
-            lab_category = normalize_lab_category(row[category_index].strip()) if category_index < len(row) else ""
+            lab_category = normalize_lab_category(row[category_index].strip()) if category_index is not None and category_index < len(row) and row[category_index].strip() else ""
 
             room_map = {
                 "lecture hall": "Lecture Hall",
@@ -1157,7 +1197,7 @@ def meeting_list_view(request):
 @login_required
 def delete_meeting_time(request, pk):
     if request.method == 'POST':
-        MeetingTime.objects.filter(pk=pk, user=request.user).delete()
+        MeetingTime.objects.filter(pid=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editmeetingtime')
 
