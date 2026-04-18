@@ -214,6 +214,60 @@ def about(request): return render(request, 'aboutus.html')
 def help(request): return render(request, 'help.html')
 def terms(request): return render(request, 'terms.html')
 def privacy(request): return render(request, 'privacy.html')
+
+
+def institution_application(request):
+    if request.method == 'POST':
+        organisation_type = request.POST.get('organisation_type', '').strip() or 'Not provided'
+        other_organisation = request.POST.get('other_organisation', '').strip()
+        institution_name = request.POST.get('institution_name', '').strip() or 'Not provided'
+        contact_person = request.POST.get('contact_person', '').strip() or 'Not provided'
+        email = request.POST.get('email', '').strip() or 'Not provided'
+        contact_number = request.POST.get('contact_number', '').strip() or 'Not provided'
+        special_instructions = request.POST.get('special_instructions', '').strip() or 'No special instructions'
+
+        final_organisation = organisation_type
+        if organisation_type.lower() == 'other' and other_organisation:
+            final_organisation = f"Other - {other_organisation}"
+
+        try:
+            html_body = render_to_string(
+                'institution_application_email.html',
+                {
+                    'organisation_type': final_organisation,
+                    'institution_name': institution_name,
+                    'contact_person': contact_person,
+                    'email': email,
+                    'contact_number': contact_number,
+                    'special_instructions': special_instructions,
+                },
+            )
+            plain_body = (
+                f"Organisation type: {final_organisation}\n"
+                f"Institution name: {institution_name}\n"
+                f"Contact person: {contact_person}\n"
+                f"Email: {email}\n"
+                f"Contact number: {contact_number}\n\n"
+                f"Special instructions:\n{special_instructions}"
+            )
+            msg = EmailMultiAlternatives(
+                subject=f"[SmartScheduler] Institution Application - {institution_name}",
+                body=plain_body,
+                from_email=settings.EMAIL_HOST_USER,
+                to=['studyyou40@gmail.com'],
+                reply_to=[email] if email and email != 'Not provided' else [],
+            )
+            msg.attach_alternative(html_body, "text/html")
+            msg.send(fail_silently=False)
+        except Exception as e:
+            print(f"[Institution Application Mail Error] {e}")
+
+        messages.success(request, "We will reach out to you soon.")
+        return redirect('institution_application')
+
+    return render(request, 'institution_application.html')
+
+
 def role(request):
     if request.user.is_authenticated:
         profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -909,6 +963,15 @@ def inst_list_view(request):
 
 
 @login_required
+def dashboard_instructor_list_view(request):
+    return render(
+        request,
+        'dashboard_inslist.html',
+        {'instructors': Instructor.objects.filter(user=request.user)}
+    )
+
+
+@login_required
 def delete_instructor(request, pk):
     if request.method == 'POST':
         Instructor.objects.filter(pk=pk, user=request.user).delete()
@@ -1282,6 +1345,15 @@ def department_list(request):
 
 
 @login_required
+def dashboard_department_list(request):
+    return render(
+        request,
+        'dashboard_deptlist.html',
+        {'departments': Department.objects.filter(user=request.user)}
+    )
+
+
+@login_required
 def delete_department(request, pk):
     if request.method == 'POST':
         Department.objects.filter(pk=pk, user=request.user).delete()
@@ -1414,6 +1486,15 @@ def addSections(request):
 @login_required
 def section_list(request):
     return render(request, 'seclist.html', {'sections': Section.objects.filter(user=request.user)})
+
+
+@login_required
+def dashboard_section_list(request):
+    return render(
+        request,
+        'dashboard_seclist.html',
+        {'sections': Section.objects.filter(user=request.user)}
+    )
 
 
 @login_required

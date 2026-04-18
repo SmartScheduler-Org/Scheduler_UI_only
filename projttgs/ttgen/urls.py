@@ -9,6 +9,7 @@ urlpatterns = [
     path('terms', views.terms, name='terms'),
     path('privacy', views.privacy, name='privacy'),
     path('contact', views.contact, name='contact'),
+    path('apply-for-institutions', views.institution_application, name='institution_application'),
 
     path('admin_dashboard', views.admindash, name='admindash'),
     path('role', views.role, name='role'),
@@ -21,6 +22,7 @@ urlpatterns = [
     path('saved_timetables/', views.teachertimetable_list, name='teachertimetable_list'),
     path('add_teachers', views.addInstructor, name='addInstructors'),
     path('teachers_list/', views.inst_list_view , name='editinstructor'),
+    path('dashboard/teachers_list/', views.dashboard_instructor_list_view, name='dashboard_teachers_list'),
     path('delete_teacher/<int:pk>/', views.delete_instructor, name='deleteinstructor'), 
     path('saved_teacher_timetables/<int:tid>/', views.saved_teacher_timetable, name='saved_teacher_timetable'),
 
@@ -44,10 +46,12 @@ urlpatterns = [
 
     path('add_departments', views.addDepts, name='addDepts'),
     path('departments_list/', views.department_list, name='editdepartment'),
+    path('dashboard/departments_list/', views.dashboard_department_list, name='dashboard_departments_list'),
     path('delete_department/<int:pk>/', views.delete_department, name='deletedepartment'),
 
     path('add_sections', views.addSections, name='addSections'),
     path('sections_list/', views.section_list, name='editsection'),
+    path('dashboard/sections_list/', views.dashboard_section_list, name='dashboard_sections_list'),
     path('delete_section/<str:pk>/', views.delete_section, name='deletesection'),
     path("map-section-courses/",views.map_section_courses,name="map_section_courses"),
     path("view-section-courses/", views.view_section_courses, name="view_section_courses"),

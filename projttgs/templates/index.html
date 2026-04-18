@@ -88,6 +88,74 @@ if (themeToggle) {
 html.light .theme-icon.sun { display: none; }
 html.light .theme-icon.moon { display: block; }
 html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0,0,0,0.05); color: #334155; }
+
+.hero-right-stack {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.apply-link-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.apply-link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.18), rgba(59, 130, 246, 0.18));
+  border: 1px solid rgba(244, 114, 182, 0.38);
+  color: #fdf2f8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 rgba(244, 114, 182, 0.4);
+  animation: applyBlinkPulse 1.15s ease-in-out infinite;
+}
+
+.apply-link-chip::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f472b6;
+  box-shadow: 0 0 12px rgba(244, 114, 182, 0.9);
+}
+
+.apply-link-chip:hover {
+  transform: translateY(-2px);
+  border-color: rgba(125, 211, 252, 0.55);
+}
+
+@keyframes applyBlinkPulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 18px rgba(244, 114, 182, 0.18);
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow: 0 0 28px rgba(125, 211, 252, 0.32);
+  }
+}
+
+@media (max-width: 960px) {
+  .hero-right-stack {
+    max-width: 100%;
+    align-items: stretch;
+  }
+
+  .apply-link-wrap {
+    justify-content: center;
+  }
+}
 </style>
 
     <!-- HERO -->
@@ -136,6 +204,13 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
 
           <!-- Right: AI Timetable Panel -->
           <div class="hero-right">
+            <div class="hero-right-stack">
+              <div class="apply-link-wrap">
+                <a href="{% url 'institution_application' %}" class="apply-link-chip">
+                  apply for ur institutes/universities
+                </a>
+              </div>
+
             <div class="hero-panel" id="hero-panel">
               <!-- Code editor typing area -->
               <div class="hero-editor">
@@ -221,6 +296,7 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
                 </div>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </section>
@@ -297,9 +373,9 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
         <div class="cta-text-main">Want this for your institution?</div>
         <div class="cta-text-sub">Fully customizable branding & rules.</div>
       </div>
-      <button class="btn-outline">
+      <a href="{% url 'institution_application' %}" class="btn-outline">
         <span>Book a walkthrough</span>
-      </button>
+      </a>
     </div>
   </div>
 </section>

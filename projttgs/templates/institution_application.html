@@ -1,0 +1,688 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Apply For Institutions · SmartScheduler</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="{% static 'homepage.css' %}">
+
+    <style>
+      .theme-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid rgba(148,163,184,0.3);
+        background: rgba(255,255,255,0.08);
+        color: #e5e7eb;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+      .theme-toggle:hover {
+        background: rgba(255,255,255,0.15);
+        transform: scale(1.08);
+      }
+      .theme-icon.moon { display: none; }
+      .theme-icon.sun { display: block; }
+      html.light .theme-icon.sun { display: none; }
+      html.light .theme-icon.moon { display: block; }
+      html.light .theme-toggle {
+        border-color: rgba(30,41,59,0.25);
+        background: rgba(0,0,0,0.05);
+        color: #334155;
+      }
+
+      .nav-link.active {
+        color: #e5e7eb;
+      }
+      .nav-link.active::after {
+        width: 100%;
+      }
+
+      .apply-hero {
+        padding: 88px 0 34px;
+      }
+
+      .apply-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(148,163,184,0.2);
+        background: rgba(255,255,255,0.05);
+        color: #cbd5e1;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .apply-kicker::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 14px rgba(34, 197, 94, 0.9);
+      }
+
+      .apply-title {
+        margin-top: 20px;
+        font-size: clamp(38px, 5vw, 64px);
+        line-height: 1.03;
+        font-weight: 700;
+      }
+
+      .apply-gradient {
+        background: linear-gradient(120deg, #e2e8f0, #93c5fd, #f9a8d4);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .apply-sub {
+        max-width: 720px;
+        margin-top: 16px;
+        font-size: 15px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .apply-layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.3fr);
+        gap: 28px;
+        align-items: start;
+        padding-bottom: 82px;
+      }
+
+      .apply-side-card,
+      .apply-form-card {
+        position: relative;
+        border-radius: 28px;
+        overflow: hidden;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(148,163,184,0.16);
+        backdrop-filter: blur(16px);
+      }
+
+      .apply-side-card {
+        padding: 26px;
+      }
+
+      .apply-side-card::before,
+      .apply-form-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #60a5fa 35%, #f472b6 65%, transparent);
+      }
+
+      .apply-form-card {
+        padding: 28px;
+      }
+
+      .side-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(96,165,250,0.1);
+        color: #bfdbfe;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .side-title {
+        margin-top: 18px;
+        font-size: 28px;
+        line-height: 1.15;
+      }
+
+      .side-copy {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .side-points {
+        margin-top: 22px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .side-point {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 12px;
+        align-items: start;
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(2,6,23,0.5);
+        border: 1px solid rgba(148,163,184,0.1);
+      }
+
+      .side-point-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(99,102,241,0.28), rgba(236,72,153,0.22));
+        color: #e0e7ff;
+        font-size: 15px;
+      }
+
+      .side-point-title {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 3px;
+      }
+
+      .side-point-copy {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .pulse-strip {
+        margin-top: 22px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(14,165,233,0.14), rgba(244,114,182,0.14));
+        border: 1px solid rgba(125,211,252,0.18);
+        font-size: 13px;
+        line-height: 1.7;
+        color: #dbeafe;
+        animation: floatPulse 3s ease-in-out infinite;
+      }
+
+      @keyframes floatPulse {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+      }
+
+      .form-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: start;
+        margin-bottom: 24px;
+      }
+
+      .form-title {
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .form-sub {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .mini-chip {
+        flex-shrink: 0;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #fde68a;
+        background: rgba(245,158,11,0.12);
+        border: 1px solid rgba(245,158,11,0.25);
+      }
+
+      .form-section {
+        margin-bottom: 22px;
+      }
+
+      .section-label {
+        display: block;
+        margin-bottom: 12px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--muted);
+      }
+
+      .select-wrap {
+        position: relative;
+      }
+
+      .select-wrap::after {
+        content: "\f107";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        position: absolute;
+        top: 50%;
+        right: 18px;
+        transform: translateY(-50%);
+        color: #93c5fd;
+        pointer-events: none;
+      }
+
+      .other-org-wrap {
+        margin-top: 14px;
+        display: none;
+      }
+
+      .other-org-wrap.visible {
+        display: block;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .field-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--muted);
+      }
+
+      .field-input,
+      .field-textarea {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid rgba(148,163,184,0.2);
+        background: rgba(2,6,23,0.5);
+        color: var(--text);
+        padding: 14px 16px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      .field-input:focus,
+      .field-textarea:focus {
+        border-color: rgba(96,165,250,0.7);
+        box-shadow: 0 0 0 3px rgba(96,165,250,0.12);
+      }
+
+      .field-textarea {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      .submit-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-top: 10px;
+      }
+
+      .submit-note {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .submit-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 14px 26px;
+        background: linear-gradient(135deg, #2563eb, #ec4899);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        box-shadow: 0 16px 36px rgba(37, 99, 235, 0.34);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 44px rgba(236, 72, 153, 0.34);
+        filter: brightness(1.04);
+      }
+
+      .apply-toast-stack {
+        position: fixed;
+        top: 88px;
+        right: 22px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .apply-toast {
+        min-width: 260px;
+        max-width: 360px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(34,197,94,0.96), rgba(14,165,233,0.96));
+        color: #fff;
+        box-shadow: 0 18px 38px rgba(2,6,23,0.35);
+        border: 1px solid rgba(255,255,255,0.18);
+        animation: toastIn 0.35s ease forwards;
+      }
+
+      .apply-toast-title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+
+      .apply-toast-copy {
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateY(-14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 980px) {
+        .apply-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .field-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .apply-hero {
+          padding-top: 72px;
+        }
+
+        .form-head {
+          flex-direction: column;
+        }
+      }
+
+      html.light .apply-side-card,
+      html.light .apply-form-card,
+      html.light .org-card,
+      html.light .field-input,
+      html.light .field-textarea {
+        background: rgba(255,255,255,0.82);
+        color: #0f172a;
+      }
+
+      html.light .field-input,
+      html.light .field-textarea {
+        border-color: rgba(148,163,184,0.25);
+      }
+
+      html.light .side-copy,
+      html.light .side-point-copy,
+      html.light .form-sub,
+      html.light .submit-note,
+      html.light .field-label,
+      html.light .section-label {
+        color: #64748b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    {% if messages %}
+    <div class="apply-toast-stack">
+      {% for message in messages %}
+      <div class="apply-toast">
+        <div class="apply-toast-title">Submitted</div>
+        <div class="apply-toast-copy">{{ message }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <header class="nav">
+      <div class="container nav-inner">
+        <a class="nav-left" href="{% url 'home' %}" style="text-decoration:none; color:inherit;">
+          <div class="nav-logo-mark"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssApplyLg" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssApplyLg)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
+          <div>
+            <div class="nav-title"><span style="color:#a3e635">Smart</span><span style="color:#22c55e">Scheduler</span></div>
+            <div style="font-size: 11px; color: var(--muted);">
+              Smart Academic Scheduling
+            </div>
+          </div>
+        </a>
+
+        <nav class="nav-links">
+          <a class="nav-link" href="{% url 'about' %}">About Us</a>
+          <a class="nav-link active" href="{% url 'institution_application' %}">Apply</a>
+          <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
+          <a class="nav-link" href="{% url 'home' %}#demo">Live Demo</a>
+        </nav>
+
+        <div class="nav-actions">
+          <div class="chip">Institution Onboarding</div>
+          <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
+            <svg class="theme-icon sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="theme-icon moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <a href="{% url 'role' %}" class="btn-primary">
+            <span class="icon">&#9889;</span>
+            <span>Try Generator</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="apply-hero">
+        <div class="container">
+          <div class="apply-kicker">SmartScheduler Partner Form</div>
+          <h1 class="apply-title">
+            <span class="apply-gradient">Bring SmartScheduler to your campus.</span>
+          </h1>
+          <p class="apply-sub">
+            Share your institution details and deployment needs. We will understand your academic setup,
+            map the right workflow, and reach out with the best onboarding plan for your team.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="container apply-layout">
+          <aside class="apply-side-card">
+            <div class="side-badge">Fast Setup</div>
+            <h2 class="side-title">Made for real academic operations.</h2>
+            <p class="side-copy">
+              Whether you manage a school, college, university, or coaching institute, this request helps us
+              prepare the right demo, rules, and rollout path for your organization.
+            </p>
+
+            <div class="side-points">
+              <div class="side-point">
+                <div class="side-point-icon"><i class="fas fa-building-columns"></i></div>
+                <div>
+                  <div class="side-point-title">Institution-specific planning</div>
+                  <div class="side-point-copy">We tailor the walkthrough for your structure, scale, and timetable rules.</div>
+                </div>
+              </div>
+
+              <div class="side-point">
+                <div class="side-point-icon"><i class="fas fa-users-gear"></i></div>
+                <div>
+                  <div class="side-point-title">Team-ready onboarding</div>
+                  <div class="side-point-copy">Faculty, admin, and scheduler workflows can be aligned from day one.</div>
+                </div>
+              </div>
+
+              <div class="side-point">
+                <div class="side-point-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+                <div>
+                  <div class="side-point-title">Smarter rollout</div>
+                  <div class="side-point-copy">Special instructions help us shape the right configuration before we reach out.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pulse-strip">
+              Share your requirements once. We will come back with the most relevant walkthrough instead of a generic sales pitch.
+            </div>
+          </aside>
+
+          <section class="apply-form-card">
+            <div class="form-head">
+              <div>
+                <div class="form-title">Apply for your institution</div>
+                <div class="form-sub">
+                  Fill the sections below and our team will reach out with the next steps.
+                </div>
+              </div>
+              <div class="mini-chip">2 min form</div>
+            </div>
+
+            <form method="post">
+              {% csrf_token %}
+
+              <div class="form-section">
+                <label class="section-label">1. Type of organisation</label>
+                <div class="select-wrap">
+                  <select class="field-input" id="organisation_type" name="organisation_type" required>
+                    <option value="" selected disabled>Select organisation type</option>
+                    <option value="School">School</option>
+                    <option value="Colleges">Colleges</option>
+                    <option value="Universities">Universities</option>
+                    <option value="Coaching Institue">Coaching Institue</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="other-org-wrap" id="otherOrganisationWrap">
+                  <div class="field-group">
+                    <label class="field-label" for="other_organisation">Mention organisation type</label>
+                    <input class="field-input" type="text" id="other_organisation" name="other_organisation" placeholder="Type your organisation category">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <label class="section-label">2. Contact details</label>
+                <div class="field-grid">
+                  <div class="field-group">
+                    <label class="field-label" for="institution_name">Name of your institute</label>
+                    <input class="field-input" type="text" id="institution_name" name="institution_name" placeholder="Enter institution name" required>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label" for="contact_person">Contact person name</label>
+                    <input class="field-input" type="text" id="contact_person" name="contact_person" placeholder="Enter full name" required>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label" for="email">Email id</label>
+                    <input class="field-input" type="email" id="email" name="email" placeholder="name@institution.edu" required>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label" for="contact_number">Contact number</label>
+                    <input class="field-input" type="tel" id="contact_number" name="contact_number" placeholder="Enter phone number" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <label class="section-label" for="special_instructions">3. Additional notes</label>
+                <div class="field-group">
+                  <label class="field-label" for="special_instructions">Any special instruction</label>
+                  <textarea class="field-textarea" id="special_instructions" name="special_instructions" placeholder="Tell us about departments, special scheduling rules, campus scale, integrations, or anything else we should know."></textarea>
+                </div>
+              </div>
+
+              <div class="submit-row">
+                <div class="submit-note">
+                  After submitting, a confirmation bubble will appear and our team will review your request shortly.
+                </div>
+                <button type="submit" class="submit-btn">Submit Request</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    {% include 'mainfotter.html' %}
+
+    <script>
+      const themeToggle = document.getElementById("themeToggle");
+      if (themeToggle) {
+        themeToggle.addEventListener("click", () => {
+          document.documentElement.classList.toggle("light");
+          localStorage.setItem(
+            "theme",
+            document.documentElement.classList.contains("light") ? "light" : "dark"
+          );
+        });
+      }
+
+      const orgSelect = document.getElementById("organisation_type");
+      const otherWrap = document.getElementById("otherOrganisationWrap");
+      const otherInput = document.getElementById("other_organisation");
+
+      function syncOtherOrganisation() {
+        const isOther = orgSelect && orgSelect.value === "Other";
+        if (otherWrap) {
+          otherWrap.classList.toggle("visible", Boolean(isOther));
+        }
+        if (otherInput) {
+          otherInput.required = Boolean(isOther);
+          if (!isOther) {
+            otherInput.value = "";
+          }
+        }
+      }
+
+      if (orgSelect) {
+        orgSelect.addEventListener("change", syncOtherOrganisation);
+      }
+      syncOtherOrganisation();
+
+      const toasts = document.querySelectorAll(".apply-toast");
+      toasts.forEach((toast) => {
+        setTimeout(() => {
+          toast.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+          toast.style.opacity = "0";
+          toast.style.transform = "translateY(-10px)";
+        }, 3200);
+      });
+    </script>
+  </body>
+</html>
