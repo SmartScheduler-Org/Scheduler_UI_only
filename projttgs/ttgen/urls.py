@@ -9,6 +9,7 @@ urlpatterns = [
     path('terms', views.terms, name='terms'),
     path('privacy', views.privacy, name='privacy'),
     path('contact', views.contact, name='contact'),
+    path('apply-for-institutions', views.institution_application, name='institution_application'),
 
     path('admin_dashboard', views.admindash, name='admindash'),
     path('role', views.role, name='role'),
