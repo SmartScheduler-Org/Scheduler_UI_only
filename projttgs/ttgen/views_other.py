@@ -916,6 +916,15 @@ def inst_list_view(request):
 
 
 @login_required
+def dashboard_instructor_list_view(request):
+    return render(
+        request,
+        'dashboard_inslist.html',
+        {'instructors': Instructor.objects.filter(user=request.user)}
+    )
+
+
+@login_required
 def delete_instructor(request, pk):
     if request.method == 'POST':
         Instructor.objects.filter(pk=pk, user=request.user).delete()
@@ -1286,6 +1295,15 @@ def department_list(request):
 
 
 @login_required
+def dashboard_department_list(request):
+    return render(
+        request,
+        'dashboard_deptlist.html',
+        {'departments': Department.objects.filter(user=request.user)}
+    )
+
+
+@login_required
 def delete_department(request, pk):
     if request.method == 'POST':
         Department.objects.filter(pk=pk, user=request.user).delete()
@@ -1417,6 +1435,15 @@ def addSections(request):
 @login_required
 def section_list(request):
     return render(request, 'seclist.html', {'sections': Section.objects.filter(user=request.user)})
+
+
+@login_required
+def dashboard_section_list(request):
+    return render(
+        request,
+        'dashboard_seclist.html',
+        {'sections': Section.objects.filter(user=request.user)}
+    )
 
 
 @login_required
