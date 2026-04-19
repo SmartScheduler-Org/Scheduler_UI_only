@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; margin: 0; padding: 0; }
+    .wrapper { max-width: 620px; margin: 32px auto; background: #111827; border-radius: 18px; overflow: hidden; border: 1px solid rgba(96,165,250,0.24); }
+    .header { background: linear-gradient(135deg, #2563eb 0%, #ec4899 100%); padding: 30px 34px; }
+    .header h1 { color: #fff; margin: 0; font-size: 23px; font-weight: 700; }
+    .header p { color: rgba(255,255,255,0.76); margin: 8px 0 0; font-size: 13px; line-height: 1.6; }
+    .body { padding: 28px 34px; }
+    .field { margin-bottom: 18px; }
+    .label { font-size: 11px; font-weight: 700; color: #93c5fd; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+    .value { font-size: 15px; color: #e5e7eb; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 11px 14px; word-break: break-word; }
+    .message { line-height: 1.7; white-space: pre-wrap; color: #cbd5e1; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .footer { background: #020617; padding: 18px 34px; text-align: center; font-size: 12px; color: #64748b; }
+    .reply-btn { display: inline-block; margin-top: 12px; background: #2563eb; color: #fff; text-decoration: none; padding: 11px 22px; border-radius: 9px; font-size: 14px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>New Institution Application</h1>
+      <p>A new onboarding/application request was submitted through the SmartScheduler landing page.</p>
+    </div>
+
+    <div class="body">
+      <div class="field">
+        <div class="label">Organisation Type</div>
+        <div class="value">{{ organisation_type }}</div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <div class="label">Institution Name</div>
+          <div class="value">{{ institution_name }}</div>
+        </div>
+        <div class="field">
+          <div class="label">Contact Person</div>
+          <div class="value">{{ contact_person }}</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <div class="label">Email Id</div>
+          <div class="value">{{ email }}</div>
+        </div>
+        <div class="field">
+          <div class="label">Contact Number</div>
+          <div class="value">{{ contact_number }}</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">Special Instructions</div>
+        <div class="value message">{{ special_instructions }}</div>
+      </div>
+
+      <a href="mailto:{{ email }}?subject=Re: SmartScheduler institution application" class="reply-btn">Reply to applicant</a>
+    </div>
+
+    <div class="footer">
+      Sent from SmartScheduler institution application form.
+    </div>
+  </div>
+</body>
+</html>

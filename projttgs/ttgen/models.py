@@ -273,6 +273,7 @@ class SavedTimetable(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    is_published = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]
@@ -417,3 +418,25 @@ class UserAccessPlan(models.Model):
         if self.plan_name:
             return f"{self.user.username} - {self.plan_name}"
         return self.user.username
+# ==============================
+# TEACHER PREFERENCE
+# ==============================
+class TeacherPreference(models.Model):
+    DESIGNATION_CHOICES = [
+        ('Professor', 'Professor'),
+        ('Associate Professor', 'Associate Professor'),
+        ('Assistant Professor', 'Assistant Professor'),
+    ]
+    name         = models.CharField(max_length=200)
+    email        = models.EmailField()
+    designation  = models.CharField(max_length=50, choices=DESIGNATION_CHOICES)
+    subjects     = models.JSONField(default=list)
+    classes      = models.JSONField(default=list)
+    years        = models.JSONField(default=list)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.email})"

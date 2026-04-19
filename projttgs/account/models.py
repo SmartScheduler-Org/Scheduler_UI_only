@@ -12,6 +12,7 @@ class Profile(models.Model):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, blank=True, default='')
     date_of_birth = models.DateField(blank=True, null=True)
     photo = models.ImageField(upload_to='users/%Y/%m/%d/', blank=True)
+    institution_code = models.CharField(max_length=20, blank=True, default='')
 
     def __str__(self):
         return f'Profile for user {self.user.username}'

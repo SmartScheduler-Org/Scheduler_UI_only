@@ -3,11 +3,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Saved Timetable</title>
 
-<link rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
 body {
@@ -15,13 +17,66 @@ body {
     font-family: "Segoe UI", sans-serif;
 }
 
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 10% 12%, rgba(91, 33, 237, 0.10), transparent 18%),
+        radial-gradient(circle at 88% 18%, rgba(56, 189, 248, 0.08), transparent 18%);
+    opacity: 0.9;
+    z-index: 0;
+}
+
 h1 {
     margin-top: 20px;
     text-align: center;
-    font-size: 2.2rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 650;
     color: #257a7a;
 }
+
+/* ── Page Utility Bar ── */
+.page-utility-bar {
+    position: sticky;
+    top: 14px;
+    z-index: 60;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    width: min(1380px, calc(100% - 36px));
+    margin: 16px auto 0;
+}
+
+.utility-btn {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.78);
+    color: #f8fafc;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.24);
+    backdrop-filter: blur(14px);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+}
+
+.utility-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 44px rgba(15, 23, 42, 0.32);
+    background: rgba(15, 23, 42, 0.92);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.utility-btn svg { width: 22px; height: 22px; }
+.utility-btn.is-close { background: rgba(127, 29, 29, 0.88); }
+.utility-btn.is-close:hover { background: rgba(153, 27, 27, 0.96); }
 
 .saved-meta {
     text-align: center;
@@ -72,6 +127,7 @@ h1 {
   padding: 10px;
   font-weight: 600;
   margin-bottom: 6px;
+  position: relative;
 }
 
 .class-box {
@@ -79,6 +135,7 @@ h1 {
   border: 1px solid #d0d7de;
   border-radius: 6px;
   padding: 8px;
+  position: relative;
 }
 
 .lunch-cell {
@@ -88,7 +145,6 @@ h1 {
   color: #333;
 }
 
-/* ⭐ NEW: Special Class Styling */
 .special-cell {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   font-weight: 700;
@@ -101,6 +157,7 @@ h1 {
 
 .slot-cell {
     position: relative;
+    overflow: visible;
 }
 
 .action-buttons {
@@ -113,6 +170,7 @@ h1 {
     left: 50%;
     transform: translateX(-50%);
     transition: opacity 0.25s ease-in-out;
+    z-index: 10;
 }
 
 .slot-cell:hover .action-buttons {
@@ -131,6 +189,7 @@ h1 {
 .btn-update { background: #9bd0c1; }
 .btn-delete { background: #f4a6a6; }
 .btn-add { background: #c7cffc; }
+.btn-substitute { background: #ffd27f; color: #333; }
 
 .btn-save-tt {
     display: inline-block;
@@ -144,8 +203,229 @@ h1 {
     cursor: pointer;
     transition: background 0.2s;
 }
-.btn-save-tt:hover {
-    background: #2e7d32;
+.btn-save-tt:hover { background: #2e7d32; }
+
+/* ── Top Actions ── */
+.top-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 10px auto 0;
+}
+
+/* ── Drag & Drop Toggle Button ── */
+.drag-toggle-btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 11px 22px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #0f766e, #14b8a6);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 12px 24px rgba(15,118,110,0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.drag-toggle-btn::before {
+    content: "";
+    position: absolute;
+    top: -130%;
+    left: -22%;
+    width: 32%;
+    height: 340%;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.28), transparent);
+    transform: rotate(20deg);
+    opacity: 0;
+}
+
+.drag-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(20,184,166,0.26);
+}
+
+.drag-toggle-btn.is-active {
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    box-shadow: 0 16px 30px rgba(99,102,241,0.28);
+    animation: activePulse 1.8s ease-in-out infinite;
+}
+
+.drag-toggle-btn.is-active::before {
+    opacity: 1;
+    animation: toggleSweep 2.8s linear infinite;
+}
+
+@keyframes activePulse {
+    0%, 100% { box-shadow: 0 16px 30px rgba(99,102,241,0.28); }
+    50% { box-shadow: 0 20px 36px rgba(99,102,241,0.38); }
+}
+
+@keyframes toggleSweep {
+    0% { left: -22%; }
+    100% { left: 110%; }
+}
+
+/* ── Drop Target Styles ── */
+body.drag-drop-active .slot-cell.drop-target {
+    transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+body.drag-drop-active .slot-cell.drop-target:hover {
+    background: rgba(56, 189, 248, 0.08);
+}
+
+body.drag-drop-active .slot-cell.drop-target.drag-over {
+    background: rgba(34, 197, 94, 0.12);
+    box-shadow: inset 0 0 0 2px rgba(34,197,94,0.45);
+}
+
+body.drag-drop-active .drop-target::before {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    border-radius: 10px;
+    border: 1px dashed rgba(99, 102, 241, 0.16);
+    pointer-events: none;
+    opacity: 1;
+    animation: slotPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes slotPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* ── Draggable Item Styles ── */
+.draggable-slot-item { position: relative; }
+body.drag-drop-active .draggable-slot-item { cursor: grab; }
+
+body.drag-drop-active .draggable-slot-item::after {
+    content: "\2195 Drag";
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(13, 71, 161, 0.12);
+    color: #0d47a1;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+body.drag-drop-active .draggable-slot-item.is-dragging {
+    opacity: 0.45;
+    transform: scale(0.98);
+}
+
+/* ── View Switcher ── */
+.view-switcher {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 30px auto 24px;
+    padding: 16px;
+    width: min(920px, 94%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(228,244,247,0.95));
+    border: 1px solid rgba(37, 122, 122, 0.12);
+    border-radius: 22px;
+    box-shadow: 0 16px 30px rgba(27, 79, 114, 0.08);
+}
+
+.view-toggle {
+    position: relative;
+    overflow: hidden;
+    border: none;
+    border-radius: 16px;
+    padding: 13px 18px;
+    min-width: 190px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    opacity: 0.56;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+}
+
+.view-toggle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255,255,255,0.28), transparent 45%, rgba(255,255,255,0.18));
+    transform: translateX(-100%);
+    transition: transform 0.45s ease;
+}
+
+.view-toggle:hover::before,
+.view-toggle.is-active::before { transform: translateX(0); }
+.view-toggle:hover { transform: translateY(-3px) scale(1.01); filter: saturate(1.08); }
+.view-toggle.is-active { transform: translateY(-4px) scale(1.03); opacity: 1; box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22); }
+.view-toggle__label { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.view-toggle--section { background: linear-gradient(135deg, #1167d8, #2898ff); }
+.view-toggle--room { background: linear-gradient(135deg, #16873f, #33b25b); }
+.view-toggle--workload { color: #3e2c00; background: linear-gradient(135deg, #ffd451, #ffb400); }
+.view-toggle--teacher { background: linear-gradient(135deg, #1186a2, #2eb5d4); }
+
+/* ── Room View ── */
+.room-view-title { margin: 0; font-size: 2.1rem; color: #1f4d6b; letter-spacing: 0.01em; }
+.room-view-toolbar { width: min(100%, 2100px); margin: 8px auto 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 18px; background: linear-gradient(135deg, #ffffff, #eef7ff); border: 1px solid rgba(31, 77, 107, 0.1); border-radius: 22px; box-shadow: 0 14px 32px rgba(27, 79, 114, 0.08); }
+.room-view-toolbar__hint { color: #567083; font-size: 14px; font-weight: 600; }
+
+.room-card { position: relative; overflow: hidden; width: min(100%, 2100px); margin: 0 auto 34px; padding: 24px 22px 18px; background: linear-gradient(180deg, #ffffff, #f5fbff); border: 1px solid rgba(27, 79, 114, 0.12); border-radius: 24px; box-shadow: 0 20px 50px rgba(27, 79, 114, 0.1); page-break-inside: avoid; break-inside: avoid; }
+.export-surface { position: relative; overflow: hidden; }
+.export-watermark { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.export-watermark__grid { position: absolute; inset: -8% -10%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 62px 20px; align-content: center; justify-items: center; transform: rotate(-28deg); transform-origin: center; }
+.export-watermark__grid span { display: inline-block; font-size: 28px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(17, 103, 216, 0.09); white-space: nowrap; user-select: none; }
+.room-card__content { position: relative; z-index: 1; padding-top: 34px; }
+.room-card__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; margin-bottom: 16px; }
+.room-card__title { margin: 0; font-size: 1.9rem; line-height: 1.15; color: #203446; }
+.room-card__meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.room-optimization { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: #edf8ee; color: #1b5e20; font-size: 14px; font-weight: 800; box-shadow: inset 0 0 0 1px rgba(27, 94, 32, 0.08); }
+.room-optimization strong { font-size: 15px; }
+.room-save-btn { padding: 10px 18px; border-radius: 999px; background: linear-gradient(135deg, #155724, #2f8f45); box-shadow: 0 12px 24px rgba(21, 87, 36, 0.2); }
+.room-save-btn:hover { background: linear-gradient(135deg, #1d6c2f, #39a652); }
+.room-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; overflow: hidden; border: 1px solid #d9e5ee; border-radius: 18px; background: rgba(255, 255, 255, 0.96); }
+.room-table thead th { padding: 14px 10px; background: linear-gradient(180deg, #f8fbff, #e8f1f8); color: #29485f; font-size: 13px; font-weight: 800; border-right: 1px solid #d8e2ea; border-bottom: 1px solid #d8e2ea; text-align: center; }
+.room-table thead th:last-child { border-right: none; }
+.room-table tbody td { padding: 8px; height: 108px; border-right: 1px solid #e1e8ee; border-bottom: 1px solid #e1e8ee; text-align: center; vertical-align: middle; background: rgba(255, 255, 255, 0.88); }
+.room-table tbody tr:last-child td { border-bottom: none; }
+.room-table tbody td:last-child { border-right: none; }
+.room-day-cell { min-width: 120px; padding: 14px 10px !important; background: linear-gradient(180deg, #ffffff, #f5f9fc); color: #22384a; font-size: 14px; font-weight: 800; }
+.room-lunch-cell { background: linear-gradient(180deg, #fbfbfb, #f0f0f0) !important; color: #343434; font-weight: 800; letter-spacing: 0.04em; }
+.room-empty-cell { background: linear-gradient(135deg, rgba(17, 103, 216, 0.03), rgba(17, 103, 216, 0.01)), repeating-linear-gradient(-45deg, rgba(41, 72, 95, 0.025), rgba(41, 72, 95, 0.025) 8px, transparent 8px, transparent 16px); }
+.room-slot-card { height: 100%; min-height: 108px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 14px 12px; text-align: center; border-radius: 18px; border: 1px solid rgba(70, 103, 125, 0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 18px rgba(27, 79, 114, 0.06); }
+.room-slot-card strong { display: block; font-size: 15px; line-height: 1.25; }
+.room-slot-card__section { color: #334f63; font-weight: 700; line-height: 1.3; }
+.room-slot-card__teacher { color: #476375; font-size: 13px; font-weight: 600; line-height: 1.25; }
+.room-slot-card--lab { background: linear-gradient(135deg, rgba(227, 242, 253, 0.92), rgba(209, 231, 255, 0.96)); }
+.room-slot-card--class { background: linear-gradient(135deg, rgba(234, 255, 234, 0.92), rgba(220, 245, 223, 0.96)); }
+.room-table tbody tr:hover td { background-color: rgba(246, 251, 255, 0.98); }
+.room-pdf-btn { padding: 12px 22px; border: none; border-radius: 999px; background: linear-gradient(135deg, #0f6f7d, #1da0b4); color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 0.02em; box-shadow: 0 12px 24px rgba(15, 111, 125, 0.22); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.room-pdf-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 28px rgba(15, 111, 125, 0.28); }
+
+.labs-container { display: flex; gap: 10px; justify-content: center; align-items: stretch; padding: 8px; }
+
+@media (max-width: 768px) {
+    .view-switcher { gap: 10px; padding: 14px; }
+    .view-toggle { width: 100%; min-width: 0; }
+    .room-card { padding: 18px 12px 14px; border-radius: 18px; }
+    .room-card__title { font-size: 1.45rem; }
+    .room-view-toolbar { padding: 14px; }
+    .room-table { display: block; overflow-x: auto; white-space: nowrap; }
+    .export-watermark__grid { grid-template-columns: repeat(3, 1fr); gap: 48px 16px; }
+    .export-watermark__grid span { font-size: 18px; }
 }
 </style>
 </head>
@@ -168,15 +448,118 @@ function saveAsImage(elementId, filename) {
         btns.forEach(function(b) { b.style.display = ''; });
     });
 }
+
+function saveRoomViewAsPdf() {
+    const el = document.getElementById("room-view");
+    if (!el) return;
+
+    const btns = el.querySelectorAll('.btn-save-tt, .room-pdf-btn');
+    btns.forEach(function(b) { b.style.display = 'none'; });
+
+    const cards = el.querySelectorAll('.room-card');
+    if (!cards.length) {
+        btns.forEach(function(b) { b.style.display = ''; });
+        return;
+    }
+
+    var worker = html2pdf().set({
+        margin: [8, 8, 8, 8],
+        filename: 'Room_Timetables.pdf',
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, windowWidth: 1400 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    }).from(cards[0]).toContainer().toCanvas().toPdf();
+
+    for (var i = 1; i < cards.length; i++) {
+        worker = worker.get('pdf').then(function(pdf) {
+            pdf.addPage();
+        }).from(cards[i]).toContainer().toCanvas().toPdf();
+    }
+
+    worker.save().then(function() {
+        btns.forEach(function(b) { b.style.display = ''; });
+    }).catch(function() {
+        btns.forEach(function(b) { b.style.display = ''; });
+    });
+}
+
+function showView(view) {
+    var views = ["section", "room", "workload", "teacher"];
+    views.forEach(function(name) {
+        var panel = document.getElementById(name + "-view");
+        var button = document.querySelector('.view-toggle[data-view="' + name + '"]');
+        if (panel) panel.style.display = name === view ? "block" : "none";
+        if (button) {
+            button.classList.toggle("is-active", name === view);
+            button.setAttribute("aria-pressed", name === view ? "true" : "false");
+        }
+    });
+    if (window.location.hash !== "#" + view) {
+        window.history.replaceState(null, "", "#" + view);
+    }
+}
 </script>
 
-<h1>⭐ Saved Timetable</h1>
+<!-- Page Utility Bar -->
+<div class="page-utility-bar">
+    <button type="button" class="utility-btn" id="openFullScreenButton" title="Open full screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+    </button>
+    <a href="{% url 'admindash' %}" class="utility-btn is-close" title="Close and go to dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </a>
+</div>
+
+<h1>&#11088; Saved Timetable</h1>
 <div class="saved-meta">
   Saved on: {{ saved.created_at|date:"d M Y" }} at {{ saved.created_at|date:"h:i A" }}
 </div>
 
+<!-- Top Actions -->
+{% if not is_published_view %}
+<div class="top-actions">
+    <button id="dragDropToggle" type="button" class="drag-toggle-btn">
+        Activate Drag & Drop
+    </button>
+</div>
+{% endif %}
+
+<!-- View Switcher -->
+<div class="view-switcher">
+  <button class="view-toggle view-toggle--section is-active" type="button" data-view="section" onclick="showView('section')" aria-pressed="true">
+    <span class="view-toggle__label">&#128218; Section Timetable</span>
+  </button>
+  <button class="view-toggle view-toggle--room" type="button" data-view="room" onclick="showView('room')" aria-pressed="false">
+    <span class="view-toggle__label">&#127979; Room Timetable</span>
+  </button>
+  <button class="view-toggle view-toggle--workload" type="button" data-view="workload" onclick="showView('workload')" aria-pressed="false">
+    <span class="view-toggle__label">&#128202; Teacher Workload</span>
+  </button>
+  <button class="view-toggle view-toggle--teacher" type="button" data-view="teacher" onclick="showView('teacher')" aria-pressed="false">
+    <span class="view-toggle__label">&#128105;&#8205;&#127979; Teacher Timetable</span>
+  </button>
+</div>
+
+{# ===================== SECTION TIMETABLES ===================== #}
+<div id="section-view">
 {% for table in tables %}
-  <div id="saved-section-tt-{{ forloop.counter }}">
+  <div id="saved-section-tt-{{ forloop.counter }}" class="export-surface">
+  <div class="export-watermark">
+    <div class="export-watermark__grid">
+      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+    </div>
+  </div>
+  <div style="position:relative; z-index:1;">
   <h2 class="secHead">
     {{ table.section.section_id }} ({{ table.section.department.dept_name }})
   </h2>
@@ -184,9 +567,7 @@ function saveAsImage(elementId, filename) {
   {% if table.subject_counts %}
     <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #f7fbff; border: 1px solid #d6e9f8; border-radius: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
-        <div style="font-weight: 700; color: #0d47a1;">
-        Subjects Scheduled
-        </div>
+        <div style="font-weight: 700; color: #0d47a1;">Subjects Scheduled</div>
         <div style="font-size: 13px; font-weight: 700; color: #c62828; background: #fff3f3; border: 1px solid #ffcdd2; border-radius: 999px; padding: 5px 10px;">
           M.T.C: {{ table.total_missing_classes }}
         </div>
@@ -195,13 +576,9 @@ function saveAsImage(elementId, filename) {
         {% for subject in table.subject_counts %}
           <span style="display: inline-block; padding: 6px 10px; background: #ffffff; border: 1px solid #bbdefb; border-radius: 16px; color: #1565c0; font-size: 13px; font-weight: 600; max-width: 340px;">
             {{ subject.name }}: {{ subject.count }}/{{ subject.required }}
-            {% if subject.unfulfilled %}
-              | Missed {{ subject.unfulfilled }}
-            {% endif %}
+            {% if subject.unfulfilled %} | Missed {{ subject.unfulfilled }}{% endif %}
             {% if subject.reason %}
-              <div style="margin-top: 4px; font-size: 11px; font-weight: 500; color: #6b7280; line-height: 1.35;">
-                Reason: {{ subject.reason }}
-              </div>
+              <div style="margin-top: 4px; font-size: 11px; font-weight: 500; color: #6b7280; line-height: 1.35;">Reason: {{ subject.reason }}</div>
             {% endif %}
             {% if subject.suggested_slots %}
               <div style="margin-top: 5px; font-size: 11px; font-weight: 500; color: #166534; line-height: 1.4;">
@@ -220,11 +597,13 @@ function saveAsImage(elementId, filename) {
   {% endif %}
 
   <div style="text-align:center;">
+      {% if not is_published_view %}
       <a href="{% url 'saved_add_slot' saved.id table.section.section_id %}"
          class="action-button btn-add"
          style="padding:6px 14px; font-size:13px;">
          + Add Slot
       </a>
+      {% endif %}
       <button class="btn-save-tt" onclick="saveAsImage('saved-section-tt-{{ forloop.counter }}', 'Section_{{ table.section.section_id }}')">
         Save as Image
       </button>
@@ -259,13 +638,19 @@ function saveAsImage(elementId, filename) {
             <td class="lunch-cell">LUNCH</td>
 
           {% elif cell.type == "special" %}
-            <!-- ⭐ NEW: Special Class Cell -->
             <td class="special-cell">SPECIAL CLASS</td>
 
           {% elif cell.type == "lab" %}
-            <td colspan="{{ cell.colspan }}" class="slot-cell">
+            <td colspan="{{ cell.colspan }}" class="slot-cell drop-target"
+                data-section-id="{{ table.section.section_id }}"
+                data-day="{{ row.day }}"
+                data-slot="{{ cell.slot_number }}">
               {% for lab in cell.labs %}
-                <div class="lab-box">
+                <div class="lab-box draggable-slot-item"
+                     data-move-type="lab"
+                     data-section-id="{{ table.section.section_id }}"
+                     data-day="{{ row.day }}"
+                     data-slot="{{ cell.slot_number }}">
                   <strong>{{ lab.course.course_name }} Lab</strong><br>
                   Batch {{ lab.batch }}/{{ lab.total_batches }}<br>
                   {{ lab.instructor.name }}<br>
@@ -273,40 +658,58 @@ function saveAsImage(elementId, filename) {
                 </div>
               {% endfor %}
 
+              {% if not is_published_view %}
               <div class="action-buttons">
                 <a href="{% url 'saved_update_slot' saved.id table.section.section_id row.day cell.labs.0.meeting_times.0.time %}"
                    class="action-button btn-update">Update</a>
-
                 <a href="{% url 'saved_delete_slot' saved.id table.section.section_id row.day cell.labs.0.meeting_times.0.time %}"
                    class="action-button btn-delete">Delete</a>
+                <a href="{% url 'saved_substitute_lab_teacher' saved.id table.section.section_id row.day cell.labs.0.meeting_times.0.time %}"
+                   class="action-button btn-substitute">Substitute Lab</a>
               </div>
+              {% endif %}
             </td>
 
           {% elif cell.type == "class" %}
-            <td class="slot-cell">
+            <td class="slot-cell drop-target"
+                data-section-id="{{ table.section.section_id }}"
+                data-day="{{ row.day }}"
+                data-slot="{{ cell.slot_number }}">
               {% for cls in cell.classes %}
-                <div class="class-box">
+                <div class="class-box draggable-slot-item"
+                     data-move-type="class"
+                     data-section-id="{{ table.section.section_id }}"
+                     data-day="{{ row.day }}"
+                     data-slot="{{ cell.slot_number }}">
                   <strong>{{ cls.course.course_name }}</strong><br>
                   {{ cls.instructor.name }}<br>
                   {{ cls.room.r_number }}
                 </div>
               {% endfor %}
 
+              {% if not is_published_view %}
               <div class="action-buttons">
                 <a href="{% url 'saved_update_slot' saved.id table.section.section_id row.day cell.classes.0.meeting_time.time %}"
                    class="action-button btn-update">Update</a>
-
                 <a href="{% url 'saved_delete_slot' saved.id table.section.section_id row.day cell.classes.0.meeting_time.time %}"
                    class="action-button btn-delete">Delete</a>
+                <a href="{% url 'saved_substitute_teacher' saved.id table.section.section_id row.day cell.classes.0.meeting_time.time %}"
+                   class="action-button btn-substitute">Substitute</a>
               </div>
+              {% endif %}
             </td>
 
           {% else %}
-            <td class="slot-cell">
+            <td class="slot-cell drop-target"
+                data-section-id="{{ table.section.section_id }}"
+                data-day="{{ row.day }}"
+                data-slot="{{ cell.slot_number }}">
+              {% if not is_published_view %}
               <div class="action-buttons">
                 <a href="{% url 'saved_add_slot' saved.id table.section.section_id %}"
                    class="action-button btn-add">Add</a>
               </div>
+              {% endif %}
             </td>
           {% endif %}
 
@@ -316,8 +719,417 @@ function saveAsImage(elementId, filename) {
     </tbody>
   </table>
   </div>
+  </div>
 
 {% endfor %}
+</div>
+
+{# ===================== ROOM TIMETABLES ===================== #}
+<div id="room-view" style="display:none;">
+<div class="room-view-toolbar">
+  <div>
+    <h2 class="room-view-title">Room Timetables</h2>
+    <div class="room-view-toolbar__hint">Clean room-wise layout with export-ready separation</div>
+  </div>
+  <button class="room-pdf-btn" type="button" onclick="saveRoomViewAsPdf()">
+    Download Room Timetables PDF
+  </button>
+</div>
+
+{% for rt in room_tables %}
+  <div id="room-tt-{{ forloop.counter }}" class="room-card export-surface">
+    <div class="export-watermark">
+      <div class="export-watermark__grid">
+        <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+        <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+        <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+      </div>
+    </div>
+    <div class="room-card__content">
+      <div class="room-card__header">
+        <h3 class="room-card__title">Room {{ rt.room.r_number }} ({{ rt.room.room_type }})</h3>
+        <div class="room-card__meta">
+          <div class="room-optimization">
+            <span>Optimization</span>
+            <strong>{{ rt.optimization_percentage }}%</strong>
+          </div>
+          <button class="btn-save-tt room-save-btn" onclick="saveAsImage('room-tt-{{ forloop.counter }}', 'Room_{{ rt.room.r_number }}')">
+            Save as Image
+          </button>
+        </div>
+      </div>
+
+  <table class="room-table">
+    <thead>
+      <tr>
+        <th style="width:120px;">Day</th>
+        <th>{{ SLOT_LABELS.1 }}</th>
+        <th>{{ SLOT_LABELS.2 }}</th>
+        <th>{{ SLOT_LABELS.3 }}</th>
+        <th>{{ SLOT_LABELS.4 }}</th>
+        <th>{{ SLOT_LABELS.5 }}</th>
+        <th>{{ SLOT_LABELS.6 }}</th>
+        <th>{{ SLOT_LABELS.7 }}</th>
+        <th>{{ SLOT_LABELS.8 }}</th>
+        <th>{{ SLOT_LABELS.9 }}</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for row in rt.rows %}
+      <tr>
+        <td class="room-day-cell"><b>{{ row.day }}</b></td>
+
+        {% for cell in row.cells %}
+          {% if cell.type == "lunch" %}
+            <td class="room-lunch-cell"><b>LUNCH</b></td>
+
+          {% elif cell.type == "lab" %}
+            <td colspan="{{ cell.colspan }}">
+              <div class="room-slot-card room-slot-card--lab">
+              {% for lab in cell.labs %}
+                <strong>{{ lab.course.course_name }}</strong>
+                <div class="room-slot-card__section">{{ lab.section }} ({{ lab.group }})</div>
+                <div class="room-slot-card__teacher">{{ lab.instructor.name }}</div>
+              {% endfor %}
+              </div>
+            </td>
+
+          {% elif cell.type == "class" %}
+            <td>
+              <div class="room-slot-card room-slot-card--class">
+              {% for cls in cell.classes %}
+                <strong>{{ cls.course.course_name }}</strong>
+                <div class="room-slot-card__section">{{ cls.section }}</div>
+                <div class="room-slot-card__teacher">{{ cls.instructor.name }}</div>
+              {% endfor %}
+              </div>
+            </td>
+
+          {% else %}
+            <td class="room-empty-cell"></td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+    </div>
+  </div>
+  <br>
+{% endfor %}
+</div>
+
+{# ===================== TEACHER WORKLOAD SUMMARY ===================== #}
+<div id="workload-view" style="display:none;">
+<h1 class="secHead" style="margin-top: 60px;">Teacher Workload Summary</h1>
+
+<table class="table2" style="width:70%; margin-bottom:40px;">
+  <thead>
+    <tr>
+      <th>Teacher</th>
+      <th>Lectures</th>
+      <th>Lab Slots</th>
+      <th>Total Load</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% if teacher_workloads %}
+      {% for teacher, data in teacher_workloads.items %}
+        <tr>
+          <td>
+            <strong>{{ teacher.name }}</strong><br>
+            <span style="font-size:12px; color:#555;">({{ teacher.uid }})</span>
+          </td>
+          <td>{{ data.lectures }}</td>
+          <td>{{ data.labs }}</td>
+          <td>
+            {% if data.total >= 8 %}
+              <span style="color:#c62828; font-weight:700;">{{ data.total }} &#9888;</span>
+            {% elif data.total >= 6 %}
+              <span style="color:#ef6c00; font-weight:700;">{{ data.total }}</span>
+            {% else %}
+              <span style="color:#2e7d32; font-weight:700;">{{ data.total }}</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td colspan="4" style="text-align:center; font-weight:600;">No workload data available</td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>
+</div>
+
+{# ===================== TEACHER TIMETABLES ===================== #}
+<div id="teacher-view" style="display:none;">
+<h1 class="secHead" style="margin-top: 60px;">Teacher Timetables</h1>
+
+{% for ttable in teacher_tables %}
+  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface">
+  <div class="export-watermark">
+    <div class="export-watermark__grid">
+      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+    </div>
+  </div>
+  <div style="position:relative; z-index:1;">
+  <h2 class="secHead">
+    {{ ttable.teacher.name }} ({{ ttable.teacher.uid }})
+    <button class="btn-save-tt" style="margin-left: 12px; vertical-align: middle;" onclick="saveAsImage('teacher-tt-{{ forloop.counter }}', 'Teacher_{{ ttable.teacher.name }}')">
+      Save as Image
+    </button>
+  </h2>
+
+  <table class="table2">
+    <thead>
+      <tr>
+        <th>DAY</th>
+        <th>{{ SLOT_LABELS.1 }}</th>
+        <th>{{ SLOT_LABELS.2 }}</th>
+        <th>{{ SLOT_LABELS.3 }}</th>
+        <th>{{ SLOT_LABELS.4 }}</th>
+        <th>{{ SLOT_LABELS.5 }}</th>
+        <th>{{ SLOT_LABELS.6 }}</th>
+        <th>{{ SLOT_LABELS.7 }}</th>
+        <th>{{ SLOT_LABELS.8 }}</th>
+        <th>{{ SLOT_LABELS.9 }}</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% for row in ttable.rows %}
+      <tr>
+        <th style="background:#ffffff; font-weight:600; color:#000;">
+          {{ row.day }}
+        </th>
+
+        {% for cell in row.cells %}
+          {% if cell.type == "lunch" %}
+            <td class="lunch-cell">LUNCH</td>
+
+          {% elif cell.type == "special" %}
+            <td class="special-cell">SPECIAL CLASS</td>
+
+          {% elif cell.type == "lab" %}
+            <td colspan="{{ cell.colspan }}">
+              <div class="labs-container">
+                {% for lab in cell.labs %}
+                  <div class="lab-box">
+                    <strong style="font-size: 14px; color: #0d47a1;">{{ lab.course.course_name }} Lab</strong>
+                    <strong style="color: #1565c0; font-size: 13px;">Batch {{ lab.batch }}/{{ lab.total_batches }}</strong>
+                    <span style="color: #424242;">Section: {{ lab.section }}</span><br>
+                    <span style="color: #424242; font-size: 12px;">{{ lab.room.r_number }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            </td>
+
+          {% elif cell.type == "class" %}
+            <td>
+              {% for cls in cell.classes %}
+                <div class="class-box">
+                  <strong>{{ cls.course.course_name }}</strong><br>
+                  Section: {{ cls.section }}<br>
+                  {{ cls.room.r_number }}
+                </div>
+              {% endfor %}
+            </td>
+
+          {% else %}
+            <td></td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  </div>
+
+{% endfor %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // ── Plan Permissions ──
+    window.planPermissions = {
+        canEditDelete: {{ can_edit_delete|yesno:"true,false" }},
+        canSubstitute: {{ can_substitute|yesno:"true,false" }},
+        canDragDrop: {{ can_drag_drop|yesno:"true,false" }}
+    };
+
+    var SAVED_TID = {{ saved.id }};
+
+    function getCsrfToken() {
+        var cookie = document.cookie.split(";").find(function (c) {
+            return c.trim().startsWith("csrftoken=");
+        });
+        return cookie ? cookie.split("=")[1] : "";
+    }
+
+    function showPlanUpgradeMessage(title, text) {
+        Swal.fire({
+            icon: "info",
+            title: title,
+            text: text,
+            confirmButtonColor: "#4e73df"
+        });
+    }
+
+    // ── Full screen ──
+    var openFullScreenButton = document.getElementById("openFullScreenButton");
+    if (openFullScreenButton) {
+        openFullScreenButton.addEventListener("click", function () {
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                }
+            } catch (err) { }
+        });
+    }
+
+    // ── Permission gating for substitute buttons ──
+    document.querySelectorAll(".btn-substitute").forEach(function (link) {
+        link.addEventListener("click", function (event) {
+            if (window.planPermissions.canSubstitute) return;
+            event.preventDefault();
+            showPlanUpgradeMessage("Substitute Locked", "Please upgrade your plan to use substitute features.");
+        });
+    });
+
+    // ── Permission gating for edit/delete buttons ──
+    document.querySelectorAll(".btn-update, .btn-delete").forEach(function (link) {
+        link.addEventListener("click", function (event) {
+            if (window.planPermissions.canEditDelete) return;
+            event.preventDefault();
+            showPlanUpgradeMessage("Editing Locked", "Please upgrade your plan to use editing features.");
+        });
+    });
+
+    // ── Drag & Drop ──
+    (function initDragAndDrop() {
+        var toggleBtn = document.getElementById("dragDropToggle");
+        if (!toggleBtn) return;
+
+        var dragEnabled = false;
+        var currentDrag = null;
+        var dragItems = Array.from(document.querySelectorAll(".draggable-slot-item"));
+        var dropTargets = Array.from(document.querySelectorAll(".slot-cell.drop-target"));
+
+        function syncDragState() {
+            document.body.classList.toggle("drag-drop-active", dragEnabled);
+            toggleBtn.classList.toggle("is-active", dragEnabled);
+            toggleBtn.textContent = dragEnabled ? "Disable Drag & Drop" : "Activate Drag & Drop";
+            dragItems.forEach(function (item) {
+                item.setAttribute("draggable", dragEnabled ? "true" : "false");
+            });
+        }
+
+        toggleBtn.addEventListener("click", function () {
+            if (!window.planPermissions.canDragDrop) {
+                showPlanUpgradeMessage("Drag & Drop Locked", "Please upgrade your plan to access drag-and-drop scheduling.");
+                return;
+            }
+            dragEnabled = !dragEnabled;
+            currentDrag = null;
+            syncDragState();
+        });
+
+        dragItems.forEach(function (item) {
+            item.setAttribute("draggable", "false");
+
+            item.addEventListener("dragstart", function (event) {
+                if (!dragEnabled) { event.preventDefault(); return; }
+                currentDrag = {
+                    sectionId: item.dataset.sectionId,
+                    day: item.dataset.day,
+                    slot: item.dataset.slot,
+                    moveType: item.dataset.moveType
+                };
+                item.classList.add("is-dragging");
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", JSON.stringify(currentDrag));
+            });
+
+            item.addEventListener("dragend", function () {
+                item.classList.remove("is-dragging");
+                dropTargets.forEach(function (target) { target.classList.remove("drag-over"); });
+            });
+        });
+
+        dropTargets.forEach(function (target) {
+            target.addEventListener("dragover", function (event) {
+                if (!dragEnabled || !currentDrag) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                target.classList.add("drag-over");
+            });
+
+            target.addEventListener("dragleave", function () { target.classList.remove("drag-over"); });
+
+            target.addEventListener("drop", async function (event) {
+                target.classList.remove("drag-over");
+                if (!dragEnabled || !currentDrag) return;
+                event.preventDefault();
+
+                var targetSection = target.dataset.sectionId;
+                var targetDay = target.dataset.day;
+                var targetSlot = target.dataset.slot;
+
+                if (currentDrag.sectionId === targetSection && currentDrag.day === targetDay && currentDrag.slot === targetSlot) return;
+
+                try {
+                    var response = await fetch(
+                        "/saved/" + SAVED_TID + "/move/" +
+                        encodeURIComponent(currentDrag.sectionId) + "/" +
+                        encodeURIComponent(currentDrag.day) + "/" +
+                        encodeURIComponent(currentDrag.slot) + "/",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": getCsrfToken(),
+                                "X-Requested-With": "XMLHttpRequest"
+                            },
+                            body: JSON.stringify({
+                                target_day: targetDay,
+                                target_slot: targetSlot,
+                                move_type: currentDrag.moveType
+                            })
+                        }
+                    );
+
+                    var result = await response.json();
+                    if (!response.ok || !result.ok) {
+                        Swal.fire({ icon: "error", title: "Move Blocked", text: result.message || "Conflict detected. Move cancelled.", confirmButtonColor: "#4e73df" });
+                        return;
+                    }
+
+                    Swal.fire({ icon: "success", title: "Updated", text: result.message || "Slot updated successfully.", timer: 900, showConfirmButton: false })
+                        .then(function () { window.location.reload(); });
+                } catch (error) {
+                    Swal.fire({ icon: "error", title: "Request Failed", text: "Could not move this block right now.", confirmButtonColor: "#4e73df" });
+                } finally {
+                    currentDrag = null;
+                }
+            });
+        });
+
+        syncDragState();
+    })();
+
+    // ── Restore view from URL hash ──
+    var hash = window.location.hash.replace("#", "");
+    if (["section", "room", "workload", "teacher"].indexOf(hash) !== -1) {
+        showView(hash);
+    }
+});
+</script>
 
 <script src="{% static 'chatbot.js' %}"></script>
 </body>

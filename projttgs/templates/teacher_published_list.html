@@ -1,0 +1,160 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block title %}Published Timetables | SmartScheduler{% endblock %}
+{% block content %}
+
+<style>
+    .pub-h1 {
+        text-align: center;
+        margin-top: 40px;
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: #b497ff;
+    }
+
+    .pub-container {
+        width: 90%;
+        max-width: 850px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .pub-card {
+        background: #171724;
+        padding: 22px;
+        border-radius: 14px;
+        margin: 20px 0;
+        border: 1px solid #2d2d43;
+        transition: all 0.2s ease;
+    }
+
+    .pub-card:hover {
+        border-color: #6e3bd9;
+        background: #1d1c2b;
+        transform: translateY(-3px);
+    }
+
+    .pub-date {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #d4ccff;
+        margin-bottom: 4px;
+    }
+
+    .pub-hod-name {
+        font-size: 0.85rem;
+        color: #aaa8c8;
+        margin-bottom: 12px;
+    }
+
+    .pub-btn-view {
+        display: inline-block;
+        padding: 10px 22px;
+        font-size: 0.95rem;
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #5b21ed, #7c4dff);
+        transition: 0.25s ease;
+    }
+
+    .pub-btn-view:hover {
+        background: linear-gradient(135deg, #6230e8, #8966ff);
+    }
+
+    .pub-no-data {
+        text-align: center;
+        padding: 40px;
+        color: #aaa8c8;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .pub-code-section {
+        background: #171724;
+        padding: 22px;
+        border-radius: 14px;
+        margin: 0 0 20px 0;
+        border: 1px solid #2d2d43;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .pub-code-input {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #2d2d43;
+        background: #0e0e16;
+        color: #eae6ff;
+        font-size: 0.9rem;
+        width: 180px;
+    }
+
+    .pub-btn-set {
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #5b21ed, #7c4dff);
+        border-radius: 6px;
+        color: white;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .pub-btn-set:hover {
+        background: linear-gradient(135deg, #6230e8, #8966ff);
+    }
+</style>
+
+<h1 class="pub-h1">Published Timetables</h1>
+
+<div class="pub-container">
+
+    <!-- Institution Code Section -->
+    <div class="pub-code-section">
+        {% if institution_code %}
+            <div>
+                <span style="color: #b497ff; font-weight: 600;">Institution Code:</span>
+                <span style="color: #d4ccff; font-size: 1.1rem; font-weight: 700; letter-spacing: 1px;">{{ institution_code }}</span>
+            </div>
+        {% else %}
+            <div>
+                <span style="color: #aaa8c8;">Enter your institution code to view published timetables</span>
+            </div>
+            <form method="POST" action="{% url 'teachertimetable_list' %}" style="display: flex; gap: 8px; align-items: center;">
+                {% csrf_token %}
+                <input type="text" name="institution_code" placeholder="e.g. SVNIT2025" class="pub-code-input" required>
+                <button type="submit" class="pub-btn-set">Join</button>
+            </form>
+        {% endif %}
+    </div>
+
+    {% if institution_code %}
+        {% if timetables %}
+            {% for t in timetables %}
+            <div class="pub-card">
+                <div class="pub-date">
+                    Published on: {{ t.created_at|date:"d M Y" }} at {{ t.created_at|date:"h:i A" }}
+                </div>
+                <div class="pub-hod-name">By: {{ t.user.username }}</div>
+                <a href="{% url 'view_published_timetable' t.id %}" class="pub-btn-view">View Timetable</a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="pub-no-data">
+                No published timetables found for this institution code.
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="pub-no-data">
+            Please enter your institution code above to get started.
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+.manage-fieldset {
+    width: 90%;
+    margin: auto;
+    padding: 20px 30px;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+}
+
+.back-btn-link {
+    text-decoration: none;
+}
+
+.dashboard-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #22c55e, #0f766e);
+    color: #fff;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(15, 118, 110, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.dashboard-back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(34, 197, 94, 0.35);
+    filter: brightness(1.05);
+}
+
+.edit-container {
+    margin-top: 25px;
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+    font-size: 18px;
+}
+
+.styled-table th {
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.styled-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    opacity: 0.9;
+}
+
+.styled-table tr:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transition: 0.2s;
+}
+
+.delete-btn {
+    padding: 5px 12px;
+    background: #ff4d4dcc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.delete-btn:hover {
+    background: #ff3333;
+    transform: scale(1.05);
+}
+</style>
+
+<fieldset class="manage-fieldset">
+    <a href="{% url 'admindash' %}" class="back-btn-link">
+        <span class="dashboard-back-btn">Back to Dashboard</span>
+    </a>
+
+    <div class="edit-container">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Section ID</th>
+                    <th>Department</th>
+                    <th>Total Classes / Week</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for sec in sections %}
+                <tr>
+                    <td>{{ sec.section_id }}</td>
+                    <td>{{ sec.department }}</td>
+                    <td>{{ sec.num_class_in_week }}</td>
+                    <td>
+                        <form action="{% url 'deletesection' sec.section_id %}" method="post">
+                            {% csrf_token %}
+                            <button class="delete-btn">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</fieldset>
+
+{% endblock %}
