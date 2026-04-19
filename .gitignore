@@ -15,7 +15,5 @@ migrations/
 db.sqlite3
 *.gz
 *.br
-
-
 .env
 Scheduler_UI/projttgs/.env
