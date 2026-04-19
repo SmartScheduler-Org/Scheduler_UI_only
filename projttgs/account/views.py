@@ -40,8 +40,8 @@ def register(request):
                 user_form.cleaned_data['password'])
             # Save the User object
             new_user.save()
-            # Create the user profile
-            Profile.objects.create(user=new_user)
+            # Create the user profile (may already exist via signal)
+            Profile.objects.get_or_create(user=new_user)
             return render(request,
                           'account/register_done.html',
                           {'new_user': new_user})

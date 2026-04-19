@@ -69,7 +69,7 @@
      <div class="dash-grid">
 
         <!-- TOTAL TEACHERS -->
-        <a href="{% url 'editinstructor' %}" class="dash-card">
+        <a href="{% url 'dashboard_teachers_list' %}" class="dash-card">
             <div class="dash-icon-wrap">
                 <i class="icon fas fa-chalkboard-teacher"></i>
             </div>
@@ -78,7 +78,7 @@
         </a>
 
         <!-- TOTAL DEPARTMENTS -->
-        <a href="{% url 'editdepartment' %}" class="dash-card">
+        <a href="{% url 'dashboard_departments_list' %}" class="dash-card">
             <div class="dash-icon-wrap">
                 <i class="icon fas fa-building"></i>
             </div>
@@ -87,7 +87,7 @@
         </a>
 
         <!-- TOTAL CLASSES -->
-        <a href="{% url 'editsection' %}" class="dash-card">
+        <a href="{% url 'dashboard_sections_list' %}" class="dash-card">
             <div class="dash-icon-wrap">
                 <i class="icon fas fa-layer-group"></i>
             </div>
@@ -111,6 +111,24 @@
             </div>
             <h3>CSV Converter</h3>
             <p>PDF/Excel → CSV</p>
+        </a>
+
+        <!-- SEND PREFERENCE MAIL -->
+        <a href="{% url 'send_preferences' %}" class="dash-card" style="background:linear-gradient(135deg,rgba(124,92,252,.18),rgba(124,92,252,.04));border-color:rgba(124,92,252,.4);">
+            <div class="dash-icon-wrap" style="background:rgba(124,92,252,.2);border-color:rgba(124,92,252,.5);">
+                <i class="icon fas fa-paper-plane" style="color:#c4b5fd;"></i>
+            </div>
+            <h3 style="color:#c4b5fd;">Send Preference Mail</h3>
+            <p>Email form links to teachers</p>
+        </a>
+
+        <!-- VIEW TEACHER RESPONSES -->
+        <a href="{% url 'teacher_responses' %}" class="dash-card" style="background:linear-gradient(135deg,rgba(6,182,212,.15),rgba(6,182,212,.03));border-color:rgba(6,182,212,.4);">
+            <div class="dash-icon-wrap" style="background:rgba(6,182,212,.18);border-color:rgba(6,182,212,.45);">
+                <i class="icon fas fa-table" style="color:#67e8f9;"></i>
+            </div>
+            <h3 style="color:#67e8f9;">View Responses</h3>
+            <p>All submitted preferences</p>
         </a>
 
      </div>
@@ -285,8 +303,8 @@
   --ai-glow:#8b5cf6;
   --glass: rgba(255,255,255,0.07);
   --border: rgba(255,255,255,0.12);
-}
 
+}
 .admin-shortcuts-wrap {
   position: relative;
   z-index: 90;
@@ -419,7 +437,7 @@
 /* HERO */
 .hero {
   position: relative;
-  padding: 72px 20px 40px;
+  padding: 120px 20px 40px;
   text-align: center;
 }
 
@@ -478,7 +496,6 @@
 .dash-welcome {
   font-size: 28px;
   color: var(--text);
-  margin: 0 0 12px;
   text-shadow: 0 0 14px rgba(255,255,255,0.25);
 }
 
@@ -714,18 +731,8 @@
 
 /* RESPONSIVE */
 @media(max-width:768px){
-  .admin-shortcuts-shell {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 12px;
-    border-radius: 28px;
-  }
-  .admin-shortcut {
-    width: 100%;
-  }
   .hero-heading { font-size: 36px; }
-  .hero { padding-top: 72px; }
+  .hero { padding-top: 100px; }
   .flow-line { display:none; }
   .flow-card { text-align:left; }
 }

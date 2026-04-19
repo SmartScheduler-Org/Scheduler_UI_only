@@ -2,10 +2,11 @@
   .site-footer-ref {
     position: relative;
     z-index: 10;
-    margin-top: 32px;
+    margin-top: auto;
     border-top: 1px solid rgba(148, 163, 184, 0.22);
     background: linear-gradient(180deg, #071225 0%, #030915 100%);
     width: 100%;
+    flex-shrink: 0;
   }
 
   .site-footer-ref .site-footer-inner {
@@ -107,6 +108,31 @@
     line-height: 1.5;
   }
 
+  html.light .site-footer-ref {
+    border-top-color: rgba(148, 163, 184, 0.22);
+    background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(241,245,249,0.95) 100%);
+    box-shadow: 0 -10px 30px rgba(148, 163, 184, 0.08);
+  }
+
+  html.light .site-footer-ref .footer-subtitle,
+  html.light .site-footer-ref .site-footer-copy {
+    color: #64748b;
+  }
+
+  html.light .site-footer-ref .site-footer-nav a,
+  html.light .site-footer-ref .site-footer-social a {
+    color: #475569;
+  }
+
+  html.light .site-footer-ref .site-footer-nav a:hover,
+  html.light .site-footer-ref .site-footer-social a:hover {
+    color: #1e293b;
+  }
+
+  html.light .site-footer-ref .footer-bottom {
+    border-top-color: rgba(148, 163, 184, 0.16);
+  }
+
   @media (min-width: 992px) {
     .site-footer-ref .site-footer-inner {
       grid-template-columns: auto 1fr auto;
@@ -165,11 +191,11 @@
 
     <nav class="site-footer-nav" aria-label="Footer navigation">
       <a href="{% url 'help' %}">Help</a>
-      <a href="{% url 'contact' %}">Contact us</a>
+      <a href="{% url 'about' %}">About Us</a>
+      <a href="{% url 'contact' %}">Contact Us</a>
       <a href="{% url 'home' %}#features">Our Services</a>
-      <a href="#">Privacy Policy</a>
+      <a href="{% url 'privacy' %}">Privacy Policy</a>
       <a href="{% url 'terms' %}">Terms &amp; Conditions</a>
-      <a href="#">Career</a>
     </nav>
 
     <div class="site-footer-social" aria-label="Social links">

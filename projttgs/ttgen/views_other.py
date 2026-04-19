@@ -4,8 +4,8 @@ from django.urls import reverse
 from .forms import *
 from .models import *
 from account.models import Profile
-from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
 import random as rnd
@@ -213,6 +213,61 @@ def index(request): return render(request, 'index.html')
 def about(request): return render(request, 'aboutus.html')
 def help(request): return render(request, 'help.html')
 def terms(request): return render(request, 'terms.html')
+def privacy(request): return render(request, 'privacy.html')
+
+
+def institution_application(request):
+    if request.method == 'POST':
+        organisation_type = request.POST.get('organisation_type', '').strip() or 'Not provided'
+        other_organisation = request.POST.get('other_organisation', '').strip()
+        institution_name = request.POST.get('institution_name', '').strip() or 'Not provided'
+        contact_person = request.POST.get('contact_person', '').strip() or 'Not provided'
+        email = request.POST.get('email', '').strip() or 'Not provided'
+        contact_number = request.POST.get('contact_number', '').strip() or 'Not provided'
+        special_instructions = request.POST.get('special_instructions', '').strip() or 'No special instructions'
+
+        final_organisation = organisation_type
+        if organisation_type.lower() == 'other' and other_organisation:
+            final_organisation = f"Other - {other_organisation}"
+
+        try:
+            html_body = render_to_string(
+                'institution_application_email.html',
+                {
+                    'organisation_type': final_organisation,
+                    'institution_name': institution_name,
+                    'contact_person': contact_person,
+                    'email': email,
+                    'contact_number': contact_number,
+                    'special_instructions': special_instructions,
+                },
+            )
+            plain_body = (
+                f"Organisation type: {final_organisation}\n"
+                f"Institution name: {institution_name}\n"
+                f"Contact person: {contact_person}\n"
+                f"Email: {email}\n"
+                f"Contact number: {contact_number}\n\n"
+                f"Special instructions:\n{special_instructions}"
+            )
+            msg = EmailMultiAlternatives(
+                subject=f"[SmartScheduler] Institution Application - {institution_name}",
+                body=plain_body,
+                from_email=settings.EMAIL_HOST_USER,
+                to=['studyyou40@gmail.com'],
+                reply_to=[email] if email and email != 'Not provided' else [],
+            )
+            msg.attach_alternative(html_body, "text/html")
+            msg.send(fail_silently=False)
+        except Exception as e:
+            print(f"[Institution Application Mail Error] {e}")
+
+        messages.success(request, "We will reach out to you soon.")
+        return redirect('institution_application')
+
+    return render(request, 'institution_application.html')
+
+
 def role(request):
     if request.user.is_authenticated:
         profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -264,8 +319,45 @@ def teacherlogin(request): return render(request, 'teacherlogin.html')
 def deanlogin(request): return render(request, 'deanlogin.html')
 def teachertimetable(request): return render(request, 'teachertimetable.html')
 
+
+@login_required
+def set_institution_code(request):
+    if request.method == 'POST':
+        code = request.POST.get('institution_code', '').strip().upper()
+        if not code:
+            messages.error(request, "Institution code cannot be empty.")
+            return redirect('saved_timetable_list')
+        if len(code) > 20:
+            messages.error(request, "Institution code is too long (max 20 characters).")
+            return redirect('saved_timetable_list')
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        profile.institution_code = code
+        profile.save()
+        messages.success(request, f"Institution code set to: {code}")
+    return redirect('saved_timetable_list')
+
+
+@login_required
+def toggle_publish_timetable(request, tid):
+    try:
+        timetable = SavedTimetable.objects.get(id=tid, user=request.user)
+    except SavedTimetable.DoesNotExist:
+        messages.error(request, "Timetable not found.")
+        return redirect('saved_timetable_list')
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if not profile.institution_code:
+        messages.error(request, "Please set your institution code before publishing.")
+        return redirect('saved_timetable_list')
+    timetable.is_published = not timetable.is_published
+    timetable.save(update_fields=['is_published'])
+    status = "published" if timetable.is_published else "unpublished"
+    messages.success(request, f"Timetable {status} successfully.")
+    return redirect('saved_timetable_list')
+
+
 # CONTACT FORM
 def contact(request):
+    sent = False
     if request.method == 'POST':
         message = request.POST['message']
         send_mail(
@@ -275,12 +367,13 @@ def contact(request):
             ['studyyou40@gmail.com'],
             fail_silently=False
         )
-    return render(request, 'contact.html')
-
-
+    return render(request, 'contact.html')  
 # ADMIN DASHBOARD
 @login_required
 def admindash(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if profile.role == 'teacher':
+        return redirect('teachertimetable_list')
     return render(request, 'admindashboard.html')
 
 
@@ -410,6 +503,10 @@ for _runtime_view_name in (
     "saved_delete_slot",
     "saved_add_slot",
     "saved_update_slot",
+    "saved_move_slot_dragdrop",
+    "saved_substitute_teacher",
+    "saved_substitute_lab_teacher",
+    "view_published_timetable",
 ):
     if _runtime_view_name not in globals():
         def _fallback_runtime_view(request, *args, **kwargs):
@@ -550,6 +647,7 @@ def delete_course(request, pk):
         Course.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editcourse')
+    return redirect('editcourse')
 
 
 @login_required
@@ -908,11 +1006,21 @@ def inst_list_view(request):
 
 
 @login_required
+def dashboard_instructor_list_view(request):
+    return render(
+        request,
+        'dashboard_inslist.html',
+        {'instructors': Instructor.objects.filter(user=request.user)}
+    )
+
+
+@login_required
 def delete_instructor(request, pk):
     if request.method == 'POST':
         Instructor.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editinstructor')
+    return redirect('editinstructor')
 
 
 
@@ -967,7 +1075,7 @@ def addRooms(request):
         first = True
 
         for row in reader:
-            if not row or len(row) < 5:
+            if not row or len(row) < 4:
                 continue
 
             if first:
@@ -982,17 +1090,14 @@ def addRooms(request):
                 )
                 cap_index = header.index("seating_capacity") if "seating_capacity" in header else 2
                 type_index = header.index("room_type") if "room_type" in header else 3
-                if "lab_category" not in header:
-                    messages.error(request, "Missing required column: lab_category")
-                    return redirect("addRooms")
-                category_index = header.index("lab_category")
+                category_index = header.index("lab_category") if "lab_category" in header else None
                 continue
 
             r_number = row[rid_index].strip()
             department_value = row[dept_index].strip()
             seating_capacity = row[cap_index].strip()
             room_type = row[type_index].strip()
-            lab_category = normalize_lab_category(row[category_index].strip()) if category_index < len(row) else ""
+            lab_category = normalize_lab_category(row[category_index].strip()) if category_index is not None and category_index < len(row) and row[category_index].strip() else ""
 
             room_map = {
                 "lecture hall": "Lecture Hall",
@@ -1044,6 +1149,7 @@ def delete_room(request, pk):
         Room.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editrooms')
+    return redirect('editrooms')
 
 
 @login_required
@@ -1157,9 +1263,10 @@ def meeting_list_view(request):
 @login_required
 def delete_meeting_time(request, pk):
     if request.method == 'POST':
-        MeetingTime.objects.filter(pk=pk, user=request.user).delete()
+        MeetingTime.objects.filter(pid=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editmeetingtime')
+    return redirect('editmeetingtime')
 
 
 @login_required
@@ -1278,11 +1385,21 @@ def department_list(request):
 
 
 @login_required
+def dashboard_department_list(request):
+    return render(
+        request,
+        'dashboard_deptlist.html',
+        {'departments': Department.objects.filter(user=request.user)}
+    )
+
+
+@login_required
 def delete_department(request, pk):
     if request.method == 'POST':
         Department.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editdepartment')
+    return redirect('editdepartment')
 
 
 @login_required
@@ -1412,11 +1529,21 @@ def section_list(request):
 
 
 @login_required
+def dashboard_section_list(request):
+    return render(
+        request,
+        'dashboard_seclist.html',
+        {'sections': Section.objects.filter(user=request.user)}
+    )
+
+
+@login_required
 def delete_section(request, pk):
     if request.method == 'POST':
         Section.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editsection')
+    return redirect('editsection')
 
 
 @login_required
@@ -1429,7 +1556,7 @@ def generate(request):
 
 
 
-
+@login_required
 def delete_saved_timetable(request, tid):
     SavedTimetable.objects.filter(id=tid, user=request.user).delete()
     messages.success(request, "Saved timetable deleted.")
@@ -1840,3 +1967,208 @@ def convert_csv(request):
     return render(request, "convert_csv.html", {
         "entity_configs_json": entity_configs_json,
     })
+
+# ============================================================
+# TEACHER PREFERENCE VIEWS  (added by integration)
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+# ============================================================
+import csv as _csv
+import io  as _io
+import re  as _re
+from django.http        import HttpResponse
+from django.core.mail   import send_mail as _send_mail
+from django.conf        import settings  as _settings
+
+_EMAIL_RE = _re.compile(r'[\w\.\+\-]+@[\w\.\-]+\.[a-zA-Z]{2,}')
+
+def teacher_pref_form(request):
+    """Standalone form page teachers open from their email link."""
+    return render(request, 'teacher_pref_form.html')
+
+def send_preferences_page(request):
+    """HOD page: enter emails → choose Gmail/Outlook/SMTP → send."""
+    return render(request, 'send_preferences.html')
+
+def teacher_responses_page(request):
+    """HOD page: view all submitted preferences."""
+    from .models import TeacherPreference
+    import json as _json
+    subs = list(TeacherPreference.objects.all().order_by('-submitted_at').values(
+        'id','name','email','designation','subjects','classes','years','submitted_at'
+    ))
+    for s in subs:
+        s['submitted_at'] = s['submitted_at'].strftime('%d %b %Y, %I:%M %p')
+    return render(request, 'teacher_responses.html', {
+        'submissions_json': _json.dumps(subs),
+        'total': len(subs),
+    })
+
+@csrf_exempt
+def teacher_pref_submit(request):
+    """AJAX: save submitted teacher preference form."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        from .models import TeacherPreference
+        import json as _json
+        data        = _json.loads(request.body)
+        name        = data.get('name', '').strip()
+        email       = data.get('email', '').strip()
+        designation = data.get('designation', '').strip()
+        subjects    = data.get('subjects', [])
+        classes     = data.get('classes', [])
+        years       = data.get('years', [])
+
+        errors = []
+        if not name:                      errors.append('Name is required.')
+        if not email or '@' not in email: errors.append('Valid email is required.')
+        if not designation:               errors.append('Designation is required.')
+        if not subjects:                  errors.append('Select at least one subject.')
+        if len(subjects) > 3:            errors.append('Maximum 3 subjects allowed.')
+        if not classes:                   errors.append('Select at least one class.')
+        if not years:                     errors.append('Select at least one year.')
+        if errors:
+            return JsonResponse({'ok': False, 'errors': errors}, status=400)
+
+        sub = TeacherPreference.objects.create(
+            name=name, email=email, designation=designation,
+            subjects=subjects, classes=classes, years=years,
+        )
+
+        # Send confirmation email to the teacher via SMTP
+        try:
+            body = f"""SmartScheduler — Teaching Preference Confirmation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name        : {name}
+Email       : {email}
+Designation : {designation}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Subjects Selected:
+{chr(10).join('  • ' + s for s in subjects)}
+Classes Selected:
+{chr(10).join('  • ' + c for c in classes)}
+Year Preference:
+{chr(10).join('  • ' + y for y in years)}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Submitted via SmartScheduler Teacher Preference Portal"""
+
+            _send_mail(
+                subject=f'SmartScheduler — Preferences Received: {name}',
+                message=body,
+                from_email=_settings.EMAIL_HOST_USER,
+                recipient_list=[email, _settings.EMAIL_HOST_USER],
+                fail_silently=True,
+            )
+        except Exception:
+            pass  # Don't block submission if email fails
+
+        return JsonResponse({'ok': True, 'id': sub.id})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def send_pref_links_smtp(request):
+    """AJAX: send form links via SMTP to all entered emails."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        import json as _json
+        data   = _json.loads(request.body)
+        emails = data.get('emails', [])
+        base   = request.build_absolute_uri('/teacher-pref-form/')
+
+        sent, failed = [], []
+        for email in emails:
+            email = email.strip().lower()
+            if not _EMAIL_RE.match(email):
+                failed.append(email); continue
+            link = f"{base}?email={email}"
+            body = f"""Dear Teacher,
+You are invited to fill your teaching preferences for the upcoming semester on SmartScheduler.
+Click the link below to open your preference form:
+{link}
+The form covers:
+  • Your designation (Professor / Associate / Assistant)
+  • Top 3 subjects you'd like to teach
+  • Classes / sections you're comfortable with
+  • Year of study preference
+Please submit at your earliest convenience.
+Thank you,
+SmartScheduler Scheduling Team"""
+            try:
+                _send_mail(
+                    subject='SmartScheduler — Please Fill In Your Teaching Preferences',
+                    message=body,
+                    from_email=_settings.EMAIL_HOST_USER,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                sent.append(email)
+            except Exception as e:
+                failed.append(email)
+
+        return JsonResponse({'ok': True, 'sent': sent, 'failed': failed})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def parse_emails_view(request):
+    """AJAX: extract emails from uploaded CSV/TXT/PDF file."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        uploaded = request.FILES.get('file')
+        if not uploaded:
+            return JsonResponse({'ok': False, 'error': 'No file uploaded.'}, status=400)
+        filename = uploaded.name.lower()
+        raw_text = ''
+        if filename.endswith('.csv'):
+            content = uploaded.read()
+            try:    text = content.decode('utf-8')
+            except: text = content.decode('latin-1', errors='replace')
+            reader   = _csv.reader(_io.StringIO(text))
+            raw_text = ' '.join(cell for row in reader for cell in row)
+        elif filename.endswith('.txt'):
+            content = uploaded.read()
+            try:    raw_text = content.decode('utf-8')
+            except: raw_text = content.decode('latin-1', errors='replace')
+        elif filename.endswith('.pdf'):
+            try:
+                from pypdf import PdfReader
+                reader   = PdfReader(_io.BytesIO(uploaded.read()))
+                raw_text = '\n'.join(p.extract_text() or '' for p in reader.pages)
+            except Exception as e:
+                return JsonResponse({'ok': False, 'error': f'PDF error: {e}'}, status=400)
+        else:
+            return JsonResponse({'ok': False, 'error': 'Upload CSV, TXT, or PDF.'}, status=400)
+
+        found = _EMAIL_RE.findall(raw_text)
+        seen, emails = set(), []
+        for e in found:
+            e = e.lower().strip('.')
+            if e not in seen:
+                seen.add(e); emails.append(e)
+        if not emails:
+            return JsonResponse({'ok': False, 'error': 'No email addresses found in file.'}, status=400)
+        return JsonResponse({'ok': True, 'emails': emails, 'count': len(emails)})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+
+def export_preferences_csv(request):
+    """Download all teacher preferences as CSV."""
+    from .models import TeacherPreference
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="teacher_preferences.csv"'
+    writer = _csv.writer(response)
+    writer.writerow(['Name','Email','Designation','Subjects','Classes','Years','Submitted At'])
+    for s in TeacherPreference.objects.all():
+        writer.writerow([
+            s.name, s.email, s.designation,
+            ', '.join(s.subjects), ', '.join(s.classes), ', '.join(s.years),
+            s.submitted_at.strftime('%d %b %Y %H:%M')
+        ])
+    return response

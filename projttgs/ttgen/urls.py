@@ -7,7 +7,9 @@ urlpatterns = [
     path('about', views.about, name='about'),
     path('help', views.help, name='help'),
     path('terms', views.terms, name='terms'),
+    path('privacy', views.privacy, name='privacy'),
     path('contact', views.contact, name='contact'),
+    path('apply-for-institutions', views.institution_application, name='institution_application'),
 
     path('admin_dashboard', views.admindash, name='admindash'),
     path('role', views.role, name='role'),
@@ -20,6 +22,7 @@ urlpatterns = [
     path('saved_timetables/', views.teachertimetable_list, name='teachertimetable_list'),
     path('add_teachers', views.addInstructor, name='addInstructors'),
     path('teachers_list/', views.inst_list_view , name='editinstructor'),
+    path('dashboard/teachers_list/', views.dashboard_instructor_list_view, name='dashboard_teachers_list'),
     path('delete_teacher/<int:pk>/', views.delete_instructor, name='deleteinstructor'), 
     path('saved_teacher_timetables/<int:tid>/', views.saved_teacher_timetable, name='saved_teacher_timetable'),
 
@@ -43,10 +46,12 @@ urlpatterns = [
 
     path('add_departments', views.addDepts, name='addDepts'),
     path('departments_list/', views.department_list, name='editdepartment'),
+    path('dashboard/departments_list/', views.dashboard_department_list, name='dashboard_departments_list'),
     path('delete_department/<int:pk>/', views.delete_department, name='deletedepartment'),
 
     path('add_sections', views.addSections, name='addSections'),
     path('sections_list/', views.section_list, name='editsection'),
+    path('dashboard/sections_list/', views.dashboard_section_list, name='dashboard_sections_list'),
     path('delete_section/<str:pk>/', views.delete_section, name='deletesection'),
     path("map-section-courses/",views.map_section_courses,name="map_section_courses"),
     path("view-section-courses/", views.view_section_courses, name="view_section_courses"),
@@ -54,7 +59,7 @@ urlpatterns = [
 
 
     path('generate/', views.generate, name='generate'),
-    path("generate/demo/", views.demo_generate_start, name="demo_generate_start"),
+    path('demo-generate/', views.demo_generate_start, name='demo_generate_start'),
     path("auth/role/subscription/", views.subscription_gate, name="subscription_gate"),
     path("auth/role/subscription/create-order/", views.create_razorpay_order, name="create_razorpay_order"),
     path("auth/role/subscription/verify-payment/", views.verify_razorpay_payment, name="verify_razorpay_payment"),
@@ -81,12 +86,19 @@ urlpatterns = [
     path('saved_timetables/<int:tid>/', views.saved_timetable, name='saved_timetable'),
     path("saved_timetable/delete/<int:tid>/", views.delete_saved_timetable, name="delete_saved_timetable"),
 
+    path('set_institution_code/', views.set_institution_code, name='set_institution_code'),
+    path('toggle_publish/<int:tid>/', views.toggle_publish_timetable, name='toggle_publish_timetable'),
+    path('published_timetable/<int:tid>/', views.view_published_timetable, name='view_published_timetable'),
+
     path('download_timetable/<int:tid>/', views.download_saved_timetable_pdf, name='download_timetable'),
     
     # Saved timetable slot editing
     path("saved/<int:tid>/add/<str:section>/", views.saved_add_slot, name="saved_add_slot"),
     path("saved/<int:tid>/update/<str:section>/<str:day>/<int:slot>/", views.saved_update_slot, name="saved_update_slot"),
     path("saved/<int:tid>/delete/<str:section>/<str:day>/<int:slot>/", views.saved_delete_slot, name="saved_delete_slot"),
+    path("saved/<int:tid>/move/<str:section>/<str:day>/<int:slot>/", views.saved_move_slot_dragdrop, name="saved_move_slot"),
+    path("saved/<int:tid>/substitute/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_teacher, name="saved_substitute_teacher"),
+    path("saved/<int:tid>/substitute_lab/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_lab_teacher, name="saved_substitute_lab_teacher"),
 
     path("substitute_teacher/<str:section>/<str:day>/<int:slot>/",views.substitute_teacher,name="substitute_teacher"),
     path("substitute_lab/<str:section>/<str:day>/<int:slot>/",views.substitute_lab_teacher,name="substitute_lab_teacher"),
@@ -100,4 +112,12 @@ urlpatterns = [
 
 
 
+    # ── Teacher Preference Feature ──────────────────────────────
+    path('teacher-pref-form/',      views.teacher_pref_form,         name='teacher_pref_form'),
+    path('send-preferences/',       views.send_preferences_page,     name='send_preferences'),
+    path('teacher-responses/',      views.teacher_responses_page,    name='teacher_responses'),
+    path('api/pref/submit/',        views.teacher_pref_submit,       name='pref_submit'),
+    path('api/pref/send-links/',    views.send_pref_links_smtp,      name='pref_send_links'),
+    path('api/pref/parse-emails/',  views.parse_emails_view,         name='pref_parse_emails'),
+    path('export/preferences/csv/', views.export_preferences_csv,    name='export_pref_csv'),
 ]
