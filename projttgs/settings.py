@@ -109,6 +109,8 @@ LOGIN_REDIRECT_URL = 'admindash'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'login'
 
+
+
 # Email Config
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = ''
