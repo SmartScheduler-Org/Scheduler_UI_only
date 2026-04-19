@@ -12,8 +12,6 @@ assets/
 projttgs/ttgen/migrations/
 ttgen/migrations/
 migrations/
-
-
 db.sqlite3
 *.gz
 *.br
