@@ -269,14 +269,32 @@ def teachertimetable(request): return render(request, 'teachertimetable.html')
 # CONTACT FORM
 def contact(request):
     if request.method == 'POST':
-        message = request.POST['message']
-        send_mail(
-            'Contact',
-            message,
-            settings.EMAIL_HOST_USER,
-            ['studyyou40@gmail.com'],
-            fail_silently=False
+        name    = request.POST.get('name', '').strip()
+        email   = request.POST.get('email', '').strip()
+        subject = request.POST.get('subject', 'No subject').strip()
+        message = request.POST.get('message', '').strip()
+
+        body = (
+            f"New contact form submission from SmartScheduler\n"
+            f"{'─' * 44}\n"
+            f"Name    : {name}\n"
+            f"Email   : {email}\n"
+            f"Subject : {subject}\n"
+            f"{'─' * 44}\n\n"
+            f"{message}\n"
         )
+        try:
+            send_mail(
+                subject=f"[SmartScheduler] {subject}",
+                message=body,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=['ankitymca27@gmail.com'],
+                fail_silently=False,
+            )
+            messages.success(request, "Message sent! We'll get back to you soon.")
+        except Exception:
+            messages.error(request, "Couldn't send your message right now. Please try again later.")
+        return redirect('contact')
     return render(request, 'contact.html')
 
 
