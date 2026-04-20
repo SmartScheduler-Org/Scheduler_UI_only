@@ -1,6 +1,6 @@
 <header class="nav">
   <div class="container nav-inner">
-    <div class="nav-left">
+    <a class="nav-left" href="{% url 'home' %}">
       <div class="nav-logo-mark"><svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ssLg2" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/></linearGradient></defs><path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#ssLg2)"/><path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/></svg></div>
       <div>
         <div class="nav-title"><span style="color:#a3e635">Smart</span><span style="color:#22c55e">Scheduler</span></div>
@@ -8,7 +8,7 @@
           Smart Academic Scheduling
         </div>
       </div>
-    </div>
+    </a>
 
     <nav class="nav-links" id="navMenu">
       <a class="nav-link" href="{% url 'admindash' %}">Home</a>
