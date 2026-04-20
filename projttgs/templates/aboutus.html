@@ -290,6 +290,62 @@
   }
   .tech-badge svg { color: var(--teal); flex-shrink: 0; }
 
+  /* ── Team tier labels ── */
+  .team-tier-label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+  }
+  .team-tier-label::before,
+  .team-tier-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .team-tier-contrib {
+    margin-top: 44px;
+    color: var(--lime);
+    opacity: 0.7;
+  }
+
+  /* ── Contributor cards ── */
+  .contrib-grid { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .contrib-card {
+    border-color: rgba(163, 230, 53, 0.12);
+    background: rgba(7, 18, 37, 0.6);
+  }
+  .contrib-card:hover {
+    border-color: rgba(163, 230, 53, 0.28);
+    box-shadow: 0 12px 36px rgba(163, 230, 53, 0.08);
+  }
+  .contrib-avatar-wrap { margin-bottom: 14px; }
+  .contrib-avatar-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(163, 230, 53, 0.07);
+    border: 2px dashed rgba(163, 230, 53, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    color: var(--muted);
+  }
+  .contrib-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin: 6px 0 0;
+    opacity: 0.8;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 600px) {
     .about-page { padding: 40px 14px 64px; }
@@ -395,8 +451,10 @@
     <span class="eyebrow">The team</span>
     <h2 class="section-title">Built by people who felt the pain</h2>
     <p class="section-sub">
-      Six developers who sat through enough manual timetabling headaches to decide it was worth automating properly.
+      The core team behind SmartScheduler — and the contributors who helped shape it along the way.
     </p>
+
+    <p class="team-tier-label">Core Team</p>
     <div class="team-grid">
       <div class="team-card">
         <img class="team-avatar" src="{% static 'img/aarzoo.jpeg' %}" alt="Aarzoo">
@@ -405,7 +463,7 @@
       </div>
       <div class="team-card">
         <img class="team-avatar" src="{% static 'img/ish.jpeg' %}" alt="Ish">
-        <p class="team-name">Ish</p>
+        <p class="team-name">Yhisangi</p>
         <p class="team-role">Backend Developer</p>
       </div>
       <div class="team-card">
@@ -415,7 +473,7 @@
       </div>
       <div class="team-card">
         <img class="team-avatar" src="{% static 'img/sam.jpeg' %}" alt="Sam">
-        <p class="team-name">Sam</p>
+        <p class="team-name">Sanjeevan</p>
         <p class="team-role">Full Stack Developer</p>
       </div>
       <div class="team-card">
@@ -428,6 +486,71 @@
         <p class="team-name">Yashika</p>
         <p class="team-role">UI / UX Designer</p>
       </div>
+    </div>
+
+    <!-- Contributors -->
+    <p class="team-tier-label team-tier-contrib">Contributors</p>
+    <p class="section-sub" style="margin-bottom: 28px; font-size: 14px;">
+      Joined as interns — shipped real features, fixed real bugs, and kept things moving.
+    </p>
+    <div class="team-grid contrib-grid">
+
+      <div class="team-card contrib-card">
+        <div class="contrib-avatar-wrap">
+          <!-- swap with <img class="team-avatar"> once you have a photo -->
+          <div class="contrib-avatar-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+        </div>
+        <p class="team-name">Anjali Sharma</p>
+        <p class="team-role">Social Media</p>
+        <p class="contrib-desc">Manages community presence, content, and outreach for SmartScheduler.</p>
+      </div>
+
+      <div class="team-card contrib-card">
+        <div class="contrib-avatar-wrap">
+          <div class="contrib-avatar-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+        </div>
+        <p class="team-name">Ankit</p>
+        <p class="team-role">Feature Dev &amp; Bug Fixes</p>
+        <p class="contrib-desc">Shipped small features and squashed bugs across the codebase.</p>
+      </div>
+
+      <div class="team-card contrib-card">
+        <div class="contrib-avatar-wrap">
+          <div class="contrib-avatar-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+        </div>
+        <p class="team-name">Yash Singh</p>
+        <p class="team-role">Feature Dev &amp; Bug Fixes</p>
+        <p class="contrib-desc">Shipped small features and squashed bugs across the codebase.</p>
+      </div>
+
+      <div class="team-card contrib-card">
+        <div class="contrib-avatar-wrap">
+          <div class="contrib-avatar-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+        </div>
+        <p class="team-name">Shubham Raj</p>
+        <p class="team-role">Feature Dev &amp; Bug Fixes</p>
+        <p class="contrib-desc">Shipped small features and squashed bugs across the codebase.</p>
+      </div>
+
+      <div class="team-card contrib-card">
+        <div class="contrib-avatar-wrap">
+          <div class="contrib-avatar-placeholder">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+        </div>
+        <p class="team-name">Harsh Arya</p>
+        <p class="team-role">Dev Support &amp; Operations</p>
+        <p class="contrib-desc">Handled dev tasks, data prep (CSV imports), and general support work.</p>
+      </div>
+
     </div>
   </section>
 
