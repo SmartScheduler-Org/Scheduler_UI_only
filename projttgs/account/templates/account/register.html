@@ -24,8 +24,14 @@
       <h2 class="auth-title">Create Account ✨</h2>
       <p class="auth-sub">Register to start creating smart timetables.</p>
 
-      {% if form.errors %}
-      <div class="auth-error">❌ Please check your details and try again.</div>
+      {% if user_form.errors %}
+      <div class="auth-error">
+        {% for field, errors in user_form.errors.items %}
+          {% for error in errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        {% endfor %}
+      </div>
       {% endif %}
 
       <form action="{% url 'register' %}" method="post">
@@ -33,6 +39,10 @@
 
         <p><label>Username</label>
           <input type="text" name="username" id="usernameInput" placeholder="Enter username" required pattern="[A-Za-z0-9]+" title="Only letters and numbers are allowed">
+        </p>
+
+        <p><label>First Name</label>
+          <input type="text" name="first_name" placeholder="Enter first name">
         </p>
 
         <p><label>Email</label>

@@ -40,8 +40,12 @@ def register(request):
                 user_form.cleaned_data['password'])
             # Save the User object
             new_user.save()
+<<<<<<< Updated upstream
             # Create the user profile (may already exist via signal)
             Profile.objects.get_or_create(user=new_user)
+=======
+            # Profile is auto-created by the post_save signal
+>>>>>>> Stashed changes
             return render(request,
                           'account/register_done.html',
                           {'new_user': new_user})
