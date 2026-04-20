@@ -27,7 +27,7 @@ if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 INSTALLED_APPS = [
-    "account",
+    "account.apps.AccountConfig",
     "ttgen",
     "django.contrib.admin",
     "django.contrib.auth",
