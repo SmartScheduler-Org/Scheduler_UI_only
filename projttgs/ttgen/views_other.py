@@ -281,7 +281,12 @@ def contact(request):
 # ADMIN DASHBOARD
 @login_required
 def admindash(request):
-    return render(request, 'admindashboard.html')
+    context = {
+        'teacher_count': Instructor.objects.filter(user=request.user).count(),
+        'department_count': Department.objects.filter(user=request.user).count(),
+        'class_count': Section.objects.filter(user=request.user).count(),
+    }
+    return render(request, 'admindashboard.html', context)
 
 
 # Helper to reset GA cache when admin modifies models
