@@ -113,6 +113,24 @@
             <p>PDF/Excel → CSV</p>
         </a>
 
+        <!-- SEND PREFERENCE MAIL -->
+        <a href="{% url 'send_preferences' %}" class="dash-card" style="background:linear-gradient(135deg,rgba(0,212,255,.18),rgba(99,102,241,.08));border-color:rgba(0,212,255,.45);">
+            <div class="dash-icon-wrap" style="background:rgba(0,212,255,.2);border-color:rgba(0,212,255,.5);">
+                <i class="icon fas fa-paper-plane" style="color:#67e8f9;"></i>
+            </div>
+            <h3 style="color:#67e8f9;">Send Pref Mail</h3>
+            <p>Email form links to teachers</p>
+        </a>
+
+        <!-- VIEW TEACHER RESPONSES -->
+        <a href="{% url 'teacher_responses' %}" class="dash-card" style="background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(236,72,153,.08));border-color:rgba(168,85,247,.45);">
+            <div class="dash-icon-wrap" style="background:rgba(168,85,247,.2);border-color:rgba(168,85,247,.5);">
+                <i class="icon fas fa-table" style="color:#d8b4fe;"></i>
+            </div>
+            <h3 style="color:#d8b4fe;">View Responses</h3>
+            <p>All submitted preferences</p>
+        </a>
+
      </div>
 
   </div>

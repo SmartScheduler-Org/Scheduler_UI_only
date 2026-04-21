@@ -1,3 +1,4 @@
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
@@ -1865,3 +1866,130 @@ def convert_csv(request):
     return render(request, "convert_csv.html", {
         "entity_configs_json": entity_configs_json,
     })
+
+
+# ═══════════════════════════════════════════════════════════════
+# TEACHER PREFERENCE VIEWS
+# ═══════════════════════════════════════════════════════════════
+import csv as _csv, io as _io, re as _re, json as _json
+from django.http import HttpResponse as _HR
+from django.core.mail import send_mail as _sm
+from django.conf import settings as _cfg
+
+_ERE = _re.compile(r'[\w\.\+\-]+@[\w\.\-]+\.[a-zA-Z]{2,}')
+
+def teacher_pref_form(request):
+    return render(request, 'teacher_pref_form.html')
+
+def send_preferences_page(request):
+    return render(request, 'send_preferences.html')
+
+def teacher_responses_page(request):
+    from .models import TeacherPreference
+    subs = list(TeacherPreference.objects.all().values(
+        'id','name','email','designation','subjects','classes','years','submitted_at'))
+    for s in subs:
+        s['submitted_at'] = s['submitted_at'].strftime('%d %b %Y, %I:%M %p')
+    return render(request, 'teacher_responses.html', {
+        'submissions_json': _json.dumps(subs), 'total': len(subs)})
+
+@csrf_exempt
+def teacher_pref_submit(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        from .models import TeacherPreference
+        d = _json.loads(request.body)
+        name=d.get('name','').strip(); email=d.get('email','').strip()
+        desg=d.get('designation','').strip()
+        subj=d.get('subjects',[]); cls=d.get('classes',[]); yrs=d.get('years',[])
+        err = []
+        if not name: err.append('Name required.')
+        if not email or '@' not in email: err.append('Valid email required.')
+        if not desg: err.append('Designation required.')
+        if not subj: err.append('Select at least one subject.')
+        if len(subj) > 3: err.append('Max 3 subjects.')
+        if not cls: err.append('Select at least one class.')
+        if not yrs: err.append('Select at least one year.')
+        if err: return JsonResponse({'ok': False, 'errors': err}, status=400)
+        sub = TeacherPreference.objects.create(
+            name=name, email=email, designation=desg,
+            subjects=subj, classes=cls, years=yrs)
+        try:
+            _sm(subject=f'SmartScheduler — Preferences Received: {name}',
+                message=f'Name: {name}\nEmail: {email}\nDesignation: {desg}\nSubjects: {", ".join(subj)}\nClasses: {", ".join(cls)}\nYears: {", ".join(yrs)}',
+                from_email=_cfg.EMAIL_HOST_USER,
+                recipient_list=[email, _cfg.EMAIL_HOST_USER], fail_silently=True)
+        except: pass
+        return JsonResponse({'ok': True, 'id': sub.id})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def send_pref_links_smtp(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        d = _json.loads(request.body); emails = d.get('emails', [])
+        base = request.build_absolute_uri('/teacher-pref-form/')
+        sent, failed = [], []
+        for email in emails:
+            email = email.strip().lower()
+            if not _ERE.match(email): failed.append(email); continue
+            try:
+                _sm(subject='SmartScheduler — Fill Your Teaching Preferences',
+                    message=f'Dear Teacher,\n\nFill your preferences:\n{base}?email={email}\n\nThank you,\nSmartScheduler Team',
+                    from_email=_cfg.EMAIL_HOST_USER,
+                    recipient_list=[email], fail_silently=False)
+                sent.append(email)
+            except: failed.append(email)
+        return JsonResponse({'ok': True, 'sent': sent, 'failed': failed})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def parse_emails_view(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        f = request.FILES.get('file')
+        if not f: return JsonResponse({'ok': False, 'error': 'No file.'}, status=400)
+        n = f.name.lower(); raw = ''
+        if n.endswith('.csv'):
+            content = f.read()
+            try: t = content.decode('utf-8')
+            except: t = content.decode('latin-1', errors='replace')
+            raw = ' '.join(cell for row in _csv.reader(_io.StringIO(t)) for cell in row)
+        elif n.endswith('.txt'):
+            content = f.read()
+            try: raw = content.decode('utf-8')
+            except: raw = content.decode('latin-1', errors='replace')
+        elif n.endswith('.pdf'):
+            try:
+                from pypdf import PdfReader
+                raw = '\n'.join(p.extract_text() or '' for p in PdfReader(_io.BytesIO(f.read())).pages)
+            except Exception as e:
+                return JsonResponse({'ok': False, 'error': f'PDF error: {e}'}, status=400)
+        else:
+            return JsonResponse({'ok': False, 'error': 'Upload CSV, TXT, or PDF.'}, status=400)
+        found = _ERE.findall(raw); seen = set(); emails = []
+        for e in found:
+            e = e.lower().strip('.')
+            if e not in seen: seen.add(e); emails.append(e)
+        if not emails:
+            return JsonResponse({'ok': False, 'error': 'No emails found.'}, status=400)
+        return JsonResponse({'ok': True, 'emails': emails, 'count': len(emails)})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+def export_preferences_csv(request):
+    from .models import TeacherPreference
+    response = _HR(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="teacher_preferences.csv"'
+    w = _csv.writer(response)
+    w.writerow(['Name','Email','Designation','Subjects','Classes','Years','Submitted'])
+    for s in TeacherPreference.objects.all():
+        w.writerow([s.name, s.email, s.designation,
+            ', '.join(s.subjects), ', '.join(s.classes), ', '.join(s.years),
+            s.submitted_at.strftime('%d %b %Y %H:%M')])
+    return response
