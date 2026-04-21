@@ -1,227 +1,137 @@
 {% extends "base.html" %}
 {% load socialaccount %}
-{% block title %}Register • SmartScheduler{% endblock %}
+{% block title %}Create Account • SmartScheduler{% endblock %}
 {% block content %}
-
-<div class="auth-wrapper">
-  <div class="auth-container">
-
-    <!-- LEFT IMAGE + AUTOTYPE -->
-    <div class="auth-left">
-      <div class="auth-image-box">
-        <img
-          src="https://plus.unsplash.com/premium_photo-1706544427087-9f8747c5c675?q=80&w=2072&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          alt="AI Illustration"
-        />
-        <div class="auth-text-over">
-          <span id="autoType"></span>
+<canvas id="regcv"></canvas>
+<div class="regwrap">
+  <div class="rego rego1"></div><div class="rego rego2"></div><div class="rego rego3"></div>
+  <div class="reggrid"></div>
+  <div class="regbox" id="regbox">
+    <div class="regbord"></div>
+    <div class="regsparks" id="regsparks"></div>
+    <div class="regsplit">
+      <!-- LEFT -->
+      <div class="regleft">
+        <img class="regimg" src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=900&auto=format&fit=crop&q=80" alt=""/>
+        <div class="reglov">
+          <div class="reglogo">
+            <div class="reglogoic">
+              <svg viewBox="0 0 200 200" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="RGX1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient></defs>
+                <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#RGX1)"/>
+                <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="#0070ff" opacity="0.95"/>
+                <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="#00c8ff" opacity="0.9"/>
+                <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
+              </svg>
+            </div>
+            <span style="font-size:.9rem;font-weight:700"><span style="color:#a3e635">Smart</span><span style="color:#00e5ff">Scheduler</span></span>
+          </div>
+          <div class="regbadge"><span class="regbd"></span>Join SmartScheduler</div>
+          <div id="regtyp"><span class="regtc"></span></div>
+          <div class="regfeats">
+            <div class="regfeat">✅ Zero-clash AI timetables</div>
+            <div class="regfeat">✅ Genetic Algorithm engine</div>
+            <div class="regfeat">✅ Export PDF timetables</div>
+            <div class="regfeat">✅ NEP 2020 ready</div>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- RIGHT CARD -->
-    <div class="auth-card">
-      <h2 class="auth-title">Create Account ✨</h2>
-      <p class="auth-sub">Register to start creating smart timetables.</p>
-
-      {% if user_form.errors %}
-      <div class="auth-error">
-        {% for field, errors in user_form.errors.items %}
-          {% for error in errors %}
-            <p>{{ error }}</p>
-          {% endfor %}
-        {% endfor %}
-      </div>
-      {% endif %}
-
-      <form action="{% url 'register' %}" method="post">
-        {% csrf_token %}
-
-        <p><label>Username</label>
-          <input type="text" name="username" placeholder="Enter username" required>
-        </p>
-        <p><label>First Name</label>
-          <input type="text" name="first_name" placeholder="Enter first name">
-        </p>
-        <p><label>Email</label>
-          <input type="email" name="email" placeholder="Enter email" required>
-        </p>
-
-        <p><label>Password</label>
-          <input type="password" name="password" placeholder="Enter password" required>
-        </p>
-
-        <p><label>Confirm Password</label>
-          <input type="password" name="password2" placeholder="Confirm password" required>
-        </p>
-
-        <button type="submit" class="auth-btn">Create Account</button>
-      </form>
-
-      <div class="or-divider"><span>or</span></div>
-
-      <a href="{% provider_login_url 'google' %}" class="google-btn">
-        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.01 24.01 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-        Sign up with Google
-      </a>
-
-      <div class="auth-links">
-        Already have an account? <a href="{% url 'login' %}">Login</a>
+      <!-- RIGHT -->
+      <div class="reground">
+        <div class="regformlogo">
+          <div style="filter:drop-shadow(0 0 9px rgba(0,229,255,.55))">
+            <svg viewBox="0 0 200 200" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="RFL1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient></defs>
+              <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#RFL1)"/>
+              <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="#0070ff" opacity="0.95"/>
+              <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="#00c8ff" opacity="0.9"/>
+              <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
+            </svg>
+          </div>
+          <span style="font-size:.95rem;font-weight:700"><span style="color:#a3e635">Smart</span><span style="color:#00e5ff">Scheduler</span></span>
+        </div>
+        <h2 class="regtitle">Create Account ✨</h2>
+        <p class="regsub">Register to start creating smart timetables.</p>
+        {% if form.errors %}<div class="regerr">❌ Please check your details and try again.</div>{% endif %}
+        <form action="{% url 'register' %}" method="post">{% csrf_token %}
+          <div class="regfield"><label>Username</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" name="username" placeholder="Choose a username" required/></div></div>
+          <div class="regfield"><label>Email</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><input type="email" name="email" placeholder="Your email address" required/></div></div>
+          <div class="regfield"><label>Password</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" name="password" placeholder="Create a password" required/></div></div>
+          <div class="regfield"><label>Confirm Password</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M9 12l2 2 4-4"/><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" name="password2" placeholder="Confirm your password" required/></div></div>
+          <button type="submit" class="regbtn"><span>Create Account</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        </form>
+        <div class="regdiv"><span>or</span></div>
+        <a href="{% provider_login_url 'google' %}" class="reggbtn"><svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.01 24.01 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign up with Google</a>
+        <div class="reglinks">Already have an account? <a href="{% url 'login' %}" style="color:#6ee7b7;font-weight:600;text-decoration:none">Sign In →</a></div>
       </div>
     </div>
   </div>
 </div>
-
 <style>
-/* Layout */
-.auth-wrapper {
-  min-height: calc(100vh - 80px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-}
-
-.auth-container {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  max-width: 1080px;
-  gap: 40px;
-  padding: 0 20px;
-}
-
-/******** LEFT SECTION *********/
-.auth-left { flex: 1.2; }
-
-.auth-image-box {
-  width: 100%;
-  height: 350px;
-  overflow: hidden;
-  border-radius: 22px;
-  position: relative;
-}
-
-.auth-image-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: brightness(0.65);
-}
-
-.auth-text-over {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 34px;
-  font-weight: 700;
-  color: #fff;
-  pointer-events: none;
-}
-
-#autoType { text-shadow: 0 0 12px rgba(255,255,255,0.9); }
-
-/******** RIGHT CARD *********/
-.auth-card {
-  flex: 1;
-  max-width: 420px;
-  padding: 22px 22px;
-  border-radius: 22px;
-  background: rgba(15,23,42,0.92);
-  border: 1px solid rgba(148,163,184,0.3);
-  backdrop-filter: blur(14px);
-  color: white;
-}
-
-.auth-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-.auth-sub { font-size: 13px; color: #b8bfd8; margin-bottom: 12px; }
-
-.auth-error {
-  background: rgba(244,63,94,0.25);
-  border: 1px solid rgba(244,63,94,0.6);
-  padding: 10px; font-size: 13px;
-  border-radius: 10px; margin-bottom: 14px;
-}
-
-.auth-card input {
-  width: 100%;
-  padding: 9px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(148,163,184,0.4);
-  background: rgba(15,23,42,0.85);
-  color: white;
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-.auth-card input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 10px rgba(99,102,241,0.6);
-}
-
-.auth-btn {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: linear-gradient(135deg,#6366f1,#ec4899);
-  color: white;
-  font-size: 16px; font-weight: 600;
-  cursor: pointer;
-  border: none;
-}
-
-.auth-btn:hover { transform: translateY(-2px); }
-/* OR DIVIDER */
-.or-divider {
-  display:flex; align-items:center; gap:12px;
-  margin:14px 0;
-  color:#b8bfd8; font-size:13px;
-}
-.or-divider::before, .or-divider::after {
-  content:""; flex:1; height:1px;
-  background:rgba(148,163,184,.35);
-}
-
-/* GOOGLE BUTTON */
-.google-btn {
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  width:100%; padding:12px; border-radius:999px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(148,163,184,.35);
-  color:white; font-size:15px; font-weight:600;
-  text-decoration:none; cursor:pointer;
-  transition: background .2s;
-}
-.google-btn:hover { background:rgba(255,255,255,.15); }
-
-.auth-links{text-align:center;margin-top:14px;font-size:14px;}
-.auth-links a{color:#a5b4fc;font-weight:600;} .auth-links a:hover{text-decoration:underline;}
-
-/******** RESPONSIVE ********/
-@media(max-width:820px){ .auth-container{flex-direction:column;} .auth-card{width:100%;} .auth-image-box{height:260px;} }
-@media(max-width:520px){ .auth-text-over{font-size:24px;} .auth-card{padding:22px 18px;width:92%;} }
+*{box-sizing:border-box}html,body{width:100%;overflow-x:hidden}
+#regcv{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:0}
+.regwrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:18px 14px;position:relative;font-family:'Poppins',sans-serif;perspective:1200px}
+.rego{position:fixed;border-radius:50%;filter:blur(92px);pointer-events:none;z-index:0}
+.rego1{width:500px;height:500px;background:radial-gradient(circle,rgba(0,229,255,.32),transparent 70%);top:-100px;left:-100px;animation:ROGA 17s ease-in-out infinite alternate}
+.rego2{width:540px;height:540px;background:radial-gradient(circle,rgba(34,197,94,.26),transparent 70%);bottom:-140px;right:-110px;animation:ROGA 21s ease-in-out infinite alternate-reverse}
+.rego3{width:370px;height:370px;background:radial-gradient(circle,rgba(168,85,247,.2),transparent 70%);top:32%;right:16%;animation:ROGA 14s ease-in-out infinite alternate}
+@keyframes ROGA{to{transform:translate(58px,48px) scale(1.17)}}
+.reggrid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(0,229,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.055) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 28%,transparent 100%)}
+.regbox{position:relative;z-index:10;width:100%;max-width:920px;border-radius:30px;overflow:hidden;background:rgba(4,8,24,.74);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);box-shadow:0 32px 85px rgba(0,0,0,.52),0 0 0 1px rgba(255,255,255,.05) inset;animation:RGBIN 1s cubic-bezier(.22,1,.36,1) both;opacity:0;transform:translateY(58px) rotateX(8deg);transform-style:preserve-3d}
+@keyframes RGBIN{to{opacity:1;transform:translateY(0) rotateX(0)}}
+.regbord{position:absolute;inset:-1px;border-radius:31px;z-index:0;pointer-events:none;background:conic-gradient(from var(--rga,0deg),#00e5ff,#22c55e,#10d97e,#22d3ee,#00e5ff);opacity:.38;filter:blur(4px);animation:RGBSP 7s linear infinite;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+@property --rga{syntax:'<angle>';initial-value:0deg;inherits:false}@keyframes RGBSP{to{--rga:360deg}}
+.regsparks{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;border-radius:30px}
+.rsp{position:absolute;border-radius:50%;animation:RSPU linear infinite;opacity:0}
+@keyframes RSPU{0%{transform:translateY(100%) scale(0);opacity:0}10%{opacity:.75}90%{opacity:.3}100%{transform:translateY(-120%) scale(1);opacity:0}}
+.regsplit{display:flex;width:100%;position:relative;z-index:1}
+.regleft{width:42%;position:relative;overflow:hidden;flex-shrink:0}
+.regimg{width:100%;height:100%;object-fit:cover;display:block;border-radius:30px 0 0 30px;filter:brightness(.68) saturate(1.3);animation:RGIMGP 22s ease-in-out infinite alternate}
+@keyframes RGIMGP{from{transform:scale(1.05)}to{transform:scale(1.14) translateY(-8px)}}
+.reglov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:1.8rem;background:linear-gradient(to top,rgba(3,6,18,.94) 0%,rgba(3,6,18,.26) 52%,transparent 100%)}
+.reglogo{position:absolute;top:1.5rem;left:1.5rem;display:flex;align-items:center;gap:.5rem}
+.reglogoic{width:40px;height:40px;background:rgba(4,8,24,.82);border:1px solid rgba(0,200,255,.38);border-radius:10px;display:grid;place-items:center;backdrop-filter:blur(10px);filter:drop-shadow(0 0 8px rgba(0,229,255,.45))}
+.regbadge{display:inline-flex;align-items:center;gap:.45rem;font-size:.64rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#00e5ff;padding:.28rem .75rem;border:1px solid rgba(0,229,255,.32);border-radius:20px;background:rgba(0,229,255,.1);margin-bottom:.85rem;width:fit-content}
+.regbd{width:6px;height:6px;border-radius:50%;background:#00e5ff;animation:RGBD 2s infinite}
+@keyframes RGBD{0%,100%{box-shadow:0 0 0 0 rgba(0,229,255,.65)}50%{box-shadow:0 0 0 8px rgba(0,229,255,0)}}
+#regtyp{font-size:clamp(1.1rem,2.1vw,1.55rem);font-weight:800;color:#fff;line-height:1.3;letter-spacing:-.02em;min-height:4rem;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.regtc{display:inline-block;width:3px;height:1.1em;background:#10d97e;border-radius:2px;vertical-align:text-bottom;margin-left:2px;animation:RGTC .7s step-end infinite}
+@keyframes RGTC{0%,100%{opacity:1}50%{opacity:0}}
+.regfeats{margin-top:.9rem;display:flex;flex-direction:column;gap:.4rem}
+.regfeat{font-size:.78rem;color:rgba(255,255,255,.75);background:rgba(255,255,255,.07);border-radius:8px;padding:.35rem .7rem;backdrop-filter:blur(6px)}
+.reground{flex:1;padding:2rem 2.2rem;display:flex;flex-direction:column;justify-content:center}
+.regformlogo{display:flex;align-items:center;gap:.5rem;margin-bottom:1.2rem}
+.regtitle{font-size:1.75rem;font-weight:800;letter-spacing:-.04em;background:linear-gradient(120deg,#fff 20%,#00e5ff 50%,#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.25rem}
+.regsub{font-size:.82rem;color:rgba(148,163,184,.75);margin-bottom:1.2rem}
+.regerr{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:.6rem .9rem;font-size:.82rem;color:#fca5a5;margin-bottom:.9rem}
+.regfield{margin-bottom:.75rem}.regfield label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(148,163,184,.7);margin-bottom:.35rem}
+.regiw{position:relative}.regiw svg{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:rgba(148,163,184,.5);pointer-events:none}
+.regiw input{width:100%;padding:.74rem 1rem .74rem 2.6rem;border-radius:12px;font-size:.87rem;color:#e2e8f0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-family:'Poppins',sans-serif;outline:none;transition:border-color .25s,background .25s,box-shadow .25s}
+.regiw input:focus{border-color:rgba(0,229,255,.65);background:rgba(0,229,255,.08);box-shadow:0 0 0 3px rgba(0,229,255,.18)}
+.regiw input::placeholder{color:rgba(148,163,184,.35)}
+.regbtn{width:100%;padding:.86rem;border-radius:14px;border:none;font-size:.92rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;color:#fff;background:linear-gradient(135deg,#00e5ff,#22c55e 50%,#10d97e);background-size:200%;animation:RGBTN 4s ease infinite;display:flex;align-items:center;justify-content:center;gap:.55rem;transition:transform .2s,box-shadow .2s;margin-top:.9rem}
+.regbtn:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(0,229,255,.42)}
+@keyframes RGBTN{0%,100%{background-position:0%}50%{background-position:100%}}
+.regdiv{display:flex;align-items:center;gap:10px;margin:.9rem 0 .8rem;color:rgba(148,163,184,.4);font-size:.75rem}
+.regdiv::before,.regdiv::after{content:'';flex:1;height:1px;background:rgba(148,163,184,.12)}
+.reggbtn{display:flex;align-items:center;justify-content:center;gap:.7rem;width:100%;padding:.75rem;border-radius:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#e2e8f0;font-size:.86rem;font-weight:600;text-decoration:none;font-family:'Poppins',sans-serif;transition:background .2s,transform .2s}
+.reggbtn:hover{background:rgba(255,255,255,.11);transform:translateY(-1px)}
+.reglinks{margin-top:.8rem;font-size:.77rem;text-align:center;color:rgba(148,163,184,.6)}
+@media(max-width:700px){.regsplit{flex-direction:column}.regleft{width:100%;height:190px}.regimg{border-radius:30px 30px 0 0}.reground{padding:1.5rem}.regfeats{display:none}}
 </style>
-
 <script>
-const lines = ["Automate Your College", "Adopt SmartScheduler", "Choose Smart"];
-const auto = document.getElementById("autoType");
-let idx = 0, char = 0, del = false;
-
-function typeLoop() {
-  const text = lines[idx];
-  char += del ? -1 : 1;
-
-  auto.textContent = text.slice(0, char);
-
-  if (char === text.length) { del = true; setTimeout(typeLoop, 1100); return;}
-  if (del && char === 0) { del = false; idx = (idx + 1) % lines.length; }
-
-  setTimeout(typeLoop, del ? 45 : 80);
-}
-typeLoop();
+const regcv=document.getElementById('regcv'),regcx=regcv.getContext('2d');
+function rgrsz(){regcv.width=innerWidth;regcv.height=innerHeight;}window.addEventListener('resize',rgrsz);rgrsz();
+const RGCC=['0,229,255','34,197,94','16,217,126','99,102,241','0,200,255'];
+class RGCP{constructor(){this.rst(true);}rst(i){this.x=Math.random()*regcv.width;this.y=i?Math.random()*regcv.height:regcv.height+5;this.vx=(Math.random()-.5)*.32;this.vy=-(Math.random()*.5+.1);this.r=Math.random()*1.8+.4;this.life=1;this.dc=Math.random()*.0038+.001;this.c=RGCC[Math.floor(Math.random()*RGCC.length)];}upd(){this.x+=this.vx;this.y+=this.vy;this.life-=this.dc;if(this.life<=0)this.rst();}drw(){regcx.beginPath();regcx.arc(this.x,this.y,this.r,0,Math.PI*2);regcx.fillStyle=`rgba(${this.c},${this.life*.74})`;regcx.shadowBlur=10;regcx.shadowColor=`rgba(${this.c},.5)`;regcx.fill();regcx.shadowBlur=0;}}
+const rgpts=Array.from({length:82},()=>new RGCP());
+function rgAnm(){regcx.clearRect(0,0,regcv.width,regcv.height);for(let i=0;i<rgpts.length;i++){for(let j=i+1;j<rgpts.length;j++){const dx=rgpts[i].x-rgpts[j].x,dy=rgpts[i].y-rgpts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<108){regcx.beginPath();regcx.moveTo(rgpts[i].x,rgpts[i].y);regcx.lineTo(rgpts[j].x,rgpts[j].y);regcx.strokeStyle=`rgba(0,229,255,${(1-d/108)*.11})`;regcx.lineWidth=.7;regcx.stroke();}}}rgpts.forEach(p=>{p.upd();p.drw();});requestAnimationFrame(rgAnm);}rgAnm();
+const regbox=document.getElementById('regbox');
+document.addEventListener('mousemove',e=>{const r=regbox.getBoundingClientRect();const cx=(e.clientX-r.left)/r.width-.5,cy=(e.clientY-r.top)/r.height-.5;regbox.style.transform=`perspective(1200px) rotateY(${cx*11}deg) rotateX(${-cy*8}deg)`;regbox.style.boxShadow=`${-cx*32}px ${-cy*24}px 85px rgba(0,0,0,.52),0 0 130px rgba(0,229,255,.18)`;});
+document.addEventListener('mouseleave',()=>{regbox.style.transform='perspective(1200px) rotateY(0) rotateX(0)';regbox.style.boxShadow='0 32px 85px rgba(0,0,0,.52)';});
+const rgsc=document.getElementById('regsparks');const rgscl=['#00e5ff','#22c55e','#10d97e','#22d3ee','#6366f1'];
+for(let i=0;i<20;i++){const el=document.createElement('div');el.className='rsp';const sz=Math.random()*4+1.5;Object.assign(el.style,{width:sz+'px',height:sz+'px',left:Math.random()*100+'%',background:rgscl[Math.floor(Math.random()*rgscl.length)],animationDuration:(Math.random()*7+4)+'s',animationDelay:(Math.random()*8)+'s',boxShadow:`0 0 ${sz*3}px currentColor`});rgsc.appendChild(el);}
+const rgphr=['Smart timetables fast.','Zero clashes guaranteed.','NEP 2020 ready engine.','Powered by AI & GA.','Join SmartScheduler.'];let rgpi=0,rgci=0,rgdel=false;const rgtel=document.getElementById('regtyp');
+function rgtp(){const cur=rgphr[rgpi];const csr="<span class='regtc'></span>";if(!rgdel){rgci++;rgtel.innerHTML=cur.slice(0,rgci)+csr;if(rgci===cur.length)setTimeout(()=>{rgdel=true;},1500);}else{rgci--;rgtel.innerHTML=cur.slice(0,rgci)+csr;if(rgci===0){rgdel=false;rgpi=(rgpi+1)%rgphr.length;}}setTimeout(rgtp,rgdel?40:80);}rgtp();
 </script>
-
 {% endblock %}

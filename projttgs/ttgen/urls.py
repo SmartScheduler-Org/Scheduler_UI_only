@@ -101,4 +101,13 @@ urlpatterns = [
 
 
 
+
+    # Teacher Preference
+    path('teacher-pref-form/',      views.teacher_pref_form,         name='teacher_pref_form'),
+    path('send-preferences/',       views.send_preferences_page,     name='send_preferences'),
+    path('teacher-responses/',      views.teacher_responses_page,    name='teacher_responses'),
+    path('api/pref/submit/',        views.teacher_pref_submit,       name='pref_submit'),
+    path('api/pref/send-links/',    views.send_pref_links_smtp,      name='pref_send_links'),
+    path('api/pref/parse-emails/',  views.parse_emails_view,         name='pref_parse_emails'),
+    path('export/preferences/csv/', views.export_preferences_csv,    name='export_pref_csv'),
 ]
