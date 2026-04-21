@@ -273,6 +273,8 @@ class SavedTimetable(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    is_published = models.BooleanField(default=False)
+    publish_code = models.CharField(max_length=50, blank=True, default="")
 
     class Meta:
         ordering = ["-created_at"]

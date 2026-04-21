@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Timetable</title>
+    <style>
+        body {
+            background: #f5f7f7;
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 420px;
+            background: white;
+            padding: 35px;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 {
+            color: #257a7a;
+            font-weight: 650;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 2px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #257a7a;
+            box-shadow: 0 0 0 3px rgba(37,122,122,0.12);
+        }
+
+        button {
+            width: 100%;
+            margin-top: 16px;
+            padding: 12px;
+            background: #257a7a;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e6565;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 18px;
+            color: #257a7a;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>View Timetable</h2>
+    <p class="subtitle">Enter the code shared by your HOD to view the timetable</p>
+
+    {% if messages %}
+    {% for message in messages %}
+        <div class="message {% if 'error' in message.tags %}error{% else %}success{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="access_code" placeholder="Enter timetable code" required autofocus>
+        <button type="submit">View Timetable</button>
+    </form>
+
+    <a href="{% url 'role' %}" class="back-link">Back</a>
+</div>
+
+<script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>
