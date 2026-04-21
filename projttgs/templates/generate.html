@@ -36,6 +36,8 @@
         body {
             margin: 0;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             font-family: "Manrope", sans-serif;
             color: var(--text);
             background:
@@ -109,6 +111,9 @@
         .shell {
             position: relative;
             z-index: 1;
+            flex: 1 0 auto;
+            display: flex;
+            flex-direction: column;
             width: min(1240px, calc(100% - 32px));
             margin: 0 auto;
             padding: 24px 0 48px;
@@ -638,6 +643,7 @@
         }
 
         .footer {
+            margin-top: auto;
             padding: 18px 6px 0;
             text-align: center;
             color: rgba(226, 235, 255, 0.48);
@@ -789,7 +795,7 @@
         }
     </style>
 </head>
-<body>
+<body class="site-layout">
     {% if generator_unavailable %}
     <style>
         body {
@@ -1122,6 +1128,22 @@
     </div>
 
     <script>
+        (function () {
+            const pageShell = document.querySelector(".shell");
+            const stickyFooter = document.querySelector(".site-footer-ref, .footer, .footer-new");
+            function enforceStickyFooterLayout() {
+                if (!pageShell || !stickyFooter) return;
+                document.body.style.display = "flex";
+                document.body.style.flexDirection = "column";
+                document.body.style.minHeight = "100vh";
+                document.body.style.minHeight = "100svh";
+                pageShell.style.flex = "1 0 auto";
+                stickyFooter.style.marginTop = "auto";
+            }
+            enforceStickyFooterLayout();
+            window.addEventListener("resize", enforceStickyFooterLayout);
+        })();
+
         document.addEventListener("DOMContentLoaded", function () {
             const form = document.getElementById("generate-form");
             const submitButton = form ? form.querySelector(".cta") : null;

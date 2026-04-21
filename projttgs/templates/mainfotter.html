@@ -2,10 +2,11 @@
   .site-footer-ref {
     position: relative;
     z-index: 10;
-    margin-top: 32px;
+    margin-top: auto !important;
     border-top: 1px solid rgba(148, 163, 184, 0.22);
     background: linear-gradient(180deg, #071225 0%, #030915 100%);
     width: 100%;
+    align-self: stretch;
   }
 
   .site-footer-ref .site-footer-inner {
@@ -167,9 +168,8 @@
       <a href="{% url 'help' %}">Help</a>
       <a href="{% url 'contact' %}">Contact us</a>
       <a href="{% url 'home' %}#features">Our Services</a>
-      <a href="#">Privacy Policy</a>
+      <a href="{% url 'privacy' %}">Privacy Policy</a>
       <a href="{% url 'terms' %}">Terms &amp; Conditions</a>
-      <a href="#">Career</a>
     </nav>
 
     <div class="site-footer-social" aria-label="Social links">
