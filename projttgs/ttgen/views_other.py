@@ -5,7 +5,7 @@ from django.urls import reverse
 from .forms import *
 from .models import *
 from account.models import Profile
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
@@ -276,21 +276,22 @@ def contact(request):
 
         body = (
             f"New contact form submission from SmartScheduler\n"
-            f"{'─' * 44}\n"
+            f"{'-' * 44}\n"
             f"Name    : {name}\n"
             f"Email   : {email}\n"
             f"Subject : {subject}\n"
-            f"{'─' * 44}\n\n"
+            f"{'-' * 44}\n\n"
             f"{message}\n"
         )
         try:
-            send_mail(
-                subject=f"[SmartScheduler] {subject}",
-                message=body,
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=['ankitymca27@gmail.com'],
-                fail_silently=False,
+            msg = EmailMessage(
+                subject=f"[SmartScheduler] {subject} — from {name}",
+                body=body,
+                from_email=settings.EMAIL_HOST_USER,   # Gmail forces this to be your account
+                to=['smartschedulertech@gmail.com'],
+                reply_to=[f"{name} <{email}>"],         # Reply goes to the visitor
             )
+            msg.send(fail_silently=False)
             messages.success(request, "Message sent! We'll get back to you soon.")
         except Exception:
             messages.error(request, "Couldn't send your message right now. Please try again later.")

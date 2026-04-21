@@ -224,6 +224,12 @@
   }
   .faq-a-inner a { color: var(--teal); text-decoration: none; }
   .faq-a-inner a:hover { text-decoration: underline; }
+
+  /* override homepage.css which hides .faq-item via GSAP animation */
+  .faq-section .faq-item {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 </style>
 
 <div class="contact-page">
@@ -247,7 +253,7 @@
         </div>
         <div>
           <div class="info-label">Email</div>
-          <div class="info-value">ankitymca27@gmail.com</div>
+          <div class="info-value">smartschedulertech@gmail.com</div>
         </div>
       </div>
 
@@ -313,7 +319,7 @@
         <div class="form-row">
           <div class="field">
             <label for="cnt-name">Your Name</label>
-            <input type="text" id="cnt-name" name="name" placeholder="Ankit Kumar" required>
+            <input type="text" id="cnt-name" name="name" placeholder="Your Name" required>
           </div>
           <div class="field">
             <label for="cnt-email">Your Email</label>
@@ -424,7 +430,99 @@
           <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
         </button>
         <div class="faq-a"><div class="faq-a-inner">
-          We typically respond within 24–48 hours on working days. Your message is delivered directly to our team email. For urgent issues, you can also reach us at <a href="mailto:ankitymca27@gmail.com">ankitymca27@gmail.com</a>.
+          We typically respond within 24–48 hours on working days. Your message is delivered directly to our team email. For urgent issues, you can also reach us at <a href="mailto:smartschedulertech@gmail.com">smartschedulertech@gmail.com</a>.
+        </div></div>
+      </div>
+
+      <!-- ── From home page ── -->
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How fast is the timetable generation?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          It generates a full optimized timetable in 3–8 seconds.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Does it support labs and electives?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes — handles long labs, shared spaces and elective batch allocation.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can we export as PDF?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          You can export department, student and teacher-wise PDF instantly.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Does it integrate with ERP?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Supports API-based ERP syncing to keep data always updated.
+        </div></div>
+      </div>
+
+      <!-- ── Contact-page-only extras ── -->
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Is there a free trial available?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes — every new account starts with a free tier that includes a limited number of generation credits so you can try the full workflow before committing to a plan. No credit card required to sign up.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can SmartScheduler handle multiple departments simultaneously?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes. Each admin account manages one department, but a Dean account can view and oversee timetables across all departments from a single dashboard. This makes it easy for institution-wide coordination without sharing admin credentials.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How do I reset my password?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Use the <strong style="color:#f1f5f9;">Forgot Password</strong> link on the login page to receive a reset email. If you do not receive it within a few minutes, check your spam folder or contact us at <a href="mailto:smartschedulertech@gmail.com">smartschedulertech@gmail.com</a> with your registered email address.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Is my institution's data stored securely?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          All data is stored server-side with access scoped strictly to your account. Passwords are hashed and never stored in plain text. We do not share or sell any institutional data. For detailed security or compliance questions, reach out to us directly.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can I customise the number of periods and timings per day?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes. From the <strong style="color:#f1f5f9;">Add Timings</strong> section in the dashboard you can define as many meeting-time slots as your institution needs — morning, afternoon, or split-day schedules. The generator respects whichever slots you configure.
         </div></div>
       </div>
 
