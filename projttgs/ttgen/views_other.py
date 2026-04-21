@@ -4,7 +4,7 @@ from django.urls import reverse
 from .forms import *
 from .models import *
 from account.models import Profile
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
@@ -268,14 +268,33 @@ def teachertimetable(request): return render(request, 'teachertimetable.html')
 # CONTACT FORM
 def contact(request):
     if request.method == 'POST':
-        message = request.POST['message']
-        send_mail(
-            'Contact',
-            message,
-            settings.EMAIL_HOST_USER,
-            ['studyyou40@gmail.com'],
-            fail_silently=False
+        name    = request.POST.get('name', '').strip()
+        email   = request.POST.get('email', '').strip()
+        subject = request.POST.get('subject', 'No subject').strip()
+        message = request.POST.get('message', '').strip()
+
+        body = (
+            f"New contact form submission from SmartScheduler\n"
+            f"{'-' * 44}\n"
+            f"Name    : {name}\n"
+            f"Email   : {email}\n"
+            f"Subject : {subject}\n"
+            f"{'-' * 44}\n\n"
+            f"{message}\n"
         )
+        try:
+            msg = EmailMessage(
+                subject=f"[SmartScheduler] {subject} — from {name}",
+                body=body,
+                from_email=settings.EMAIL_HOST_USER,   # Gmail forces this to be your account
+                to=['smartschedulertech@gmail.com'],
+                reply_to=[f"{name} <{email}>"],         # Reply goes to the visitor
+            )
+            msg.send(fail_silently=False)
+            messages.success(request, "Message sent! We'll get back to you soon.")
+        except Exception:
+            messages.error(request, "Couldn't send your message right now. Please try again later.")
+        return redirect('contact')
     return render(request, 'contact.html')
 
 
