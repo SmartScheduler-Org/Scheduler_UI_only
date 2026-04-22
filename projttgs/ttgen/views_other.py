@@ -4,7 +4,7 @@ from django.urls import reverse
 from .forms import *
 from .models import *
 from account.models import Profile
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
@@ -268,14 +268,33 @@ def teachertimetable(request): return render(request, 'teachertimetable.html')
 # CONTACT FORM
 def contact(request):
     if request.method == 'POST':
-        message = request.POST['message']
-        send_mail(
-            'Contact',
-            message,
-            settings.EMAIL_HOST_USER,
-            ['studyyou40@gmail.com'],
-            fail_silently=False
+        name    = request.POST.get('name', '').strip()
+        email   = request.POST.get('email', '').strip()
+        subject = request.POST.get('subject', 'No subject').strip()
+        message = request.POST.get('message', '').strip()
+
+        body = (
+            f"New contact form submission from SmartScheduler\n"
+            f"{'-' * 44}\n"
+            f"Name    : {name}\n"
+            f"Email   : {email}\n"
+            f"Subject : {subject}\n"
+            f"{'-' * 44}\n\n"
+            f"{message}\n"
         )
+        try:
+            msg = EmailMessage(
+                subject=f"[SmartScheduler] {subject} — from {name}",
+                body=body,
+                from_email=settings.EMAIL_HOST_USER,   # Gmail forces this to be your account
+                to=['smartschedulertech@gmail.com'],
+                reply_to=[f"{name} <{email}>"],         # Reply goes to the visitor
+            )
+            msg.send(fail_silently=False)
+            messages.success(request, "Message sent! We'll get back to you soon.")
+        except Exception:
+            messages.error(request, "Couldn't send your message right now. Please try again later.")
+        return redirect('contact')
     return render(request, 'contact.html')
 
 
@@ -368,18 +387,225 @@ if "Lab" not in globals():
 
 
 if "build_section_tables" not in globals():
-    def build_section_tables(all_classes, all_labs):
-        return []
+    def build_section_tables(all_classes, all_labs, user=None):
+        from collections import defaultdict, OrderedDict
+        section_map = OrderedDict()
+        for cls in all_classes:
+            sec_key = cls.section
+            if sec_key not in section_map:
+                section_map[sec_key] = {"classes": [], "labs": [], "dept": cls.department}
+            section_map[sec_key]["classes"].append(cls)
+        for lab in all_labs:
+            sec_key = lab.section
+            if sec_key not in section_map:
+                section_map[sec_key] = {"classes": [], "labs": [], "dept": lab.department}
+            section_map[sec_key]["labs"].append(lab)
+
+        tables = []
+        for sec_id, data in section_map.items():
+            grid = {}
+            for day in DAYS:
+                grid[day] = {}
+            for cls in data["classes"]:
+                if cls.meeting_time:
+                    day = cls.meeting_time.day
+                    slot = int(cls.meeting_time.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["classes"].append(cls)
+            for lab in data["labs"]:
+                if lab.meeting_times:
+                    first_mt = lab.meeting_times[0]
+                    day = first_mt.day
+                    slot = int(first_mt.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["labs"].append(lab)
+
+            rows = []
+            for day in DAYS:
+                cells = []
+                skip_until = 0
+                for s in range(1, 10):
+                    if s <= skip_until:
+                        continue
+                    if s == 5:
+                        cells.append({"type": "lunch", "colspan": 1, "slot_number": s})
+                        continue
+                    cell_data = grid[day].get(s, {"classes": [], "labs": []})
+                    if cell_data["labs"]:
+                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        cells.append({
+                            "type": "lab",
+                            "colspan": lab_span,
+                            "slot_number": s,
+                            "labs": cell_data["labs"],
+                        })
+                        skip_until = s + lab_span - 1
+                    elif cell_data["classes"]:
+                        cells.append({
+                            "type": "class",
+                            "colspan": 1,
+                            "slot_number": s,
+                            "classes": cell_data["classes"],
+                        })
+                    else:
+                        cells.append({"type": "empty", "colspan": 1, "slot_number": s})
+                rows.append({"day": day, "cells": cells})
+
+            class _SectionProxy:
+                def __init__(self, sid, dept):
+                    self.section_id = sid
+                    self.department = dept
+            tables.append({
+                "section": _SectionProxy(sec_id, data["dept"]),
+                "rows": rows,
+                "subject_counts": [],
+                "total_missing_classes": 0,
+            })
+        return tables
 
 
 if "build_teacher_tables" not in globals():
-    def build_teacher_tables(all_classes, all_labs):
-        return []
+    def build_teacher_tables(all_classes, all_labs, user=None):
+        from collections import OrderedDict
+        teacher_map = OrderedDict()
+        for cls in all_classes:
+            t = cls.instructor
+            if t and t not in teacher_map:
+                teacher_map[t] = {"classes": [], "labs": []}
+            if t:
+                teacher_map[t]["classes"].append(cls)
+        for lab in all_labs:
+            t = lab.instructor
+            if t and t not in teacher_map:
+                teacher_map[t] = {"classes": [], "labs": []}
+            if t:
+                teacher_map[t]["labs"].append(lab)
+
+        tables = []
+        for teacher, data in teacher_map.items():
+            grid = {}
+            for day in DAYS:
+                grid[day] = {}
+            for cls in data["classes"]:
+                if cls.meeting_time:
+                    day = cls.meeting_time.day
+                    slot = int(cls.meeting_time.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["classes"].append(cls)
+            for lab in data["labs"]:
+                if lab.meeting_times:
+                    first_mt = lab.meeting_times[0]
+                    day = first_mt.day
+                    slot = int(first_mt.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["labs"].append(lab)
+
+            rows = []
+            for day in DAYS:
+                cells = []
+                skip_until = 0
+                for s in range(1, 10):
+                    if s <= skip_until:
+                        continue
+                    if s == 5:
+                        cells.append({"type": "lunch", "colspan": 1, "slot_number": s})
+                        continue
+                    cell_data = grid[day].get(s, {"classes": [], "labs": []})
+                    if cell_data["labs"]:
+                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        cells.append({
+                            "type": "lab", "colspan": lab_span, "slot_number": s,
+                            "labs": cell_data["labs"],
+                        })
+                        skip_until = s + lab_span - 1
+                    elif cell_data["classes"]:
+                        cells.append({
+                            "type": "class", "colspan": 1, "slot_number": s,
+                            "classes": cell_data["classes"],
+                        })
+                    else:
+                        cells.append({"type": "empty", "colspan": 1, "slot_number": s})
+                rows.append({"day": day, "cells": cells})
+
+            tables.append({"teacher": teacher, "rows": rows})
+        return tables
 
 
 if "build_room_tables" not in globals():
-    def build_room_tables(all_classes, all_labs):
-        return []
+    def build_room_tables(all_classes, all_labs, user=None):
+        from collections import OrderedDict
+        room_map = OrderedDict()
+        for cls in all_classes:
+            r = cls.room
+            if r and r not in room_map:
+                room_map[r] = {"classes": [], "labs": []}
+            if r:
+                room_map[r]["classes"].append(cls)
+        for lab in all_labs:
+            r = lab.room
+            if r and r not in room_map:
+                room_map[r] = {"classes": [], "labs": []}
+            if r:
+                room_map[r]["labs"].append(lab)
+
+        tables = []
+        for room, data in room_map.items():
+            grid = {}
+            for day in DAYS:
+                grid[day] = {}
+            for cls in data["classes"]:
+                if cls.meeting_time:
+                    day = cls.meeting_time.day
+                    slot = int(cls.meeting_time.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["classes"].append(cls)
+            for lab in data["labs"]:
+                if lab.meeting_times:
+                    first_mt = lab.meeting_times[0]
+                    day = first_mt.day
+                    slot = int(first_mt.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["labs"].append(lab)
+
+            total_slots = sum(1 for d in grid.values() for s, v in d.items() if v["classes"] or v["labs"])
+            max_slots = len(DAYS) * 8
+            optimization = round(total_slots / max_slots * 100) if max_slots else 0
+
+            rows = []
+            for day in DAYS:
+                cells = []
+                skip_until = 0
+                for s in range(1, 10):
+                    if s <= skip_until:
+                        continue
+                    if s == 5:
+                        cells.append({"type": "lunch", "colspan": 1, "slot_number": s})
+                        continue
+                    cell_data = grid[day].get(s, {"classes": [], "labs": []})
+                    if cell_data["labs"]:
+                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        cells.append({
+                            "type": "lab", "colspan": lab_span, "slot_number": s,
+                            "labs": cell_data["labs"],
+                        })
+                        skip_until = s + lab_span - 1
+                    elif cell_data["classes"]:
+                        cells.append({
+                            "type": "class", "colspan": 1, "slot_number": s,
+                            "classes": cell_data["classes"],
+                        })
+                    else:
+                        cells.append({"type": "empty", "colspan": 1, "slot_number": s})
+                rows.append({"day": day, "cells": cells})
+
+            tables.append({"room": room, "rows": rows, "optimization": optimization})
+        return tables
 
 
 if "timetable" not in globals():
@@ -572,9 +798,9 @@ def saved_timetable(request, tid):
     saved_t = _get_saved_timetable_or_404(tid, request.user)
     classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
 
-    tables = build_section_tables(classes, labs)
-    room_tables = build_room_tables(classes, labs)
-    teacher_tables = build_teacher_tables(classes, labs)
+    tables = build_section_tables(classes, labs, user=request.user)
+    room_tables = build_room_tables(classes, labs, user=request.user)
+    teacher_tables = build_teacher_tables(classes, labs, user=request.user)
     teacher_workloads = _compute_teacher_workloads(classes, labs)
 
     permissions = _get_plan_permissions(request.user)
@@ -862,9 +1088,10 @@ def teacher_view_timetable(request, tid):
         return redirect("teacher_enter_code")
 
     classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
-    tables = build_section_tables(classes, labs)
-    room_tables = build_room_tables(classes, labs)
-    teacher_tables = build_teacher_tables(classes, labs)
+    owner = saved_t.user
+    tables = build_section_tables(classes, labs, user=owner)
+    room_tables = build_room_tables(classes, labs, user=owner)
+    teacher_tables = build_teacher_tables(classes, labs, user=owner)
     teacher_workloads = _compute_teacher_workloads(classes, labs)
 
     context = {
