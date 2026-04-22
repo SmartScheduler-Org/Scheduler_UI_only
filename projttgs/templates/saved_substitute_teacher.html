@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Substitute Teacher (Saved Timetable)</title>
+
+    <style>
+        body {
+            background: #f5f7f7;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .container {
+            width: 450px;
+            margin: 50px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #257a7a;
+            font-weight: 650;
+        }
+
+        .info-box {
+            background: #f7fbff;
+            border: 1px solid #d6e9f8;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #0d47a1;
+        }
+
+        label {
+            font-weight: 600;
+            color: #444;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 20px;
+            background: #ffd27f;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ffc14d;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 14px;
+            color: #257a7a;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Substitute {% if is_lab %}Lab {% endif %}Teacher</h2>
+
+    <div class="info-box">
+        <strong>Current Assignment</strong>
+        Section: {{ section.section_id }}<br>
+        Course: {{ scheduled.course.course_name }}{% if is_lab %} (Lab){% endif %}<br>
+        Day: {{ day }} | Slot: {{ SLOT_LABELS|dictsort:"key" }}
+        Current Teacher: {{ scheduled.instructor.name }}
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+        <div style="padding: 10px; margin-bottom: 10px; border-radius: 8px;
+            {% if 'error' in message.tags %}background: #ffebee; color: #c62828; border: 1px solid #ffcdd2;
+            {% else %}background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9;{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Select New Teacher</label>
+        <select name="teacher" required>
+            <option value="">-- Choose Teacher --</option>
+            {% for t in available_teachers %}
+            <option value="{{ t.id }}">{{ t.name }} ({{ t.uid }})</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Substitute Teacher</button>
+    </form>
+
+    <a href="{% url 'saved_timetable' saved.id %}" class="back-link">Back to Timetable</a>
+</div>
+
+<script src="{% static 'chatbot.js' %}"></script>
+</body>
+</html>

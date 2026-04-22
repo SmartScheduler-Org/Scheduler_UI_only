@@ -223,7 +223,7 @@ def role(request):
             if role_value == 'hod':
                 return redirect('admindash')
             elif role_value == 'teacher':
-                return redirect('teachertimetable_list')
+                return redirect('teacher_enter_code')
             elif role_value == 'dean':
                 return redirect('teachertimetable')
     return render(request, 'role.html')
@@ -247,7 +247,7 @@ def teacher_role_set(request):
         return render(request, 'role_locked.html', {'current_role': profile.get_role_display()})
     profile.role = 'teacher'
     profile.save()
-    return redirect('teachertimetable_list')
+    return redirect('teacher_enter_code')
 
 
 @login_required
@@ -387,18 +387,225 @@ if "Lab" not in globals():
 
 
 if "build_section_tables" not in globals():
-    def build_section_tables(all_classes, all_labs):
-        return []
+    def build_section_tables(all_classes, all_labs, user=None):
+        from collections import defaultdict, OrderedDict
+        section_map = OrderedDict()
+        for cls in all_classes:
+            sec_key = cls.section
+            if sec_key not in section_map:
+                section_map[sec_key] = {"classes": [], "labs": [], "dept": cls.department}
+            section_map[sec_key]["classes"].append(cls)
+        for lab in all_labs:
+            sec_key = lab.section
+            if sec_key not in section_map:
+                section_map[sec_key] = {"classes": [], "labs": [], "dept": lab.department}
+            section_map[sec_key]["labs"].append(lab)
+
+        tables = []
+        for sec_id, data in section_map.items():
+            grid = {}
+            for day in DAYS:
+                grid[day] = {}
+            for cls in data["classes"]:
+                if cls.meeting_time:
+                    day = cls.meeting_time.day
+                    slot = int(cls.meeting_time.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["classes"].append(cls)
+            for lab in data["labs"]:
+                if lab.meeting_times:
+                    first_mt = lab.meeting_times[0]
+                    day = first_mt.day
+                    slot = int(first_mt.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["labs"].append(lab)
+
+            rows = []
+            for day in DAYS:
+                cells = []
+                skip_until = 0
+                for s in range(1, 10):
+                    if s <= skip_until:
+                        continue
+                    if s == 5:
+                        cells.append({"type": "lunch", "colspan": 1, "slot_number": s})
+                        continue
+                    cell_data = grid[day].get(s, {"classes": [], "labs": []})
+                    if cell_data["labs"]:
+                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        cells.append({
+                            "type": "lab",
+                            "colspan": lab_span,
+                            "slot_number": s,
+                            "labs": cell_data["labs"],
+                        })
+                        skip_until = s + lab_span - 1
+                    elif cell_data["classes"]:
+                        cells.append({
+                            "type": "class",
+                            "colspan": 1,
+                            "slot_number": s,
+                            "classes": cell_data["classes"],
+                        })
+                    else:
+                        cells.append({"type": "empty", "colspan": 1, "slot_number": s})
+                rows.append({"day": day, "cells": cells})
+
+            class _SectionProxy:
+                def __init__(self, sid, dept):
+                    self.section_id = sid
+                    self.department = dept
+            tables.append({
+                "section": _SectionProxy(sec_id, data["dept"]),
+                "rows": rows,
+                "subject_counts": [],
+                "total_missing_classes": 0,
+            })
+        return tables
 
 
 if "build_teacher_tables" not in globals():
-    def build_teacher_tables(all_classes, all_labs):
-        return []
+    def build_teacher_tables(all_classes, all_labs, user=None):
+        from collections import OrderedDict
+        teacher_map = OrderedDict()
+        for cls in all_classes:
+            t = cls.instructor
+            if t and t not in teacher_map:
+                teacher_map[t] = {"classes": [], "labs": []}
+            if t:
+                teacher_map[t]["classes"].append(cls)
+        for lab in all_labs:
+            t = lab.instructor
+            if t and t not in teacher_map:
+                teacher_map[t] = {"classes": [], "labs": []}
+            if t:
+                teacher_map[t]["labs"].append(lab)
+
+        tables = []
+        for teacher, data in teacher_map.items():
+            grid = {}
+            for day in DAYS:
+                grid[day] = {}
+            for cls in data["classes"]:
+                if cls.meeting_time:
+                    day = cls.meeting_time.day
+                    slot = int(cls.meeting_time.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["classes"].append(cls)
+            for lab in data["labs"]:
+                if lab.meeting_times:
+                    first_mt = lab.meeting_times[0]
+                    day = first_mt.day
+                    slot = int(first_mt.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["labs"].append(lab)
+
+            rows = []
+            for day in DAYS:
+                cells = []
+                skip_until = 0
+                for s in range(1, 10):
+                    if s <= skip_until:
+                        continue
+                    if s == 5:
+                        cells.append({"type": "lunch", "colspan": 1, "slot_number": s})
+                        continue
+                    cell_data = grid[day].get(s, {"classes": [], "labs": []})
+                    if cell_data["labs"]:
+                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        cells.append({
+                            "type": "lab", "colspan": lab_span, "slot_number": s,
+                            "labs": cell_data["labs"],
+                        })
+                        skip_until = s + lab_span - 1
+                    elif cell_data["classes"]:
+                        cells.append({
+                            "type": "class", "colspan": 1, "slot_number": s,
+                            "classes": cell_data["classes"],
+                        })
+                    else:
+                        cells.append({"type": "empty", "colspan": 1, "slot_number": s})
+                rows.append({"day": day, "cells": cells})
+
+            tables.append({"teacher": teacher, "rows": rows})
+        return tables
 
 
 if "build_room_tables" not in globals():
-    def build_room_tables(all_classes, all_labs):
-        return []
+    def build_room_tables(all_classes, all_labs, user=None):
+        from collections import OrderedDict
+        room_map = OrderedDict()
+        for cls in all_classes:
+            r = cls.room
+            if r and r not in room_map:
+                room_map[r] = {"classes": [], "labs": []}
+            if r:
+                room_map[r]["classes"].append(cls)
+        for lab in all_labs:
+            r = lab.room
+            if r and r not in room_map:
+                room_map[r] = {"classes": [], "labs": []}
+            if r:
+                room_map[r]["labs"].append(lab)
+
+        tables = []
+        for room, data in room_map.items():
+            grid = {}
+            for day in DAYS:
+                grid[day] = {}
+            for cls in data["classes"]:
+                if cls.meeting_time:
+                    day = cls.meeting_time.day
+                    slot = int(cls.meeting_time.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["classes"].append(cls)
+            for lab in data["labs"]:
+                if lab.meeting_times:
+                    first_mt = lab.meeting_times[0]
+                    day = first_mt.day
+                    slot = int(first_mt.time)
+                    if day in grid:
+                        grid[day].setdefault(slot, {"classes": [], "labs": []})
+                        grid[day][slot]["labs"].append(lab)
+
+            total_slots = sum(1 for d in grid.values() for s, v in d.items() if v["classes"] or v["labs"])
+            max_slots = len(DAYS) * 8
+            optimization = round(total_slots / max_slots * 100) if max_slots else 0
+
+            rows = []
+            for day in DAYS:
+                cells = []
+                skip_until = 0
+                for s in range(1, 10):
+                    if s <= skip_until:
+                        continue
+                    if s == 5:
+                        cells.append({"type": "lunch", "colspan": 1, "slot_number": s})
+                        continue
+                    cell_data = grid[day].get(s, {"classes": [], "labs": []})
+                    if cell_data["labs"]:
+                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        cells.append({
+                            "type": "lab", "colspan": lab_span, "slot_number": s,
+                            "labs": cell_data["labs"],
+                        })
+                        skip_until = s + lab_span - 1
+                    elif cell_data["classes"]:
+                        cells.append({
+                            "type": "class", "colspan": 1, "slot_number": s,
+                            "classes": cell_data["classes"],
+                        })
+                    else:
+                        cells.append({"type": "empty", "colspan": 1, "slot_number": s})
+                rows.append({"day": day, "cells": cells})
+
+            tables.append({"room": room, "rows": rows, "optimization": optimization})
+        return tables
 
 
 if "timetable" not in globals():
@@ -418,6 +625,34 @@ if "get_meeting_time" not in globals():
         if user:
             qs = qs.filter(user=user)
         return qs.first()
+
+
+if "normalize_lab_category" not in globals():
+    def normalize_lab_category(value):
+        """Fallback: normalize a lab category string to match LAB_CATEGORY_CHOICES."""
+        if not value:
+            return ""
+        value = value.strip()
+        from ttgen.models import LAB_CATEGORY_CHOICES
+        valid = {v.lower(): v for v, _ in LAB_CATEGORY_CHOICES}
+        lower = value.lower()
+        if lower in valid:
+            return valid[lower]
+        for key, canonical in valid.items():
+            if lower in key or key in lower:
+                return canonical
+        return value
+
+
+if "teacher_payload" not in globals():
+    def teacher_payload(name, designation="", max_workload=""):
+        """Fallback: return sensible defaults for teacher designation & workload."""
+        resolved_designation = designation.strip() if designation else "Assistant Professor"
+        try:
+            resolved_workload = int(max_workload)
+        except (TypeError, ValueError):
+            resolved_workload = 12
+        return resolved_designation, resolved_workload
 
 
 for _runtime_view_name in (
@@ -440,6 +675,432 @@ for _runtime_view_name in (
         def _fallback_runtime_view(request, *args, **kwargs):
             return _runtime_unavailable_response(request)
         globals()[_runtime_view_name] = _fallback_runtime_view
+
+
+# ================================================================
+# SAVED TIMETABLE VIEWS (overrides private runtime stubs)
+# ================================================================
+
+def _rebuild_classes_and_labs_from_saved(saved_t):
+    """Rebuild in-memory Class and Lab objects from ScheduledSlot records."""
+    slots = saved_t.slots.select_related(
+        "section", "section__department", "course", "instructor", "room", "meeting_time",
+    ).prefetch_related("lab_slots").all()
+
+    classes = []
+    labs = []
+    lab_slots_list = []
+
+    for slot in slots:
+        if slot.is_lab:
+            lab_slots_list.append(slot)
+        else:
+            cls = Class(
+                id=0,
+                dept=slot.section.department,
+                section=slot.section.section_id,
+                course=slot.course,
+            )
+            cls.instructor = slot.instructor
+            cls.room = slot.room
+            cls.meeting_time = slot.meeting_time
+            classes.append(cls)
+
+    # Group labs by (section, starting day/time) to compute batch numbers
+    from collections import defaultdict
+    lab_groups = defaultdict(list)
+    for slot in lab_slots_list:
+        key = (slot.section.section_id, slot.meeting_time.day, slot.meeting_time.time)
+        lab_groups[key].append(slot)
+
+    for key, group in lab_groups.items():
+        total_batches = len(group)
+        for batch_num, slot in enumerate(group, start=1):
+            lab_obj = Lab(
+                id=0,
+                dept=slot.section.department,
+                section=slot.section.section_id,
+                course=slot.course,
+                batch=batch_num,
+                total_batches=total_batches,
+            )
+            lab_obj.instructor = slot.instructor
+            lab_obj.room = slot.room
+            lab_obj.meeting_times = list(slot.lab_slots.all())
+            labs.append(lab_obj)
+
+    return classes, labs
+
+
+def _compute_teacher_workloads(classes, labs):
+    """Compute teacher workload summary from classes and labs."""
+    workloads = {}
+    for cls in classes:
+        teacher = cls.instructor
+        if teacher not in workloads:
+            workloads[teacher] = {"lectures": 0, "labs": 0, "total": 0}
+        workloads[teacher]["lectures"] += 1
+        workloads[teacher]["total"] += 1
+    for lab in labs:
+        teacher = lab.instructor
+        if teacher not in workloads:
+            workloads[teacher] = {"lectures": 0, "labs": 0, "total": 0}
+        lab_slot_count = len(lab.meeting_times) if lab.meeting_times else LAB_DURATION
+        workloads[teacher]["labs"] += lab_slot_count
+        workloads[teacher]["total"] += lab_slot_count
+    return workloads
+
+
+def _get_saved_timetable_or_404(tid, user):
+    """Fetch a saved timetable ensuring it belongs to the user."""
+    try:
+        saved_t = SavedTimetable.objects.get(id=tid)
+    except SavedTimetable.DoesNotExist:
+        raise Http404("Timetable does not exist")
+    if saved_t.user != user:
+        raise Http404("Timetable does not exist")
+    return saved_t
+
+
+def _get_plan_permissions(user):
+    """Return plan permission flags for a user."""
+    try:
+        plan = UserAccessPlan.objects.get(user=user)
+        if plan.is_active:
+            return {
+                "can_edit_delete": plan.can_edit_delete,
+                "can_substitute": plan.can_substitute,
+                "can_drag_drop": plan.can_drag_drop,
+            }
+    except UserAccessPlan.DoesNotExist:
+        pass
+    return {
+        "can_edit_delete": False,
+        "can_substitute": False,
+        "can_drag_drop": False,
+    }
+
+
+@login_required
+def saved_timetable_list(request):
+    timetables = SavedTimetable.objects.filter(user=request.user)
+    return render(request, "saved_timetable_list.html", {"timetables": timetables})
+
+
+@login_required
+def saved_timetable(request, tid):
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
+
+    tables = build_section_tables(classes, labs, user=request.user)
+    room_tables = build_room_tables(classes, labs, user=request.user)
+    teacher_tables = build_teacher_tables(classes, labs, user=request.user)
+    teacher_workloads = _compute_teacher_workloads(classes, labs)
+
+    permissions = _get_plan_permissions(request.user)
+
+    context = {
+        "saved": saved_t,
+        "tables": tables,
+        "room_tables": room_tables,
+        "teacher_tables": teacher_tables,
+        "teacher_workloads": teacher_workloads,
+        "SLOT_LABELS": SLOT_LABELS,
+        "can_edit_delete": permissions["can_edit_delete"],
+        "can_substitute": permissions["can_substitute"],
+        "can_drag_drop": permissions["can_drag_drop"],
+    }
+    return render(request, "saved_timetable.html", context)
+
+
+@login_required
+def saved_substitute_teacher(request, tid, section, day, slot):
+    """Substitute a theory class instructor in a saved timetable."""
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    mt = get_meeting_time(day, slot, user=request.user)
+    if mt is None:
+        messages.error(request, "Invalid time slot.")
+        return redirect("saved_timetable", tid=tid)
+
+    try:
+        sec = Section.objects.get(section_id=section, user=request.user)
+    except Section.DoesNotExist:
+        messages.error(request, "Section not found.")
+        return redirect("saved_timetable", tid=tid)
+
+    scheduled = saved_t.slots.filter(section=sec, meeting_time=mt, is_lab=False).first()
+    if not scheduled:
+        messages.error(request, "No theory class found at this slot.")
+        return redirect("saved_timetable", tid=tid)
+
+    available_teachers = Instructor.objects.filter(user=request.user).exclude(id=scheduled.instructor.id)
+
+    if request.method == "POST":
+        teacher_id = request.POST.get("teacher")
+        if teacher_id:
+            try:
+                new_teacher = Instructor.objects.get(id=teacher_id, user=request.user)
+                # Check for conflict: new teacher already has a slot at this time
+                conflict = saved_t.slots.filter(
+                    instructor=new_teacher, meeting_time=mt,
+                ).exclude(id=scheduled.id).exists()
+                if conflict:
+                    messages.error(request, f"{new_teacher.name} already has a class at this time.")
+                else:
+                    scheduled.instructor = new_teacher
+                    scheduled.save(update_fields=["instructor"])
+                    messages.success(request, f"Teacher substituted to {new_teacher.name}.")
+                    return redirect("saved_timetable", tid=tid)
+            except Instructor.DoesNotExist:
+                messages.error(request, "Selected teacher not found.")
+
+    return render(request, "saved_substitute_teacher.html", {
+        "saved": saved_t,
+        "scheduled": scheduled,
+        "section": sec,
+        "day": day,
+        "slot": slot,
+        "available_teachers": available_teachers,
+        "SLOT_LABELS": SLOT_LABELS,
+    })
+
+
+@login_required
+def saved_substitute_lab_teacher(request, tid, section, day, slot):
+    """Substitute a lab instructor in a saved timetable."""
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    mt = get_meeting_time(day, slot, user=request.user)
+    if mt is None:
+        messages.error(request, "Invalid time slot.")
+        return redirect("saved_timetable", tid=tid)
+
+    try:
+        sec = Section.objects.get(section_id=section, user=request.user)
+    except Section.DoesNotExist:
+        messages.error(request, "Section not found.")
+        return redirect("saved_timetable", tid=tid)
+
+    scheduled = saved_t.slots.filter(section=sec, meeting_time=mt, is_lab=True).first()
+    if not scheduled:
+        messages.error(request, "No lab found at this slot.")
+        return redirect("saved_timetable", tid=tid)
+
+    available_teachers = Instructor.objects.filter(user=request.user).exclude(id=scheduled.instructor.id)
+
+    if request.method == "POST":
+        teacher_id = request.POST.get("teacher")
+        if teacher_id:
+            try:
+                new_teacher = Instructor.objects.get(id=teacher_id, user=request.user)
+                lab_times = list(scheduled.lab_slots.all())
+                conflict = saved_t.slots.filter(
+                    instructor=new_teacher, meeting_time__in=lab_times,
+                ).exclude(id=scheduled.id).exists()
+                if conflict:
+                    messages.error(request, f"{new_teacher.name} already has a class during this lab.")
+                else:
+                    scheduled.instructor = new_teacher
+                    scheduled.save(update_fields=["instructor"])
+                    messages.success(request, f"Lab teacher substituted to {new_teacher.name}.")
+                    return redirect("saved_timetable", tid=tid)
+            except Instructor.DoesNotExist:
+                messages.error(request, "Selected teacher not found.")
+
+    return render(request, "saved_substitute_teacher.html", {
+        "saved": saved_t,
+        "scheduled": scheduled,
+        "section": sec,
+        "day": day,
+        "slot": slot,
+        "available_teachers": available_teachers,
+        "SLOT_LABELS": SLOT_LABELS,
+        "is_lab": True,
+    })
+
+
+@login_required
+def saved_move_slot_dragdrop(request, tid, section, day, slot):
+    """Drag-and-drop move a slot in a saved timetable."""
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "message": "POST required."}, status=405)
+
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"ok": False, "message": "Invalid payload."}, status=400)
+
+    target_day = payload.get("target_day")
+    target_slot = payload.get("target_slot")
+    move_type = payload.get("move_type", "class")
+
+    if not target_day or not target_slot:
+        return JsonResponse({"ok": False, "message": "Missing target day/slot."}, status=400)
+
+    source_mt = get_meeting_time(day, slot, user=request.user)
+    target_mt = get_meeting_time(target_day, target_slot, user=request.user)
+
+    if not source_mt or not target_mt:
+        return JsonResponse({"ok": False, "message": "Invalid time slot."}, status=400)
+
+    try:
+        sec = Section.objects.get(section_id=section, user=request.user)
+    except Section.DoesNotExist:
+        return JsonResponse({"ok": False, "message": "Section not found."}, status=404)
+
+    if move_type == "lab":
+        scheduled = saved_t.slots.filter(section=sec, meeting_time=source_mt, is_lab=True).first()
+    else:
+        scheduled = saved_t.slots.filter(section=sec, meeting_time=source_mt, is_lab=False).first()
+
+    if not scheduled:
+        return JsonResponse({"ok": False, "message": "No slot found at source."}, status=404)
+
+    if move_type == "lab":
+        source_lab_times = list(scheduled.lab_slots.all().order_by("time"))
+        if not source_lab_times:
+            return JsonResponse({"ok": False, "message": "Lab has no time slots."}, status=400)
+
+        # Calculate offset
+        source_start_slot = int(source_lab_times[0].time)
+        target_start_slot = int(target_mt.time)
+        offset = target_start_slot - source_start_slot
+
+        new_lab_times = []
+        for lt in source_lab_times:
+            new_slot_num = int(lt.time) + offset
+            new_lt = get_meeting_time(target_day, new_slot_num, user=request.user)
+            if not new_lt:
+                return JsonResponse({"ok": False, "message": f"Target slot {new_slot_num} on {target_day} does not exist."}, status=400)
+            new_lab_times.append(new_lt)
+
+        # Check conflicts for all new lab times
+        for nlt in new_lab_times:
+            # Section conflict
+            sec_conflict = saved_t.slots.filter(section=sec, meeting_time=nlt).exclude(id=scheduled.id).exists()
+            if sec_conflict:
+                return JsonResponse({"ok": False, "message": f"Section conflict at {target_day} slot {nlt.time}."}, status=409)
+            # Teacher conflict
+            teacher_conflict = saved_t.slots.filter(instructor=scheduled.instructor, meeting_time=nlt).exclude(id=scheduled.id).exists()
+            if teacher_conflict:
+                return JsonResponse({"ok": False, "message": f"Teacher conflict at {target_day} slot {nlt.time}."}, status=409)
+            # Room conflict
+            room_conflict = saved_t.slots.filter(room=scheduled.room, meeting_time=nlt).exclude(id=scheduled.id).exists()
+            if room_conflict:
+                return JsonResponse({"ok": False, "message": f"Room conflict at {target_day} slot {nlt.time}."}, status=409)
+
+        # Apply move
+        scheduled.meeting_time = new_lab_times[0]
+        scheduled.save(update_fields=["meeting_time"])
+        scheduled.lab_slots.set(new_lab_times)
+
+    else:
+        # Theory class move
+        # Check section conflict
+        sec_conflict = saved_t.slots.filter(section=sec, meeting_time=target_mt).exclude(id=scheduled.id).exists()
+        if sec_conflict:
+            return JsonResponse({"ok": False, "message": "Section already has a class at target slot."}, status=409)
+        # Teacher conflict
+        teacher_conflict = saved_t.slots.filter(instructor=scheduled.instructor, meeting_time=target_mt).exclude(id=scheduled.id).exists()
+        if teacher_conflict:
+            return JsonResponse({"ok": False, "message": "Teacher already has a class at target slot."}, status=409)
+        # Room conflict
+        room_conflict = saved_t.slots.filter(room=scheduled.room, meeting_time=target_mt).exclude(id=scheduled.id).exists()
+        if room_conflict:
+            return JsonResponse({"ok": False, "message": "Room already occupied at target slot."}, status=409)
+
+        scheduled.meeting_time = target_mt
+        scheduled.save(update_fields=["meeting_time"])
+
+    return JsonResponse({"ok": True, "message": "Slot moved successfully."})
+
+
+# ================================================================
+# PUBLISH / TEACHER READ-ONLY VIEWS
+# ================================================================
+
+@login_required
+def publish_timetable(request, tid):
+    """HOD publishes a saved timetable with a custom code."""
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    if request.method == "POST":
+        code = request.POST.get("publish_code", "").strip()
+        if not code:
+            messages.error(request, "Please enter a publish code.")
+            return redirect("saved_timetable", tid=tid)
+        conflict = SavedTimetable.objects.filter(
+            user=request.user, publish_code=code, is_published=True
+        ).exclude(id=tid).exists()
+        if conflict:
+            messages.error(request, "This code is already used for another timetable.")
+            return redirect("saved_timetable", tid=tid)
+        saved_t.is_published = True
+        saved_t.publish_code = code
+        saved_t.save(update_fields=["is_published", "publish_code"])
+        messages.success(request, f"Timetable published with code: {code}")
+    return redirect("saved_timetable", tid=tid)
+
+
+@login_required
+def unpublish_timetable(request, tid):
+    """HOD unpublishes a timetable."""
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    if request.method == "POST":
+        saved_t.is_published = False
+        saved_t.publish_code = ""
+        saved_t.save(update_fields=["is_published", "publish_code"])
+        messages.success(request, "Timetable unpublished.")
+    return redirect("saved_timetable", tid=tid)
+
+
+@login_required
+def teacher_enter_code(request):
+    """Teacher enters a publish code to view a timetable."""
+    if request.method == "POST":
+        code = request.POST.get("access_code", "").strip()
+        if not code:
+            messages.error(request, "Please enter a code.")
+            return render(request, "teacher_enter_code.html")
+        timetable = SavedTimetable.objects.filter(
+            is_published=True, publish_code=code
+        ).first()
+        if not timetable:
+            messages.error(request, "No published timetable found with that code.")
+            return render(request, "teacher_enter_code.html")
+        return redirect("teacher_view_timetable", tid=timetable.id)
+    return render(request, "teacher_enter_code.html")
+
+
+@login_required
+def teacher_view_timetable(request, tid):
+    """Read-only timetable view for teachers accessing via publish code."""
+    try:
+        saved_t = SavedTimetable.objects.get(id=tid, is_published=True)
+    except SavedTimetable.DoesNotExist:
+        messages.error(request, "This timetable is not available.")
+        return redirect("teacher_enter_code")
+
+    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
+    owner = saved_t.user
+    tables = build_section_tables(classes, labs, user=owner)
+    room_tables = build_room_tables(classes, labs, user=owner)
+    teacher_tables = build_teacher_tables(classes, labs, user=owner)
+    teacher_workloads = _compute_teacher_workloads(classes, labs)
+
+    context = {
+        "saved": saved_t,
+        "tables": tables,
+        "room_tables": room_tables,
+        "teacher_tables": teacher_tables,
+        "teacher_workloads": teacher_workloads,
+        "SLOT_LABELS": SLOT_LABELS,
+        "can_edit_delete": False,
+        "can_substitute": False,
+        "can_drag_drop": False,
+        "is_readonly": True,
+    }
+    return render(request, "saved_timetable.html", context)
 
 
 # ---------------- CRUD VIEWS ----------------

@@ -88,9 +88,18 @@ urlpatterns = [
     path("saved/<int:tid>/add/<str:section>/", views.saved_add_slot, name="saved_add_slot"),
     path("saved/<int:tid>/update/<str:section>/<str:day>/<int:slot>/", views.saved_update_slot, name="saved_update_slot"),
     path("saved/<int:tid>/delete/<str:section>/<str:day>/<int:slot>/", views.saved_delete_slot, name="saved_delete_slot"),
+    path("saved/<int:tid>/substitute/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_teacher, name="saved_substitute_teacher"),
+    path("saved/<int:tid>/substitute_lab/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_lab_teacher, name="saved_substitute_lab_teacher"),
+    path("saved/<int:tid>/move/<str:section>/<str:day>/<int:slot>/", views.saved_move_slot_dragdrop, name="saved_move_slot_dragdrop"),
 
     path("substitute_teacher/<str:section>/<str:day>/<int:slot>/",views.substitute_teacher,name="substitute_teacher"),
     path("substitute_lab/<str:section>/<str:day>/<int:slot>/",views.substitute_lab_teacher,name="substitute_lab_teacher"),
+
+    # Publish / Teacher read-only
+    path('saved_timetable/<int:tid>/publish/', views.publish_timetable, name='publish_timetable'),
+    path('saved_timetable/<int:tid>/unpublish/', views.unpublish_timetable, name='unpublish_timetable'),
+    path('teacher/enter-code/', views.teacher_enter_code, name='teacher_enter_code'),
+    path('teacher/view/<int:tid>/', views.teacher_view_timetable, name='teacher_view_timetable'),
 
     # CSV Converter (all entity types)
     path('convert_csv/', views.convert_csv, name='convert_csv'),
