@@ -6,6 +6,45 @@
     <meta charset="UTF-8" />
     <title>AI Timetable Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      (function () {
+        if ("scrollRestoration" in window.history) {
+          window.history.scrollRestoration = "manual";
+        }
+
+        function resetHomepageScroll() {
+          const nav = document.querySelector(".nav");
+
+          window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          if (nav) {
+            nav.scrollIntoView({ block: "start", inline: "nearest", behavior: "auto" });
+          }
+        }
+
+        function scheduleHomepageReset() {
+          if (window.location.hash) {
+            window.history.replaceState(
+              null,
+              "",
+              window.location.pathname + window.location.search
+            );
+          }
+
+          resetHomepageScroll();
+          requestAnimationFrame(resetHomepageScroll);
+          window.setTimeout(resetHomepageScroll, 0);
+          window.setTimeout(resetHomepageScroll, 120);
+          window.setTimeout(resetHomepageScroll, 350);
+          window.setTimeout(resetHomepageScroll, 800);
+        }
+
+        document.addEventListener("DOMContentLoaded", scheduleHomepageReset);
+        window.addEventListener("pageshow", scheduleHomepageReset);
+        window.addEventListener("load", scheduleHomepageReset, { once: true });
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
     <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
 
@@ -21,10 +60,11 @@
   </head>
 
   <body class="site-layout">
-    <canvas id="hp-canvas"></canvas>
-    <div id="hp-cursor"></div>
+    <div id="features"></div>
+    <!-- <canvas id="hp-canvas"></canvas> -->
+    <!-- <div id="hp-cursor"></div>
     <div class="hp-orb hp-orb1"></div>
-    <div class="hp-orb hp-orb2"></div>
+    <div class="hp-orb hp-orb2"></div> -->
     <!-- Animated gradient blobs -->
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
@@ -265,7 +305,7 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
       </section>
 
       <!-- FEATURES -->
-     <section id="features" class="section">
+     <section id="services" class="section">
   <div class="container">
     <div class="section-header">
       <div class="section-eyebrow">Why AI Timetabling?</div>
@@ -1012,4 +1052,3 @@ if(typeof gsap!=='undefined'&&typeof ScrollTrigger!=='undefined'){
     <script src="{% static 'chatbot.js' %}"></script>
   </body>
 </html>
-
