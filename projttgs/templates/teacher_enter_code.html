@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}View Timetable | SmartScheduler{% endblock %}
+
+{% block content %}
+
+<div class="code-page">
+  <canvas id="stars"></canvas>
+
+  <div class="code-blob code-blob-1"></div>
+  <div class="code-blob code-blob-2"></div>
+
+  <div class="code-card">
+    <h2 class="code-title">View Timetable</h2>
+    <p class="code-subtitle">Enter the code shared by your HOD to view the timetable</p>
+
+    {% if messages %}
+    {% for message in messages %}
+      <div class="code-msg {% if 'error' in message.tags %}code-msg--error{% else %}code-msg--success{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="POST" class="code-form">
+      {% csrf_token %}
+      <input type="text" name="access_code" placeholder="Enter timetable code" required autofocus class="code-input">
+      <button type="submit" class="code-btn code-btn--primary">View Timetable</button>
+    </form>
+
+    <form method="post" action="{% url 'logout' %}" class="code-form" style="margin-top:12px;">
+      {% csrf_token %}
+      <button type="submit" class="code-btn code-btn--logout">Logout</button>
+    </form>
+  </div>
+</div>
+
+<style>
+:root { --accent:#6366f1; --accent2:#ec4899; --muted:#9ca3af; }
+
+.code-page {
+  min-height: calc(100vh - 100px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0 20px 0;
+  position: relative;
+  font-family: "Poppins", sans-serif;
+}
+
+.code-blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: .55;
+  mix-blend-mode: screen;
+  z-index: 0;
+}
+.code-blob-1 { width: 300px; height: 300px; background: #4f46e5; top: -60px; left: -60px; }
+.code-blob-2 { width: 360px; height: 360px; background: #ec4899; bottom: -100px; right: -60px; }
+
+#stars {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.code-card {
+  z-index: 2;
+  width: 100%;
+  max-width: 440px;
+  padding: 36px 32px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(14px);
+  background: rgba(15,23,42,.6);
+  text-align: center;
+  animation: codePop .6s ease forwards;
+  opacity: 0;
+  transform: translateY(18px);
+}
+@keyframes codePop { to { opacity:1; transform:translateY(0); } }
+
+.code-title {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(120deg, #a5f3fc, #d8b4fe, #f9a8d4);
+  -webkit-background-clip: text;
+  color: transparent;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.code-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+
+.code-msg {
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+.code-msg--error {
+  background: rgba(239,68,68,.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239,68,68,.3);
+}
+.code-msg--success {
+  background: rgba(34,197,94,.15);
+  color: #86efac;
+  border: 1px solid rgba(34,197,94,.3);
+}
+
+.code-form { width: 100%; }
+
+.code-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  color: white;
+  text-align: center;
+  letter-spacing: 2px;
+  background: rgba(15,23,42,.9);
+  border: 1px solid rgba(148,163,184,.4);
+  box-sizing: border-box;
+  transition: border-color .2s;
+}
+.code-input:focus {
+  outline: none;
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.2);
+}
+.code-input::placeholder { color: rgba(148,163,184,.6); letter-spacing: 1px; }
+
+.code-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, opacity .15s;
+}
+.code-btn:hover { transform: translateY(-2px); }
+
+.code-btn--primary {
+  margin-top: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
+}
+
+.code-btn--logout {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(148,163,184,.3);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.code-btn--logout:hover {
+  background: rgba(239,68,68,.15);
+  border-color: rgba(239,68,68,.4);
+  color: #fca5a5;
+}
+
+@media (max-width: 480px) {
+  .code-card { margin: 0 16px; padding: 28px 20px; }
+  .code-title { font-size: 24px; }
+}
+</style>
+
+<script>
+const s=document.getElementById("stars"),ctx=s.getContext("2d");
+function resize(){s.width=innerWidth;s.height=innerHeight} resize();addEventListener("resize",resize);
+class Star{constructor(){
+this.x=Math.random()*s.width;this.y=Math.random()*s.height;
+this.size=Math.random()*1.8+.6;this.sx=Math.random()*.08-.04;this.sy=Math.random()*.08-.04;}
+move(){this.x+=this.sx;this.y+=this.sy;}
+draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,2*Math.PI);
+ctx.fillStyle="rgba(255,255,255,.85)";ctx.shadowBlur=8;ctx.fill();}}
+let stars=[];for(let k=0;k<120;k++)stars.push(new Star());
+function anim(){ctx.clearRect(0,0,s.width,s.height);stars.forEach(s=>{s.move();s.draw();});requestAnimationFrame(anim);} anim();
+</script>
+
+{% endblock %}

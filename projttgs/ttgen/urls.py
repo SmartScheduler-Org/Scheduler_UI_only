@@ -21,6 +21,7 @@ urlpatterns = [
     path('saved_timetables/', views.teachertimetable_list, name='teachertimetable_list'),
     path('add_teachers', views.addInstructor, name='addInstructors'),
     path('teachers_list/', views.inst_list_view , name='editinstructor'),
+    path('dashboard_teachers_list/', views.dashboard_inst_list_view, name='dashboard_editinstructor'),
     path('delete_teacher/<int:pk>/', views.delete_instructor, name='deleteinstructor'), 
     path('saved_teacher_timetables/<int:tid>/', views.saved_teacher_timetable, name='saved_teacher_timetable'),
 
@@ -44,10 +45,12 @@ urlpatterns = [
 
     path('add_departments', views.addDepts, name='addDepts'),
     path('departments_list/', views.department_list, name='editdepartment'),
+    path('dashboard_departments_list/', views.dashboard_department_list, name='dashboard_editdepartment'),
     path('delete_department/<int:pk>/', views.delete_department, name='deletedepartment'),
 
     path('add_sections', views.addSections, name='addSections'),
     path('sections_list/', views.section_list, name='editsection'),
+    path('dashboard_sections_list/', views.dashboard_section_list, name='dashboard_editsection'),
     path('delete_section/<str:pk>/', views.delete_section, name='deletesection'),
     path("map-section-courses/",views.map_section_courses,name="map_section_courses"),
     path("view-section-courses/", views.view_section_courses, name="view_section_courses"),
@@ -88,9 +91,18 @@ urlpatterns = [
     path("saved/<int:tid>/add/<str:section>/", views.saved_add_slot, name="saved_add_slot"),
     path("saved/<int:tid>/update/<str:section>/<str:day>/<int:slot>/", views.saved_update_slot, name="saved_update_slot"),
     path("saved/<int:tid>/delete/<str:section>/<str:day>/<int:slot>/", views.saved_delete_slot, name="saved_delete_slot"),
+    path("saved/<int:tid>/substitute/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_teacher, name="saved_substitute_teacher"),
+    path("saved/<int:tid>/substitute_lab/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_lab_teacher, name="saved_substitute_lab_teacher"),
+    path("saved/<int:tid>/move/<str:section>/<str:day>/<int:slot>/", views.saved_move_slot_dragdrop, name="saved_move_slot_dragdrop"),
 
     path("substitute_teacher/<str:section>/<str:day>/<int:slot>/",views.substitute_teacher,name="substitute_teacher"),
     path("substitute_lab/<str:section>/<str:day>/<int:slot>/",views.substitute_lab_teacher,name="substitute_lab_teacher"),
+
+    # Publish / Teacher read-only
+    path('saved_timetable/<int:tid>/publish/', views.publish_timetable, name='publish_timetable'),
+    path('saved_timetable/<int:tid>/unpublish/', views.unpublish_timetable, name='unpublish_timetable'),
+    path('teacher/enter-code/', views.teacher_enter_code, name='teacher_enter_code'),
+    path('teacher/view/<int:tid>/', views.teacher_view_timetable, name='teacher_view_timetable'),
 
     # CSV Converter (all entity types)
     path('convert_csv/', views.convert_csv, name='convert_csv'),
@@ -101,4 +113,13 @@ urlpatterns = [
 
 
 
+
+    # Teacher Preference
+    path('teacher-pref-form/',      views.teacher_pref_form,         name='teacher_pref_form'),
+    path('send-preferences/',       views.send_preferences_page,     name='send_preferences'),
+    path('teacher-responses/',      views.teacher_responses_page,    name='teacher_responses'),
+    path('api/pref/submit/',        views.teacher_pref_submit,       name='pref_submit'),
+    path('api/pref/send-links/',    views.send_pref_links_smtp,      name='pref_send_links'),
+    path('api/pref/parse-emails/',  views.parse_emails_view,         name='pref_parse_emails'),
+    path('export/preferences/csv/', views.export_preferences_csv,    name='export_pref_csv'),
 ]
