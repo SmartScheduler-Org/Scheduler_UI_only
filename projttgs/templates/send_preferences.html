@@ -1,0 +1,95 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block title %}SmartScheduler | Send Preference Mail{% endblock %}
+{% block content %}
+<style>
+.spp{max-width:700px;margin:0 auto;padding:2.5rem 1rem 5rem}
+.spp-back{display:inline-flex;align-items:center;gap:.4rem;font-size:.84rem;color:rgba(148,163,184,.8);text-decoration:none;margin-bottom:1.5rem;transition:color .2s}.spp-back:hover{color:#fff}
+.spp-eye{display:inline-flex;align-items:center;gap:.5rem;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#00e5ff;margin-bottom:.9rem;padding:.28rem .8rem;border:1px solid rgba(0,229,255,.28);border-radius:20px;background:rgba(0,229,255,.08)}
+.spp-eye::before{content:'';width:6px;height:6px;border-radius:50%;background:#00e5ff;animation:SPBD 2s infinite}
+.spp-title{font-size:clamp(1.8rem,4vw,2.4rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.4rem;color:#fff}
+.spp-title em{font-style:normal;color:#00e5ff}
+.spp-desc{font-size:.9rem;color:rgba(148,163,184,.8);line-height:1.6;margin-bottom:2rem}
+.spp-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:1.8rem;margin-bottom:1.3rem;transition:box-shadow .3s}
+.spp-card:hover{box-shadow:0 8px 30px rgba(0,200,255,.1)}
+.spp-lbl{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(148,163,184,.7);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.dz{border:2px dashed rgba(255,255,255,.1);border-radius:14px;padding:1.8rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(255,255,255,.02)}.dz:hover,.dz.ov{border-color:rgba(0,229,255,.5);background:rgba(0,229,255,.07)}
+.dz input{display:none}.dzi{font-size:2rem;margin-bottom:.5rem}.dzt{font-size:.84rem;color:rgba(148,163,184,.8)}.dzt strong{color:#00e5ff;cursor:pointer}
+.dzr{margin-top:.7rem;font-size:.82rem;font-weight:600}.dzr-ok{color:#10d97e}.dzr-err{color:#f43f5e}
+.spp-ta{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:1rem;font-family:'Poppins',sans-serif;font-size:.9rem;color:#e2e8f0;resize:vertical;min-height:120px;outline:none;transition:border-color .2s}
+.spp-ta::placeholder{color:rgba(148,163,184,.4)}.spp-ta:focus{border-color:rgba(0,229,255,.5);background:rgba(0,229,255,.04)}
+.fhint{font-size:.73rem;color:rgba(148,163,184,.7);margin-top:.45rem}
+.spp-btns{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.3rem}
+.spp-btn{flex:1;min-width:130px;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.2rem;border-radius:12px;font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:transform .18s,box-shadow .18s;font-family:'Poppins',sans-serif}
+.spp-btn:hover{transform:translateY(-2px)}
+.btn-smtp{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}.btn-smtp:hover{box-shadow:0 8px 28px rgba(34,197,94,.45)}
+.btn-gmail{background:linear-gradient(135deg,#ea4335,#c0392b);color:#fff}.btn-gmail:hover{box-shadow:0 8px 28px rgba(234,67,53,.45)}
+.btn-ol{background:linear-gradient(135deg,#0078d4,#005a9e);color:#fff}.btn-ol:hover{box-shadow:0 8px 28px rgba(0,120,212,.45)}
+.spp-st{display:none;margin-top:1.1rem;padding:.9rem 1.1rem;border-radius:12px;font-size:.86rem;font-weight:500;line-height:1.6;border:1px solid transparent}
+.spp-st.load{background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.2);color:#00e5ff}
+.spp-st.ok{background:rgba(16,217,126,.08);border-color:rgba(16,217,126,.2);color:#10d97e}
+.spp-st.err{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.2);color:#f43f5e}
+.spp-info{display:flex;align-items:flex-start;gap:.7rem;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:1rem 1.1rem;font-size:.8rem;color:#86efac;line-height:1.5}
+@keyframes SPBD{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+<div class="spp">
+  <a href="{% url 'admindash' %}" class="spp-back">← Back to Dashboard</a>
+  <div class="spp-eye">Teacher Preferences</div>
+  <h1 class="spp-title">Send <em>Preference</em> Mail</h1>
+  <p class="spp-desc">Enter teacher emails or import from a file. Each teacher gets their own unique form link. Use <strong>Send via Server</strong> for direct SMTP delivery, or open Gmail/Outlook compose windows.</p>
+  <div class="spp-card">
+    <div class="spp-lbl">📂 Import from File (CSV / TXT / PDF)</div>
+    <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
+      <input type="file" id="fi" accept=".csv,.txt,.pdf"/>
+      <div class="dzi">📂</div><div class="dzt">Drop file or <strong>click to browse</strong></div>
+      <div class="dzr" id="dzr"></div>
+    </div>
+  </div>
+  <div class="spp-card">
+    <div class="spp-lbl">✉️ Teacher Email(s)</div>
+    <textarea class="spp-ta" id="ei" placeholder="teacher1@college.edu&#10;teacher2@college.edu&#10;&#10;One per line or comma-separated"></textarea>
+    <div class="fhint">💡 Each teacher gets a personalised form link. When they submit — data shows in View Responses instantly.</div>
+    <div class="spp-btns">
+      <button class="spp-btn btn-smtp" onclick="sendSMTP()">🚀 Send via Server</button>
+      <button class="spp-btn btn-gmail" onclick="sendCompose('gmail')">📧 Gmail</button>
+      <button class="spp-btn btn-ol" onclick="sendCompose('outlook')">📨 Outlook</button>
+    </div>
+    <div class="spp-st" id="spp-st"></div>
+  </div>
+  <div class="spp-info">ℹ️ <span><strong>Send via Server</strong> uses SMTP (set EMAIL_HOST_USER + EMAIL_HOST_PASSWORD in .env). Gmail/Outlook open compose windows — no SMTP needed for those.</span></div>
+</div>
+<script>
+const dz=document.getElementById('dz'),fi=document.getElementById('fi'),dzr=document.getElementById('dzr'),ei=document.getElementById('ei');
+['dragenter','dragover'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.add('ov');}));
+['dragleave','drop'].forEach(e=>dz.addEventListener(e,()=>dz.classList.remove('ov')));
+dz.addEventListener('drop',ev=>{ev.preventDefault();if(ev.dataTransfer.files[0])uploadFile(ev.dataTransfer.files[0]);});
+fi.addEventListener('change',()=>{if(fi.files[0])uploadFile(fi.files[0]);});
+async function uploadFile(f){dzr.className='dzr';dzr.textContent='⏳ Parsing…';const fd=new FormData();fd.append('file',f);
+  try{const r=await fetch('/api/pref/parse-emails/',{method:'POST',body:fd});const d=await r.json();
+    if(d.ok&&d.emails.length){ei.value=d.emails.join('\n');dzr.className='dzr dzr-ok';dzr.textContent='✅ Found '+d.count+' email(s)';}
+    else{dzr.className='dzr dzr-err';dzr.textContent=d.error||'⚠️ No emails found.';}
+  }catch{dzr.className='dzr dzr-err';dzr.textContent='❌ Upload failed.';}}
+function parseEmails(r){return[...new Set(r.split(/[\n,]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@')&&e.includes('.')))]}
+function buildLink(e){return window.location.origin+'/teacher-pref-form/?email='+encodeURIComponent(e);}
+async function sendSMTP(){
+  const emails=parseEmails(ei.value);if(!emails.length){alert('Enter at least one email.');return;}
+  const bar=document.getElementById('spp-st');bar.className='spp-st load';bar.style.display='block';
+  bar.innerHTML='📤 Sending to <strong>'+emails.length+'</strong> teacher(s)…';
+  try{const r=await fetch('/api/pref/send-links/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails})});
+    const d=await r.json();
+    if(d.ok){bar.className='spp-st ok';bar.innerHTML='✅ Sent to <strong>'+d.sent.length+'</strong>!'+(d.failed.length?'<br><span style="color:#fca5a5">Failed: '+d.failed.join(', ')+'</span>':'');ei.value='';}
+    else{bar.className='spp-st err';bar.innerHTML='❌ '+d.error;}
+  }catch{bar.className='spp-st err';bar.innerHTML='❌ Server error. Check .env EMAIL settings.';}
+  setTimeout(()=>{bar.style.display='none';},9000);}
+function openGmail(e,l){const s=encodeURIComponent('SmartScheduler — Fill Your Teaching Preferences');const b=encodeURIComponent('Dear Teacher,\n\nFill preferences:\n'+l+'\n\nThank you,\nSmartScheduler');window.open('https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(e)+'&su='+s+'&body='+b,'_blank');}
+function openMailto(e,l){const s=encodeURIComponent('SmartScheduler — Fill Your Teaching Preferences');const b=encodeURIComponent('Dear Teacher,\n\nFill preferences:\n'+l+'\n\nThank you,\nSmartScheduler');const a=document.createElement('a');a.href='mailto:'+e+'?subject='+s+'&body='+b;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);}
+function sendCompose(c){
+  const emails=parseEmails(ei.value);if(!emails.length){alert('Enter at least one email.');return;}
+  const bar=document.getElementById('spp-st');bar.className='spp-st load';bar.style.display='block';
+  bar.innerHTML='📬 Opening compose for <strong>'+emails.length+'</strong> teacher(s)…';
+  const delay=c==='gmail'?900:700;
+  emails.forEach((e,i)=>{const l=buildLink(e);setTimeout(()=>{if(c==='gmail')openGmail(e,l);else openMailto(e,l);},i*delay);});
+  setTimeout(()=>{bar.className='spp-st ok';bar.innerHTML='✅ Compose opened for <strong>'+emails.length+'</strong>! Hit Send in each tab.';ei.value='';},emails.length*delay+300);
+  setTimeout(()=>{bar.style.display='none';},emails.length*delay+8000);}
+</script>
+{% endblock %}

@@ -1,214 +1,669 @@
-{% load static %}
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head runat="server">
-    <title>TTGS | Help</title>
-    <meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-	<script src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+{% extends "base.html" %}
 
-    <style>
-        body {
-            padding-top: 3rem;
-            padding-bottom: 3rem;
-            background-color: black;
-            font-family: 'Poppins', sans-serif;
-            overflow-x: hidden;
-            color: white;
-        }
+{% block title %}SmartScheduler | Help{% endblock %}
 
-        /* ✅ Navbar */
-        .navbar {
-            background-color: black !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        .nav-item:hover{
-            background-color: #7a3cff;
-            border-radius: 20px;
-            box-shadow: 0 0 15px #7a3cff;
-        }
-        .navbar-nav .active .nav-link {
-            background: #7a3cff; 
-            color: #fff !important;
-            border-radius: 25px;
-            box-shadow: 0 0 15px #7a3cff;
-        }
+{% block content %}
+<style>
+  .help-page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 52px 20px 84px;
+    color: #e5e7eb;
+  }
 
-        .pricing-header {
-            max-width: 700px;
-        }
+  .help-hero {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
+    gap: 26px;
+    padding: 34px;
+    border-radius: 32px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background:
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.18), transparent 34%),
+      rgba(8, 15, 35, 0.9);
+    box-shadow: 0 24px 70px rgba(2, 6, 23, 0.42);
+  }
 
-        /* ✅ Timeline */
-        .timeline {
-            position: relative;
-            max-width: 800px;
-            margin: auto;
-            padding: 40px 0;
-            z-index: 2;
-        }
+  .help-hero::after {
+    content: "";
+    position: absolute;
+    inset: auto -70px -90px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.18), transparent 70%);
+    filter: blur(18px);
+    pointer-events: none;
+  }
 
-        .timeline::after {
-            content: '';
-            position: absolute;
-            width: 6px;
-            background: #7a3cff;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            margin-left: -3px;
-            border-radius: 3px;
-        }
+  .help-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(129, 140, 248, 0.35);
+    background: rgba(79, 70, 229, 0.14);
+    color: #c4b5fd;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
 
-        .timeline-item {
-            padding: 20px 30px;
-            position: relative;
-            background: #111;
-            border-radius: 10px;
-            width: 45%;
-            margin-bottom: 40px;
-            box-shadow: 0 0 15px rgba(122,60,255,0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
+  .help-title {
+    margin: 0 0 14px;
+    font-size: clamp(34px, 5vw, 56px);
+    line-height: 1.04;
+    font-weight: 700;
+  }
 
-        .timeline-item:hover {
-            transform: scale(1.08);
-            box-shadow: 0 0 30px rgba(122,60,255,0.9);
-        }
+  .help-title span {
+    background: linear-gradient(120deg, #f8fafc, #93c5fd, #c4b5fd);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 
-        .timeline-item.left { left: 0; }
-        .timeline-item.right { left: 55%; }
+  .help-subtitle {
+    max-width: 620px;
+    margin: 0 0 24px;
+    color: #aebacf;
+    font-size: 15px;
+    line-height: 1.8;
+  }
 
-        .timeline-item::before {
-            content: attr(data-step);
-            position: absolute;
-            top: 15px;
-            width: 40px;
-            height: 40px;
-            background: #7a3cff;
-            border-radius: 50%;
-            color: #fff;
-            text-align: center;
-            line-height: 40px;
-            font-weight: bold;
-            box-shadow: 0 0 10px #7a3cff;
-        }
+  .help-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
 
-        .timeline-item.left::before { right: -60px; }
-        .timeline-item.right::before { left: -60px; }
+  .help-chip {
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(15, 23, 42, 0.82);
+    color: #dbe5f4;
+    font-size: 13px;
+  }
 
-        .timeline-item h4 {
-            color: #7a3cff;
-            margin-bottom: 10px;
-        }
+  .help-preview {
+    position: relative;
+    align-self: stretch;
+    padding: 22px;
+    border-radius: 26px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(14px);
+  }
 
-        .timeline-item i {
-            font-size: 30px;
-            margin-right: 10px;
-            color: #7a3cff;
-        }
+  .help-preview-label {
+    margin-bottom: 12px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
 
-        /* ✅ Bubbles */
-        .bubble {
-            position: absolute;
-            bottom: -100px;
-            background: linear-gradient(90deg,rgba(42, 123, 155, 1) 0%, rgba(204, 84, 41, 1) 58%, rgba(237, 221, 83, 1) 100%);
-            border-radius: 50%;
-            animation: rise 20s infinite ease-in;
-            z-index: 1;
-        }
+  .help-preview-card {
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px solid rgba(129, 140, 248, 0.2);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.68));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
 
-        .bubble:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-duration: 15s; }
-        .bubble:nth-child(2) { width: 25px; height: 25px; left: 30%; animation-duration: 18s; animation-delay: 2s; }
-        .bubble:nth-child(3) { width: 60px; height: 60px; left: 50%; animation-duration: 22s; animation-delay: 3s; }
-        .bubble:nth-child(4) { width: 20px; height: 20px; left: 70%; animation-duration: 17s; animation-delay: 1s; }
-        .bubble:nth-child(5) { width: 50px; height: 50px; left: 90%; animation-duration: 25s; animation-delay: 4s; }
+  .preview-stat {
+    display: grid;
+    gap: 12px;
+  }
 
-        @keyframes rise {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            50% { opacity: 0.8; }
-            100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
-        }
+  .preview-stat-item {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+  }
 
-    </style>
-</head>
-<body>
-    <form id="form1">
-        <header>
-			<nav class="navbar navbar-expand-md navbar-dark fixed-top">
-				<a class="navbar-brand" href="#"><b>Scheduler.IO</b></a>
-				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-				<div class="collapse navbar-collapse" id="navbarCollapse">
-					<ul class="navbar-nav ml-auto">
-						<li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-						<li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About Us</a></li>
-						<li class="nav-item active"><a class="nav-link" href="#">Help</a></li>
-						<li class="nav-item"><a class="nav-link" href="#">Contact Us</a></li>
-						<li class="nav-item"><a class="nav-link" href="#">Login</a></li>
-						<li class="nav-item"><a class="nav-link" href="#">Sign Up</a></li>
-					</ul>
-				</div>
-			</nav>
-		</header>
+  .preview-stat-item strong {
+    font-size: 16px;
+    color: #f8fafc;
+  }
 
-        <!-- ✅ Bubbles -->
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
+  .preview-stat-item span {
+    font-size: 13px;
+    color: #9fb0c5;
+  }
 
-        <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-            <h1 class="display-4" style="color: #7a3cff;">How to use Scheduler?</h1>
-            <p class="lead" style="color: white;">Follow these steps to generate your timetable easily.</p>
+  .help-section {
+    margin-top: 38px;
+  }
+
+  .help-section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .help-kicker {
+    margin-bottom: 8px;
+    color: #93c5fd;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .help-section-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+  }
+
+  .help-section-copy {
+    max-width: 650px;
+    margin: 8px 0 0;
+    color: #98a7bb;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .quick-card,
+  .faq-card,
+  .support-panel {
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(9, 14, 30, 0.84);
+    box-shadow: 0 18px 48px rgba(2, 6, 23, 0.22);
+  }
+
+  .quick-card {
+    padding: 18px;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+  }
+
+  .quick-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(129, 140, 248, 0.35);
+    box-shadow: 0 24px 56px rgba(15, 23, 42, 0.44);
+  }
+
+  .quick-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.26));
+    color: #dbeafe;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .quick-card h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    color: #f8fafc;
+  }
+
+  .quick-card p {
+    margin: 0;
+    color: #97a6ba;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .workflow-card {
+    position: relative;
+    padding: 22px 22px 22px 76px;
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background:
+      radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 26%),
+      rgba(9, 14, 30, 0.88);
+  }
+
+  .workflow-card::before {
+    content: attr(data-step);
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    box-shadow: 0 12px 28px rgba(59, 130, 246, 0.32);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .workflow-card h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: #f8fafc;
+  }
+
+  .workflow-card p {
+    margin: 0;
+    color: #9fb0c5;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .workflow-note {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    background: linear-gradient(90deg, rgba(14, 165, 233, 0.12), rgba(34, 197, 94, 0.1));
+    color: #d9f7e7;
+    font-size: 14px;
+  }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .faq-card {
+    padding: 18px 18px 20px;
+  }
+
+  .faq-card h3 {
+    margin: 0 0 10px;
+    font-size: 17px;
+    color: #f8fafc;
+  }
+
+  .faq-card p {
+    margin: 0;
+    color: #98a7bb;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .support-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+    gap: 18px;
+    padding: 24px;
+    background:
+      radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.12), transparent 30%),
+      rgba(8, 14, 28, 0.92);
+  }
+
+  .support-panel h3 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    color: #f8fafc;
+  }
+
+  .support-panel p {
+    margin: 0;
+    color: #aebacf;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .support-actions {
+    display: grid;
+    gap: 12px;
+  }
+
+  .support-link {
+    display: block;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f8fafc;
+    text-decoration: none;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .support-link:hover {
+    transform: translateY(-2px);
+    border-color: rgba(129, 140, 248, 0.34);
+    background: rgba(99, 102, 241, 0.1);
+  }
+
+  .support-link strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+
+  .support-link span {
+    color: #9fb0c5;
+    font-size: 13px;
+  }
+
+  html.light .help-page {
+    color: #1e293b;
+  }
+
+  html.light .help-hero,
+  html.light .help-preview,
+  html.light .help-preview-card,
+  html.light .quick-card,
+  html.light .workflow-card,
+  html.light .faq-card,
+  html.light .support-panel {
+    background:
+      radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 30%),
+      #ffffff;
+    border-color: rgba(100, 116, 139, 0.16);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+  }
+
+  html.light .help-badge {
+    background: rgba(99, 102, 241, 0.08);
+    color: #5b21b6;
+    border-color: rgba(99, 102, 241, 0.14);
+  }
+
+  html.light .help-title,
+  html.light .help-section-title,
+  html.light .quick-card h3,
+  html.light .workflow-card h3,
+  html.light .faq-card h3,
+  html.light .support-panel h3,
+  html.light .preview-stat-item strong {
+    color: #0f172a;
+  }
+
+  html.light .help-title span {
+    background: linear-gradient(120deg, #0f172a, #1d4ed8, #7c3aed);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  html.light .help-subtitle,
+  html.light .help-section-copy,
+  html.light .quick-card p,
+  html.light .workflow-card p,
+  html.light .faq-card p,
+  html.light .support-panel p,
+  html.light .preview-stat-item span,
+  html.light .support-link span {
+    color: #64748b;
+  }
+
+  html.light .help-chip {
+    background: #f8fafc;
+    color: #334155;
+    border-color: rgba(100, 116, 139, 0.16);
+  }
+
+  html.light .support-link {
+    background: #f8fafc;
+    border-color: rgba(100, 116, 139, 0.14);
+    color: #0f172a;
+  }
+
+  @media (max-width: 1080px) {
+    .quick-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 900px) {
+    .help-page {
+      padding-top: 34px;
+    }
+
+    .help-hero,
+    .support-panel,
+    .faq-grid,
+    .workflow-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .help-page {
+      padding-left: 14px;
+      padding-right: 14px;
+      padding-bottom: 70px;
+    }
+
+    .help-hero,
+    .support-panel {
+      padding: 22px 18px;
+      border-radius: 26px;
+    }
+
+    .help-section-head {
+      align-items: start;
+      flex-direction: column;
+    }
+
+    .quick-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .workflow-card {
+      padding: 78px 18px 18px;
+    }
+
+    .workflow-card::before {
+      left: 18px;
+      top: 18px;
+    }
+  }
+</style>
+
+<div class="help-page">
+  <section class="help-hero">
+    <div>
+      <div class="help-badge">Help Center</div>
+      <h1 class="help-title">Everything you need to <span>set up SmartScheduler fast</span></h1>
+      <p class="help-subtitle">
+        This guide walks you through the normal workflow on your website, from adding academic data to generating and saving final timetables without confusion.
+      </p>
+      <div class="help-chip-row">
+        <div class="help-chip">Add departments, rooms, timings and sections</div>
+        <div class="help-chip">Map teachers and courses correctly</div>
+        <div class="help-chip">Generate, review and download timetables</div>
+      </div>
+    </div>
+
+    <div class="help-preview">
+      <div class="help-preview-label">Recommended order</div>
+      <div class="help-preview-card">
+        <div class="preview-stat">
+          <div class="preview-stat-item">
+            <strong>1. Set up core data</strong>
+            <span>Departments, rooms, timings and sections should be added first.</span>
+          </div>
+          <div class="preview-stat-item">
+            <strong>2. Connect teaching data</strong>
+            <span>Add courses, instructors and the required mappings.</span>
+          </div>
+          <div class="preview-stat-item">
+            <strong>3. Generate confidently</strong>
+            <span>Review the result, edit if needed, then save or download.</span>
+          </div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <!-- ✅ Timeline -->
-        <div class="timeline">
-            <div class="timeline-item left" data-step="1">
-                <h4><i class="fas fa-sign-in-alt"></i> Login</h4>
-                <p>Log into the system using your account to start generating the timetable.</p>
-            </div>
-            <div class="timeline-item right" data-step="2">
-                <h4><i class="fas fa-book"></i> Courses</h4>
-                <p>Input the information for the Courses.</p>
-            </div>
-            <div class="timeline-item left" data-step="3">
-                <h4><i class="fas fa-chalkboard-teacher"></i> Teachers</h4>
-                <p>Input the information for the Teachers.</p>
-            </div>
-            <div class="timeline-item right" data-step="4">
-                <h4><i class="fas fa-door-open"></i> Rooms</h4>
-                <p>Input the information for the Rooms.</p>
-            </div>
-            <div class="timeline-item left" data-step="5">
-                <h4><i class="far fa-clock"></i> Timings</h4>
-                <p>Input the information for the Timings.</p>
-            </div>
-            <div class="timeline-item right" data-step="6">
-                <h4><i class="fas fa-building"></i> Departments</h4>
-                <p>Input the information for the Departments.</p>
-            </div>
-            <div class="timeline-item left" data-step="7">
-                <h4><i class="fas fa-users"></i> Sections</h4>
-                <p>Input the information for the Sections.</p>
-            </div>
-            <div class="timeline-item right" data-step="8">
-                <h4><i class="fas fa-cogs"></i> Generate</h4>
-                <p>Click on Home and then click on "Generate Timetable".</p>
-            </div>
-            <div class="timeline-item left" data-step="9">
-                <h4><i class="fas fa-file-pdf"></i> Download</h4>
-                <p>The Timetable can then be downloaded as a PDF Document.</p>
-            </div>
-        </div>
-    </form>
-<script src="{% static 'chatbot.js' %}"></script>
-</body>
-</html>
+  <section class="help-section">
+    <div class="help-section-head">
+      <div>
+        <div class="help-kicker">Quick Start</div>
+        <h2 class="help-section-title">What to do first</h2>
+        <p class="help-section-copy">
+          If you are opening the system for the first time, these four actions will help you avoid most timetable generation issues later.
+        </p>
+      </div>
+    </div>
+
+    <div class="quick-grid">
+      <article class="quick-card">
+        <div class="quick-step">01</div>
+        <h3>Choose your role</h3>
+        <p>Start from the homepage and enter the generator flow so you can access the dashboard and management pages.</p>
+      </article>
+
+      <article class="quick-card">
+        <div class="quick-step">02</div>
+        <h3>Fill the master data</h3>
+        <p>Add departments, rooms and timings before you begin assigning courses and teachers.</p>
+      </article>
+
+      <article class="quick-card">
+        <div class="quick-step">03</div>
+        <h3>Create academic mappings</h3>
+        <p>Link section-course and teacher-course data so the generator understands who teaches what.</p>
+      </article>
+
+      <article class="quick-card">
+        <div class="quick-step">04</div>
+        <h3>Generate and verify</h3>
+        <p>Open the generate screen, review the result carefully, then save or download the timetable.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="help-section">
+    <div class="help-section-head">
+      <div>
+        <div class="help-kicker">Workflow</div>
+        <h2 class="help-section-title">Step-by-step help</h2>
+        <p class="help-section-copy">
+          Follow this order for the smoothest experience inside SmartScheduler.
+        </p>
+      </div>
+    </div>
+
+    <div class="workflow-grid">
+      <article class="workflow-card" data-step="1">
+        <h3>Open the dashboard</h3>
+        <p>After selecting your role, move to the dashboard where all setup pages and the generation tools are available.</p>
+      </article>
+
+      <article class="workflow-card" data-step="2">
+        <h3>Add departments and sections</h3>
+        <p>Create your academic structure first so each course and section can be assigned to the correct department.</p>
+      </article>
+
+      <article class="workflow-card" data-step="3">
+        <h3>Add courses and instructors</h3>
+        <p>Enter subject data, teacher information and any workload details needed for realistic scheduling.</p>
+      </article>
+
+      <article class="workflow-card" data-step="4">
+        <h3>Add rooms and time slots</h3>
+        <p>Make sure classrooms, labs and meeting times are complete because the generator depends on this availability data.</p>
+      </article>
+
+      <article class="workflow-card" data-step="5">
+        <h3>Map courses properly</h3>
+        <p>Use the mapping pages to connect teachers with courses and sections with their allowed courses.</p>
+      </article>
+
+      <article class="workflow-card" data-step="6">
+        <h3>Generate, save and export</h3>
+        <p>Run timetable generation, adjust any slots if needed, then save the final version and download the PDF.</p>
+      </article>
+    </div>
+
+    <div class="workflow-note">
+      Tip: if generation looks incomplete, the most common reason is missing mapping data, missing rooms, or missing meeting times.
+    </div>
+  </section>
+
+  <section class="help-section">
+    <div class="help-section-head">
+      <div>
+        <div class="help-kicker">FAQ</div>
+        <h2 class="help-section-title">Common questions</h2>
+        <p class="help-section-copy">
+          A few quick answers for issues users usually face while preparing their timetable data.
+        </p>
+      </div>
+    </div>
+
+    <div class="faq-grid">
+      <article class="faq-card">
+        <h3>Why is my timetable not generating properly?</h3>
+        <p>Usually because one or more required inputs are missing, such as section-course mapping, teacher-course mapping, rooms, or timings.</p>
+      </article>
+
+      <article class="faq-card">
+        <h3>Can I upload data in bulk?</h3>
+        <p>Yes. Your dashboard already includes CSV upload flows on multiple setup pages, which is the fastest way to prepare large datasets.</p>
+      </article>
+
+      <article class="faq-card">
+        <h3>Can I edit a generated timetable later?</h3>
+        <p>Yes. After generation you can review saved timetables, update slots, add slots, or remove them before downloading the final PDF.</p>
+      </article>
+
+      <article class="faq-card">
+        <h3>What should I enter first in a new account?</h3>
+        <p>Begin with departments, timings, rooms and sections. Once those are ready, add courses and instructors, then complete the mappings.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="help-section">
+    <div class="support-panel">
+      <div>
+        <div class="help-kicker">Need More Help</div>
+        <h3>Reach the right page quickly</h3>
+        <p>
+          If you want direct assistance, you can continue from the contact page, review your services from the homepage, or go back into the generator flow from the main website.
+        </p>
+      </div>
+
+      <div class="support-actions">
+        <a class="support-link" href="{% url 'contact' %}">
+          <strong>Contact Support</strong>
+          <span>Send your query through the website contact page.</span>
+        </a>
+        <a class="support-link" href="{% url 'home' %}#features">
+          <strong>View Services</strong>
+          <span>See the product sections and feature highlights.</span>
+        </a>
+        <a class="support-link" href="{% url 'role' %}">
+          <strong>Open Generator</strong>
+          <span>Jump back into the scheduling workflow.</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock content %}

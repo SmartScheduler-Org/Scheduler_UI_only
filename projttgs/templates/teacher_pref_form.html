@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<script>if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light');</script>
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SmartScheduler | Teaching Preferences</title>
+<link rel="stylesheet" href="{% static 'base.css' %}">
+<link rel="stylesheet" href="{% static 'homepage.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{box-sizing:border-box}body{min-height:100vh;font-family:'Poppins',sans-serif;background:#040818;color:#e2e8f0}
+.fp{max-width:640px;margin:0 auto;padding:2.5rem 1rem 5rem;position:relative;z-index:1}
+.fplogo{display:flex;align-items:center;gap:.6rem;text-decoration:none;margin-bottom:2.2rem}
+.fpli{width:40px;height:40px;background:rgba(4,8,24,.85);border:1px solid rgba(0,200,255,.38);border-radius:10px;display:grid;place-items:center;filter:drop-shadow(0 0 8px rgba(0,229,255,.5))}
+.fpbrand{font-size:1.05rem;font-weight:700}.fpbrand .s1{color:#a3e635}.fpbrand .s2{color:#00e5ff}
+.fpeye{display:inline-flex;align-items:center;gap:.5rem;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#00e5ff;margin-bottom:.9rem;padding:.28rem .8rem;border:1px solid rgba(0,229,255,.25);border-radius:20px;background:rgba(0,229,255,.07)}
+.fpeye::before{content:'';width:6px;height:6px;border-radius:50%;background:#00e5ff;animation:FPBD 2s infinite}
+.fptitle{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.4rem}
+.fptitle em{font-style:normal;color:#00e5ff}
+.fpdesc{font-size:.88rem;color:rgba(148,163,184,.8);line-height:1.6;margin-bottom:2rem}
+.fpcard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:1.8rem;margin-bottom:1.2rem;transition:box-shadow .3s}
+.fpcard:hover{box-shadow:0 8px 30px rgba(0,200,255,.1)}
+.fpst{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(148,163,184,.7);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.fpg{margin-bottom:1.2rem}.fpg:last-child{margin-bottom:0}
+label.fl{display:block;font-size:.8rem;font-weight:600;color:#e2e8f0;margin-bottom:.4rem}
+.fpi,.fps{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.75rem 1rem;font-family:'Poppins',sans-serif;font-size:.9rem;color:#e2e8f0;outline:none;transition:border-color .2s}
+.fpi::placeholder{color:rgba(148,163,184,.38)}.fpi:focus,.fps:focus{border-color:rgba(0,229,255,.55);background:rgba(0,229,255,.04)}
+.fps option{background:#0d1526}
+.cbg{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:.55rem}
+.cbi{display:flex;align-items:center;gap:.55rem;padding:.6rem .8rem;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;transition:border-color .2s,background .2s;font-size:.82rem;color:#e2e8f0;user-select:none}
+.cbi:hover{border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.05)}
+.cbi input[type=checkbox]{width:15px;height:15px;accent-color:#00e5ff;cursor:pointer;flex-shrink:0}
+.cbi.sel{border-color:rgba(0,229,255,.55);background:rgba(0,229,255,.1)}
+.shjnt{font-size:.73rem;color:rgba(148,163,184,.7);margin-top:.45rem}
+.fpsub{width:100%;padding:1rem;border-radius:13px;border:none;background:linear-gradient(135deg,#00e5ff,#14b8a6 52%,#10d97e);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;transition:transform .2s,box-shadow .2s;box-shadow:0 0 20px rgba(0,229,255,.3)}
+.fpsub:hover{transform:translateY(-2px);box-shadow:0 0 35px rgba(0,229,255,.5)}.fpsub:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.fperr{background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.2);border-radius:10px;padding:.9rem 1rem;margin-bottom:1rem;font-size:.84rem;color:#f87171;line-height:1.6}
+.sucsc{text-align:center;padding:3.5rem 1rem}.sucsi{font-size:4rem;margin-bottom:1rem}.suct{font-size:1.8rem;font-weight:800;color:#10d97e;margin-bottom:.5rem}.sucd{color:rgba(148,163,184,.8);line-height:1.6}
+@keyframes FPBD{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
+<div class="fp">
+  <a href="/" class="fplogo">
+    <div class="fpli">
+      <svg viewBox="0 0 200 200" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="FPLG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient></defs>
+        <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#FPLG)"/>
+        <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="#0070ff" opacity="0.95"/>
+        <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="#00c8ff" opacity="0.9"/>
+        <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
+      </svg>
+    </div>
+    <div class="fpbrand"><span class="s1">Smart</span><span class="s2">Scheduler</span></div>
+  </a>
+  <div class="sucsc" id="suc" style="display:none"><div class="sucsi">🎉</div><div class="suct">Preferences Submitted!</div><p class="sucd">Thank you. Your preferences have been saved.<br>A confirmation has been sent to your email.</p></div>
+  <div id="fw">
+    <div class="fpeye">Teaching Preferences</div>
+    <h1 class="fptitle">Fill Your <em>Preferences</em></h1>
+    <p class="fpdesc">Help us assign the best schedule for the upcoming semester.</p>
+    <div class="fperr" id="fperr" style="display:none"></div>
+    <div class="fpcard">
+      <div class="fpst"><i class="fas fa-user"></i>&nbsp;Personal Details</div>
+      <div class="fpg"><label class="fl">Full Name *</label><input class="fpi" id="fn" placeholder="e.g. Dr. Priya Sharma" type="text"/></div>
+      <div class="fpg"><label class="fl">Email Address *</label><input class="fpi" id="fe" placeholder="yourname@college.edu" type="email"/></div>
+      <div class="fpg"><label class="fl">Designation *</label>
+        <select class="fps" id="fd"><option value="">-- Select --</option><option>Professor</option><option>Associate Professor</option><option>Assistant Professor</option></select>
+      </div>
+    </div>
+    <div class="fpcard">
+      <div class="fpst"><i class="fas fa-book"></i>&nbsp;Subject Preferences (max 3)</div>
+      <div class="cbg" id="sg">
+        <label class="cbi"><input type="checkbox" name="s" value="Mathematics"> Mathematics</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Physics"> Physics</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Chemistry"> Chemistry</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Computer Science"> Computer Science</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Electronics"> Electronics</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Electrical Engineering"> Electrical Engg</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Mechanical Engineering"> Mechanical Engg</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Civil Engineering"> Civil Engg</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Data Structures"> Data Structures</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Algorithms"> Algorithms</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Operating Systems"> Operating Systems</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Database Management"> Database Mgmt</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Computer Networks"> Computer Networks</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Software Engineering"> Software Engg</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Artificial Intelligence"> AI</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Machine Learning"> Machine Learning</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Web Development"> Web Development</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Cloud Computing"> Cloud Computing</label>
+        <label class="cbi"><input type="checkbox" name="s" value="Cybersecurity"> Cybersecurity</label>
+        <label class="cbi"><input type="checkbox" name="s" value="English Communication"> English Comm</label>
+      </div>
+      <div class="shjnt">Max 3 subjects. <span id="sc">0</span>/3 selected.</div>
+    </div>
+    <div class="fpcard">
+      <div class="fpst"><i class="fas fa-layer-group"></i>&nbsp;Class Preferences</div>
+      <div class="cbg">
+        <label class="cbi"><input type="checkbox" name="c" value="CS-A"> CS-A</label><label class="cbi"><input type="checkbox" name="c" value="CS-B"> CS-B</label><label class="cbi"><input type="checkbox" name="c" value="CS-C"> CS-C</label>
+        <label class="cbi"><input type="checkbox" name="c" value="IT-A"> IT-A</label><label class="cbi"><input type="checkbox" name="c" value="IT-B"> IT-B</label>
+        <label class="cbi"><input type="checkbox" name="c" value="EC-A"> EC-A</label><label class="cbi"><input type="checkbox" name="c" value="EC-B"> EC-B</label>
+        <label class="cbi"><input type="checkbox" name="c" value="ME-A"> ME-A</label><label class="cbi"><input type="checkbox" name="c" value="ME-B"> ME-B</label>
+        <label class="cbi"><input type="checkbox" name="c" value="CE-A"> CE-A</label><label class="cbi"><input type="checkbox" name="c" value="EE-A"> EE-A</label>
+      </div>
+    </div>
+    <div class="fpcard">
+      <div class="fpst"><i class="fas fa-calendar"></i>&nbsp;Year of Study</div>
+      <div class="cbg">
+        <label class="cbi"><input type="checkbox" name="y" value="1st Year"> 1st Year</label>
+        <label class="cbi"><input type="checkbox" name="y" value="2nd Year"> 2nd Year</label>
+        <label class="cbi"><input type="checkbox" name="y" value="3rd Year"> 3rd Year</label>
+        <label class="cbi"><input type="checkbox" name="y" value="4th Year"> 4th Year</label>
+      </div>
+    </div>
+    <button class="fpsub" id="fsub" onclick="submitForm()"><i class="fas fa-paper-plane"></i>&nbsp; Submit Preferences</button>
+  </div>
+</div>
+<script>
+const pre=new URLSearchParams(window.location.search).get('email');if(pre)document.getElementById('fe').value=decodeURIComponent(pre);
+const sg=document.getElementById('sg');
+sg.addEventListener('change',function(e){if(e.target.name!=='s')return;const chk=[...sg.querySelectorAll('input[name=s]:checked')];document.getElementById('sc').textContent=chk.length;sg.querySelectorAll('input[name=s]').forEach(cb=>cb.disabled=chk.length>=3&&!cb.checked);sg.querySelectorAll('.cbi').forEach(li=>li.classList.toggle('sel',li.querySelector('input').checked));});
+document.querySelectorAll('.cbi input').forEach(cb=>cb.addEventListener('change',()=>cb.closest('.cbi').classList.toggle('sel',cb.checked)));
+async function submitForm(){
+  const name=document.getElementById('fn').value.trim();const email=document.getElementById('fe').value.trim();const designation=document.getElementById('fd').value;
+  const subjects=[...document.querySelectorAll('input[name=s]:checked')].map(c=>c.value);const classes=[...document.querySelectorAll('input[name=c]:checked')].map(c=>c.value);const years=[...document.querySelectorAll('input[name=y]:checked')].map(c=>c.value);
+  const eb=document.getElementById('fperr');eb.style.display='none';const btn=document.getElementById('fsub');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>&nbsp; Submitting…';
+  try{const res=await fetch('/api/pref/submit/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,designation,subjects,classes,years})});const d=await res.json();
+    if(d.ok){document.getElementById('fw').style.display='none';document.getElementById('suc').style.display='block';}
+    else{eb.innerHTML=(d.errors||[d.error||'Submission failed.']).join('<br>');eb.style.display='block';btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i>&nbsp; Submit Preferences';eb.scrollIntoView({behavior:'smooth',block:'center'});}
+  }catch{eb.innerHTML='Network error. Try again.';eb.style.display='block';btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i>&nbsp; Submit Preferences';}}
+</script>
+</body>
+</html>

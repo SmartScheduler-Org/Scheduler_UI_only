@@ -1,230 +1,139 @@
 {% extends "base.html" %}
 {% load socialaccount %}
 {% block content %}
-
-<div class="login-page">
-
-  <canvas id="stars"></canvas>
-  <canvas id="wave-canvas"></canvas>
-
-  <div class="login-blob login-blob-1"></div>
-  <div class="login-blob login-blob-2"></div>
-
-  <div class="login-box">
-    <div class="login-split">
-
-      <!-- LEFT IMAGE PANEL WITH AUTOTYPE ON IMAGE -->
-      <div class="login-left">
-        <div class="image-overlay">
-          <p class="auto-text"></p>
+<canvas id="lcv"></canvas>
+<div class="lwrap">
+  <div class="lo lo1"></div><div class="lo lo2"></div><div class="lo lo3"></div>
+  <div class="lgrid"></div>
+  <div class="lbox" id="lbox">
+    <div class="lbord"></div>
+    <div class="lsparks" id="lsparks"></div>
+    <div class="lsplit">
+      <!-- LEFT -->
+      <div class="lleft">
+        <img class="limg" src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=900&auto=format&fit=crop&q=80" alt=""/>
+        <div class="llov">
+          <div class="llogo">
+            <div class="llogoic" style="filter:drop-shadow(0 0 10px rgba(0,229,255,.55))">
+              <svg viewBox="0 0 200 200" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="LLG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="LLG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="LLG3" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs>
+                <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#LLG1)"/>
+                <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#LLG2)" opacity="0.95"/>
+                <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#LLG3)" opacity="0.9"/>
+                <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
+                <path d="M62 100 Q62 158 100 168 Q138 158 138 100" fill="none" stroke="url(#LLG3)" stroke-width="2.5" opacity="0.45"/>
+              </svg>
+            </div>
+            <span style="font-size:.9rem;font-weight:700"><span style="color:#a3e635">Smart</span><span style="color:#00e5ff">Scheduler</span></span>
+          </div>
+          <div class="lbadge"><span class="lbd"></span>AI · Schedule Engine</div>
+          <div id="ltyp"><span class="ltc"></span></div>
+          <div class="lstats">
+            <div class="lstat"><div class="lsn">3s</div><div class="lsl">Generation</div></div>
+            <div class="lstat"><div class="lsn">0</div><div class="lsl">Clashes</div></div>
+            <div class="lstat"><div class="lsn">100%</div><div class="lsl">AI-optimized</div></div>
+          </div>
         </div>
-        <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8dGltZSUyMG1hbmFnZW1lbnR8ZW58MHx8MHx8fDA%3D"
-             class="side-image"
-             alt="AI Illustration">
       </div>
-
-      <!-- RIGHT SIDE FORM -->
-      <div class="login-right">
-
-        <h2 class="login-title">Welcome Back 👋</h2>
-        <p class="login-subtitle">Log in to manage your timetable smarter.</p>
-
-        {% if form.errors %}
-        <div class="error-msg">❌ Invalid username or password</div>
-        {% endif %}
-
-        <form action="{% url 'login' %}" method="post" class="form">
-          {% csrf_token %}
-          <p><label>Username</label>
-          <input type="text" name="username" required placeholder="Enter username"></p>
-
-          <p><label>Password</label>
-          <input type="password" name="password" required placeholder="Enter password"></p>
-
-          <input type="hidden" name="next" value="{{ next }}">
-
-          <button type="submit" class="btn">Login</button>
-        </form>
-
-        <div class="or-divider"><span>or</span></div>
-
-        <a href="{% provider_login_url 'google' %}" class="google-btn">
-          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.01 24.01 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-          Sign in with Google
-        </a>
-
-        <div class="links">
-          <a href="{% url 'register' %}">Create Account</a> •
-          <a href="{% url 'password_reset' %}">Forgot Password?</a>
+      <!-- RIGHT -->
+      <div class="lright">
+        <div class="lformlogo">
+          <div style="filter:drop-shadow(0 0 9px rgba(0,229,255,.55))">
+            <svg viewBox="0 0 200 200" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="FLG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="FLG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="FLG3" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs>
+              <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#FLG1)"/>
+              <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#FLG2)" opacity="0.95"/>
+              <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#FLG3)" opacity="0.9"/>
+              <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
+              <path d="M62 100 Q62 158 100 168 Q138 158 138 100" fill="none" stroke="url(#FLG3)" stroke-width="2.5" opacity="0.45"/>
+            </svg>
+          </div>
+          <span style="font-size:.98rem;font-weight:700"><span style="color:#a3e635">Smart</span><span style="color:#00e5ff">Scheduler</span></span>
         </div>
-
+        <h2 class="ltitle">Welcome Back 👋</h2>
+        <p class="lsub">Log in to manage your timetable smarter.</p>
+        {% if form.errors %}<div class="lerr">❌ Invalid username or password.</div>{% endif %}
+        <form action="{% url 'login' %}" method="post">{% csrf_token %}
+          <div class="lfield"><label>Username</label><div class="liw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" name="username" required placeholder="Enter username" autofocus/></div></div>
+          <div class="lfield"><label>Password</label><div class="liw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" name="password" required placeholder="Enter password"/></div></div>
+          <input type="hidden" name="next" value="{{ next }}">
+          <button type="submit" class="lbtn"><span>Sign In</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        </form>
+        <div class="ldiv"><span>or</span></div>
+        <a href="{% provider_login_url 'google' %}" class="lgbtn"><svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.01 24.01 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign in with Google</a>
+        <div class="llinks"><a href="{% url 'register' %}" style="color:#6ee7b7">Create Account</a> &nbsp;·&nbsp; <a href="{% url 'password_reset' %}" style="color:#a5b4fc">Forgot Password?</a></div>
       </div>
     </div>
   </div>
 </div>
-
 <style>
-html, body { width:100%; overflow-x:hidden !important; }
-
-:root { --accent:#6366f1; --accent2:#ec4899; --muted:#9ca3af; }
-
-/* Page Layout */
-.login-page {
-  min-height:calc(100vh - 100px);
-  display:flex; justify-content:center; align-items:center;
-  padding:10px 0 20px 0;
-  position:relative;
-  font-family:"Poppins",sans-serif;
-}
-
-/* Blobs + Stars + Waves same */
-.login-blob { position:absolute; border-radius:999px; filter:blur(60px);
-  opacity:.62; mix-blend-mode:screen; z-index:0;}
-.login-blob-1{width:340px;height:340px;background:#4f46e5;top:-80px;left:-80px;}
-.login-blob-2{width:420px;height:420px;background:#ec4899;bottom:-120px;right:-80px;}
-
-#stars,#wave-canvas{position:fixed; inset:0; width:100vw;height:100vh;pointer-events:none;z-index:0;}
-
-/* CARD */
-.login-box {
-  z-index:2;
-  width:100%; max-width:820px;
-  border-radius:22px;
-  border:1px solid rgba(255,255,255,.2);
-  backdrop-filter:blur(14px);
-  background:rgba(15,23,42,.55);
-  overflow:hidden;
-  animation:pop .7s ease forwards; opacity:0; transform:translateY(20px);
-}
-@keyframes pop {to {opacity:1; transform:translateY(0);}}
-
-/* Split */
-.login-split { display:flex; width:100%; }
-
-/* LEFT IMAGE */
-.login-left {
-  width:45%; position:relative;
-}
-.side-image {
-  width:100%; height:100%; object-fit:cover; display:block;
-  border-radius:22px 0 0 22px;
-}
-
-/* AUTO TYPE ON IMAGE */
-.image-overlay {
-  position:absolute; top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  z-index:5; text-align:center;
-}
-.auto-text {
-  font-size: 26px;
-  font-weight: 700;
-  color: white;          /* main color */
-  -webkit-background-clip: unset;
-  background: none;
-  text-shadow: none;     /* if you don’t want glow */
-}
-
-
-/* FORM SIDE */
-.login-right { width:55%; padding:24px 28px; }
-
-.login-title {
-  font-size:28px; font-weight:700;
-  background:linear-gradient(120deg,#fff,#d5d9ff,#ffc3e8);
-  -webkit-background-clip:text; color:transparent;
-}
-.login-subtitle { font-size:14px; color:var(--muted); margin-bottom:12px; }
-
-/* FORM */
-.form p { margin-bottom:10px; text-align:left; font-size:13px; color:var(--muted); }
-.form label { margin-bottom:3px; display:block; }
-.form input {
-  width:100%; padding:10px 12px;
-  border-radius:10px; font-size:14px; color:white;
-  background:rgba(15,23,42,.9);
-  border:1px solid rgba(148,163,184,.45);
-}
-
-/* BUTTON */
-.btn {
-  width:100%; padding:11px; border-radius:999px;
-  border:none; font-size:16px; font-weight:700;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  cursor:pointer; color:white;
-}
-.btn:hover { transform:translateY(-2px); }
-
-/* OR DIVIDER */
-.or-divider {
-  display:flex; align-items:center; gap:12px;
-  margin:12px 0 10px;
-  color:var(--muted); font-size:13px;
-}
-.or-divider::before, .or-divider::after {
-  content:""; flex:1; height:1px;
-  background:rgba(148,163,184,.35);
-}
-
-/* GOOGLE BUTTON */
-.google-btn {
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  width:100%; padding:10px; border-radius:999px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(148,163,184,.35);
-  color:white; font-size:15px; font-weight:600;
-  text-decoration:none; cursor:pointer;
-  transition: background .2s;
-}
-.google-btn:hover { background:rgba(255,255,255,.15); }
-
-/* LINKS */
-.links { margin-top:12px; font-size:13px; text-align:center; color:var(--muted);}
-.links a {color:#a5b4fc; font-weight:600; }
-
-/* RESPONSIVE */
-@media(max-width:768px){
-  .login-split { flex-direction:column; }
-  .login-left { width:100%; height:230px; }
-  .side-image { border-radius:22px 22px 0 0; }
-  .login-right { width:100%; padding:22px; }
-  .auto-text { font-size:20px; }
-  .login-title { font-size:28px; }
-}
+*{box-sizing:border-box}html,body{width:100%;overflow-x:hidden}
+#lcv{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:0}
+.lwrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:18px 14px;position:relative;font-family:'Poppins',sans-serif;perspective:1200px}
+.lo{position:fixed;border-radius:50%;filter:blur(92px);pointer-events:none;z-index:0}
+.lo1{width:520px;height:520px;background:radial-gradient(circle,rgba(0,200,255,.38),transparent 70%);top:-110px;left:-110px;animation:LOA 17s ease-in-out infinite alternate}
+.lo2{width:580px;height:580px;background:radial-gradient(circle,rgba(168,85,247,.3),transparent 70%);bottom:-150px;right:-120px;animation:LOA 21s ease-in-out infinite alternate-reverse}
+.lo3{width:390px;height:390px;background:radial-gradient(circle,rgba(16,185,129,.2),transparent 70%);top:33%;right:16%;animation:LOA 14s ease-in-out infinite alternate}
+@keyframes LOA{to{transform:translate(60px,50px) scale(1.18)}}
+.lgrid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(0,200,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.055) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 28%,transparent 100%)}
+.lbox{position:relative;z-index:10;width:100%;max-width:900px;border-radius:30px;overflow:hidden;background:rgba(4,8,24,.74);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);box-shadow:0 32px 85px rgba(0,0,0,.52),0 0 0 1px rgba(255,255,255,.05) inset;animation:LBIN 1s cubic-bezier(.22,1,.36,1) both;opacity:0;transform:translateY(58px) rotateX(8deg);transform-style:preserve-3d}
+@keyframes LBIN{to{opacity:1;transform:translateY(0) rotateX(0)}}
+.lbord{position:absolute;inset:-1px;border-radius:31px;z-index:0;pointer-events:none;background:conic-gradient(from var(--la,0deg),#00e5ff,#6366f1,#ec4899,#00c8ff,#00e5ff);opacity:.42;filter:blur(4px);animation:LBSP 6s linear infinite;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1.5px}
+@property --la{syntax:'<angle>';initial-value:0deg;inherits:false}@keyframes LBSP{to{--la:360deg}}
+.lsparks{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;border-radius:30px}
+.lsp{position:absolute;border-radius:50%;animation:LSPU linear infinite;opacity:0}
+@keyframes LSPU{0%{transform:translateY(100%) scale(0);opacity:0}10%{opacity:.75}90%{opacity:.3}100%{transform:translateY(-120%) scale(1);opacity:0}}
+.lsplit{display:flex;width:100%;position:relative;z-index:1}
+.lleft{width:44%;position:relative;overflow:hidden;flex-shrink:0}
+.limg{width:100%;height:100%;object-fit:cover;display:block;border-radius:30px 0 0 30px;filter:brightness(.7) saturate(1.3);animation:LIMGP 22s ease-in-out infinite alternate}
+@keyframes LIMGP{from{transform:scale(1.05)}to{transform:scale(1.14) translateX(8px)}}
+.llov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:1.8rem;background:linear-gradient(to top,rgba(3,6,18,.94) 0%,rgba(3,6,18,.26) 52%,transparent 100%)}
+.llogo{position:absolute;top:1.5rem;left:1.5rem;display:flex;align-items:center;gap:.5rem}
+.llogoic{width:40px;height:40px;background:rgba(4,8,24,.82);border:1px solid rgba(0,200,255,.38);border-radius:10px;display:grid;place-items:center;backdrop-filter:blur(10px)}
+.lbadge{display:inline-flex;align-items:center;gap:.45rem;font-size:.64rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#00e5ff;padding:.28rem .75rem;border:1px solid rgba(0,229,255,.32);border-radius:20px;background:rgba(0,229,255,.1);margin-bottom:.85rem;width:fit-content}
+.lbd{width:6px;height:6px;border-radius:50%;background:#00e5ff;animation:LBD 2s infinite}
+@keyframes LBD{0%,100%{box-shadow:0 0 0 0 rgba(0,229,255,.65)}50%{box-shadow:0 0 0 8px rgba(0,229,255,0)}}
+#ltyp{font-size:clamp(1.2rem,2.3vw,1.75rem);font-weight:800;color:#fff;line-height:1.3;letter-spacing:-.02em;min-height:4.5rem;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.ltc{display:inline-block;width:3px;height:1.1em;background:#00e5ff;border-radius:2px;vertical-align:text-bottom;margin-left:2px;animation:LTC .7s step-end infinite}
+@keyframes LTC{0%,100%{opacity:1}50%{opacity:0}}
+.lstats{display:flex;gap:.9rem;margin-top:.9rem}
+.lstat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:.55rem .85rem;backdrop-filter:blur(8px)}
+.lsn{font-size:1.1rem;font-weight:800;color:#fff}.lsl{font-size:.62rem;color:rgba(255,255,255,.5);margin-top:.1rem}
+.lright{flex:1;padding:2.4rem 2.6rem;display:flex;flex-direction:column;justify-content:center}
+.lformlogo{display:flex;align-items:center;gap:.5rem;margin-bottom:1.5rem}
+.ltitle{font-size:1.85rem;font-weight:800;letter-spacing:-.04em;background:linear-gradient(120deg,#fff 20%,#00e5ff 50%,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.25rem}
+.lsub{font-size:.83rem;color:rgba(148,163,184,.75);margin-bottom:1.4rem}
+.lerr{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:.65rem .9rem;font-size:.82rem;color:#fca5a5;margin-bottom:.9rem;animation:LESH .4s ease}
+@keyframes LESH{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
+.lfield{margin-bottom:.85rem}.lfield label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(148,163,184,.7);margin-bottom:.4rem}
+.liw{position:relative}.liw svg{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:rgba(148,163,184,.5);pointer-events:none}
+.liw input{width:100%;padding:.78rem 1rem .78rem 2.6rem;border-radius:12px;font-size:.88rem;color:#e2e8f0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-family:'Poppins',sans-serif;outline:none;transition:border-color .25s,background .25s,box-shadow .25s}
+.liw input:focus{border-color:rgba(0,200,255,.65);background:rgba(0,200,255,.08);box-shadow:0 0 0 3px rgba(0,200,255,.18)}
+.liw input::placeholder{color:rgba(148,163,184,.35)}
+.lbtn{width:100%;padding:.9rem;border-radius:14px;border:none;font-size:.94rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;color:#fff;background:linear-gradient(135deg,#00e5ff,#6366f1 50%,#ec4899);background-size:200%;animation:LBTN 4s ease infinite;display:flex;align-items:center;justify-content:center;gap:.55rem;transition:transform .2s,box-shadow .2s;margin-top:1.2rem;position:relative;overflow:hidden}
+.lbtn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.16),transparent);opacity:0;transition:opacity .2s}
+.lbtn:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(0,200,255,.45)}.lbtn:hover::before{opacity:1}
+@keyframes LBTN{0%,100%{background-position:0%}50%{background-position:100%}}
+.ldiv{display:flex;align-items:center;gap:10px;margin:1rem 0 .9rem;color:rgba(148,163,184,.4);font-size:.75rem}
+.ldiv::before,.ldiv::after{content:'';flex:1;height:1px;background:rgba(148,163,184,.12)}
+.lgbtn{display:flex;align-items:center;justify-content:center;gap:.7rem;width:100%;padding:.78rem;border-radius:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#e2e8f0;font-size:.87rem;font-weight:600;text-decoration:none;font-family:'Poppins',sans-serif;transition:background .2s,transform .2s}
+.lgbtn:hover{background:rgba(255,255,255,.11);transform:translateY(-1px)}
+.llinks{margin-top:.9rem;font-size:.77rem;text-align:center;color:rgba(148,163,184,.6)}.llinks a{font-weight:600;text-decoration:none}
+@media(max-width:700px){.lsplit{flex-direction:column}.lleft{width:100%;height:200px}.limg{border-radius:30px 30px 0 0}.lright{padding:1.8rem}.lstats{display:none}}
 </style>
-
-<!-- AUTO-TYPE -->
 <script>
-const messages=["Automate your college ","Adopt SmartScheduler ","Choose Smart ✨"];
-let i=0,j=0,speed=70;
-const el=document.querySelector(".auto-text");
-function type(){
-  if(j < messages[i].length){
-    el.innerHTML += messages[i][j++];
-    setTimeout(type,speed);
-  } else setTimeout(erase,1200);
-}
-function erase(){
-  if(j>0){
-    el.innerHTML = messages[i].substring(0,--j);
-    setTimeout(erase,40);
-  } else {i=(i+1)%messages.length; setTimeout(type,300);}
-}
-type();
+const lcv=document.getElementById('lcv'),lcx=lcv.getContext('2d');
+function lrsz(){lcv.width=innerWidth;lcv.height=innerHeight;}window.addEventListener('resize',lrsz);lrsz();
+const LCC=['0,229,255','99,102,241','236,72,153','167,139,250','0,200,255'];
+class LCP{constructor(){this.rst(true);}rst(i){this.x=Math.random()*lcv.width;this.y=i?Math.random()*lcv.height:lcv.height+5;this.vx=(Math.random()-.5)*.33;this.vy=-(Math.random()*.5+.1);this.r=Math.random()*1.8+.4;this.life=1;this.dc=Math.random()*.0038+.001;this.c=LCC[Math.floor(Math.random()*LCC.length)];}upd(){this.x+=this.vx;this.y+=this.vy;this.life-=this.dc;if(this.life<=0)this.rst();}drw(){lcx.beginPath();lcx.arc(this.x,this.y,this.r,0,Math.PI*2);lcx.fillStyle=`rgba(${this.c},${this.life*.74})`;lcx.shadowBlur=10;lcx.shadowColor=`rgba(${this.c},.5)`;lcx.fill();lcx.shadowBlur=0;}}
+const lpts=Array.from({length:85},()=>new LCP());
+function lAnm(){lcx.clearRect(0,0,lcv.width,lcv.height);for(let i=0;i<lpts.length;i++){for(let j=i+1;j<lpts.length;j++){const dx=lpts[i].x-lpts[j].x,dy=lpts[i].y-lpts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<110){lcx.beginPath();lcx.moveTo(lpts[i].x,lpts[i].y);lcx.lineTo(lpts[j].x,lpts[j].y);lcx.strokeStyle=`rgba(0,200,255,${(1-d/110)*.12})`;lcx.lineWidth=.7;lcx.stroke();}}}lpts.forEach(p=>{p.upd();p.drw();});requestAnimationFrame(lAnm);}lAnm();
+const lbox=document.getElementById('lbox');
+document.addEventListener('mousemove',e=>{const r=lbox.getBoundingClientRect();const cx=(e.clientX-r.left)/r.width-.5,cy=(e.clientY-r.top)/r.height-.5;lbox.style.transform=`perspective(1200px) rotateY(${cx*11}deg) rotateX(${-cy*8}deg)`;lbox.style.boxShadow=`${-cx*32}px ${-cy*24}px 85px rgba(0,0,0,.52),0 0 130px rgba(0,200,255,.2)`;});
+document.addEventListener('mouseleave',()=>{lbox.style.transform='perspective(1200px) rotateY(0) rotateX(0)';lbox.style.boxShadow='0 32px 85px rgba(0,0,0,.52)';});
+const lsc=document.getElementById('lsparks');const lscl=['#00e5ff','#6366f1','#ec4899','#22d3ee','#a78bfa'];
+for(let i=0;i<24;i++){const el=document.createElement('div');el.className='lsp';const sz=Math.random()*4+1.5;Object.assign(el.style,{width:sz+'px',height:sz+'px',left:Math.random()*100+'%',background:lscl[Math.floor(Math.random()*lscl.length)],animationDuration:(Math.random()*7+4)+'s',animationDelay:(Math.random()*8)+'s',boxShadow:`0 0 ${sz*3}px currentColor`});lsc.appendChild(el);}
+const lphr=['Zero-clash timetables.','AI-powered scheduling.','Generated in 3 seconds.','NEP 2020 ready.','Smart Academic Planning.'];let lpi=0,lci=0,ldel=false;const ltel=document.getElementById('ltyp');
+function ltp(){const cur=lphr[lpi];const csr="<span class='ltc'></span>";if(!ldel){lci++;ltel.innerHTML=cur.slice(0,lci)+csr;if(lci===cur.length)setTimeout(()=>{ldel=true;},1500);}else{lci--;ltel.innerHTML=cur.slice(0,lci)+csr;if(lci===0){ldel=false;lpi=(lpi+1)%lphr.length;}}setTimeout(ltp,ldel?40:80);}ltp();
 </script>
-
-<!-- FLOATING STARS -->
-<script>
-const s=document.getElementById("stars"),ctx=s.getContext("2d");
-function resize(){s.width=innerWidth; s.height=innerHeight} resize(); addEventListener("resize",resize);
-class Star{constructor(){
-this.x=Math.random()*s.width;this.y=Math.random()*s.height;
-this.size=Math.random()*1.8+.6;this.sx=Math.random()*.08-.04;this.sy=Math.random()*.08-.04;}
-move(){this.x+=this.sx;this.y+=this.sy;}
-draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,2*Math.PI);
-ctx.fillStyle="rgba(255,255,255,.85)";ctx.shadowBlur=8;ctx.fill();}}
-let stars=[];for(let k=0;k<120;k++)stars.push(new Star());
-function anim(){ctx.clearRect(0,0,s.width,s.height);stars.forEach(s=>{s.move();s.draw();});requestAnimationFrame(anim);} anim();
-</script>
-
 {% endblock %}

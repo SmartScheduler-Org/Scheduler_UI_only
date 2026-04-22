@@ -138,7 +138,12 @@
           "Segoe UI", sans-serif;
       }
 
+      html,
       body {
+        min-height: 100%;
+      }
+
+      body.site-layout {
         background: radial-gradient(
           circle at top,
           #111827 0,
@@ -147,6 +152,9 @@
         );
         color: var(--text);
         min-height: 100vh;
+        min-height: 100svh;
+        display: flex !important;
+        flex-direction: column !important;
         overflow-x: hidden;
       }
 
@@ -154,6 +162,23 @@
         max-width: 1180px;
         margin: 0 auto;
         padding: 0 20px;
+      }
+
+      .page-shell {
+        width: 100%;
+        flex: 1 0 auto;
+      }
+
+      body.site-layout > main,
+      body.site-layout > .page-shell,
+      body.site-layout > .container.page-shell {
+        flex: 1 0 auto;
+      }
+
+      body.site-layout > .site-footer-ref,
+      body.site-layout > .footer,
+      body.site-layout > .footer-new {
+        margin-top: auto !important;
       }
 
       a {
@@ -225,8 +250,7 @@
 
       /* ====== NAVBAR ====== */
       .nav {
-        position: sticky;
-        top: 0;
+        position: relative;
         z-index: 50;
         backdrop-filter: blur(18px);
         background: linear-gradient(

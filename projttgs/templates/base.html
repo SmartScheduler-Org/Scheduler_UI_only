@@ -27,7 +27,7 @@
 
 </head>
 
-<body>
+<body class="site-layout">
     {% include 'navbar.html' %} 
     <div id="pageLoadIndicator" class="page-load-indicator" aria-hidden="true">
       <div class="page-load-pill">
@@ -54,11 +54,11 @@
     <div class="blob blob-3"></div>
 
 
-    <div class="container">
+    <main class="container page-shell">
         {% block content %}
         
         {% endblock %}
-    </div>
+    </main>
 
      {% include 'footer.html' %}
     <script src="{% static 'chatbot.js' %}"></script>
@@ -156,7 +156,22 @@
     </style>
     <script>
       (function () {
+        const pageShell = document.querySelector(".page-shell");
+        const stickyFooter = document.querySelector(".site-footer-ref, .footer, .footer-new");
+        function enforceStickyFooterLayout() {
+          if (!pageShell || !stickyFooter) return;
+          document.body.style.display = "flex";
+          document.body.style.flexDirection = "column";
+          document.body.style.minHeight = "100vh";
+          document.body.style.minHeight = "100svh";
+          pageShell.style.flex = "1 0 auto";
+          pageShell.style.width = "100%";
+          stickyFooter.style.marginTop = "auto";
+        }
+
         const loader = document.getElementById("pageLoadIndicator");
+        enforceStickyFooterLayout();
+        window.addEventListener("resize", enforceStickyFooterLayout);
         if (!loader) return;
 
         let showTimer = null;

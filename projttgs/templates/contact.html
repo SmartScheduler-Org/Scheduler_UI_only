@@ -1,157 +1,544 @@
 {% extends "base.html" %}
+{% load static %}
+{% block title %}Contact Us | SmartScheduler{% endblock %}
 
 {% block content %}
-
 <style>
-  .contact-wrapper {
-    max-width: 1180px;
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --surface:  rgba(7, 18, 37, 0.82);
+    --border:   rgba(148, 163, 184, 0.18);
+    --text:     #e2e8f0;
+    --muted:    #94a3b8;
+    --teal:     #38bdf8;
+    --sky:      #0ea5e9;
+  }
+
+  .contact-page {
+    max-width: 1060px;
     margin: 0 auto;
-    padding: 80px 20px;
-    font-family: "Poppins", sans-serif;
-    color: #e5e7eb;
+    padding: 64px 20px 96px;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text);
   }
 
-  .contact-title {
-    text-align: center;
-    margin-bottom: 40px;
+  /* Hero */
+  .contact-hero { text-align: center; margin-bottom: 56px; }
+  .contact-hero .eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 14px;
   }
-
-  .contact-title h1 {
-    font-size: 46px;
+  .contact-hero h1 {
+    font-size: clamp(28px, 5vw, 46px);
     font-weight: 700;
-    background: linear-gradient(120deg, #e5e7eb, #8ab4ff, #f9a8d4);
-    -webkit-background-clip: text;
-    color: transparent;
+    margin: 0 0 14px;
+    line-height: 1.12;
   }
-
-  .top-section {
-    display: flex;
-    align-items: center;
-    gap: 40px;
-    margin-bottom: 60px;
-  }
-
-  .hero-img {
-    flex: 0 0 38%; /* image width */
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 0 30px rgba(99,102,241,0.4);
-  }
-  .hero-img img {
-    width: 100%;
-    display: block;
-  }
-
-  .hero-text {
-    flex: 1;
+  .contact-hero h1 span { color: var(--teal); }
+  .contact-hero p {
+    color: var(--muted);
     font-size: 16px;
-    color: #cbd5e1;
+    line-height: 1.7;
+    max-width: 520px;
+    margin: 0 auto;
   }
 
+  /* Layout */
   .contact-grid {
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 30px;
+    grid-template-columns: 1fr 1.45fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 780px) { .contact-grid { grid-template-columns: 1fr; } }
+
+  /* Info card */
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px 28px;
+    backdrop-filter: blur(14px);
+  }
+  .info-card h2 { font-size: 18px; font-weight: 600; margin: 0 0 24px; color: #f1f5f9; }
+  .info-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+  .info-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: var(--teal);
+  }
+  .info-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .info-value { font-size: 14px; color: var(--text); font-weight: 500; }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  .social-row { display: flex; gap: 10px; }
+  .social-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); text-decoration: none;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+  }
+  .social-btn:hover {
+    background: rgba(56,189,248,0.1); border-color: rgba(56,189,248,0.35);
+    color: var(--teal); transform: translateY(-2px);
   }
 
-  .info-card, .form-card {
-    background: rgba(255,255,255,0.07);
-    padding: 28px;
-    border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.15);
-    backdrop-filter: blur(16px);
+  /* Form card */
+  .form-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 24px; padding: 36px 32px; backdrop-filter: blur(14px);
   }
+  .form-card h2 { font-size: 18px; font-weight: 600; margin: 0 0 26px; color: #f1f5f9; }
 
-  .info-item {
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 15px;
+  /* Django messages */
+  .alert {
+    padding: 12px 16px; border-radius: 12px; font-size: 14px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
   }
+  .alert-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+  .alert-error   { background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.3); color: #fda4af; }
 
-  .info-item i { color: #8ab4ff; font-size: 18px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
 
-  .social-row { display: flex; gap: 18px; margin-top: 18px; }
-  .social-row i { font-size: 22px; cursor: pointer; transition: 0.3s; }
-  .social-row i:hover { transform: scale(1.2); color: #f472b6; }
-
-  input, textarea {
-    width: 100%; padding: 14px; margin-bottom: 14px;
-    border-radius: 10px; background: rgba(0,0,0,0.3);
-    color: white; border: 1px solid rgba(255,255,255,0.2);
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-size: 12px; font-weight: 500;
+    color: var(--muted); margin-bottom: 6px; letter-spacing: 0.04em;
   }
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%; padding: 12px 14px;
+    background: rgba(0,0,0,0.28); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text);
+    font-family: 'Poppins', sans-serif; font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none; resize: vertical;
+  }
+  .field input::placeholder,
+  .field textarea::placeholder { color: #4b5563; }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: rgba(56,189,248,0.5);
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.08);
+  }
+  .field select option { background: #0f172a; color: var(--text); }
 
   .btn-submit {
-    width: 100%; padding: 14px; border-radius: 12px;
-    background: linear-gradient(135deg,#6366f1,#ec4899);
-    border: none; color: white; font-weight: 600;
-    cursor: pointer; transition: 0.3s;
+    width: 100%; padding: 13px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--teal), var(--sky));
+    border: none; color: #020917;
+    font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+    margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;
   }
-  .btn-submit:hover { transform: translateY(-3px); }
+  .btn-submit:hover {
+    opacity: 0.92; transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(14,165,233,0.35);
+  }
+  .btn-submit:active { transform: translateY(0); }
 
-  @media (max-width: 900px) {
-    .top-section { flex-direction: column; text-align: center; }
-    .hero-img { width: 70%; }
-    .contact-grid { grid-template-columns: 1fr; }
+  /* ── FAQ ── */
+  .faq-section {
+    margin-top: 72px;
+  }
+  .faq-header { text-align: center; margin-bottom: 36px; }
+  .faq-header .eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 12px;
+  }
+  .faq-header h2 {
+    font-size: clamp(22px, 3.5vw, 32px);
+    font-weight: 700;
+    margin: 0 0 10px;
+    color: #f1f5f9;
+  }
+  .faq-header p { color: var(--muted); font-size: 15px; margin: 0; }
+
+  .faq-list { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+
+  .faq-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .faq-item.open { border-color: rgba(56,189,248,0.35); }
+
+  .faq-q {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    cursor: pointer;
+    text-align: left;
+    color: #f1f5f9;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .faq-q:hover { color: var(--teal); }
+  .faq-icon {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.25);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--teal);
+    transition: transform 0.25s ease, background 0.2s;
+  }
+  .faq-item.open .faq-icon { transform: rotate(45deg); background: rgba(56,189,248,0.2); }
+
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.32s ease, padding 0.2s ease;
+  }
+  .faq-item.open .faq-a { max-height: 300px; }
+  .faq-a-inner {
+    padding: 0 22px 18px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.75;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  .faq-a-inner a { color: var(--teal); text-decoration: none; }
+  .faq-a-inner a:hover { text-decoration: underline; }
+
+  /* override homepage.css which hides .faq-item via GSAP animation */
+  .faq-section .faq-item {
+    opacity: 1 !important;
+    transform: none !important;
   }
 </style>
 
-<div class="contact-wrapper">
+<div class="contact-page">
 
-  <div class="contact-title reveal">
-    <h1>Contact Us</h1>
-    <p style="color:#9ca3af;font-size:15px;">Have queries, collaborations or demo requests? We’re here to help.</p>
-  </div>
-
-  <div class="top-section">
-    <div class="hero-img reveal">
-      <img src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1000" />
-    </div>
-
-    <div class="hero-text reveal">
-      <h2 style="font-size:28px;font-weight:600;margin-bottom:12px;">Let’s Connect & Build Together </h2>
-      <p>SmartScheduler is dedicated to bringing smart timetable automation to institutions and teams.
-         Reach out for product demos, partnerships, or support queries.</p>
-    </div>
+  <!-- Hero -->
+  <div class="contact-hero">
+    <span class="eyebrow">Contact Us</span>
+    <h1>Got a question? <span>Let's talk.</span></h1>
+    <p>Whether it's a demo request, a bug report, or just a hello — drop us a message and we'll get back to you.</p>
   </div>
 
   <div class="contact-grid">
 
-    <div class="info-card reveal">
-      <div class="info-item"><i class="fa-solid fa-envelope"></i> support@smartscheduler.in</div>
-      <div class="info-item"><i class="fa-solid fa-phone"></i> +91 79883 52710</div>
-      <div class="info-item"><i class="fa-solid fa-location-dot"></i> YMCA Faridabad, Haryana</div>
+    <!-- Info -->
+    <div class="info-card">
+      <h2>Reach us directly</h2>
 
+      <div class="info-item">
+        <div class="info-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div>
+          <div class="info-label">Email</div>
+          <div class="info-value">smartschedulertech@gmail.com</div>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.1a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.06 6.06l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <div>
+          <div class="info-label">Phone</div>
+          <div class="info-value">+91 79883 52710</div>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div>
+          <div class="info-label">Location</div>
+          <div class="info-value">YMCA University, Faridabad, Haryana</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="info-label" style="margin-bottom:12px;">Find us online</div>
       <div class="social-row">
-        <i class="fa-brands fa-instagram"></i>
-        <i class="fa-brands fa-linkedin"></i>
-        <i class="fa-brands fa-twitter"></i>
-        <i class="fa-brands fa-github"></i>
+        <a href="#" class="social-btn" title="Instagram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="LinkedIn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="GitHub">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="Twitter / X">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
       </div>
     </div>
 
-    <form class="form-card reveal">
-      <input type="text" placeholder="Your Name" required />
-      <input type="email" placeholder="Your Email" required />
-      <textarea placeholder="Your Message"></textarea>
-      <button class="btn-submit">Send Message</button>
-    </form>
+    <!-- Form -->
+    <div class="form-card">
+      <h2>Send us a message</h2>
+
+      {% for msg in messages %}
+        {% if 'success' in msg.tags %}
+          <div class="alert alert-success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ msg }}
+          </div>
+        {% else %}
+          <div class="alert alert-error">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+            {{ msg }}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <form method="POST" action="{% url 'contact' %}">
+        {% csrf_token %}
+
+        <div class="form-row">
+          <div class="field">
+            <label for="cnt-name">Your Name</label>
+            <input type="text" id="cnt-name" name="name" placeholder="Your Name" required>
+          </div>
+          <div class="field">
+            <label for="cnt-email">Your Email</label>
+            <input type="email" id="cnt-email" name="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="cnt-subject">Subject</label>
+          <select id="cnt-subject" name="subject">
+            <option value="General Inquiry">General Inquiry</option>
+            <option value="Demo Request">Demo Request</option>
+            <option value="Bug Report">Bug Report</option>
+            <option value="Partnership">Partnership / Collaboration</option>
+            <option value="Support">Support</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="cnt-message">Message</label>
+          <textarea id="cnt-message" name="message" rows="5" placeholder="Tell us what's on your mind..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Message
+        </button>
+      </form>
+    </div>
 
   </div>
+  <!-- ── FAQ ── -->
+  <section class="faq-section">
+    <div class="faq-header">
+      <span class="eyebrow">FAQ</span>
+      <h2>Frequently asked questions</h2>
+      <p>Can't find what you're looking for? <a href="#cnt-message" style="color:var(--teal);text-decoration:none;">Send us a message</a> above.</p>
+    </div>
+
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How does the timetable generator work?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          SmartScheduler uses a genetic algorithm to resolve all scheduling constraints automatically. You provide your departments, sections, instructors, rooms, and meeting times — the engine handles conflict resolution across all combinations and returns a complete, validated timetable.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          What are generation credits and how do they work?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Each timetable generation consumes one credit from your subscription plan (UserAccessPlan). Credits reset based on your plan cycle. You can check your remaining credits on the dashboard. Upgrade your plan anytime from the Subscription page to get more.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can I bulk-import departments, instructors, and courses via CSV?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes. SmartScheduler supports CSV upload for instructors and course-teacher mappings. The expected format is <code style="background:rgba(56,189,248,0.1);padding:1px 6px;border-radius:4px;font-size:13px;">instructor_name, course_number</code> per row. You can also use the Convert CSV tool to reformat data from other systems before importing.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          What is the difference between Admin, Teacher, and Dean roles?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <strong style="color:#f1f5f9;">Admin (HOD)</strong> — full access: create departments, sections, rooms, generate timetables, manage subscriptions.<br>
+          <strong style="color:#f1f5f9;">Dean</strong> — can view timetables across all departments and access the admin dashboard.<br>
+          <strong style="color:#f1f5f9;">Teacher</strong> — can view their own assigned timetable only.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How do I export a timetable as a PDF?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Once a timetable is generated, save it — it will appear in your Saved Timetables list. Open any saved timetable and click the <strong style="color:#f1f5f9;">Download PDF</strong> button. The PDF is rendered server-side using xhtml2pdf (pisa) so it looks identical to the on-screen view.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How does SmartScheduler handle theory vs. lab courses?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          The scheduler uses a unified Course model that distinguishes theory and lab slots. Hard constraint validation ensures lab sessions are scheduled in lab-designated rooms and are not placed back-to-back in ways that violate your institution's rules. These constraints run before any timetable is accepted.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          I submitted the contact form — when will I get a reply?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          We typically respond within 24–48 hours on working days. Your message is delivered directly to our team email. For urgent issues, you can also reach us at <a href="mailto:smartschedulertech@gmail.com">smartschedulertech@gmail.com</a>.
+        </div></div>
+      </div>
+
+      <!-- ── From home page ── -->
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How fast is the timetable generation?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          It generates a full optimized timetable in 3–8 seconds.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Does it support labs and electives?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes — handles long labs, shared spaces and elective batch allocation.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can we export as PDF?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          You can export department, student and teacher-wise PDF instantly.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Does it integrate with ERP?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Supports API-based ERP syncing to keep data always updated.
+        </div></div>
+      </div>
+
+      <!-- ── Contact-page-only extras ── -->
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Is there a free trial available?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes — every new account starts with a free tier that includes a limited number of generation credits so you can try the full workflow before committing to a plan. No credit card required to sign up.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can SmartScheduler handle multiple departments simultaneously?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes. Each admin account manages one department, but a Dean account can view and oversee timetables across all departments from a single dashboard. This makes it easy for institution-wide coordination without sharing admin credentials.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How do I reset my password?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Use the <strong style="color:#f1f5f9;">Forgot Password</strong> link on the login page to receive a reset email. If you do not receive it within a few minutes, check your spam folder or contact us at <a href="mailto:smartschedulertech@gmail.com">smartschedulertech@gmail.com</a> with your registered email address.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Is my institution's data stored securely?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          All data is stored server-side with access scoped strictly to your account. Passwords are hashed and never stored in plain text. We do not share or sell any institutional data. For detailed security or compliance questions, reach out to us directly.
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can I customise the number of periods and timings per day?
+          <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          Yes. From the <strong style="color:#f1f5f9;">Add Timings</strong> section in the dashboard you can define as many meeting-time slots as your institution needs — morning, afternoon, or split-day schedules. The generator respects whichever slots you configure.
+        </div></div>
+      </div>
+
+    </div>
+  </section>
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script>
-gsap.registerPlugin(ScrollTrigger);
-gsap.utils.toArray(".reveal").forEach((elem) => {
-  gsap.from(elem, {
-    opacity: 0, y: 60, duration: 1.2, ease: "power3.out",
-    scrollTrigger: { trigger: elem, start: "top 85%" }
-  });
-});
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+  // Open clicked if it was closed
+  if (!isOpen) item.classList.add('open');
+}
 </script>
-
 {% endblock content %}

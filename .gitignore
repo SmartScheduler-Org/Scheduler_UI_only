@@ -21,3 +21,5 @@ db.sqlite3
 Scheduler_UI/projttgs/.env
 .graphify_python
 projttgs/graphify-out/
+/projttgs/graphify-out/
+.graphify_python

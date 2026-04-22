@@ -5,7 +5,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Saved Timetables | Scheduler.IO</title>
+<title>SmartScheduler | Saved Timetables</title>
 
 <style>
     body {
@@ -121,14 +121,22 @@
 </head>
 <body>
 
-<h1>Saved Timetables</h1>
+<h1>SmartScheduler</h1>
+<p style="text-align:center; color:#9a8acc; font-size:1rem; margin-top:-10px; font-weight:500;">Saved Timetables</p>
 
 <div class="container">
 
     {% if timetables %}
         {% for t in timetables %}
         <div class="timetable-card">
-            <div class="date">Saved on: {{ t.created_at|date:"d M Y" }} at {{ t.created_at|date:"h:i A" }}</div>
+            <div class="date">
+                Saved on: {{ t.created_at|date:"d M Y" }} at {{ t.created_at|date:"h:i A" }}
+                {% if t.is_published %}
+                <span style="background:#43a047; color:white; padding:3px 10px; border-radius:12px; font-size:12px; margin-left:10px;">
+                    Published: {{ t.publish_code }}
+                </span>
+                {% endif %}
+            </div>
             <a href="{% url 'saved_timetable' t.id %}" class="btn-view">View Timetable</a>
             <a href="{% url 'download_timetable' t.id %}" class="btn-download">Download</a>
             <a href="{% url 'delete_saved_timetable' t.id %}" class="btn-delete">Delete</a>
