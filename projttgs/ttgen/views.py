@@ -309,38 +309,33 @@ def _remaining_generations(user):
 
 
 def _has_generate_credit(user):
-    return True  # TEMP: hardcoded for testing
-    # return _remaining_generations(user) > 0
+    return _remaining_generations(user) > 0
 
 
 def _has_edit_delete_access(user):
-    return True  # TEMP: hardcoded for testing
-    # access_plan = _get_user_access_plan(user)
-    # return bool(access_plan and access_plan.is_active and access_plan.can_edit_delete)
+    access_plan = _get_user_access_plan(user)
+    return bool(access_plan and access_plan.is_active and access_plan.can_edit_delete)
 
 
 def _has_substitute_access(user):
-    return True  # TEMP: hardcoded for testing
-    # access_plan = _get_user_access_plan(user)
-    # return bool(access_plan and access_plan.is_active and access_plan.can_substitute)
+    access_plan = _get_user_access_plan(user)
+    return bool(access_plan and access_plan.is_active and access_plan.can_substitute)
 
 
 def _has_drag_drop_access(user):
-    return True  # TEMP: hardcoded for testing
-    # access_plan = _get_user_access_plan(user)
-    # return bool(access_plan and access_plan.is_active and access_plan.can_drag_drop)
+    access_plan = _get_user_access_plan(user)
+    return bool(access_plan and access_plan.is_active and access_plan.can_drag_drop)
 
 
 def _consume_generation_credit(user):
-    return True  # TEMP: hardcoded for testing
-    # access_plan = _get_user_access_plan(user)
-    # if not access_plan or not access_plan.is_active or access_plan.generations_remaining <= 0:
-    #     return False
-    # access_plan.generations_used += 1
-    # if access_plan.generations_used >= access_plan.generations_total:
-    #     access_plan.is_active = False
-    # access_plan.save(update_fields=["generations_used", "is_active", "purchased_at"])
-    # return True
+    access_plan = _get_user_access_plan(user)
+    if not access_plan or not access_plan.is_active or access_plan.generations_remaining <= 0:
+        return False
+    access_plan.generations_used += 1
+    if access_plan.generations_used >= access_plan.generations_total:
+        access_plan.is_active = False
+    access_plan.save(update_fields=["generations_used", "is_active", "purchased_at"])
+    return True
 
 
 def _permission_denied_response(request, message):

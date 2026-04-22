@@ -764,27 +764,21 @@ def _get_saved_timetable_or_404(tid, user):
 
 def _get_plan_permissions(user):
     """Return plan permission flags for a user."""
-    # TEMP: hardcoded for testing
+    try:
+        plan = UserAccessPlan.objects.get(user=user)
+        if plan.is_active:
+            return {
+                "can_edit_delete": plan.can_edit_delete,
+                "can_substitute": plan.can_substitute,
+                "can_drag_drop": plan.can_drag_drop,
+            }
+    except UserAccessPlan.DoesNotExist:
+        pass
     return {
-        "can_edit_delete": True,
-        "can_substitute": True,
-        "can_drag_drop": True,
+        "can_edit_delete": False,
+        "can_substitute": False,
+        "can_drag_drop": False,
     }
-    # try:
-    #     plan = UserAccessPlan.objects.get(user=user)
-    #     if plan.is_active:
-    #         return {
-    #             "can_edit_delete": plan.can_edit_delete,
-    #             "can_substitute": plan.can_substitute,
-    #             "can_drag_drop": plan.can_drag_drop,
-    #         }
-    # except UserAccessPlan.DoesNotExist:
-    #     pass
-    # return {
-    #     "can_edit_delete": False,
-    #     "can_substitute": False,
-    #     "can_drag_drop": False,
-    # }
 
 
 @login_required
