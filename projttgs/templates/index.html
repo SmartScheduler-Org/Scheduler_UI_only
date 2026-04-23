@@ -215,6 +215,9 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
 
           <!-- Right: AI Timetable Panel -->
           <div class="hero-right">
+            <a class="institute-apply-btn" href="{% url 'institute_application' %}">
+              Apply for your institute
+            </a>
             <div class="hero-panel" id="hero-panel">
               <!-- Code editor typing area -->
               <div class="hero-editor">
@@ -376,9 +379,9 @@ html.light .theme-toggle { border-color: rgba(30,41,59,0.25); background: rgba(0
         <div class="cta-text-main">Want this for your institution?</div>
         <div class="cta-text-sub">Fully customizable branding & rules.</div>
       </div>
-      <button class="btn-outline">
+      <a class="btn-outline" href="{% url 'institute_application' %}">
         <span>Book a walkthrough</span>
-      </button>
+      </a>
     </div>
   </div>
 </section>
