@@ -1,0 +1,629 @@
+{% extends "base.html" %}
+{% block title %}Our Services | SmartScheduler{% endblock %}
+
+{% block content %}
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --svc-bg: rgba(7, 18, 37, 0.84);
+    --svc-surface: rgba(8, 15, 32, 0.82);
+    --svc-surface-2: rgba(12, 22, 44, 0.92);
+    --svc-border: rgba(148, 163, 184, 0.18);
+    --svc-text: #e2e8f0;
+    --svc-muted: #94a3b8;
+    --svc-teal: #38bdf8;
+    --svc-sky: #0ea5e9;
+    --svc-lime: #a3e635;
+    --svc-green: #22c55e;
+  }
+
+  .services-page {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 56px 20px 88px;
+    color: var(--svc-text);
+    font-family: "Poppins", sans-serif;
+  }
+
+  .services-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 40px;
+    border-radius: 30px;
+    border: 1px solid var(--svc-border);
+    background:
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 34%),
+      radial-gradient(circle at bottom right, rgba(163, 230, 53, 0.14), transparent 32%),
+      var(--svc-bg);
+    box-shadow: 0 24px 68px rgba(2, 6, 23, 0.42);
+  }
+
+  .services-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(56, 189, 248, 0.24);
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--svc-teal);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .services-hero h1 {
+    max-width: 760px;
+    margin: 0 0 14px;
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.06;
+    font-weight: 700;
+  }
+
+  .services-hero h1 span {
+    background: linear-gradient(120deg, #f8fafc, #7dd3fc, #bef264);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .services-hero p {
+    max-width: 720px;
+    margin: 0;
+    color: var(--svc-muted);
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  .services-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 28px;
+  }
+
+  .services-stat {
+    min-height: 120px;
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(10px);
+  }
+
+  .services-stat strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #f8fafc;
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .services-stat span {
+    display: block;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .services-stat small {
+    display: block;
+    margin-top: 8px;
+    color: var(--svc-muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .services-section {
+    margin-top: 34px;
+  }
+
+  .section-head {
+    margin-bottom: 18px;
+  }
+
+  .section-head .eyebrow {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--svc-teal);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .section-head h2 {
+    margin: 0 0 8px;
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 650;
+    color: #f8fafc;
+  }
+
+  .section-head p {
+    max-width: 720px;
+    margin: 0;
+    color: var(--svc-muted);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .service-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .service-card,
+  .process-card,
+  .deliverable-card,
+  .audience-card,
+  .cta-panel {
+    border-radius: 24px;
+    border: 1px solid var(--svc-border);
+    background: var(--svc-surface);
+    box-shadow: 0 18px 50px rgba(2, 6, 23, 0.24);
+  }
+
+  .service-card {
+    padding: 22px;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+  }
+
+  .service-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.32);
+    box-shadow: 0 26px 60px rgba(2, 6, 23, 0.34);
+  }
+
+  .service-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(14, 165, 233, 0.08));
+    color: var(--svc-teal);
+  }
+
+  .service-card h3,
+  .process-card h3,
+  .deliverable-card h3,
+  .audience-card h3,
+  .cta-panel h3 {
+    margin: 0 0 10px;
+    color: #f8fafc;
+    font-size: 18px;
+  }
+
+  .service-card p,
+  .process-card p,
+  .deliverable-card p,
+  .audience-card p,
+  .cta-panel p {
+    margin: 0;
+    color: var(--svc-muted);
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .service-list,
+  .deliverable-list {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+  }
+
+  .service-list li,
+  .deliverable-list li {
+    position: relative;
+    padding-left: 20px;
+    color: #dbe5f4;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .service-list li::before,
+  .deliverable-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--svc-teal), var(--svc-green));
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+  }
+
+  .process-grid,
+  .deliverable-grid,
+  .audience-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .process-card,
+  .deliverable-card,
+  .audience-card {
+    padding: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 28%),
+      var(--svc-surface-2);
+  }
+
+  .process-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--svc-teal), var(--svc-sky));
+    color: #02101f;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .audience-card strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #e2e8f0;
+    font-size: 14px;
+  }
+
+  .cta-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+    gap: 18px;
+    padding: 26px;
+    background:
+      radial-gradient(circle at top left, rgba(163, 230, 53, 0.12), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.14), transparent 34%),
+      rgba(8, 14, 28, 0.92);
+  }
+
+  .cta-actions {
+    display: grid;
+    gap: 12px;
+  }
+
+  .cta-link {
+    display: block;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f8fafc;
+    text-decoration: none;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .cta-link:hover {
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.34);
+    background: rgba(56, 189, 248, 0.1);
+  }
+
+  .cta-link strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+
+  .cta-link span {
+    color: var(--svc-muted);
+    font-size: 13px;
+  }
+
+  html.light .services-page {
+    color: #0f172a;
+  }
+
+  html.light .services-hero,
+  html.light .service-card,
+  html.light .process-card,
+  html.light .deliverable-card,
+  html.light .audience-card,
+  html.light .cta-panel,
+  html.light .services-stat {
+    background:
+      radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 30%),
+      #ffffff;
+    border-color: rgba(100, 116, 139, 0.16);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+  }
+
+  html.light .services-hero h1,
+  html.light .section-head h2,
+  html.light .service-card h3,
+  html.light .process-card h3,
+  html.light .deliverable-card h3,
+  html.light .audience-card h3,
+  html.light .cta-panel h3,
+  html.light .services-stat strong {
+    color: #0f172a;
+  }
+
+  html.light .services-hero p,
+  html.light .section-head p,
+  html.light .service-card p,
+  html.light .process-card p,
+  html.light .deliverable-card p,
+  html.light .audience-card p,
+  html.light .cta-panel p,
+  html.light .services-stat small,
+  html.light .cta-link span {
+    color: #64748b;
+  }
+
+  html.light .service-list li,
+  html.light .deliverable-list li,
+  html.light .services-stat span,
+  html.light .audience-card strong,
+  html.light .cta-link {
+    color: #1e293b;
+  }
+
+  html.light .cta-link {
+    background: #f8fafc;
+    border-color: rgba(100, 116, 139, 0.14);
+  }
+
+  @media (max-width: 980px) {
+    .services-stat-grid,
+    .service-grid,
+    .process-grid,
+    .deliverable-grid,
+    .audience-grid,
+    .cta-panel {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .cta-panel {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .services-page {
+      padding: 34px 14px 72px;
+    }
+
+    .services-hero {
+      padding: 26px 20px;
+      border-radius: 24px;
+    }
+
+    .services-stat-grid,
+    .service-grid,
+    .process-grid,
+    .deliverable-grid,
+    .audience-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="services-page">
+  <section class="services-hero">
+    <div class="services-kicker">Our Services</div>
+    <h1>Academic scheduling services built to <span>remove manual chaos</span></h1>
+    <p>
+      SmartScheduler helps institutions move from spreadsheet-heavy planning to a cleaner,
+      faster workflow. From timetable generation and lab-ready scheduling to downloadable
+      views and managed updates, this page gives your footer's "Our Services" link a proper home.
+    </p>
+
+    <div class="services-stat-grid">
+      <article class="services-stat">
+        <strong>3-8s</strong>
+        <span>Fast timetable generation</span>
+        <small>Generate balanced schedules in seconds instead of days of manual reshuffling.</small>
+      </article>
+      <article class="services-stat">
+        <strong>100%</strong>
+        <span>Conflict-aware planning</span>
+        <small>Teacher, room, section, and lab constraints are checked together.</small>
+      </article>
+      <article class="services-stat">
+        <strong>PDF</strong>
+        <span>Share-ready outputs</span>
+        <small>Download clean timetable views for teams, faculty, and administration.</small>
+      </article>
+      <article class="services-stat">
+        <strong>Multi-role</strong>
+        <span>Admin, teacher, dean access</span>
+        <small>Different stakeholders can work from the same scheduling system cleanly.</small>
+      </article>
+    </div>
+  </section>
+
+  <section class="services-section">
+    <div class="section-head">
+      <div class="eyebrow">Core Services</div>
+      <h2>What SmartScheduler does for your institution</h2>
+      <p>
+        These are the main services users interact with across the product, now collected
+        in one dedicated page instead of living only inside the homepage.
+      </p>
+    </div>
+
+    <div class="service-grid">
+      <article class="service-card">
+        <div class="service-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3>Automatic Timetable Generation</h3>
+        <p>Build institution-ready timetables with a scheduling engine that handles multiple inputs at once.</p>
+        <ul class="service-list">
+          <li>Generates section-wise timetables quickly</li>
+          <li>Balances subjects, faculty, rooms, and timings</li>
+          <li>Reduces manual timetable rework</li>
+        </ul>
+      </article>
+
+      <article class="service-card">
+        <div class="service-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3 4.03-3 9-3 9 1.34 9 3z"/><path d="M3 12V7c0-1.66 4.03-3 9-3s9 1.34 9 3v5"/></svg>
+        </div>
+        <h3>Conflict and Constraint Handling</h3>
+        <p>The platform keeps track of the rules that matter most to real academic scheduling.</p>
+        <ul class="service-list">
+          <li>Teacher clash prevention</li>
+          <li>Room and lab availability checks</li>
+          <li>Load balancing across the week</li>
+        </ul>
+      </article>
+
+      <article class="service-card">
+        <div class="service-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg>
+        </div>
+        <h3>Review, Save, and Share</h3>
+        <p>Once a timetable is generated, teams can keep working with it instead of starting over.</p>
+        <ul class="service-list">
+          <li>Saved timetable history</li>
+          <li>Teacher and section-specific views</li>
+          <li>PDF export for sharing and print</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="services-section">
+    <div class="section-head">
+      <div class="eyebrow">Workflow</div>
+      <h2>How the service delivery flows</h2>
+      <p>
+        The product is strongest when institutions follow a simple setup sequence, so this
+        section explains the service journey clearly.
+      </p>
+    </div>
+
+    <div class="process-grid">
+      <article class="process-card">
+        <div class="process-step">01</div>
+        <h3>Institution Setup</h3>
+        <p>Add departments, sections, rooms, and timings so the system understands the academic structure before generation begins.</p>
+      </article>
+      <article class="process-card">
+        <div class="process-step">02</div>
+        <h3>Course and Faculty Mapping</h3>
+        <p>Connect instructors with courses and map sections correctly so the engine can schedule the right class in the right slot.</p>
+      </article>
+      <article class="process-card">
+        <div class="process-step">03</div>
+        <h3>AI Generation Run</h3>
+        <p>Generate a timetable with scheduling logic that resolves clashes, supports labs, and creates practical outputs fast.</p>
+      </article>
+      <article class="process-card">
+        <div class="process-step">04</div>
+        <h3>Review and Distribution</h3>
+        <p>Open generated views, make plan-based adjustments when needed, save the result, and distribute PDFs or published views.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="services-section">
+    <div class="section-head">
+      <div class="eyebrow">Deliverables</div>
+      <h2>What your team gets from these services</h2>
+      <p>
+        Beyond raw timetable generation, the value here is in producing outputs that people can actually use.
+      </p>
+    </div>
+
+    <div class="deliverable-grid">
+      <article class="deliverable-card">
+        <h3>Operational Outputs</h3>
+        <ul class="deliverable-list">
+          <li>Section-wise timetable views</li>
+          <li>Teacher-wise published schedules</li>
+          <li>Saved timetable versions for later reference</li>
+          <li>PDF exports for official circulation</li>
+        </ul>
+      </article>
+      <article class="deliverable-card">
+        <h3>Planning Benefits</h3>
+        <ul class="deliverable-list">
+          <li>Less manual conflict checking</li>
+          <li>Faster planning cycles during semester setup</li>
+          <li>Cleaner coordination across departments</li>
+          <li>More confidence in final timetable accuracy</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="services-section">
+    <div class="section-head">
+      <div class="eyebrow">Who It Helps</div>
+      <h2>Designed for the people who actually run scheduling</h2>
+      <p>
+        SmartScheduler is not just a generator page. It supports the different people involved in planning, approving, and reading schedules.
+      </p>
+    </div>
+
+    <div class="audience-grid">
+      <article class="audience-card">
+        <h3>Heads of Department</h3>
+        <strong>Control the full setup and generation flow.</strong>
+        <p>HODs can manage master data, create mappings, generate timetables, and review institutional readiness before final release.</p>
+      </article>
+      <article class="audience-card">
+        <h3>Teachers</h3>
+        <strong>Access only the timetable view that matters to them.</strong>
+        <p>Teachers can retrieve their assigned schedule without needing admin access to the whole academic setup.</p>
+      </article>
+      <article class="audience-card">
+        <h3>Dean-Level Reviewers</h3>
+        <strong>See the bigger picture across departments.</strong>
+        <p>Dean-facing access helps with institutional oversight and timetable review without shifting ownership away from the scheduling team.</p>
+      </article>
+      <article class="audience-card">
+        <h3>Operations Teams</h3>
+        <strong>Share and archive final outputs cleanly.</strong>
+        <p>Downloadable files and saved records make it easier to coordinate with administration, faculty groups, and internal communication channels.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="services-section">
+    <div class="cta-panel">
+      <div>
+        <div class="section-head" style="margin-bottom:0;">
+          <div class="eyebrow">Next Step</div>
+          <h2 style="margin-bottom:10px;">Want to explore the product from here?</h2>
+          <p>
+            This page now gives the footer's services link a real destination. From here, users can go straight into the generator flow or contact your team for help.
+          </p>
+        </div>
+      </div>
+
+      <div class="cta-actions">
+        <a class="cta-link" href="{% url 'role' %}">
+          <strong>Open Generator</strong>
+          <span>Jump into the scheduling workflow.</span>
+        </a>
+        <a class="cta-link" href="{% url 'contact' %}">
+          <strong>Contact Us</strong>
+          <span>Reach the team for demos, support, or questions.</span>
+        </a>
+        <a class="cta-link" href="{% url 'help' %}">
+          <strong>Help Center</strong>
+          <span>Review the setup steps and common questions.</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock content %}
