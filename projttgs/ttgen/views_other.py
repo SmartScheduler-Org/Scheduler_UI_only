@@ -212,6 +212,7 @@ def clone_section_courses_from_similar(section):
 # BASIC NAVIGATION VIEWS
 def index(request): return render(request, 'index.html')
 def about(request): return render(request, 'aboutus.html')
+def live_demo(request): return render(request, 'live_demo.html')
 def help(request): return render(request, 'help.html')
 def terms(request): return render(request, 'terms.html')
 def privacy(request): return render(request, 'privacy.html')
