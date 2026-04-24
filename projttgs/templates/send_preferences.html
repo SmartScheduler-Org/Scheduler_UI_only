@@ -22,21 +22,38 @@
 .spp-btns{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.3rem}
 .spp-btn{flex:1;min-width:130px;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.2rem;border-radius:12px;font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:transform .18s,box-shadow .18s;font-family:'Poppins',sans-serif}
 .spp-btn:hover{transform:translateY(-2px)}
-.btn-smtp{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}.btn-smtp:hover{box-shadow:0 8px 28px rgba(34,197,94,.45)}
+.btn-whatsapp{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff}.btn-whatsapp:hover{box-shadow:0 8px 28px rgba(37,211,102,.45)}
 .btn-gmail{background:linear-gradient(135deg,#ea4335,#c0392b);color:#fff}.btn-gmail:hover{box-shadow:0 8px 28px rgba(234,67,53,.45)}
-.btn-ol{background:linear-gradient(135deg,#0078d4,#005a9e);color:#fff}.btn-ol:hover{box-shadow:0 8px 28px rgba(0,120,212,.45)}
 .spp-st{display:none;margin-top:1.1rem;padding:.9rem 1.1rem;border-radius:12px;font-size:.86rem;font-weight:500;line-height:1.6;border:1px solid transparent}
 .spp-st.load{background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.2);color:#00e5ff}
 .spp-st.ok{background:rgba(16,217,126,.08);border-color:rgba(16,217,126,.2);color:#10d97e}
 .spp-st.err{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.2);color:#f43f5e}
-.spp-info{display:flex;align-items:flex-start;gap:.7rem;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:1rem 1.1rem;font-size:.8rem;color:#86efac;line-height:1.5}
+/* Popup overlay */
+.spp-popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center}
+.spp-popup-overlay.active{display:flex}
+.spp-popup{background:#1e293b;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:2.2rem 2rem;text-align:center;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.spp-popup-icon{font-size:3rem;margin-bottom:1rem}
+.spp-popup-title{font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:.6rem}
+.spp-popup-msg{font-size:.88rem;color:rgba(148,163,184,.85);line-height:1.6;margin-bottom:1.4rem}
+.spp-popup-btn{background:linear-gradient(135deg,#00e5ff,#0077b6);color:#fff;border:none;padding:.75rem 1.8rem;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif}
 @keyframes SPBD{0%,100%{opacity:1}50%{opacity:.4}}
 </style>
+
+<!-- Success Popup -->
+<div class="spp-popup-overlay" id="successPopup">
+  <div class="spp-popup">
+    <div class="spp-popup-icon" id="popupIcon">✅</div>
+    <div class="spp-popup-title" id="popupTitle">Sent Successfully!</div>
+    <div class="spp-popup-msg" id="popupMsg"></div>
+    <button class="spp-popup-btn" onclick="closePopupAndRedirect()">Go to Dashboard</button>
+  </div>
+</div>
+
 <div class="spp">
   <a href="{% url 'admindash' %}" class="spp-back">← Back to Dashboard</a>
   <div class="spp-eye">Teacher Preferences</div>
   <h1 class="spp-title">Send <em>Preference</em> Mail</h1>
-  <p class="spp-desc">Enter teacher emails or import from a file. Each teacher gets their own unique form link. Use <strong>Send via Server</strong> for direct SMTP delivery, or open Gmail/Outlook compose windows.</p>
+  <p class="spp-desc">✨ Reach every teacher in one click — paste emails, upload a CSV, or type them one per line. Each teacher gets a private, personalised form link delivered straight to their inbox or WhatsApp. No tabs, no compose windows, no manual steps.</p>
   <div class="spp-card">
     <div class="spp-lbl">📂 Import from File (CSV / TXT / PDF)</div>
     <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
@@ -48,17 +65,16 @@
   <div class="spp-card">
     <div class="spp-lbl">✉️ Teacher Email(s)</div>
     <textarea class="spp-ta" id="ei" placeholder="teacher1@college.edu&#10;teacher2@college.edu&#10;&#10;One per line or comma-separated"></textarea>
-    <div class="fhint">💡 Each teacher gets a personalised form link. When they submit — data shows in View Responses instantly.</div>
+    <div class="fhint">💡 Paste emails separated by commas, one per line, or upload a CSV — all valid addresses will receive their unique link.</div>
     <div class="spp-btns">
-      <button class="spp-btn btn-smtp" onclick="sendSMTP()">🚀 Send via Server</button>
-      <button class="spp-btn btn-gmail" onclick="sendCompose('gmail')">📧 Gmail</button>
-      <button class="spp-btn btn-ol" onclick="sendCompose('outlook')">📨 Outlook</button>
+      <button class="spp-btn btn-gmail" onclick="sendGmail()">📧 Send via Gmail</button>
+      <button class="spp-btn btn-whatsapp" onclick="sendWhatsApp()">💬 Send via WhatsApp</button>
     </div>
     <div class="spp-st" id="spp-st"></div>
   </div>
-  <div class="spp-info">ℹ️ <span><strong>Send via Server</strong> uses SMTP (set EMAIL_HOST_USER + EMAIL_HOST_PASSWORD in .env). Gmail/Outlook open compose windows — no SMTP needed for those.</span></div>
 </div>
 <script>
+const DASHBOARD_URL = "{% url 'admindash' %}";
 const dz=document.getElementById('dz'),fi=document.getElementById('fi'),dzr=document.getElementById('dzr'),ei=document.getElementById('ei');
 ['dragenter','dragover'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.add('ov');}));
 ['dragleave','drop'].forEach(e=>dz.addEventListener(e,()=>dz.classList.remove('ov')));
@@ -69,27 +85,71 @@ async function uploadFile(f){dzr.className='dzr';dzr.textContent='⏳ Parsing…
     if(d.ok&&d.emails.length){ei.value=d.emails.join('\n');dzr.className='dzr dzr-ok';dzr.textContent='✅ Found '+d.count+' email(s)';}
     else{dzr.className='dzr dzr-err';dzr.textContent=d.error||'⚠️ No emails found.';}
   }catch{dzr.className='dzr dzr-err';dzr.textContent='❌ Upload failed.';}}
-function parseEmails(r){return[...new Set(r.split(/[\n,]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@')&&e.includes('.')))]}
-function buildLink(e){return window.location.origin+'/teacher-pref-form/?email='+encodeURIComponent(e);}
-async function sendSMTP(){
-  const emails=parseEmails(ei.value);if(!emails.length){alert('Enter at least one email.');return;}
-  const bar=document.getElementById('spp-st');bar.className='spp-st load';bar.style.display='block';
-  bar.innerHTML='📤 Sending to <strong>'+emails.length+'</strong> teacher(s)…';
-  try{const r=await fetch('/api/pref/send-links/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails})});
+function parseEmails(r){
+  // Extract every valid email from any text — handles comma, newline, semicolon, tab, or mixed separators
+  const re = /[\w.+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/g;
+  const found = r.match(re) || [];
+  return [...new Set(found.map(e => e.trim().toLowerCase()))];
+}
+
+function showPopup(icon, title, msg){
+  document.getElementById('popupIcon').textContent = icon;
+  document.getElementById('popupTitle').textContent = title;
+  document.getElementById('popupMsg').textContent = msg;
+  document.getElementById('successPopup').classList.add('active');
+}
+function closePopupAndRedirect(){
+  document.getElementById('successPopup').classList.remove('active');
+  window.location.href = DASHBOARD_URL;
+}
+
+async function sendGmail(){
+  const emails=parseEmails(ei.value);
+  if(!emails.length){alert('Enter at least one email.');return;}
+  const bar=document.getElementById('spp-st');
+  bar.className='spp-st load';bar.style.display='block';
+  bar.innerHTML='📤 Sending Gmail to <strong>'+emails.length+'</strong> teacher(s)…';
+  try{
+    const r=await fetch('/api/pref/send-links/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails})});
     const d=await r.json();
-    if(d.ok){bar.className='spp-st ok';bar.innerHTML='✅ Sent to <strong>'+d.sent.length+'</strong>!'+(d.failed.length?'<br><span style="color:#fca5a5">Failed: '+d.failed.join(', ')+'</span>':'');ei.value='';}
-    else{bar.className='spp-st err';bar.innerHTML='❌ '+d.error;}
-  }catch{bar.className='spp-st err';bar.innerHTML='❌ Server error. Check .env EMAIL settings.';}
-  setTimeout(()=>{bar.style.display='none';},9000);}
-function openGmail(e,l){const s=encodeURIComponent('SmartScheduler — Fill Your Teaching Preferences');const b=encodeURIComponent('Dear Teacher,\n\nFill preferences:\n'+l+'\n\nThank you,\nSmartScheduler');window.open('https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(e)+'&su='+s+'&body='+b,'_blank');}
-function openMailto(e,l){const s=encodeURIComponent('SmartScheduler — Fill Your Teaching Preferences');const b=encodeURIComponent('Dear Teacher,\n\nFill preferences:\n'+l+'\n\nThank you,\nSmartScheduler');const a=document.createElement('a');a.href='mailto:'+e+'?subject='+s+'&body='+b;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);}
-function sendCompose(c){
-  const emails=parseEmails(ei.value);if(!emails.length){alert('Enter at least one email.');return;}
-  const bar=document.getElementById('spp-st');bar.className='spp-st load';bar.style.display='block';
-  bar.innerHTML='📬 Opening compose for <strong>'+emails.length+'</strong> teacher(s)…';
-  const delay=c==='gmail'?900:700;
-  emails.forEach((e,i)=>{const l=buildLink(e);setTimeout(()=>{if(c==='gmail')openGmail(e,l);else openMailto(e,l);},i*delay);});
-  setTimeout(()=>{bar.className='spp-st ok';bar.innerHTML='✅ Compose opened for <strong>'+emails.length+'</strong>! Hit Send in each tab.';ei.value='';},emails.length*delay+300);
-  setTimeout(()=>{bar.style.display='none';},emails.length*delay+8000);}
+    bar.style.display='none';
+    if(d.ok){
+      ei.value='';
+      const failedMsg = d.failed && d.failed.length ? ' ('+d.failed.length+' failed: '+d.failed.join(', ')+')' : '';
+      showPopup('📧','Mail Sent Successfully!','Mail sent successfully to '+d.sent.length+' teacher(s). Please check your Gmail for delivery confirmation.'+failedMsg);
+    } else {
+      bar.style.display='block';
+      bar.className='spp-st err';
+      bar.innerHTML='❌ '+d.error;
+    }
+  }catch{
+    bar.style.display='none';
+    showPopup('❌','Error','Server error. Please check Gmail SMTP settings in .env and try again.');
+  }
+}
+
+async function sendWhatsApp(){
+  const emails=parseEmails(ei.value);
+  if(!emails.length){alert('Enter at least one email / phone number.');return;}
+  const bar=document.getElementById('spp-st');
+  bar.className='spp-st load';bar.style.display='block';
+  bar.innerHTML='💬 Sending WhatsApp to <strong>'+emails.length+'</strong> teacher(s)…';
+  try{
+    const r=await fetch('/api/pref/send-whatsapp/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails})});
+    const d=await r.json();
+    bar.style.display='none';
+    if(d.ok){
+      ei.value='';
+      showPopup('💬','Message Sent Successfully!','Message sent successfully to '+d.sent.length+' teacher(s). Please check your WhatsApp for delivery confirmation.');
+    } else {
+      bar.style.display='block';
+      bar.className='spp-st err';
+      bar.innerHTML='❌ '+d.error;
+    }
+  }catch{
+    bar.style.display='none';
+    showPopup('❌','Error','Server error. Please check WhatsApp API settings and try again.');
+  }
+}
 </script>
 {% endblock %}

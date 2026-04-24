@@ -45,8 +45,8 @@
         window.addEventListener("load", scheduleHomepageReset, { once: true });
       })();
     </script>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
-    <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='50' y1='0' x2='50' y2='120' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='.5' stop-color='%230ea5e9'/%3E%3Cstop offset='1' stop-color='%230c3557'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2L8 42l14 50q28 20 56 0l14-50Z' fill='url(%23g)'/%3E%3Cpath d='M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z' fill='%23081424' opacity='.85'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/png" href="{% static 'logo.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'logo.png' %}">
 
     <!-- Google Font -->
     <link
@@ -60,6 +60,7 @@
   </head>
 
   <body class="site-layout">
+    <canvas id="neuron-canvas"></canvas>
     <div id="features"></div>
     <!-- <canvas id="hp-canvas"></canvas> -->
     <!-- <div id="hp-cursor"></div>
@@ -74,43 +75,7 @@
     <header class="nav">
       <div class="container nav-inner">
         <a class="nav-left" href="{% url 'home' %}">
-          <div class="nav-logo-mark" style="display:flex;align-items:center;filter:drop-shadow(0 0 12px rgba(0,200,255,.65));"><svg viewBox="0 0 200 200" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="lg_top_IND" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
-      <stop offset="0%" stop-color="#00e5ff"/>
-      <stop offset="50%" stop-color="#0090ff"/>
-      <stop offset="100%" stop-color="#0040c8"/>
-    </linearGradient>
-    <linearGradient id="lg_left_IND" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
-      <stop offset="0%" stop-color="#0070ff"/>
-      <stop offset="100%" stop-color="#001a7a"/>
-    </linearGradient>
-    <linearGradient id="lg_right_IND" x1="1" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
-      <stop offset="0%" stop-color="#00c8ff"/>
-      <stop offset="100%" stop-color="#0030a0"/>
-    </linearGradient>
-    <linearGradient id="lg_inner_IND" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
-      <stop offset="0%" stop-color="#003090"/>
-      <stop offset="100%" stop-color="#001050"/>
-    </linearGradient>
-    <filter id="glow_IND">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-  </defs>
-  <!-- Outer chevron top (bright cyan stripe) -->
-  <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_top_IND)" filter="url(#glow_IND)"/>
-  <!-- Left arm -->
-  <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_left_IND)" opacity="0.95"/>
-  <!-- Right arm -->
-  <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_right_IND)" opacity="0.9"/>
-  <!-- Inner dark arch cutout -->
-  <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.95"/>
-  <!-- Inner arch highlight rim -->
-  <path d="M62 100 Q62 158 100 168 Q138 158 138 100" fill="none" stroke="url(#lg_right_IND)" stroke-width="2.5" opacity="0.5"/>
-  <!-- Top fold shadow line -->
-  <path d="M44 78 L100 34 L156 78" fill="none" stroke="rgba(0,220,255,0.4)" stroke-width="2"/>
-</svg></div>
+          <div class="nav-logo-mark" style="display:flex;align-items:center;filter:drop-shadow(0 0 12px rgba(0,200,255,.65));"><img src="{% static 'logo.png' %}" alt="SmartScheduler Logo" width="40" height="40" style="object-fit:contain;border-radius:6px;"/></div>
           <div>
             <div class="nav-title"><span style="color:#a3e635">Smart</span><span style="color:#22c55e">Scheduler</span></div>
             <div style="font-size: 11px; color: var(--muted)">
@@ -1050,5 +1015,110 @@ if(typeof gsap!=='undefined'&&typeof ScrollTrigger!=='undefined'){
     gsap.to(img,{scale:1.14,yPercent:-9,ease:'none',scrollTrigger:{trigger:img,scrub:1}});});}
 </script>
     <script src="{% static 'chatbot.js' %}"></script>
+    <script src="{% static 'neuron_bg.js' %}"></script>
+<style>
+/* ── 3D Glass Hero Panel ── */
+.hero-panel {
+  background: linear-gradient(135deg,
+    rgba(0,229,255,0.10) 0%,
+    rgba(0,100,255,0.07) 40%,
+    rgba(168,85,247,0.08) 100%) !important;
+  border: 1px solid rgba(0,229,255,0.25) !important;
+  backdrop-filter: blur(18px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.6) !important;
+  box-shadow:
+    0 8px 32px rgba(0,229,255,0.12),
+    0 2px 0 rgba(255,255,255,0.07) inset,
+    0 -1px 0 rgba(0,229,255,0.15) inset !important;
+}
+/* ── Glass Feature Cards ── */
+.feature-card {
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.06) 0%,
+    rgba(0,229,255,0.04) 100%) !important;
+  border: 1px solid rgba(0,229,255,0.18) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25), 0 1px 0 rgba(255,255,255,0.06) inset !important;
+}
+.feature-card:hover {
+  background: linear-gradient(135deg,
+    rgba(0,229,255,0.12) 0%,
+    rgba(168,85,247,0.08) 100%) !important;
+  box-shadow:
+    0 30px 70px rgba(0,229,255,0.28),
+    0 0 60px rgba(0,200,255,0.1),
+    0 0 0 1px rgba(0,229,255,0.35),
+    0 2px 0 rgba(255,255,255,0.1) inset !important;
+}
+/* ── Glass Compare / View / Metric Cards ── */
+.compare-card, .view-card, .metric-card {
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.05) 0%,
+    rgba(0,150,255,0.05) 100%) !important;
+  border: 1px solid rgba(0,229,255,0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.22), 0 1px 0 rgba(255,255,255,0.05) inset !important;
+  transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s, border-color 0.3s !important;
+}
+.compare-card:hover, .view-card:hover, .metric-card:hover {
+  transform: translateY(-10px) scale(1.04) rotateX(-3deg) !important;
+  box-shadow: 0 24px 60px rgba(0,200,255,0.22), 0 0 0 1px rgba(0,229,255,0.3) !important;
+  border-color: rgba(0,229,255,0.4) !important;
+}
+/* ── 3D hero-right floating card glow ── */
+.hero-right::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border-radius: 36px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(0,229,255,0.18), transparent 70%);
+  pointer-events: none;
+  animation: hrGlow 4s ease-in-out infinite alternate;
+}
+@keyframes hrGlow {
+  from { opacity: 0.5; transform: scale(0.95); }
+  to   { opacity: 1;   transform: scale(1.05); }
+}
+/* ── Stat numbers glass pill ── */
+.stat, [class*="stat-"] {
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+</style>
+<script>
+/* 3D tilt on hero panel and feature cards */
+(function(){
+  function addTilt(selector, maxTilt, scale) {
+    document.querySelectorAll(selector).forEach(function(el){
+      el.addEventListener('mousemove', function(e){
+        var r = el.getBoundingClientRect();
+        var cx = (e.clientX - r.left) / r.width  - 0.5;
+        var cy = (e.clientY - r.top)  / r.height - 0.5;
+        el.style.transform = 'perspective(900px) rotateY('+( cx*maxTilt)+'deg) rotateX('+(- cy*maxTilt)+'deg) scale('+scale+') translateZ(10px)';
+        el.style.transition = 'transform 0.08s ease';
+      });
+      el.addEventListener('mouseleave', function(){
+        el.style.transform = '';
+        el.style.transition = 'transform 0.55s cubic-bezier(.34,1.56,.64,1)';
+      });
+    });
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', function(){
+      addTilt('.hero-panel', 12, 1.04);
+      addTilt('.compare-card', 10, 1.03);
+      addTilt('.view-card',    10, 1.03);
+      addTilt('.metric-card',  8,  1.02);
+    });
+  } else {
+    addTilt('.hero-panel', 12, 1.04);
+    addTilt('.compare-card', 10, 1.03);
+    addTilt('.view-card',    10, 1.03);
+    addTilt('.metric-card',  8,  1.02);
+  }
+})();
+</script>
   </body>
 </html>

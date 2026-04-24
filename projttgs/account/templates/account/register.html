@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load socialaccount %}
 {% block title %}Create Account • SmartScheduler{% endblock %}
 {% block content %}
@@ -16,13 +17,7 @@
         <div class="reglov">
           <div class="reglogo">
             <div class="reglogoic">
-              <svg viewBox="0 0 200 200" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="RGX1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient></defs>
-                <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#RGX1)"/>
-                <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="#0070ff" opacity="0.95"/>
-                <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="#00c8ff" opacity="0.9"/>
-                <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
-              </svg>
+              <img src="{% static 'logo.png' %}" alt="SmartScheduler" width="28" height="28" style="object-fit:contain;display:block;border-radius:4px;"/>
             </div>
             <span style="font-size:.9rem;font-weight:700"><span style="color:#a3e635">Smart</span><span style="color:#00e5ff">Scheduler</span></span>
           </div>
@@ -40,13 +35,7 @@
       <div class="reground">
         <div class="regformlogo">
           <div style="filter:drop-shadow(0 0 9px rgba(0,229,255,.55))">
-            <svg viewBox="0 0 200 200" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-              <defs><linearGradient id="RFL1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient></defs>
-              <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#RFL1)"/>
-              <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="#0070ff" opacity="0.95"/>
-              <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="#00c8ff" opacity="0.9"/>
-              <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
-            </svg>
+            <img src="{% static 'logo.png' %}" alt="SmartScheduler" width="32" height="32" style="object-fit:contain;display:block;border-radius:6px;"/>
           </div>
           <span style="font-size:.95rem;font-weight:700"><span style="color:#a3e635">Smart</span><span style="color:#00e5ff">Scheduler</span></span>
         </div>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 <canvas id="rcv"></canvas>
 <div class="rpage">
@@ -8,20 +9,7 @@
     <div class="rlogo" id="rlogo">
       <div class="rring"></div><div class="rring r2"></div>
       <div style="filter:drop-shadow(0 0 20px rgba(0,229,255,.75))">
-        <svg viewBox="0 0 200 200" width="62" height="62" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="RL1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient>
-            <linearGradient id="RL2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient>
-            <linearGradient id="RL3" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient>
-            <filter id="RGW"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          </defs>
-          <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#RL1)" filter="url(#RGW)"/>
-          <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#RL2)" opacity="0.95"/>
-          <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#RL3)" opacity="0.9"/>
-          <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
-          <path d="M62 100 Q62 158 100 168 Q138 158 138 100" fill="none" stroke="url(#RL3)" stroke-width="2.5" opacity="0.5"/>
-          <path d="M44 78 L100 34 L156 78" fill="none" stroke="rgba(0,229,255,0.45)" stroke-width="2.2"/>
-        </svg>
+        <img src="{% static 'logo.png' %}" alt="SmartScheduler" width="62" height="62" style="object-fit:contain;display:block;"/>
       </div>
     </div>
     <div class="reye">SmartScheduler</div>

@@ -57,6 +57,7 @@ td{padding:.85rem 1.1rem;font-size:.86rem;vertical-align:top}
       <input type="text" id="si" placeholder="Search name or email…" oninput="filterTable()"/>
     </div>
     <select class="fsel" id="df" onchange="filterTable()"><option value="">All Designations</option><option>Professor</option><option>Associate Professor</option><option>Assistant Professor</option></select>
+    <select class="fsel" id="sf" onchange="filterTable()"><option value="">All Subjects</option><option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>Computer Science</option><option>Electronics</option><option>Electrical Engineering</option><option>Mechanical Engineering</option><option>Civil Engineering</option><option>Data Structures</option><option>Algorithms</option><option>Operating Systems</option><option>Database Management</option><option>Computer Networks</option><option>Software Engineering</option><option>Artificial Intelligence</option><option>Machine Learning</option><option>Web Development</option><option>Cloud Computing</option><option>Cybersecurity</option><option>English Communication</option></select>
     <button class="clrbtn" onclick="clearFilters()">Clear</button>
   </div>
   <div class="tw">
@@ -72,8 +73,8 @@ function renderRows(rows){
   var tb=document.getElementById('tb');document.getElementById('st-sho').textContent=rows.length;document.getElementById('fc').textContent='Showing '+rows.length+' of '+AR.length+' submission(s)';
   if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty-s"><div class="empty-i">📭</div><div class="empty-t">No submissions yet. Send preference mails to teachers first.</div></div></td></tr>';return;}
   tb.innerHTML=rows.map(function(s,i){var sj=(s.subjects||[]).map(function(x){return'<span class="tg">'+x+'</span>';}).join('')||'<span class="tdem">—</span>';var cl=(s.classes||[]).map(function(x){return'<span class="tg">'+x+'</span>';}).join('')||'<span class="tdem">—</span>';var yr=(s.years||[]).map(function(x){return'<span class="tg">'+x+'</span>';}).join('')||'<span class="tdem">—</span>';return'<tr><td class="tdn">'+String(i+1).padStart(2,'0')+'</td><td><div class="tdnm">'+(s.name||'—')+'</div><div class="tdem">'+(s.email||'')+'</div></td><td><span class="db '+dc(s.designation)+'">'+(s.designation||'—')+'</span></td><td><div class="tgl">'+sj+'</div></td><td><div class="tgl">'+cl+'</div></td><td><div class="tgl">'+yr+'</div></td><td class="tdd">'+(s.submitted_at||'—')+'</td></tr>';}).join('');}
-function filterTable(){var q=document.getElementById('si').value.toLowerCase().trim();var d=document.getElementById('df').value;renderRows(AR.filter(function(s){return(!q||(s.name||'').toLowerCase().includes(q)||(s.email||'').toLowerCase().includes(q))&&(!d||s.designation===d);}));}
-function clearFilters(){document.getElementById('si').value='';document.getElementById('df').value='';renderRows(AR);}
+function filterTable(){var q=document.getElementById('si').value.toLowerCase().trim();var d=document.getElementById('df').value;var subj=document.getElementById('sf').value;renderRows(AR.filter(function(s){return(!q||(s.name||'').toLowerCase().includes(q)||(s.email||'').toLowerCase().includes(q))&&(!d||s.designation===d)&&(!subj||(s.subjects||[]).includes(subj));}));}
+function clearFilters(){document.getElementById('si').value='';document.getElementById('df').value='';document.getElementById('sf').value='';renderRows(AR);}
 if(AR.length)document.getElementById('st-lat').textContent=AR[0].submitted_at||'—';
 renderRows(AR);
 </script>

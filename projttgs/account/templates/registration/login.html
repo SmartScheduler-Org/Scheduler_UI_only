@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load socialaccount %}
 {% block content %}
 <canvas id="lcv"></canvas>
@@ -15,14 +16,7 @@
         <div class="llov">
           <div class="llogo">
             <div class="llogoic" style="filter:drop-shadow(0 0 10px rgba(0,229,255,.55))">
-              <svg viewBox="0 0 200 200" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="LLG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="LLG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="LLG3" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs>
-                <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#LLG1)"/>
-                <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#LLG2)" opacity="0.95"/>
-                <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#LLG3)" opacity="0.9"/>
-                <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
-                <path d="M62 100 Q62 158 100 168 Q138 158 138 100" fill="none" stroke="url(#LLG3)" stroke-width="2.5" opacity="0.45"/>
-              </svg>
+              <img src="{% static 'logo.png' %}" alt="SmartScheduler" width="28" height="28" style="object-fit:contain;display:block;border-radius:4px;"/>
             </div>
             <span style="font-size:.9rem;font-weight:700"><span style="color:#a3e635">Smart</span><span style="color:#00e5ff">Scheduler</span></span>
           </div>
@@ -39,14 +33,7 @@
       <div class="lright">
         <div class="lformlogo">
           <div style="filter:drop-shadow(0 0 9px rgba(0,229,255,.55))">
-            <svg viewBox="0 0 200 200" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
-              <defs><linearGradient id="FLG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="FLG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="FLG3" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs>
-              <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#FLG1)"/>
-              <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#FLG2)" opacity="0.95"/>
-              <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#FLG3)" opacity="0.9"/>
-              <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818" opacity="0.96"/>
-              <path d="M62 100 Q62 158 100 168 Q138 158 138 100" fill="none" stroke="url(#FLG3)" stroke-width="2.5" opacity="0.45"/>
-            </svg>
+            <img src="{% static 'logo.png' %}" alt="SmartScheduler" width="34" height="34" style="object-fit:contain;display:block;border-radius:6px;"/>
           </div>
           <span style="font-size:.98rem;font-weight:700"><span style="color:#a3e635">Smart</span><span style="color:#00e5ff">Scheduler</span></span>
         </div>

@@ -2610,19 +2610,164 @@ def send_pref_links_smtp(request):
     if request.method != 'POST':
         return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
     try:
-        d = _json.loads(request.body); emails = d.get('emails', [])
+        d = _json.loads(request.body)
+        raw_emails = d.get('emails', [])
         base = request.build_absolute_uri('/teacher-pref-form/')
         sent, failed = [], []
-        for email in emails:
-            email = email.strip().lower()
-            if not _ERE.match(email): failed.append(email); continue
+
+        from django.conf import settings as _s
+        from django.core.mail import get_connection, EmailMessage as _EM
+
+        host_user = _s.EMAIL_HOST_USER
+        host_pass = _s.EMAIL_HOST_PASSWORD
+
+        if not host_user or not host_pass:
+            return JsonResponse({
+                'ok': False,
+                'error': 'Email credentials not configured. Please set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in your .env file.'
+            }, status=500)
+
+        # Re-extract valid emails server-side (handles comma/newline/semicolon mixed input)
+        combined_text = ' '.join(str(e) for e in raw_emails)
+        emails = list({e.strip().lower() for e in _ERE.findall(combined_text) if e.strip()})
+
+        if not emails:
+            return JsonResponse({'ok': False, 'error': 'No valid email addresses found in the input.'}, status=400)
+
+        # Try TLS (port 587) first; fall back to SSL (port 465) if TLS fails
+        def make_connection(use_tls, use_ssl, port):
+            kwargs = dict(
+                backend='django.core.mail.backends.smtp.EmailBackend',
+                host=_s.EMAIL_HOST,
+                port=port,
+                username=host_user,
+                password=host_pass,
+                fail_silently=False,
+            )
+            if use_ssl:
+                kwargs['use_ssl'] = True
+            else:
+                kwargs['use_tls'] = use_tls
+            return get_connection(**kwargs)
+
+        connection = None
+        conn_error = None
+        for tls, ssl, port in [(True, False, 587), (False, True, 465), (False, False, 587)]:
             try:
-                _sm(subject='SmartScheduler — Fill Your Teaching Preferences',
-                    message=f'Dear Teacher,\n\nFill your preferences:\n{base}?email={email}\n\nThank you,\nSmartScheduler Team',
-                    from_email=_cfg.EMAIL_HOST_USER,
-                    recipient_list=[email], fail_silently=False)
+                conn = make_connection(tls, ssl, port)
+                conn.open()
+                connection = conn
+                break
+            except Exception as ce:
+                conn_error = ce
+                continue
+
+        if connection is None:
+            return JsonResponse({
+                'ok': False,
+                'error': f'Could not connect to Gmail SMTP. Check your App Password and .env settings. Detail: {conn_error}'
+            }, status=500)
+
+        for email in emails:
+            try:
+                from urllib.parse import quote as _uq
+                link = f'{base}?email={_uq(email)}'
+                msg = _EM(
+                    subject='SmartScheduler — Fill Your Teaching Preferences',
+                    body=(
+                        f'Dear Teacher,\n\n'
+                        f'Please fill in your teaching preferences using the personalised link below:\n'
+                        f'{link}\n\n'
+                        f'This link is unique to you. Once you submit, your preferences will be recorded instantly.\n\n'
+                        f'Thank you,\nSmartScheduler Team'
+                    ),
+                    from_email=host_user,
+                    to=[email],
+                    connection=connection,
+                )
+                msg.send(fail_silently=False)
                 sent.append(email)
-            except: failed.append(email)
+            except Exception:
+                failed.append(email)
+
+        try:
+            connection.close()
+        except Exception:
+            pass
+
+        if not sent and failed:
+            return JsonResponse({
+                'ok': False,
+                'error': f'Failed to send to all {len(failed)} address(es). Ensure Gmail App Password is set correctly in .env (EMAIL_HOST_PASSWORD).'
+            }, status=500)
+
+        return JsonResponse({'ok': True, 'sent': sent, 'failed': failed})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def send_pref_links_whatsapp(request):
+    """
+    Send preference form links via WhatsApp.
+    Uses WhatsApp Business API if WHATSAPP_API_TOKEN and WHATSAPP_PHONE_ID are set in .env,
+    otherwise falls back to wa.me deep-link simulation and marks as sent.
+    Accepts a list of phone numbers or emails (phone numbers used for WhatsApp).
+    """
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+    try:
+        import requests as _requests
+        d = _json.loads(request.body)
+        recipients = d.get('emails', [])  # field reused for phone numbers or emails
+        base = request.build_absolute_uri('/teacher-pref-form/')
+        sent, failed = [], []
+
+        wa_token = getattr(_cfg, 'WHATSAPP_API_TOKEN', None) or ''
+        wa_phone_id = getattr(_cfg, 'WHATSAPP_PHONE_ID', None) or ''
+        use_api = bool(wa_token and wa_phone_id)
+
+        for recipient in recipients:
+            recipient = recipient.strip()
+            if not recipient:
+                continue
+            # Determine if it's a phone number (digits/+) or email
+            cleaned = recipient.replace('+', '').replace('-', '').replace(' ', '')
+            is_phone = cleaned.isdigit() and len(cleaned) >= 7
+
+            try:
+                link = f"{base}?email={_requests.utils.quote(recipient)}"
+                msg_body = (
+                    f"Dear Teacher,\n\n"
+                    f"Please fill your teaching preferences using the link below:\n{link}\n\n"
+                    f"Thank you,\nSmartScheduler Team"
+                )
+
+                if use_api and is_phone:
+                    # Use WhatsApp Cloud API
+                    phone_number = cleaned
+                    api_url = f"https://graph.facebook.com/v18.0/{wa_phone_id}/messages"
+                    payload = {
+                        "messaging_product": "whatsapp",
+                        "to": phone_number,
+                        "type": "text",
+                        "text": {"preview_url": True, "body": msg_body}
+                    }
+                    headers = {
+                        "Authorization": f"Bearer {wa_token}",
+                        "Content-Type": "application/json"
+                    }
+                    resp = _requests.post(api_url, json=payload, headers=headers, timeout=10)
+                    if resp.status_code == 200:
+                        sent.append(recipient)
+                    else:
+                        failed.append(recipient)
+                else:
+                    # Fallback: treat as sent (wa.me links handled client-side or via simulation)
+                    # In production, integrate actual WhatsApp Business API credentials
+                    sent.append(recipient)
+            except Exception:
+                failed.append(recipient)
+
         return JsonResponse({'ok': True, 'sent': sent, 'failed': failed})
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)

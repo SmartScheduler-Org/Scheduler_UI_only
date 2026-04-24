@@ -121,5 +121,6 @@ urlpatterns = [
     path('api/pref/submit/',        views.teacher_pref_submit,       name='pref_submit'),
     path('api/pref/send-links/',    views.send_pref_links_smtp,      name='pref_send_links'),
     path('api/pref/parse-emails/',  views.parse_emails_view,         name='pref_parse_emails'),
+    path('api/pref/send-whatsapp/', views.send_pref_links_whatsapp,  name='pref_send_whatsapp'),
     path('export/preferences/csv/', views.export_preferences_csv,    name='export_pref_csv'),
 ]
