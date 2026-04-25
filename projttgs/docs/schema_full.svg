@@ -1,0 +1,284 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1818" height="2228" viewBox="0 0 1818 2228">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+</marker>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+<feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#94a3b8" flood-opacity="0.25" />
+</filter>
+</defs>
+<rect width="1818" height="2228" fill="#f8fafc" />
+<text x="40" y="50" font-size="28" font-weight="700" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">Full Database Schema</text>
+<text x="40" y="78" font-size="14" fill="#475569" font-family="Segoe UI, Arial, sans-serif">Generated from db.sqlite3 on 2026-04-25 12:01</text>
+<text x="40" y="98" font-size="13" fill="#64748b" font-family="Segoe UI, Arial, sans-serif">Lines point from referenced table to the table containing the foreign key.</text>
+<polyline points="196,344 196,314 196,314 196,284" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; account_emailaddress.user_id</title></polyline>
+<polyline points="316,202 374,202 374,202 433,202" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>account_emailaddress.id -&gt; account_emailconfirmation.email_address_id</title></polyline>
+<polyline points="1536,192 1479,192 1479,182 1422,182" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_permission.id -&gt; auth_group_permissions.permission_id</title></polyline>
+<polyline points="1032,172 1107,172 1107,182 1182,182" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_group.id -&gt; auth_group_permissions.group_id</title></polyline>
+<polyline points="1656,344 1656,304 1656,304 1656,264" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>django_content_type.id -&gt; auth_permission.content_type_id</title></polyline>
+<polyline points="792,172 733,172 733,406 674,406" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_group.id -&gt; auth_user_groups.group_id</title></polyline>
+<polyline points="316,486 375,486 375,406 434,406" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; auth_user_groups.user_id</title></polyline>
+<polyline points="1536,192 1284,192 1284,406 1032,406" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_permission.id -&gt; auth_user_user_permissions.permission_id</title></polyline>
+<polyline points="316,486 554,486 554,406 792,406" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; auth_user_user_permissions.user_id</title></polyline>
+<polyline points="316,486 739,486 739,456 1163,456" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; django_admin_log.user_id</title></polyline>
+<polyline points="1536,406 1488,406 1488,456 1441,456" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>django_content_type.id -&gt; django_admin_log.content_type_id</title></polyline>
+<polyline points="316,486 749,486 749,790 1182,790" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; socialaccount_socialaccount.user_id</title></polyline>
+<polyline points="792,750 554,750 554,1034 316,1034" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>django_site.id -&gt; socialaccount_socialapp_sites.site_id</title></polyline>
+<polyline points="1535,800 925,800 925,1034 316,1034" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>socialaccount_socialapp.id -&gt; socialaccount_socialapp_sites.socialapp_id</title></polyline>
+<polyline points="1535,800 1104,800 1104,1064 674,1064" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>socialaccount_socialapp.id -&gt; socialaccount_socialtoken.app_id</title></polyline>
+<polyline points="1182,790 928,790 928,1064 674,1064" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>socialaccount_socialaccount.id -&gt; socialaccount_socialtoken.account_id</title></polyline>
+<polyline points="1536,1044 1302,1044 1302,1094 1069,1094" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_department.id -&gt; ttgen_course.department_id</title></polyline>
+<polyline points="316,486 536,486 536,1094 756,1094" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_course.user_id</title></polyline>
+<polyline points="335,1368 758,1368 758,1034 1182,1034" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_instructor.id -&gt; ttgen_course_instructors.instructor_id</title></polyline>
+<polyline points="1069,1094 1125,1094 1125,1034 1182,1034" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_course.id -&gt; ttgen_course_instructors.course_id</title></polyline>
+<polyline points="316,486 926,486 926,1044 1536,1044" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_department.user_id</title></polyline>
+<polyline points="196,628 196,952 196,952 196,1276" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_instructor.user_id</title></polyline>
+<polyline points="196,628 196,952 554,952 554,1276" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_meetingtime.user_id</title></polyline>
+<polyline points="196,628 196,952 912,952 912,1276" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_profile.user_id</title></polyline>
+<polyline points="316,486 732,486 732,1378 1149,1378" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_room.user_id</title></polyline>
+<polyline points="1536,1044 1495,1044 1495,1378 1455,1378" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_department.id -&gt; ttgen_room.department_id</title></polyline>
+<polyline points="316,486 926,486 926,1338 1536,1338" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_savedtimetable.user_id</title></polyline>
+<polyline points="759,1622 537,1622 537,1652 316,1652" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_section.id -&gt; ttgen_scheduledslot.section_id</title></polyline>
+<polyline points="1536,1338 926,1338 926,1652 316,1652" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_savedtimetable.id -&gt; ttgen_scheduledslot.timetable_id</title></polyline>
+<polyline points="1149,1378 732,1378 732,1652 316,1652" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_room.id -&gt; ttgen_scheduledslot.room_id</title></polyline>
+<polyline points="434,1358 375,1358 375,1652 316,1652" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_meetingtime.id -&gt; ttgen_scheduledslot.meeting_time_id</title></polyline>
+<polyline points="196,1460 196,1500 196,1500 196,1540" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_instructor.id -&gt; ttgen_scheduledslot.instructor_id</title></polyline>
+<polyline points="756,1094 536,1094 536,1652 316,1652" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_course.id -&gt; ttgen_scheduledslot.course_id</title></polyline>
+<polyline points="554,1440 554,1490 554,1490 554,1540" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_meetingtime.id -&gt; ttgen_scheduledslot_lab_slots.meetingtime_id</title></polyline>
+<polyline points="316,1652 375,1652 375,1602 434,1602" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_scheduledslot.id -&gt; ttgen_scheduledslot_lab_slots.scheduledslot_id</title></polyline>
+<polyline points="196,628 196,1084 912,1084 912,1540" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_section.user_id</title></polyline>
+<polyline points="1536,1044 1300,1044 1300,1622 1065,1622" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_department.id -&gt; ttgen_section.department_id</title></polyline>
+<polyline points="912,1216 912,1378 1302,1378 1302,1540" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_course.id -&gt; ttgen_section_allowed_courses.course_id</title></polyline>
+<polyline points="1065,1622 1123,1622 1123,1602 1182,1602" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_section.id -&gt; ttgen_section_allowed_courses.section_id</title></polyline>
+<polyline points="1065,1622 1300,1622 1300,1602 1536,1602" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_section.id -&gt; ttgen_teachersection.section_id</title></polyline>
+<polyline points="335,1368 935,1368 935,1602 1536,1602" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>ttgen_instructor.id -&gt; ttgen_teachersection.instructor_id</title></polyline>
+<polyline points="196,628 196,1226 196,1226 196,1824" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; ttgen_useraccessplan.user_id</title></polyline>
+<polyline points="196,628 196,1226 554,1226 554,1824" fill="none" stroke="#94a3b8" stroke-width="2.2" marker-end="url(#arrowhead)"><title>auth_user.id -&gt; user_account_profile.user_id</title></polyline>
+<g filter="url(#shadow)"><rect x="76" y="120" width="240" height="164" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="76" y="120" width="240" height="38" rx="14" fill="#0369a1" /><rect x="76" y="144" width="240" height="14" fill="#0369a1" /></g>
+<text x="92" y="145" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">account_emailaddress</text>
+<text x="92" y="180" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="92" y="200" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">verified : bool [NN]</text>
+<text x="92" y="220" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">primary : bool [NN]</text>
+<text x="92" y="240" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<text x="92" y="260" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">email : varchar(254) [NN]</text>
+<g filter="url(#shadow)"><rect x="433" y="120" width="243" height="164" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="433" y="120" width="243" height="38" rx="14" fill="#0369a1" /><rect x="433" y="144" width="243" height="14" fill="#0369a1" /></g>
+<text x="449" y="145" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">account_emailconfirmation</text>
+<text x="449" y="180" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="449" y="200" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">created : datetime [NN]</text>
+<text x="449" y="220" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">sent : datetime</text>
+<text x="449" y="240" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">key : varchar(64) [NN]</text>
+<text x="449" y="260" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">email_address_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="792" y="120" width="240" height="104" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="792" y="120" width="240" height="38" rx="14" fill="#0369a1" /><rect x="792" y="144" width="240" height="14" fill="#0369a1" /></g>
+<text x="808" y="145" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">auth_group</text>
+<text x="808" y="180" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="808" y="200" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">name : varchar(150) [NN]</text>
+<g filter="url(#shadow)"><rect x="1182" y="120" width="240" height="124" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1182" y="120" width="240" height="38" rx="14" fill="#0369a1" /><rect x="1182" y="144" width="240" height="14" fill="#0369a1" /></g>
+<text x="1198" y="145" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">auth_group_permissions</text>
+<text x="1198" y="180" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1198" y="200" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">group_id : integer [NN]</text>
+<text x="1198" y="220" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">permission_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="1536" y="120" width="240" height="144" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1536" y="120" width="240" height="38" rx="14" fill="#0369a1" /><rect x="1536" y="144" width="240" height="14" fill="#0369a1" /></g>
+<text x="1552" y="145" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">auth_permission</text>
+<text x="1552" y="180" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1552" y="200" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">content_type_id : integer [NN]</text>
+<text x="1552" y="220" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">codename : varchar(100) [NN]</text>
+<text x="1552" y="240" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">name : varchar(255) [NN]</text>
+<g filter="url(#shadow)"><rect x="76" y="344" width="240" height="284" rx="14" fill="#dbeafe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="76" y="344" width="240" height="38" rx="14" fill="#1d4ed8" /><rect x="76" y="368" width="240" height="14" fill="#1d4ed8" /></g>
+<text x="92" y="369" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">auth_user</text>
+<text x="92" y="404" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="92" y="424" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">password : varchar(128) [NN]</text>
+<text x="92" y="444" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">last_login : datetime</text>
+<text x="92" y="464" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">is_superuser : bool [NN]</text>
+<text x="92" y="484" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">username : varchar(150) [NN]</text>
+<text x="92" y="504" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">last_name : varchar(150) [NN]</text>
+<text x="92" y="524" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">email : varchar(254) [NN]</text>
+<text x="92" y="544" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">is_staff : bool [NN]</text>
+<text x="92" y="564" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">is_active : bool [NN]</text>
+<text x="92" y="584" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">date_joined : datetime [NN]</text>
+<text x="92" y="604" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">first_name : varchar(150) [NN]</text>
+<g filter="url(#shadow)"><rect x="434" y="344" width="240" height="124" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="434" y="344" width="240" height="38" rx="14" fill="#0369a1" /><rect x="434" y="368" width="240" height="14" fill="#0369a1" /></g>
+<text x="450" y="369" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">auth_user_groups</text>
+<text x="450" y="404" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="450" y="424" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<text x="450" y="444" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">group_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="792" y="344" width="240" height="124" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="792" y="344" width="240" height="38" rx="14" fill="#0369a1" /><rect x="792" y="368" width="240" height="14" fill="#0369a1" /></g>
+<text x="808" y="369" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">auth_user_user_permissions</text>
+<text x="808" y="404" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="808" y="424" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<text x="808" y="444" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">permission_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="1163" y="344" width="278" height="224" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1163" y="344" width="278" height="38" rx="14" fill="#0369a1" /><rect x="1163" y="368" width="278" height="14" fill="#0369a1" /></g>
+<text x="1179" y="369" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">django_admin_log</text>
+<text x="1179" y="404" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1179" y="424" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">object_id : text</text>
+<text x="1179" y="444" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">object_repr : varchar(200) [NN]</text>
+<text x="1179" y="464" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">action_flag : smallint unsigned [NN]</text>
+<text x="1179" y="484" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">change_message : text [NN]</text>
+<text x="1179" y="504" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">content_type_id : integer</text>
+<text x="1179" y="524" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<text x="1179" y="544" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">action_time : datetime [NN]</text>
+<g filter="url(#shadow)"><rect x="1536" y="344" width="240" height="124" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1536" y="344" width="240" height="38" rx="14" fill="#0369a1" /><rect x="1536" y="368" width="240" height="14" fill="#0369a1" /></g>
+<text x="1552" y="369" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">django_content_type</text>
+<text x="1552" y="404" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1552" y="424" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">app_label : varchar(100) [NN]</text>
+<text x="1552" y="444" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">model : varchar(100) [NN]</text>
+<g filter="url(#shadow)"><rect x="76" y="688" width="240" height="144" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="76" y="688" width="240" height="38" rx="14" fill="#0369a1" /><rect x="76" y="712" width="240" height="14" fill="#0369a1" /></g>
+<text x="92" y="713" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">django_migrations</text>
+<text x="92" y="748" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="92" y="768" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">app : varchar(255) [NN]</text>
+<text x="92" y="788" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">name : varchar(255) [NN]</text>
+<text x="92" y="808" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">applied : datetime [NN]</text>
+<g filter="url(#shadow)"><rect x="434" y="688" width="240" height="124" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="434" y="688" width="240" height="38" rx="14" fill="#0369a1" /><rect x="434" y="712" width="240" height="14" fill="#0369a1" /></g>
+<text x="450" y="713" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">django_session</text>
+<text x="450" y="748" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">session_key : varchar(40) [PK]</text>
+<text x="450" y="768" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">session_data : text [NN]</text>
+<text x="450" y="788" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">expire_date : datetime [NN]</text>
+<g filter="url(#shadow)"><rect x="792" y="688" width="240" height="124" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="792" y="688" width="240" height="38" rx="14" fill="#0369a1" /><rect x="792" y="712" width="240" height="14" fill="#0369a1" /></g>
+<text x="808" y="713" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">django_site</text>
+<text x="808" y="748" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="808" y="768" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">name : varchar(50) [NN]</text>
+<text x="808" y="788" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">domain : varchar(100) [NN]</text>
+<g filter="url(#shadow)"><rect x="1182" y="688" width="240" height="204" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1182" y="688" width="240" height="38" rx="14" fill="#0369a1" /><rect x="1182" y="712" width="240" height="14" fill="#0369a1" /></g>
+<text x="1198" y="713" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">socialaccount_socialaccount</text>
+<text x="1198" y="748" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1198" y="768" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">provider : varchar(200) [NN]</text>
+<text x="1198" y="788" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">uid : varchar(191) [NN]</text>
+<text x="1198" y="808" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">last_login : datetime [NN]</text>
+<text x="1198" y="828" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">date_joined : datetime [NN]</text>
+<text x="1198" y="848" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<text x="1198" y="868" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">extra_data : text [NN]</text>
+<g filter="url(#shadow)"><rect x="1535" y="688" width="243" height="224" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1535" y="688" width="243" height="38" rx="14" fill="#0369a1" /><rect x="1535" y="712" width="243" height="14" fill="#0369a1" /></g>
+<text x="1551" y="713" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">socialaccount_socialapp</text>
+<text x="1551" y="748" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1551" y="768" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">provider : varchar(30) [NN]</text>
+<text x="1551" y="788" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">name : varchar(40) [NN]</text>
+<text x="1551" y="808" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">client_id : varchar(191) [NN]</text>
+<text x="1551" y="828" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">secret : varchar(191) [NN]</text>
+<text x="1551" y="848" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">key : varchar(191) [NN]</text>
+<text x="1551" y="868" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">provider_id : varchar(200) [NN]</text>
+<text x="1551" y="888" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">settings : text [NN]</text>
+<g filter="url(#shadow)"><rect x="76" y="972" width="240" height="124" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="76" y="972" width="240" height="38" rx="14" fill="#0369a1" /><rect x="76" y="996" width="240" height="14" fill="#0369a1" /></g>
+<text x="92" y="997" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">socialaccount_socialapp_sites</text>
+<text x="92" y="1032" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="92" y="1052" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">socialapp_id : integer [NN]</text>
+<text x="92" y="1072" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">site_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="434" y="972" width="240" height="184" rx="14" fill="#e0f2fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="434" y="972" width="240" height="38" rx="14" fill="#0369a1" /><rect x="434" y="996" width="240" height="14" fill="#0369a1" /></g>
+<text x="450" y="997" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">socialaccount_socialtoken</text>
+<text x="450" y="1032" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="450" y="1052" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">token : text [NN]</text>
+<text x="450" y="1072" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">token_secret : text [NN]</text>
+<text x="450" y="1092" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">expires_at : datetime</text>
+<text x="450" y="1112" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">account_id : integer [NN]</text>
+<text x="450" y="1132" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">app_id : integer</text>
+<g filter="url(#shadow)"><rect x="756" y="972" width="313" height="244" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="756" y="972" width="313" height="38" rx="14" fill="#c2410c" /><rect x="756" y="996" width="313" height="14" fill="#c2410c" /></g>
+<text x="772" y="997" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_course</text>
+<text x="772" y="1032" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="772" y="1052" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">course_number : varchar(20) [NN]</text>
+<text x="772" y="1072" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">course_name : varchar(100) [NN]</text>
+<text x="772" y="1092" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">max_numb_students : integer unsigned [NN]</text>
+<text x="772" y="1112" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">room_required : varchar(20) [NN]</text>
+<text x="772" y="1132" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">required_lab_category : varchar(50) [NN]</text>
+<text x="772" y="1152" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">classes_per_week : integer unsigned [NN]</text>
+<text x="772" y="1172" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<text x="772" y="1192" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">department_id : bigint [NN]</text>
+<g filter="url(#shadow)"><rect x="1182" y="972" width="240" height="124" rx="14" fill="#ede9fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1182" y="972" width="240" height="38" rx="14" fill="#6d28d9" /><rect x="1182" y="996" width="240" height="14" fill="#6d28d9" /></g>
+<text x="1198" y="997" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_course_instructors</text>
+<text x="1198" y="1032" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1198" y="1052" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">course_id : bigint [NN]</text>
+<text x="1198" y="1072" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">instructor_id : bigint [NN]</text>
+<g filter="url(#shadow)"><rect x="1536" y="972" width="240" height="144" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1536" y="972" width="240" height="38" rx="14" fill="#c2410c" /><rect x="1536" y="996" width="240" height="14" fill="#c2410c" /></g>
+<text x="1552" y="997" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_department</text>
+<text x="1552" y="1032" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1552" y="1052" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">name : varchar(100) [NN]</text>
+<text x="1552" y="1072" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">code : varchar(10) [NN]</text>
+<text x="1552" y="1092" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="57" y="1276" width="278" height="184" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="57" y="1276" width="278" height="38" rx="14" fill="#c2410c" /><rect x="57" y="1300" width="278" height="14" fill="#c2410c" /></g>
+<text x="73" y="1301" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_instructor</text>
+<text x="73" y="1336" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="73" y="1356" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">uid : varchar(6) [NN]</text>
+<text x="73" y="1376" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">name : varchar(100) [NN]</text>
+<text x="73" y="1396" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">designation : varchar(50) [NN]</text>
+<text x="73" y="1416" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">max_workload : integer unsigned [NN]</text>
+<text x="73" y="1436" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="434" y="1276" width="240" height="164" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="434" y="1276" width="240" height="38" rx="14" fill="#c2410c" /><rect x="434" y="1300" width="240" height="14" fill="#c2410c" /></g>
+<text x="450" y="1301" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_meetingtime</text>
+<text x="450" y="1336" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="450" y="1356" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">pid : varchar(5) [NN]</text>
+<text x="450" y="1376" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">day : varchar(15) [NN]</text>
+<text x="450" y="1396" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">time : varchar(2) [NN]</text>
+<text x="450" y="1416" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="792" y="1276" width="240" height="144" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="792" y="1276" width="240" height="38" rx="14" fill="#c2410c" /><rect x="792" y="1300" width="240" height="14" fill="#c2410c" /></g>
+<text x="808" y="1301" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_profile</text>
+<text x="808" y="1336" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="808" y="1356" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">role : varchar(50) [NN]</text>
+<text x="808" y="1376" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">avatar : varchar(100) [NN]</text>
+<text x="808" y="1396" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="1149" y="1276" width="306" height="204" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1149" y="1276" width="306" height="38" rx="14" fill="#c2410c" /><rect x="1149" y="1300" width="306" height="14" fill="#c2410c" /></g>
+<text x="1165" y="1301" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_room</text>
+<text x="1165" y="1336" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1165" y="1356" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">r_number : varchar(50) [NN]</text>
+<text x="1165" y="1376" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">room_type : varchar(20) [NN]</text>
+<text x="1165" y="1396" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">lab_category : varchar(50) [NN]</text>
+<text x="1165" y="1416" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">seating_capacity : integer unsigned [NN]</text>
+<text x="1165" y="1436" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">department_id : bigint [NN]</text>
+<text x="1165" y="1456" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="1536" y="1276" width="240" height="124" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1536" y="1276" width="240" height="38" rx="14" fill="#c2410c" /><rect x="1536" y="1300" width="240" height="14" fill="#c2410c" /></g>
+<text x="1552" y="1301" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_savedtimetable</text>
+<text x="1552" y="1336" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1552" y="1356" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">created_at : datetime [NN]</text>
+<text x="1552" y="1376" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer</text>
+<g filter="url(#shadow)"><rect x="76" y="1540" width="240" height="224" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="76" y="1540" width="240" height="38" rx="14" fill="#c2410c" /><rect x="76" y="1564" width="240" height="14" fill="#c2410c" /></g>
+<text x="92" y="1565" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_scheduledslot</text>
+<text x="92" y="1600" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="92" y="1620" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">is_lab : bool [NN]</text>
+<text x="92" y="1640" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">course_id : bigint [NN]</text>
+<text x="92" y="1660" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">instructor_id : bigint [NN]</text>
+<text x="92" y="1680" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">meeting_time_id : bigint [NN]</text>
+<text x="92" y="1700" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">room_id : bigint [NN]</text>
+<text x="92" y="1720" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">timetable_id : bigint [NN]</text>
+<text x="92" y="1740" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">section_id : bigint [NN]</text>
+<g filter="url(#shadow)"><rect x="434" y="1540" width="240" height="124" rx="14" fill="#ede9fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="434" y="1540" width="240" height="38" rx="14" fill="#6d28d9" /><rect x="434" y="1564" width="240" height="14" fill="#6d28d9" /></g>
+<text x="450" y="1565" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_scheduledslot_lab_slots</text>
+<text x="450" y="1600" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="450" y="1620" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">scheduledslot_id : bigint [NN]</text>
+<text x="450" y="1640" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">meetingtime_id : bigint [NN]</text>
+<g filter="url(#shadow)"><rect x="759" y="1540" width="306" height="164" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="759" y="1540" width="306" height="38" rx="14" fill="#c2410c" /><rect x="759" y="1564" width="306" height="14" fill="#c2410c" /></g>
+<text x="775" y="1565" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_section</text>
+<text x="775" y="1600" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="775" y="1620" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">section_id : varchar(50) [NN]</text>
+<text x="775" y="1640" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">student_strength : integer unsigned [NN]</text>
+<text x="775" y="1660" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">department_id : bigint [NN]</text>
+<text x="775" y="1680" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="1182" y="1540" width="240" height="124" rx="14" fill="#ede9fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1182" y="1540" width="240" height="38" rx="14" fill="#6d28d9" /><rect x="1182" y="1564" width="240" height="14" fill="#6d28d9" /></g>
+<text x="1198" y="1565" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_section_allowed_courses</text>
+<text x="1198" y="1600" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1198" y="1620" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">section_id : bigint [NN]</text>
+<text x="1198" y="1640" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">course_id : bigint [NN]</text>
+<g filter="url(#shadow)"><rect x="1536" y="1540" width="240" height="124" rx="14" fill="#ede9fe" stroke="#cbd5e1" stroke-width="1.5" /><rect x="1536" y="1540" width="240" height="38" rx="14" fill="#6d28d9" /><rect x="1536" y="1564" width="240" height="14" fill="#6d28d9" /></g>
+<text x="1552" y="1565" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_teachersection</text>
+<text x="1552" y="1600" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="1552" y="1620" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">instructor_id : bigint [NN]</text>
+<text x="1552" y="1640" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">section_id : bigint [NN]</text>
+<g filter="url(#shadow)"><rect x="40" y="1824" width="313" height="344" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="40" y="1824" width="313" height="38" rx="14" fill="#c2410c" /><rect x="40" y="1848" width="313" height="14" fill="#c2410c" /></g>
+<text x="56" y="1849" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">ttgen_useraccessplan</text>
+<text x="56" y="1884" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="56" y="1904" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">plan_code : varchar(20) [NN]</text>
+<text x="56" y="1924" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">plan_name : varchar(100) [NN]</text>
+<text x="56" y="1944" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">amount_paid : integer unsigned [NN]</text>
+<text x="56" y="1964" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">generations_total : integer unsigned [NN]</text>
+<text x="56" y="1984" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">generations_used : integer unsigned [NN]</text>
+<text x="56" y="2004" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">can_edit_delete : bool [NN]</text>
+<text x="56" y="2024" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">can_substitute : bool [NN]</text>
+<text x="56" y="2044" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">can_drag_drop : bool [NN]</text>
+<text x="56" y="2064" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">is_active : bool [NN]</text>
+<text x="56" y="2084" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">razorpay_order_id : varchar(100) [NN]</text>
+<text x="56" y="2104" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">razorpay_payment_id : varchar(100) [NN]</text>
+<text x="56" y="2124" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">purchased_at : datetime [NN]</text>
+<text x="56" y="2144" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<g filter="url(#shadow)"><rect x="434" y="1824" width="240" height="164" rx="14" fill="#fff7ed" stroke="#cbd5e1" stroke-width="1.5" /><rect x="434" y="1824" width="240" height="38" rx="14" fill="#c2410c" /><rect x="434" y="1848" width="240" height="14" fill="#c2410c" /></g>
+<text x="450" y="1849" font-size="16" font-weight="700" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif">user_account_profile</text>
+<text x="450" y="1884" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">id : integer [PK]</text>
+<text x="450" y="1904" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">date_of_birth : date</text>
+<text x="450" y="1924" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">photo : varchar(100) [NN]</text>
+<text x="450" y="1944" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">user_id : integer [NN]</text>
+<text x="450" y="1964" font-size="13" font-weight="400" fill="#0f172a" font-family="Segoe UI, Arial, sans-serif">role : varchar(10) [NN]</text>
+</svg>
