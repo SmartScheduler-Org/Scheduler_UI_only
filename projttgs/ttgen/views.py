@@ -34,6 +34,7 @@ _GENERATOR_VIEW_NAMES = (
     "generate_timetable_loading",
     "generate_timetables",
     "timetables_page",
+    "timetable_dept_select",
     "show_timetable",
     "timetable",
     "update_slot",

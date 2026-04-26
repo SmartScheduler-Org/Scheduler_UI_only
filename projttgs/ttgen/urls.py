@@ -11,6 +11,8 @@ urlpatterns = [
     path('terms', views.terms, name='terms'),
     path('privacy', views.privacy, name='privacy'),
     path('contact', views.contact, name='contact'),
+    path('apply-institute/', views.institute_application, name='institute_application'),
+    path('apply-institute/thanks/', views.institute_application_thanks, name='institute_application_thanks'),
 
     path('admin_dashboard', views.admindash, name='admindash'),
     path('role', views.role, name='role'),
@@ -70,6 +72,7 @@ urlpatterns = [
     path("generate_timetable/loading/", views.generate_timetable_loading, name="generate_timetable_loading"),
     path("generate_timetable/", views.generate_timetables, name="generate_timetables"),
     path("timetables/", views.timetables_page, name="timetables_page"),
+    path("timetable/<int:index>/departments/", views.timetable_dept_select, name="timetable_dept_select"),
     path("timetable/<int:index>/", views.show_timetable, name="show_timetable"),
 
 

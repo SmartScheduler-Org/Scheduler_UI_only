@@ -933,6 +933,40 @@ body.drag-drop-active .drag-mode-badge {
     background: linear-gradient(135deg, #1186a2, #2eb5d4);
 }
 
+.dept-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 18px auto 10px;
+    max-width: 1200px;
+    padding: 0 16px;
+}
+
+.dept-filter-btn {
+    padding: 8px 20px;
+    border-radius: 999px;
+    border: 2px solid #257a7a;
+    background: #ffffff;
+    color: #257a7a;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.dept-filter-btn:hover {
+    background: #e8f5f5;
+    transform: translateY(-1px);
+}
+
+.dept-filter-btn.is-active {
+    background: linear-gradient(135deg, #257a7a, #1f9d8f);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 6px 18px rgba(37, 122, 122, 0.25);
+}
+
 .room-view-title {
     margin: 0;
     font-size: 2.1rem;
@@ -1324,27 +1358,27 @@ body.drag-drop-active .drag-mode-badge {
     function downloadViewPdf(viewName) {
         var viewEl = document.getElementById(viewName + '-view');
         if (!viewEl) { alert('No timetable view found.'); return; }
+
+        // Gather cards; filter out any hidden by the dept filter (display:none)
+        var allCards = Array.from(viewEl.querySelectorAll('.export-surface'));
+        if (!allCards.length) allCards = Array.from(viewEl.querySelectorAll('.room-card'));
+        if (!allCards.length) allCards = [viewEl];
+        var cards = allCards.filter(function(c) {
+            return window.getComputedStyle(c).display !== 'none';
+        });
+        if (!cards.length) { alert('No visible sections to export.'); return; }
+
         _showDownloadPopup();
 
-        // Gather table cards from this specific view
-        var cards = viewEl.querySelectorAll('.export-surface');
-        if (!cards.length) { cards = viewEl.querySelectorAll('.room-card'); }
-        if (!cards.length) { cards = [viewEl]; }
-
-        // Hide buttons inside view temporarily
+        // Temporarily hide UI-only buttons so they don't appear in the PDF
         var hiddenBtns = viewEl.querySelectorAll('.btn-save-tt, .room-pdf-btn, .fullpage-pdf-btn, .fullpage-excel-btn, .action-buttons');
         hiddenBtns.forEach(function(b) { b.style.display = 'none'; });
 
-        // Inject SmartScheduler header into the FIRST card
-        var firstCard = cards[0];
-        var pdfHeader = document.createElement('div');
-        pdfHeader.id = '_pdf_header';
-        pdfHeader.style.cssText = 'text-align:center; padding:8px 0 4px 0; background:#fff;';
-        var sub = document.createElement('div');
-        sub.style.cssText = 'font-size:13px; font-weight:700; color:#5b21ed; letter-spacing:1.5px; margin-bottom:4px;';
-        sub.textContent = 'SmartScheduler';
-        pdfHeader.appendChild(sub);
-        firstCard.insertBefore(pdfHeader, firstCard.firstChild);
+        // Snapshot the HTML now (after hiding buttons), then restore the DOM
+        // immediately so the page stays interactive during the async render.
+        var html = cards.map(function(c) { return c.outerHTML; })
+            .join('<div style="page-break-after:always; break-after:page; height:0;"></div>');
+        hiddenBtns.forEach(function(b) { b.style.display = ''; });
 
         var labels = { section: 'Section', room: 'Room', workload: 'Workload', teacher: 'Teacher' };
         var fname = 'SmartScheduler_' + (labels[viewName] || viewName) + '_Timetables.pdf';
@@ -1352,23 +1386,20 @@ body.drag-drop-active .drag-mode-badge {
         var opt = {
             margin: [6, 4, 6, 4],
             filename: fname,
-            image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, windowWidth: 1400 },
-            jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+            image: { type: 'jpeg', quality: 0.92 },
+            html2canvas: {
+                scale: 1.5,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+            },
+            jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' },
+            pagebreak: { mode: ['css', 'legacy'] },
         };
 
-        var worker = html2pdf().set(opt).from(cards[0]).toContainer().toCanvas().toPdf();
-        for (var i = 1; i < cards.length; i++) {
-            worker = worker.get('pdf').then(function(pdf) { pdf.addPage(); }).from(cards[i]).toContainer().toCanvas().toPdf();
-        }
-
-        function restore() {
-            var hdr = document.getElementById('_pdf_header');
-            if (hdr) hdr.remove();
-            hiddenBtns.forEach(function(b) { b.style.display = ''; });
-        }
-
-        worker.save().then(function() { restore(); _showDownloadDone(); }).catch(function() { restore(); Swal.close(); });
+        html2pdf().set(opt).from(html).save()
+            .then(function() { _showDownloadDone(); })
+            .catch(function() { Swal.close(); });
     }
 
     function downloadViewExcel(viewName) {
@@ -1408,6 +1439,15 @@ body.drag-drop-active .drag-mode-badge {
         if (window.location.hash !== "#" + view) {
             window.history.replaceState(null, "", "#" + view);
         }
+    }
+
+    function filterByDept(code) {
+        document.querySelectorAll('.dept-filter-btn').forEach(function(btn) {
+            btn.classList.toggle('is-active', btn.dataset.filter === code);
+        });
+        document.querySelectorAll('#section-view .export-surface[data-dept-code]').forEach(function(card) {
+            card.style.display = (code === 'all' || card.dataset.deptCode === code) ? '' : 'none';
+        });
     }
 
     function getCsrfToken() {
@@ -1616,6 +1656,7 @@ function initDragAndDrop() {
 
         showView(initialView);
         initDragAndDrop();
+        {% if active_dept %}filterByDept('{{ active_dept|escapejs }}');{% endif %}
 
         document.querySelectorAll(".btn-add, .btn-update, .btn-delete").forEach((link) => {
             link.addEventListener("click", function(event) {
@@ -1718,7 +1759,7 @@ function initDragAndDrop() {
 
 {% if index %}
 <div class="top-actions">
-    <a href="{% url 'save_timetable' index %}" class="save-tt-link">
+    <a href="{% url 'save_timetable' index %}{% if active_dept %}?dept={{ active_dept }}{% endif %}" class="save-tt-link">
         <button class="save-tt-hero" type="button">
             <span class="save-tt-hero__icon">✦</span>
             <span class="save-tt-hero__text">Save This Timetable</span>
@@ -1755,6 +1796,17 @@ function initDragAndDrop() {
 
 {# ===================== SECTION TIMETABLES ===================== #}
 <div id="section-view">
+
+{# ---- Department filter bar (only shown when multiple departments exist) ---- #}
+{% if departments|length > 1 %}
+<div class="dept-filter-bar" id="dept-filter-bar">
+  <button class="dept-filter-btn is-active" data-filter="all" onclick="filterByDept('all')">All Departments</button>
+  {% for dept in departments %}
+  <button class="dept-filter-btn" data-filter="{{ dept.code }}" onclick="filterByDept('{{ dept.code|escapejs }}')">{{ dept.name }}</button>
+  {% endfor %}
+</div>
+{% endif %}
+
 <div style="text-align:center; margin:18px 0 10px;">
   <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('section')">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1765,7 +1817,7 @@ function initDragAndDrop() {
   </button>
 </div>
 {% for table in tables %}
-  <div id="section-tt-{{ forloop.counter }}" class="export-surface demo-preview-card {% if demo_mode and table.demo_locked %}is-locked{% endif %}">
+  <div id="section-tt-{{ forloop.counter }}" class="export-surface demo-preview-card {% if demo_mode and table.demo_locked %}is-locked{% endif %}" data-dept-code="{{ table.section.department.code }}">
   <div class="export-watermark">
     <div class="export-watermark__grid">
       <span>SmartScheduler</span>
@@ -1784,7 +1836,7 @@ function initDragAndDrop() {
   </div>
   <div style="position:relative; z-index:1;">
   <h2 class="secHead">
-    {{ table.section.section_id }} ({{ table.section.department.dept_name }})
+    {{ table.section.section_id }} ({{ table.section.department.name }})
   </h2>
 
   <!-- {% if table.subject_counts %}
