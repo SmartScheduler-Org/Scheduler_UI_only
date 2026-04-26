@@ -9,6 +9,7 @@ from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
+import logging
 import random as rnd
 from django.contrib import messages
 import os
@@ -22,6 +23,7 @@ import copy
 import csv
 import math
 import re
+from smtplib import SMTPAuthenticationError
 from itertools import combinations
 from .models import MeetingTime
 from .models import DAYS_OF_WEEK, TIME_SLOTS
@@ -30,6 +32,8 @@ from ttgen.utils import section_sort_key
 
 
 import random as rnd
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------- PER-USER STATE ----------------
@@ -299,6 +303,65 @@ def contact(request):
             messages.error(request, "Couldn't send your message right now. Please try again later.")
         return redirect('contact')
     return render(request, 'contact.html')
+
+
+def institute_application(request):
+    if request.method == "POST":
+        institute_type = request.POST.get("institute_type", "").strip()
+        other_type = request.POST.get("other_type", "").strip()
+        contact_name = request.POST.get("contact_name", "").strip()
+        official_email = request.POST.get("official_email", "").strip()
+        contact_number = request.POST.get("contact_number", "").strip()
+        note = request.POST.get("note", "").strip()
+
+        selected_type = other_type if institute_type == "Other" and other_type else institute_type
+
+        if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+            messages.error(
+                request,
+                "Email is not configured yet. Add EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in your .env file, then restart the server.",
+            )
+            return render(request, "institute_application.html")
+
+        body = (
+            "New institute customization application\n"
+            "--------------------------------------\n"
+            f"Institute type : {selected_type}\n"
+            f"Contact person : {contact_name}\n"
+            f"Official email : {official_email}\n"
+            f"Contact number : {contact_number}\n"
+            "--------------------------------------\n\n"
+            f"Additional note:\n{note or 'No note added.'}\n"
+        )
+
+        try:
+            msg = EmailMessage(
+                subject=f"[SmartScheduler] Institute application - {selected_type or 'New request'}",
+                body=body,
+                from_email=settings.EMAIL_HOST_USER,
+                to=["smartschedulertech@gmail.com"],
+                reply_to=[f"{contact_name} <{official_email}>"] if official_email else None,
+            )
+            msg.send(fail_silently=False)
+            return redirect("institute_application_thanks")
+        except SMTPAuthenticationError:
+            logger.exception("Institute application email authentication failed")
+            messages.error(
+                request,
+                "Gmail rejected the sender email/password. Use the exact Gmail address in EMAIL_HOST_USER and a valid 16-character Gmail App Password in EMAIL_HOST_PASSWORD.",
+            )
+        except Exception as exc:
+            logger.exception("Institute application email failed")
+            error_message = "Could not send your application right now. Please check the SMTP settings and try again."
+            if settings.DEBUG:
+                error_message = f"{error_message} Server said: {exc}"
+            messages.error(request, error_message)
+
+    return render(request, "institute_application.html")
+
+
+def institute_application_thanks(request):
+    return render(request, "institute_application_thanks.html")
 
 
 # ADMIN DASHBOARD
