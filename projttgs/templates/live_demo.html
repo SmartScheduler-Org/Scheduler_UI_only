@@ -209,11 +209,12 @@
       padding: 28px 20px;
     }
     .stats-inner {
-      max-width: 1180px;
+      max-width: 900px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 0;
+      justify-content: center;
     }
     .stat-item {
       text-align: center;
@@ -786,9 +787,7 @@
       .walkthrough-wrap { grid-template-columns: 1fr; }
       .walkthrough-steps { flex-direction: row; flex-wrap: wrap; }
       .wstep-btn { flex: 1; min-width: 130px; }
-      .stats-inner { grid-template-columns: repeat(2,1fr); }
-      .stat-item:nth-child(2) { border-right: none; }
-      .stat-item:nth-child(3) { border-right: 1px solid var(--glass-border); }
+      .stats-inner { grid-template-columns: repeat(3,1fr); max-width: 100%; }
       .demo-features-grid { grid-template-columns: 1fr 1fr; }
       .compare-wrap { grid-template-columns: 1fr; }
       .pref-demo-wrap { grid-template-columns: 1fr; }
@@ -797,7 +796,7 @@
     @media (max-width: 600px) {
       .demo-features-grid { grid-template-columns: 1fr; }
       .export-grid { grid-template-columns: 1fr; }
-      .stats-inner { grid-template-columns: repeat(2,1fr); }
+      .stats-inner { grid-template-columns: 1fr; max-width: 320px; }
       .stat-item { border-right: none !important; border-bottom: 1px solid var(--glass-border); padding: 14px 0; }
       .form-row { grid-template-columns: 1fr; }
       .gen-metrics-row { grid-template-columns: 1fr; }
@@ -1149,11 +1148,53 @@
       </div>
     </section>
 
+    <!-- ══ YOUTUBE VIDEO ══ -->
+    <section class="yt-section" id="watch">
+      <div class="yt-section-inner">
+
+        <div class="yt-eyebrow-row">
+          <span class="yt-live-badge"><span class="live-dot"></span>Full Product Walkthrough</span>
+        </div>
+
+        <!-- Animated video box -->
+        <div class="yt-outer">
+          <div class="yt-inner">
+            <!-- corner accents -->
+            <div class="yt-corner yt-corner-tl"></div>
+            <div class="yt-corner yt-corner-tr"></div>
+            <div class="yt-corner yt-corner-bl"></div>
+            <div class="yt-corner yt-corner-br"></div>
+
+            <div class="yt-frame-wrap">
+              <iframe
+                src="https://www.youtube.com/embed/BHACKCNDMW8?rel=0&modestbranding=1"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chips -->
+        <div class="yt-chips">
+          <span class="yt-chip blue"><span class="yt-chip-icon">⚡</span>5-min generation</span>
+          <span class="yt-chip green"><span class="yt-chip-icon">✅</span>Zero manual clashes</span>
+          <span class="yt-chip purple"><span class="yt-chip-icon">🧬</span>Genetic algorithm engine</span>
+          <span class="yt-chip pink"><span class="yt-chip-icon">📤</span>One-click PDF export</span>
+        </div>
+
+      </div>
+    </section>
+
+    <hr class="demo-divider"/>
+
     <!-- ══ STATS STRIP ══ -->
     <div class="stats-strip">
       <div class="stats-inner">
         <div class="stat-item">
-          <div class="stat-number"><span id="cnt1">0</span>s</div>
+          <div class="stat-number"><span id="cnt1">0</span> min</div>
           <div class="stat-label">Average Generation Time</div>
         </div>
         <div class="stat-item">
@@ -1163,10 +1204,6 @@
         <div class="stat-item">
           <div class="stat-number"><span id="cnt3">0</span>+</div>
           <div class="stat-label">Departments Supported</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number"><span id="cnt4">0</span>+</div>
-          <div class="stat-label">Timetables Generated</div>
         </div>
       </div>
     </div>
@@ -1883,48 +1920,6 @@
       </div>
     </section>
 
-    <hr class="demo-divider"/>
-
-    <!-- ══ YOUTUBE VIDEO ══ -->
-    <section class="yt-section" id="watch">
-      <div class="yt-section-inner">
-
-        <div class="yt-eyebrow-row">
-          <span class="yt-live-badge"><span class="live-dot"></span>Full Product Walkthrough</span>
-        </div>
-
-        <!-- Animated video box -->
-        <div class="yt-outer">
-          <div class="yt-inner">
-            <!-- corner accents -->
-            <div class="yt-corner yt-corner-tl"></div>
-            <div class="yt-corner yt-corner-tr"></div>
-            <div class="yt-corner yt-corner-bl"></div>
-            <div class="yt-corner yt-corner-br"></div>
-
-            <div class="yt-frame-wrap">
-              <iframe
-                src="https://www.youtube.com/embed/BHACKCNDMW8?rel=0&modestbranding=1"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allowfullscreen
-              ></iframe>
-            </div>
-          </div>
-        </div>
-
-        <!-- Chips -->
-        <div class="yt-chips">
-          <span class="yt-chip blue"><span class="yt-chip-icon">⚡</span>8-second generation</span>
-          <span class="yt-chip green"><span class="yt-chip-icon">✅</span>Zero manual clashes</span>
-          <span class="yt-chip purple"><span class="yt-chip-icon">🧬</span>Genetic algorithm engine</span>
-          <span class="yt-chip pink"><span class="yt-chip-icon">📤</span>One-click PDF export</span>
-        </div>
-
-      </div>
-    </section>
-
     <!-- ══ CTA ══ -->
     <section class="demo-cta-section">
       <div class="cta-box">
@@ -2038,10 +2033,9 @@
   const statsObserver = new IntersectionObserver(entries => {
     if (entries[0].isIntersecting && !countersStarted) {
       countersStarted = true;
-      animateCount(document.getElementById('cnt1'), 8,    '', 1400);
-      animateCount(document.getElementById('cnt2'), 100,  '', 1800);
-      animateCount(document.getElementById('cnt3'), 20,   '', 1600);
-      animateCount(document.getElementById('cnt4'), 1200, '', 2000);
+      animateCount(document.getElementById('cnt1'), 5,   '', 1400);
+      animateCount(document.getElementById('cnt2'), 100, '', 1800);
+      animateCount(document.getElementById('cnt3'), 20,  '', 1600);
     }
   }, { threshold: 0.4 });
   if (statsStrip) statsObserver.observe(statsStrip);

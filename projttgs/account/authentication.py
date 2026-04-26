@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import MultipleObjectsReturned
 
 
 class EmailAuthBackend(object):
@@ -12,6 +13,10 @@ class EmailAuthBackend(object):
                 return user
             return None
         except User.DoesNotExist:
+            return None
+        except MultipleObjectsReturned:
+            # Two accounts share the same email — fail safe instead of 500.
+            # The user should contact support or log in with their username.
             return None
 
     def get_user(self, user_id):
