@@ -12,7 +12,7 @@ assets/
 projttgs/ttgen/migrations/
 ttgen/migrations/
 migrations/
-
+projttgs/account/migrations/
 
 
 db.sqlite3
@@ -22,7 +22,3 @@ db.sqlite3
 Scheduler_UI/projttgs/.env
 /projttgs/graphify-out/
 .graphify_python
-docs/schema_*.mmd
-docs/schema_*.svg
-docs/SCHEMA_DIAGRAM.md
-scripts/generate_schema_diagram.py
