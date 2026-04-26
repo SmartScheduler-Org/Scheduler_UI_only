@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.db.models import Q
@@ -280,7 +281,7 @@ class SavedTimetable(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Timetable ({self.created_at.strftime('%d %b %Y %H:%M')})"
+        return f"Timetable ({timezone.localtime(self.created_at).strftime('%d %b %Y %H:%M')})"
 
 
 class ScheduledSlot(models.Model):

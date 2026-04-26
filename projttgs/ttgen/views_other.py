@@ -4,7 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from .forms import *
 from .models import *
-from account.models import Profile
+from account.models import Profile, TeacherOnboarding
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -18,10 +18,12 @@ from django.http import HttpResponseForbidden, Http404
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.utils import timezone
 import copy
 import csv
 import math
 import re
+from datetime import date
 from itertools import combinations
 from .models import MeetingTime
 from .models import DAYS_OF_WEEK, TIME_SLOTS
@@ -226,7 +228,7 @@ def role(request):
             if role_value == 'hod':
                 return redirect('admindash')
             elif role_value == 'teacher':
-                return redirect('teacher_enter_code')
+                return redirect('teacher_dashboard')
             elif role_value == 'dean':
                 return redirect('teachertimetable')
     return render(request, 'role.html')
@@ -250,7 +252,9 @@ def teacher_role_set(request):
         return render(request, 'role_locked.html', {'current_role': profile.get_role_display()})
     profile.role = 'teacher'
     profile.save()
-    return redirect('teacher_enter_code')
+    if _get_teacher_onboarding(request.user):
+        return redirect('teacher_dashboard')
+    return redirect('teacher_onboarding')
 
 
 @login_required
@@ -267,6 +271,403 @@ def dean_role_set(request):
 def teacherlogin(request): return render(request, 'teacherlogin.html')
 def deanlogin(request): return render(request, 'deanlogin.html')
 def teachertimetable(request): return render(request, 'teachertimetable.html')
+
+
+def _get_teacher_profile_or_locked_response(user):
+    profile, _ = Profile.objects.get_or_create(user=user)
+    role_value = (profile.role or "").strip().lower()
+    if role_value and role_value != "teacher":
+        return profile, profile.get_role_display()
+    return profile, ""
+
+
+def _get_active_teacher_timetable(profile):
+    if not profile.active_timetable_id:
+        return None
+    return SavedTimetable.objects.select_related("user").filter(
+        id=profile.active_timetable_id,
+        is_published=True,
+    ).first()
+
+
+def _connect_teacher_timetable(profile, code):
+    timetable = SavedTimetable.objects.select_related("user").filter(
+        is_published=True,
+        publish_code=code,
+    ).first()
+    if not timetable:
+        return None, "No published timetable found with that code."
+
+    update_fields = ["active_timetable"]
+    profile.active_timetable = timetable
+    if profile.linked_instructor and profile.linked_instructor.user_id != timetable.user_id:
+        profile.linked_instructor = None
+        update_fields.append("linked_instructor")
+    profile.save(update_fields=update_fields)
+    return timetable, None
+
+
+def _ensure_teacher_role(profile):
+    if not profile.role:
+        profile.role = "teacher"
+        profile.save(update_fields=["role"])
+
+
+def _get_teacher_onboarding(user):
+    return getattr(user, "teacher_onboarding", None)
+
+
+def _teacher_onboarding_redirect_response(request):
+    onboarding = _get_teacher_onboarding(request.user)
+    if onboarding and not onboarding.requires_resubmission:
+        return None
+    return redirect("teacher_onboarding")
+
+
+def _user_can_manage_teacher_onboarding(user):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser or user.is_staff:
+        return True
+    profile, _ = Profile.objects.get_or_create(user=user)
+    return (profile.role or "").strip().lower() == "hod"
+
+
+def _teacher_nav_context():
+    return {
+        "hide_live_demo": True,
+        "hide_nav_cta": True,
+        "show_teacher_profile_icon": True,
+    }
+
+
+def _format_local_datetime(value, fmt):
+    if not value:
+        return ""
+    return timezone.localtime(value).strftime(fmt)
+
+
+def _resolve_teacher_dashboard_context(request, profile):
+    active_timetable = _get_active_teacher_timetable(profile)
+    onboarding = _get_teacher_onboarding(request.user)
+    sync_fields = []
+
+    if profile.active_timetable_id and active_timetable is None:
+        profile.active_timetable = None
+        sync_fields.append("active_timetable")
+
+    if (
+        profile.linked_instructor_id
+        and active_timetable
+        and profile.linked_instructor.user_id != active_timetable.user_id
+    ):
+        profile.linked_instructor = None
+        sync_fields.append("linked_instructor")
+
+    if sync_fields:
+        profile.save(update_fields=sync_fields)
+
+    linked_instructor = profile.linked_instructor
+    teacher_subjects = []
+    my_teacher_table = None
+    teacher_workload = {"lectures": 0, "labs": 0, "total": 0}
+    published_section_count = 0
+    published_teacher_count = 0
+
+    if linked_instructor:
+        teacher_subjects = list(
+            Course.objects.filter(
+                user=linked_instructor.user,
+                instructors=linked_instructor,
+            ).order_by("course_name", "course_number").distinct()
+        )
+
+    if active_timetable:
+        classes, labs = _rebuild_classes_and_labs_from_saved(active_timetable)
+        section_tables = build_section_tables(classes, labs, user=active_timetable.user)
+        teacher_tables = build_teacher_tables(classes, labs, user=active_timetable.user)
+        teacher_workloads = _compute_teacher_workloads(classes, labs)
+        published_section_count = len(section_tables)
+        published_teacher_count = len(teacher_tables)
+        if linked_instructor:
+            my_teacher_table = next(
+                (
+                    table for table in teacher_tables
+                    if table["teacher"].id == linked_instructor.id
+                ),
+                None,
+            )
+            teacher_workload = teacher_workloads.get(linked_instructor, teacher_workload)
+
+    display_name = (
+        onboarding.full_name
+        if onboarding
+        else request.user.get_full_name().strip() or request.user.username
+    )
+    if linked_instructor:
+        display_name = linked_instructor.name
+
+    role_label = profile.get_role_display() or "Teacher"
+    designation = (
+        linked_instructor.designation
+        if linked_instructor
+        else onboarding.designation if onboarding else "Teacher"
+    )
+    profile_card_state = (
+        f"Linked to {linked_instructor.uid}"
+        if linked_instructor else
+        "Add contact and faculty UID"
+    )
+    published_card_state = (
+        f"Code {active_timetable.publish_code}"
+        if active_timetable else
+        "Connect publish code"
+    )
+    if my_teacher_table:
+        timetable_card_state = "Teacher timetable ready"
+    elif active_timetable and linked_instructor:
+        timetable_card_state = "No classes assigned yet"
+    elif active_timetable:
+        timetable_card_state = "Link faculty UID first"
+    else:
+        timetable_card_state = "Connect published timetable first"
+
+    context = {
+        "teacher_profile": profile,
+        "teacher_onboarding": onboarding,
+        "active_timetable": active_timetable,
+        "linked_instructor": linked_instructor,
+        "teacher_subjects": teacher_subjects,
+        "my_teacher_table": my_teacher_table,
+        "teacher_workload": teacher_workload,
+        "published_section_count": published_section_count,
+        "published_teacher_count": published_teacher_count,
+        "teacher_display_name": display_name,
+        "teacher_role_label": role_label,
+        "teacher_designation": designation,
+        "faculty_uid_value": linked_instructor.uid if linked_instructor else "",
+        "profile_email_value": request.user.email or "",
+        "slot_labels": SLOT_LABELS,
+        "profile_card_state": profile_card_state,
+        "published_card_state": published_card_state,
+        "timetable_card_state": timetable_card_state,
+        "teacher_subject_count": len(teacher_subjects),
+}
+    context.update(_teacher_nav_context())
+    return context
+
+
+@login_required
+def teacher_onboarding(request):
+    profile, locked_response = _get_teacher_profile_or_locked_response(request.user)
+    if locked_response:
+        return render(request, "role_locked.html", {"current_role": locked_response})
+
+    _ensure_teacher_role(profile)
+
+    existing_onboarding = _get_teacher_onboarding(request.user)
+    if existing_onboarding and not existing_onboarding.requires_resubmission:
+        return redirect("teacher_dashboard")
+
+    form_values = {
+        "full_name": existing_onboarding.full_name if existing_onboarding else request.user.get_full_name().strip() or request.user.username,
+        "designation": existing_onboarding.designation if existing_onboarding else "",
+        "joining_year": existing_onboarding.joining_year if existing_onboarding else "",
+        "email": existing_onboarding.email if existing_onboarding else request.user.email or "",
+        "subjects_taught": existing_onboarding.subjects_taught if existing_onboarding else "",
+    }
+
+    if request.method == "POST":
+        form_values = {
+            "full_name": request.POST.get("full_name", "").strip(),
+            "designation": request.POST.get("designation", "").strip(),
+            "joining_year": request.POST.get("joining_year", "").strip(),
+            "email": request.POST.get("email", "").strip(),
+            "subjects_taught": request.POST.get("subjects_taught", "").strip(),
+        }
+
+        errors = []
+        if not form_values["full_name"]:
+            errors.append("Please enter your full name.")
+        if form_values["designation"] not in dict(TeacherOnboarding.DESIGNATION_CHOICES):
+            errors.append("Please choose a valid designation.")
+        if not form_values["email"] or "@" not in form_values["email"]:
+            errors.append("Please enter a valid email address.")
+        if not form_values["subjects_taught"]:
+            errors.append("Please enter the subjects you teach.")
+
+        joining_year = None
+        if not form_values["joining_year"]:
+            errors.append("Please enter your joining year.")
+        else:
+            try:
+                joining_year = int(form_values["joining_year"])
+            except ValueError:
+                errors.append("Joining year must be a number.")
+
+        current_year = date.today().year
+        if joining_year is not None and not (1950 <= joining_year <= current_year + 1):
+            errors.append(f"Joining year must be between 1950 and {current_year + 1}.")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            if existing_onboarding:
+                existing_onboarding.full_name = form_values["full_name"]
+                existing_onboarding.designation = form_values["designation"]
+                existing_onboarding.joining_year = joining_year
+                existing_onboarding.email = form_values["email"]
+                existing_onboarding.subjects_taught = form_values["subjects_taught"]
+                existing_onboarding.requires_resubmission = False
+                existing_onboarding.resubmission_requested_at = None
+                existing_onboarding.save(
+                    update_fields=[
+                        "full_name",
+                        "designation",
+                        "joining_year",
+                        "email",
+                        "subjects_taught",
+                        "requires_resubmission",
+                        "resubmission_requested_at",
+                        "updated_at",
+                    ]
+                )
+            else:
+                TeacherOnboarding.objects.create(
+                    user=request.user,
+                    full_name=form_values["full_name"],
+                    designation=form_values["designation"],
+                    joining_year=joining_year,
+                    email=form_values["email"],
+                    subjects_taught=form_values["subjects_taught"],
+                )
+            if request.user.email != form_values["email"]:
+                request.user.email = form_values["email"]
+                request.user.save(update_fields=["email"])
+            if existing_onboarding:
+                messages.success(request, "Your corrected teacher form has been submitted.")
+            else:
+                messages.success(request, "Your teacher profile form has been submitted.")
+            return redirect("teacher_dashboard")
+
+    context = {
+        "designation_choices": TeacherOnboarding.DESIGNATION_CHOICES,
+        "form_values": form_values,
+        "show_resubmission_notice": bool(existing_onboarding and existing_onboarding.requires_resubmission),
+    }
+    context.update(_teacher_nav_context())
+    return render(request, "teacher_onboarding.html", context)
+
+
+@login_required
+def teacher_dashboard(request):
+    profile, locked_response = _get_teacher_profile_or_locked_response(request.user)
+    if locked_response:
+        return render(request, 'role_locked.html', {'current_role': locked_response})
+
+    _ensure_teacher_role(profile)
+
+    redirect_response = _teacher_onboarding_redirect_response(request)
+    if redirect_response:
+        return redirect_response
+
+    context = _resolve_teacher_dashboard_context(request, profile)
+    return render(request, "teacher_dashboard.html", context)
+
+
+@login_required
+def teacher_profile_page(request):
+    profile, locked_response = _get_teacher_profile_or_locked_response(request.user)
+    if locked_response:
+        return render(request, 'role_locked.html', {'current_role': locked_response})
+
+    _ensure_teacher_role(profile)
+
+    redirect_response = _teacher_onboarding_redirect_response(request)
+    if redirect_response:
+        return redirect_response
+
+    if request.method == "POST":
+        contact_number = request.POST.get("contact_number", "").strip()
+        faculty_uid = request.POST.get("faculty_uid", "").strip()
+        profile.contact_number = contact_number
+        update_fields = ["contact_number"]
+
+        if faculty_uid:
+            active_timetable = _get_active_teacher_timetable(profile)
+            if not active_timetable:
+                messages.error(request, "Connect the HOD published timetable before linking your faculty UID.")
+            else:
+                instructor = Instructor.objects.filter(
+                    user=active_timetable.user,
+                    uid__iexact=faculty_uid,
+                ).first()
+                if instructor is None:
+                    messages.error(request, "No teacher record matched that faculty UID in the published timetable.")
+                else:
+                    profile.linked_instructor = instructor
+                    update_fields.append("linked_instructor")
+                    messages.success(request, "Your faculty profile is linked and ready for the teacher timetable page.")
+        elif request.POST.get("clear_faculty_link") == "1":
+            profile.linked_instructor = None
+            update_fields.append("linked_instructor")
+            messages.success(request, "Faculty link removed from your teacher profile.")
+        else:
+            messages.success(request, "Your teacher profile details were updated.")
+
+        profile.save(update_fields=list(dict.fromkeys(update_fields)))
+        return redirect("teacher_profile_page")
+
+    context = _resolve_teacher_dashboard_context(request, profile)
+    return render(request, "teacher_profile_page.html", context)
+
+
+@login_required
+def teacher_published_timetable(request):
+    profile, locked_response = _get_teacher_profile_or_locked_response(request.user)
+    if locked_response:
+        return render(request, 'role_locked.html', {'current_role': locked_response})
+
+    _ensure_teacher_role(profile)
+
+    redirect_response = _teacher_onboarding_redirect_response(request)
+    if redirect_response:
+        return redirect_response
+
+    if request.method == "POST":
+        code = request.POST.get("access_code", "").strip()
+        if not code:
+            messages.error(request, "Please enter the publish code shared by your HOD.")
+        else:
+            timetable, error_message = _connect_teacher_timetable(profile, code)
+            if error_message:
+                messages.error(request, error_message)
+            else:
+                messages.success(
+                    request,
+                    f"HOD published timetable connected with code {timetable.publish_code}.",
+                )
+        return redirect("teacher_published_timetable")
+
+    context = _resolve_teacher_dashboard_context(request, profile)
+    return render(request, "teacher_published_timetable.html", context)
+
+
+@login_required
+def teacher_my_timetable(request):
+    profile, locked_response = _get_teacher_profile_or_locked_response(request.user)
+    if locked_response:
+        return render(request, 'role_locked.html', {'current_role': locked_response})
+
+    _ensure_teacher_role(profile)
+
+    redirect_response = _teacher_onboarding_redirect_response(request)
+    if redirect_response:
+        return redirect_response
+
+    context = _resolve_teacher_dashboard_context(request, profile)
+    return render(request, "teacher_my_timetable.html", context)
 
 # CONTACT FORM
 def contact(request):
@@ -308,8 +709,98 @@ def admindash(request):
         'teacher_count': Instructor.objects.filter(user=request.user).count(),
         'department_count': Department.objects.filter(user=request.user).count(),
         'class_count': Section.objects.filter(user=request.user).count(),
+        'teacher_onboarding_count': TeacherOnboarding.objects.count(),
     }
     return render(request, 'admindashboard.html', context)
+
+
+@login_required
+def teacher_onboarding_responses_page(request):
+    if not _user_can_manage_teacher_onboarding(request.user):
+        return HttpResponseForbidden("You do not have permission to view teacher onboarding submissions.")
+
+    submissions = []
+    for submission in TeacherOnboarding.objects.select_related("user").all():
+        submissions.append({
+            "id": submission.id,
+            "full_name": submission.full_name,
+            "username": submission.user.username,
+            "designation": submission.designation,
+            "joining_year": submission.joining_year,
+            "email": submission.email,
+            "subjects_taught": submission.subjects_taught,
+            "submitted_at": _format_local_datetime(submission.submitted_at, "%d %b %Y, %I:%M %p"),
+            "requires_resubmission": submission.requires_resubmission,
+            "delete_url": reverse("delete_teacher_onboarding", args=[submission.id]),
+            "resubmit_url": reverse("request_teacher_onboarding_resubmission", args=[submission.id]),
+        })
+
+    return render(
+        request,
+        "teacher_onboarding_responses.html",
+        {
+            "submissions_json": json.dumps(submissions),
+            "total": len(submissions),
+        },
+    )
+
+
+@login_required
+def request_teacher_onboarding_resubmission(request, submission_id):
+    if request.method != "POST":
+        return HttpResponseForbidden("POST request required.")
+    if not _user_can_manage_teacher_onboarding(request.user):
+        return HttpResponseForbidden("You do not have permission to request teacher form resubmission.")
+
+    submission = TeacherOnboarding.objects.filter(id=submission_id).first()
+    if submission is None:
+        messages.error(request, "Teacher form submission was not found.")
+        return redirect("teacher_onboarding_responses")
+
+    submission.requires_resubmission = True
+    submission.resubmission_requested_at = timezone.now()
+    submission.save(update_fields=["requires_resubmission", "resubmission_requested_at", "updated_at"])
+    messages.success(request, f"Resubmission was requested for {submission.full_name}.")
+    return redirect("teacher_onboarding_responses")
+
+
+@login_required
+def delete_teacher_onboarding(request, submission_id):
+    if request.method != "POST":
+        return HttpResponseForbidden("POST request required.")
+    if not _user_can_manage_teacher_onboarding(request.user):
+        return HttpResponseForbidden("You do not have permission to delete teacher form submissions.")
+
+    submission = TeacherOnboarding.objects.filter(id=submission_id).first()
+    if submission is None:
+        messages.error(request, "Teacher form submission was not found.")
+    else:
+        full_name = submission.full_name
+        submission.delete()
+        messages.success(request, f"Teacher form for {full_name} was deleted.")
+    return redirect("teacher_onboarding_responses")
+
+
+@login_required
+def export_teacher_onboarding_csv(request):
+    if not _user_can_manage_teacher_onboarding(request.user):
+        return HttpResponseForbidden("You do not have permission to export teacher onboarding submissions.")
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="teacher_onboarding_submissions.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["Username", "Full Name", "Designation", "Joining Year", "Email", "Subjects Taught", "Submitted"])
+    for submission in TeacherOnboarding.objects.select_related("user").all():
+        writer.writerow([
+            submission.user.username,
+            submission.full_name,
+            submission.designation,
+            submission.joining_year,
+            submission.email,
+            submission.subjects_taught,
+            _format_local_datetime(submission.submitted_at, "%d %b %Y %H:%M"),
+        ])
+    return response
 
 
 # Helper to reset GA cache when admin modifies models
@@ -1059,20 +1550,25 @@ def unpublish_timetable(request, tid):
 
 @login_required
 def teacher_enter_code(request):
-    """Teacher enters a publish code to view a timetable."""
+    """Legacy route: connect the HOD publish code and return to the timetable page."""
+    profile, locked_response = _get_teacher_profile_or_locked_response(request.user)
+    if locked_response:
+        return render(request, 'role_locked.html', {'current_role': locked_response})
+
+    _ensure_teacher_role(profile)
+
     if request.method == "POST":
         code = request.POST.get("access_code", "").strip()
         if not code:
-            messages.error(request, "Please enter a code.")
-            return render(request, "teacher_enter_code.html")
-        timetable = SavedTimetable.objects.filter(
-            is_published=True, publish_code=code
-        ).first()
-        if not timetable:
-            messages.error(request, "No published timetable found with that code.")
-            return render(request, "teacher_enter_code.html")
-        return redirect("teacher_view_timetable", tid=timetable.id)
-    return render(request, "teacher_enter_code.html")
+            messages.error(request, "Please enter the publish code shared by your HOD.")
+            return redirect("teacher_published_timetable")
+        timetable, error_message = _connect_teacher_timetable(profile, code)
+        if error_message:
+            messages.error(request, error_message)
+            return redirect("teacher_published_timetable")
+        messages.success(request, f"HOD published timetable connected with code {timetable.publish_code}.")
+        return redirect("teacher_published_timetable")
+    return redirect("teacher_published_timetable")
 
 
 @login_required
@@ -1082,7 +1578,7 @@ def teacher_view_timetable(request, tid):
         saved_t = SavedTimetable.objects.get(id=tid, is_published=True)
     except SavedTimetable.DoesNotExist:
         messages.error(request, "This timetable is not available.")
-        return redirect("teacher_enter_code")
+        return redirect("teacher_published_timetable")
 
     classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
     owner = saved_t.user
@@ -2571,7 +3067,7 @@ def teacher_responses_page(request):
     subs = list(TeacherPreference.objects.all().values(
         'id','name','email','designation','subjects','classes','years','submitted_at'))
     for s in subs:
-        s['submitted_at'] = s['submitted_at'].strftime('%d %b %Y, %I:%M %p')
+        s['submitted_at'] = _format_local_datetime(s['submitted_at'], '%d %b %Y, %I:%M %p')
     return render(request, 'teacher_responses.html', {
         'submissions_json': _json.dumps(subs), 'total': len(subs)})
 
@@ -2673,5 +3169,5 @@ def export_preferences_csv(request):
     for s in TeacherPreference.objects.all():
         w.writerow([s.name, s.email, s.designation,
             ', '.join(s.subjects), ', '.join(s.classes), ', '.join(s.years),
-            s.submitted_at.strftime('%d %b %Y %H:%M')])
+            _format_local_datetime(s.submitted_at, '%d %b %Y %H:%M')])
     return response

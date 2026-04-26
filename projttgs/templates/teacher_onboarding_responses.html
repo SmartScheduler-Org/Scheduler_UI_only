@@ -1,0 +1,173 @@
+{% extends "mainbase.html" %}
+{% block title %}SmartScheduler | Teacher Form Responses{% endblock %}
+{% block content %}
+<style>
+.tor{max-width:1160px;margin:0 auto;padding:2rem 1rem 5rem}
+.torbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.6rem}
+.torback{display:inline-flex;align-items:center;gap:.4rem;font-size:.84rem;color:rgba(148,163,184,.8);text-decoration:none;transition:color .2s}.torback:hover{color:#fff}
+.torexp{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.1rem;border-radius:10px;font-size:.8rem;font-weight:600;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#86efac;text-decoration:none;transition:background .2s}.torexp:hover{background:rgba(34,197,94,.18)}
+.toreye{display:inline-flex;align-items:center;gap:.5rem;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#67e8f9;margin-bottom:.8rem;padding:.28rem .8rem;border:1px solid rgba(103,232,249,.25);border-radius:20px;background:rgba(103,232,249,.07)}
+.toreye::before{content:'';width:6px;height:6px;border-radius:50%;background:#67e8f9;animation:TORB 2s infinite}
+.tortitle{font-size:clamp(1.7rem,3.6vw,2.35rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.4rem;color:#fff}
+.tortitle em{font-style:normal;color:#86efac}
+.tordesc{font-size:.9rem;color:rgba(148,163,184,.8);margin-bottom:1.6rem}
+.tors{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+.torsc{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1.1rem 1.3rem}
+.torsn{font-size:1.9rem;font-weight:800;letter-spacing:-.04em}.torsa{color:#67e8f9}.torsb{color:#86efac}.torsc2{color:#c4b5fd}
+.torsl{font-size:.74rem;color:rgba(148,163,184,.7);margin-top:.2rem}
+.torf{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.3rem}
+.torsw{flex:1;min-width:220px;position:relative}.torsw svg{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:15px;height:15px;color:rgba(148,163,184,.5);pointer-events:none}
+.torsw input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.65rem 1rem .65rem 2.4rem;font-family:'Poppins',sans-serif;font-size:.86rem;color:#e2e8f0;outline:none;transition:border-color .2s}
+.torsw input::placeholder{color:rgba(148,163,184,.4)}.torsw input:focus{border-color:rgba(103,232,249,.45)}
+.torselect{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.65rem 1rem;font-family:'Poppins',sans-serif;font-size:.86rem;color:#e2e8f0;outline:none;cursor:pointer}
+.torselect option{background:#0d1526}
+.torclr{padding:.65rem 1.2rem;border-radius:10px;font-size:.84rem;font-weight:600;cursor:pointer;border:1px solid rgba(103,232,249,.22);background:rgba(103,232,249,.08);color:#67e8f9;font-family:'Poppins',sans-serif;transition:background .2s}.torclr:hover{background:rgba(103,232,249,.16)}
+.torw{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow-x:auto;overflow-y:hidden}
+table{width:100%;min-width:1260px;border-collapse:collapse}thead tr{background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.08)}
+th{padding:.85rem 1.1rem;text-align:left;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(148,163,184,.7);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:rgba(255,255,255,.03)}
+td{padding:.85rem 1.1rem;font-size:.86rem;vertical-align:top}
+.tdn{font-size:.78rem;color:rgba(148,163,184,.7);font-weight:600}.tdnm{font-weight:600;color:#e2e8f0}.tdem{font-size:.78rem;color:rgba(148,163,184,.7)}
+.tortag{display:inline-block;font-size:.68rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;white-space:nowrap;background:rgba(134,239,172,.1);color:#86efac;border:1px solid rgba(134,239,172,.2)}
+.tory{font-size:.76rem;color:#c4b5fd;font-weight:700;white-space:nowrap}
+.torsub{min-width:220px;line-height:1.6;color:rgba(226,232,240,.82)}
+.tormsgs{display:grid;gap:.8rem;margin-bottom:1.3rem}
+.tormsg{padding:.8rem 1rem;border-radius:12px;font-size:.84rem;font-weight:600}
+.tormsg.success{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.28);color:#bbf7d0}
+.tormsg.error{background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.28);color:#fecaca}
+.torstatus{display:inline-flex;align-items:center;gap:.35rem;margin-top:.45rem;padding:.22rem .55rem;border-radius:999px;font-size:.66rem;font-weight:700;letter-spacing:.04em;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.28);color:#fde68a}
+.torstatus::before{content:'';width:6px;height:6px;border-radius:50%;background:#fbbf24}
+.toracts{display:flex;flex-direction:column;gap:.5rem;min-width:160px}
+.toractform{margin:0}
+.torbtn{width:100%;padding:.58rem .85rem;border-radius:10px;border:1px solid transparent;font-family:'Poppins',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;transition:transform .15s,opacity .15s,box-shadow .15s,border-color .15s}
+.torbtn:hover{transform:translateY(-1px)}
+.torbtn--warn{background:linear-gradient(135deg,#facc15,#eab308);border-color:#facc15;color:#111827;box-shadow:0 10px 24px rgba(234,179,8,.22)}
+.torbtn--warn:hover{box-shadow:0 12px 28px rgba(234,179,8,.3)}
+.torbtn--danger{background:linear-gradient(135deg,#ef4444,#dc2626);border-color:#f87171;color:#fff1f2;box-shadow:0 10px 24px rgba(220,38,38,.2)}
+.torbtn--danger:hover{box-shadow:0 12px 28px rgba(220,38,38,.28)}
+.torbtn[disabled]{opacity:.72;cursor:not-allowed;transform:none;box-shadow:none}
+.torfoot{padding:.9rem 1.3rem;border-top:1px solid rgba(255,255,255,.06);font-size:.75rem;color:rgba(148,163,184,.7);display:flex;align-items:center;justify-content:space-between}
+.torempty{text-align:center;padding:3.5rem 1rem}.toremptyi{font-size:2.6rem;margin-bottom:.8rem;opacity:.5}.toremptyt{font-size:1rem;font-weight:600;color:rgba(148,163,184,.8)}
+@keyframes TORB{0%,100%{opacity:1}50%{opacity:.4}}
+@media(max-width:900px){.tors{grid-template-columns:1fr}.torfoot{gap:.8rem;flex-direction:column;align-items:flex-start}}
+@media(max-width:760px){th:nth-child(n+6):not(:last-child),td:nth-child(n+6):not(:last-child){display:none}.toracts{min-width:120px}}
+</style>
+<div class="tor">
+  <div class="torbar">
+    <a href="{% url 'admindash' %}" class="torback">&larr; Back to Dashboard</a>
+    <a href="{% url 'export_teacher_onboarding_csv' %}" class="torexp">Download CSV</a>
+  </div>
+  <div class="toreye">Teacher Forms</div>
+  <h1 class="tortitle">Teacher <em>Onboarding Data</em></h1>
+  <p class="tordesc">Review every teacher form submission in one place and export the data whenever you need it.</p>
+  {% if messages %}
+  <div class="tormsgs">
+    {% for message in messages %}
+    <div class="tormsg {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="tors">
+    <div class="torsc"><div class="torsn torsa" id="tor-total">{{ total }}</div><div class="torsl">Total Forms</div></div>
+    <div class="torsc"><div class="torsn torsb" id="tor-show">{{ total }}</div><div class="torsl">Showing Now</div></div>
+    <div class="torsc"><div class="torsn torsc2" id="tor-latest">-</div><div class="torsl">Latest Submission</div></div>
+  </div>
+  <div class="torf">
+    <div class="torsw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="tor-search" placeholder="Search name, username, or email..." oninput="filterTeacherForms()">
+    </div>
+    <select class="torselect" id="tor-designation" onchange="filterTeacherForms()">
+      <option value="">All Designations</option>
+      <option value="Professor">Professor</option>
+      <option value="Associate Professor">Associate Professor</option>
+      <option value="Assistant Professor">Assistant Professor</option>
+      <option value="Lab Worker">Lab Worker</option>
+    </select>
+    <button class="torclr" type="button" onclick="clearTeacherFormFilters()">Clear</button>
+  </div>
+  <div class="torw">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Username</th>
+          <th>Designation</th>
+          <th>Joining Year</th>
+          <th>Email</th>
+          <th>Subjects Taught</th>
+          <th>Submitted</th>
+      <th style="min-width:180px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tor-body"></tbody>
+    </table>
+    <div class="torfoot">
+      <span id="tor-foot-copy">-</span>
+      <a href="{% url 'export_teacher_onboarding_csv' %}" style="color:#86efac;text-decoration:none">Download CSV</a>
+    </div>
+  </div>
+</div>
+<script>
+var teacherForms = {{ submissions_json|safe }};
+var teacherFormCsrf = "{{ csrf_token }}";
+function renderTeacherFormRows(rows) {
+  var body = document.getElementById("tor-body");
+  document.getElementById("tor-show").textContent = rows.length;
+  document.getElementById("tor-foot-copy").textContent = "Showing " + rows.length + " of " + teacherForms.length + " submission(s)";
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="9"><div class="torempty"><div class="toremptyi">[]</div><div class="toremptyt">No teacher forms submitted yet.</div></div></td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(function (row, index) {
+    var statusMarkup = row.requires_resubmission ? '<div class="torstatus">Resubmission pending</div>' : '';
+    var resubmitButton = row.requires_resubmission
+      ? '<button type="submit" class="torbtn torbtn--warn" disabled>Pending</button>'
+      : '<button type="submit" class="torbtn torbtn--warn">Send Resubmission</button>';
+    var actionMarkup =
+      '<div class="toracts">' +
+      '<form method="post" action="' + row.resubmit_url + '" class="toractform">' +
+      '<input type="hidden" name="csrfmiddlewaretoken" value="' + teacherFormCsrf + '">' +
+      resubmitButton +
+      '</form>' +
+      '<form method="post" action="' + row.delete_url + '" class="toractform" onsubmit="return confirm(\'Delete this teacher form submission?\')">' +
+      '<input type="hidden" name="csrfmiddlewaretoken" value="' + teacherFormCsrf + '">' +
+      '<button type="submit" class="torbtn torbtn--danger">Delete</button>' +
+      '</form>' +
+      '</div>';
+    return '<tr>' +
+      '<td class="tdn">' + String(index + 1).padStart(2, "0") + '</td>' +
+      '<td><div class="tdnm">' + (row.full_name || '-') + '</div><div class="tdem">' + (row.email || '') + '</div>' + statusMarkup + '</td>' +
+      '<td class="tdem">' + (row.username || '-') + '</td>' +
+      '<td><span class="tortag">' + (row.designation || '-') + '</span></td>' +
+      '<td class="tory">' + (row.joining_year || '-') + '</td>' +
+      '<td class="tdem">' + (row.email || '-') + '</td>' +
+      '<td class="torsub">' + (row.subjects_taught || '-') + '</td>' +
+      '<td class="tdem">' + (row.submitted_at || '-') + '</td>' +
+      '<td>' + actionMarkup + '</td>' +
+      '</tr>';
+  }).join("");
+}
+function filterTeacherForms() {
+  var search = document.getElementById("tor-search").value.toLowerCase().trim();
+  var designation = document.getElementById("tor-designation").value;
+  var filtered = teacherForms.filter(function (row) {
+    var haystack = [row.full_name || "", row.username || "", row.email || ""].join(" ").toLowerCase();
+    var matchesSearch = !search || haystack.includes(search);
+    var matchesDesignation = !designation || row.designation === designation;
+    return matchesSearch && matchesDesignation;
+  });
+  renderTeacherFormRows(filtered);
+}
+function clearTeacherFormFilters() {
+  document.getElementById("tor-search").value = "";
+  document.getElementById("tor-designation").value = "";
+  renderTeacherFormRows(teacherForms);
+}
+if (teacherForms.length) {
+  document.getElementById("tor-latest").textContent = teacherForms[0].submitted_at || "-";
+}
+renderTeacherFormRows(teacherForms);
+</script>
+{% endblock %}

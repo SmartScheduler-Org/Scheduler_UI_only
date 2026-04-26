@@ -915,7 +915,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         </svg>
     </button>
     {% if is_readonly %}
-    <a href="{% url 'teacher_enter_code' %}" class="utility-btn is-close" title="Back">
+    <a href="{% url 'teacher_published_timetable' %}" class="utility-btn is-close" title="Back">
     {% else %}
     <a href="{% url 'admindash' %}" class="utility-btn is-close" title="Close and go to dashboard">
     {% endif %}

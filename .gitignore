@@ -12,6 +12,9 @@ assets/
 projttgs/ttgen/migrations/
 ttgen/migrations/
 migrations/
+!projttgs/account/migrations/
+!projttgs/account/migrations/__init__.py
+!projttgs/account/migrations/*.py
 
 
 db.sqlite3
