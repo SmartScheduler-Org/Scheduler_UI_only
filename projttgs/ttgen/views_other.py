@@ -2306,15 +2306,11 @@ def _pick_slot_cell(table_rows, day, slot_number):
 
 
 def _build_timetable_excel_response(classes, labs, user, filename, view_type='section'):
-    """Build a timetable Excel workbook and return it as an HTTP response."""
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     except ImportError:
-        return HttpResponse(
-            "Excel generation dependencies are not installed on this machine yet.",
-            status=503,
-        )
+        return HttpResponse("Excel dependency missing", status=503)
 
     allowed_views = {"section", "room", "teacher", "workload", "all"}
     if view_type not in allowed_views:
@@ -2331,11 +2327,15 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
     wb = Workbook()
     wb.remove(wb.active)
 
+    # ---- STYLES ----
     day_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
     day_font = Font(bold=True, size=10)
+
     lunch_fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
     lunch_font = Font(bold=True, size=9)
+
     center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
     border = Border(
         left=Side(style='thin'),
         right=Side(style='thin'),
@@ -2343,261 +2343,178 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
         bottom=Side(style='thin')
     )
 
+    # =====================================================
+    # COMMON WRITER (DAYS → ROWS, SLOTS → COLUMNS)
+    # =====================================================
+    def write_timetable(ws, tables, title_func):
+        row = 1
+
+        for table in tables:
+            # ---- TITLE ----
+            ws[f"A{row}"] = title_func(table)
+            ws[f"A{row}"].font = Font(bold=True, size=12, color="1F4E78")
+            row += 1
+
+            # ---- HEADER ----
+            ws[f"A{row}"] = "Day"
+
+            for slot in range(1, 10):
+                cell = ws.cell(row=row, column=slot + 1,
+                               value=SLOT_LABELS.get(str(slot), f"Slot {slot}"))
+                cell.fill = day_fill
+                cell.font = day_font
+                cell.alignment = center_align
+
+            row += 1
+
+            # ---- DATA ----
+            for day in DAYS:
+                ws[f"A{row}"] = day
+                ws[f"A{row}"].fill = day_fill
+                ws[f"A{row}"].font = day_font
+
+                for slot in range(1, 10):
+                    xl_cell = ws.cell(row=row, column=slot + 1)
+                    xl_cell.border = border
+                    xl_cell.alignment = center_align
+
+                    cell_data = _pick_slot_cell(table.get("rows", []), day, slot)
+
+                    if not cell_data:
+                        continue
+
+                    cell_type = cell_data.get("type")
+
+                    if cell_type == "lunch":
+                        xl_cell.value = "LUNCH"
+                        xl_cell.fill = lunch_fill
+                        xl_cell.font = lunch_font
+
+                    elif cell_type == "class":
+                        class_items = cell_data.get("classes", [])
+                        if class_items:
+                            cls = class_items[0]
+                            course = getattr(cls, "course", None)
+                            instructor = getattr(cls, "instructor", None)
+                            room = getattr(cls, "room", None)
+
+                            xl_cell.value = "\n".join([
+                                str(_safe_get(course, "course_number", "course_name", default="Class")),
+                                str(_safe_get(instructor, "name", "uid", default="TBD")),
+                                str(_safe_get(room, "r_number", default="Room TBD")),
+                            ])
+
+                    elif cell_type == "lab":
+                        lab_items = cell_data.get("labs", [])
+                        if lab_items:
+                            lab = lab_items[0]
+                            course = getattr(lab, "course", None)
+                            instructor = getattr(lab, "instructor", None)
+                            room = getattr(lab, "room", None)
+
+                            xl_cell.value = "\n".join([
+                                f"{_safe_get(course, 'course_number', 'course_name', default='Lab')} (Lab)",
+                                str(_safe_get(instructor, "name", "uid", default="TBD")),
+                                str(_safe_get(room, "r_number", default="Room TBD")),
+                            ])
+
+                row += 1
+
+            row += 2
+
+        # ---- WIDTH ----
+        ws.column_dimensions["A"].width = 18
+        for col in range(2, 11):
+            ws.column_dimensions[chr(64 + col)].width = 25
+
+    # =====================================================
+    # SECTION
+    # =====================================================
     if view_type in {"section", "all"}:
         ws = wb.create_sheet("Section Timetable")
-        row = 1
-        for table in section_tables:
-            section_obj = table.get("section")
-            dept_obj = getattr(section_obj, "department", None)
-            section_id = _safe_get(section_obj, "section_id", default="Section")
-            dept_name = _safe_get(dept_obj, "name", "dept_name", "code", default="Department")
-            ws[f"A{row}"] = f"{section_id} ({dept_name})"
-            ws[f"A{row}"].font = Font(bold=True, size=12, color="1F4E78")
-            row += 1
 
-            ws[f"A{row}"] = "Time Slot"
-            for day_idx, day in enumerate(DAYS):
-                header_cell = ws.cell(row=row, column=day_idx + 2, value=day)
-                header_cell.fill = day_fill
-                header_cell.font = day_font
-                header_cell.alignment = center_align
-            row += 1
+        def section_title(table):
+            section = table.get("section")
+            dept = getattr(section, "department", None)
+            return f"{_safe_get(section, 'section_id')} ({_safe_get(dept, 'name', default='Dept')})"
 
-            for slot in range(1, 10):
-                ws[f"A{row}"] = SLOT_LABELS.get(str(slot), f"Slot {slot}")
-                ws[f"A{row}"].fill = day_fill
-                ws[f"A{row}"].font = day_font
+        write_timetable(ws, section_tables, section_title)
 
-                for day_idx, day in enumerate(DAYS):
-                    xl_cell = ws.cell(row=row, column=day_idx + 2)
-                    xl_cell.border = border
-                    xl_cell.alignment = center_align
-
-                    cell_data = _pick_slot_cell(table.get("rows", []), day, slot)
-                    if not cell_data:
-                        continue
-                    cell_type = cell_data.get("type")
-                    if cell_type == "lunch":
-                        xl_cell.value = "LUNCH"
-                        xl_cell.fill = lunch_fill
-                        xl_cell.font = lunch_font
-                    elif cell_type == "class":
-                        class_items = cell_data.get("classes", [])
-                        if class_items:
-                            cls = class_items[0]
-                            course = getattr(cls, "course", None)
-                            instructor = getattr(cls, "instructor", None)
-                            room = getattr(cls, "room", None)
-                            xl_cell.value = "\n".join([
-                                str(_safe_get(course, "course_number", "course_name", default="Class")),
-                                str(_safe_get(instructor, "name", "uid", default="TBD")),
-                                str(_safe_get(room, "r_number", default="Room TBD")),
-                            ])
-                    elif cell_type == "lab":
-                        lab_items = cell_data.get("labs", [])
-                        if lab_items:
-                            lab = lab_items[0]
-                            course = getattr(lab, "course", None)
-                            instructor = getattr(lab, "instructor", None)
-                            room = getattr(lab, "room", None)
-                            xl_cell.value = "\n".join([
-                                f"{_safe_get(course, 'course_number', 'course_name', default='Lab')} (Lab)",
-                                str(_safe_get(instructor, "name", "uid", default="TBD")),
-                                str(_safe_get(room, "r_number", default="Room TBD")),
-                            ])
-                row += 1
-            row += 2
-
-        ws.column_dimensions["A"].width = 15
-        for col in range(2, 7):
-            ws.column_dimensions[chr(64 + col)].width = 25
-
+    # =====================================================
+    # ROOM
+    # =====================================================
     if view_type in {"room", "all"}:
         ws = wb.create_sheet("Room Timetable")
-        row = 1
-        for table in room_tables:
-            room_obj = table.get("room")
-            ws[f"A{row}"] = f"Room: {_safe_get(room_obj, 'r_number', default=str(room_obj) if room_obj else 'Room')}"
-            ws[f"A{row}"].font = Font(bold=True, size=12, color="1F4E78")
-            row += 1
 
-            ws[f"A{row}"] = "Time Slot"
-            for day_idx, day in enumerate(DAYS):
-                header_cell = ws.cell(row=row, column=day_idx + 2, value=day)
-                header_cell.fill = day_fill
-                header_cell.font = day_font
-                header_cell.alignment = center_align
-            row += 1
+        def room_title(table):
+            room = table.get("room")
+            return f"Room: {_safe_get(room, 'r_number', default='Room')}"
 
-            for slot in range(1, 10):
-                ws[f"A{row}"] = SLOT_LABELS.get(str(slot), f"Slot {slot}")
-                ws[f"A{row}"].fill = day_fill
-                ws[f"A{row}"].font = day_font
+        write_timetable(ws, room_tables, room_title)
 
-                for day_idx, day in enumerate(DAYS):
-                    xl_cell = ws.cell(row=row, column=day_idx + 2)
-                    xl_cell.border = border
-                    xl_cell.alignment = center_align
-
-                    cell_data = _pick_slot_cell(table.get("rows", []), day, slot)
-                    if not cell_data:
-                        continue
-                    cell_type = cell_data.get("type")
-                    if cell_type == "lunch":
-                        xl_cell.value = "LUNCH"
-                        xl_cell.fill = lunch_fill
-                        xl_cell.font = lunch_font
-                    elif cell_type == "class":
-                        class_items = cell_data.get("classes", [])
-                        if class_items:
-                            cls = class_items[0]
-                            course = getattr(cls, "course", None)
-                            instructor = getattr(cls, "instructor", None)
-                            xl_cell.value = "\n".join([
-                                str(_safe_get(course, "course_number", "course_name", default="Class")),
-                                str(getattr(cls, "section", "Section")),
-                                str(_safe_get(instructor, "name", "uid", default="TBD")),
-                            ])
-                    elif cell_type == "lab":
-                        lab_items = cell_data.get("labs", [])
-                        if lab_items:
-                            lab = lab_items[0]
-                            course = getattr(lab, "course", None)
-                            instructor = getattr(lab, "instructor", None)
-                            xl_cell.value = "\n".join([
-                                f"{_safe_get(course, 'course_number', 'course_name', default='Lab')} (Lab)",
-                                str(getattr(lab, "section", "Section")),
-                                str(_safe_get(instructor, "name", "uid", default="TBD")),
-                            ])
-                row += 1
-            row += 2
-
-        ws.column_dimensions["A"].width = 15
-        for col in range(2, 7):
-            ws.column_dimensions[chr(64 + col)].width = 25
-
+    # =====================================================
+    # TEACHER
+    # =====================================================
     if view_type in {"teacher", "all"}:
         ws = wb.create_sheet("Teacher Timetable")
-        row = 1
-        for table in teacher_tables:
-            teacher_obj = table.get("teacher")
-            teacher_name = _safe_get(teacher_obj, "name", "uid", default=str(teacher_obj) if teacher_obj else "Teacher")
-            ws[f"A{row}"] = f"Teacher: {teacher_name}"
-            ws[f"A{row}"].font = Font(bold=True, size=12, color="1F4E78")
-            row += 1
 
-            ws[f"A{row}"] = "Time Slot"
-            for day_idx, day in enumerate(DAYS):
-                header_cell = ws.cell(row=row, column=day_idx + 2, value=day)
-                header_cell.fill = day_fill
-                header_cell.font = day_font
-                header_cell.alignment = center_align
-            row += 1
+        def teacher_title(table):
+            teacher = table.get("teacher")
+            return f"Teacher: {_safe_get(teacher, 'name', 'uid', default='Teacher')}"
 
-            for slot in range(1, 10):
-                ws[f"A{row}"] = SLOT_LABELS.get(str(slot), f"Slot {slot}")
-                ws[f"A{row}"].fill = day_fill
-                ws[f"A{row}"].font = day_font
+        write_timetable(ws, teacher_tables, teacher_title)
 
-                for day_idx, day in enumerate(DAYS):
-                    xl_cell = ws.cell(row=row, column=day_idx + 2)
-                    xl_cell.border = border
-                    xl_cell.alignment = center_align
-
-                    cell_data = _pick_slot_cell(table.get("rows", []), day, slot)
-                    if not cell_data:
-                        continue
-                    cell_type = cell_data.get("type")
-                    if cell_type == "lunch":
-                        xl_cell.value = "LUNCH"
-                        xl_cell.fill = lunch_fill
-                        xl_cell.font = lunch_font
-                    elif cell_type == "class":
-                        class_items = cell_data.get("classes", [])
-                        if class_items:
-                            cls = class_items[0]
-                            course = getattr(cls, "course", None)
-                            room = getattr(cls, "room", None)
-                            xl_cell.value = "\n".join([
-                                str(_safe_get(course, "course_number", "course_name", default="Class")),
-                                str(getattr(cls, "section", "Section")),
-                                str(_safe_get(room, "r_number", default="Room TBD")),
-                            ])
-                    elif cell_type == "lab":
-                        lab_items = cell_data.get("labs", [])
-                        if lab_items:
-                            lab = lab_items[0]
-                            course = getattr(lab, "course", None)
-                            room = getattr(lab, "room", None)
-                            xl_cell.value = "\n".join([
-                                f"{_safe_get(course, 'course_number', 'course_name', default='Lab')} (Lab)",
-                                str(getattr(lab, "section", "Section")),
-                                str(_safe_get(room, "r_number", default="Room TBD")),
-                            ])
-                row += 1
-            row += 2
-
-        ws.column_dimensions["A"].width = 15
-        for col in range(2, 7):
-            ws.column_dimensions[chr(64 + col)].width = 25
-
+    # =====================================================
+    # WORKLOAD
+    # =====================================================
     if view_type in {"workload", "all"}:
         ws = wb.create_sheet("Teacher Workload")
-        ws["A1"] = "Teacher Workload Summary"
-        ws["A1"].font = Font(bold=True, size=12, color="1F4E78")
 
-        ws["A2"] = "Teacher Name"
-        ws["B2"] = "Classes"
-        ws["C2"] = "Labs"
-        ws["D2"] = "Total Hours"
-        for col in ["A", "B", "C", "D"]:
-            ws[f"{col}2"].fill = day_fill
-            ws[f"{col}2"].font = day_font
-            ws[f"{col}2"].alignment = center_align
+        ws["A1"] = "Teacher Workload Summary"
+        ws["A1"].font = Font(bold=True, size=12)
+
+        headers = ["Teacher Name", "Classes", "Labs", "Total Hours"]
+        for col, h in enumerate(headers, start=1):
+            ws.cell(row=2, column=col, value=h)
 
         row = 3
         for teacher, workload in teacher_workloads.items():
             lectures = workload.get("lectures", workload.get("classes", 0))
             labs_count = workload.get("labs", 0)
             total_hours = workload.get("total", lectures + labs_count)
-            ws[f"A{row}"] = _safe_get(teacher, "name", "uid", default=str(teacher))
-            ws[f"B{row}"] = lectures
-            ws[f"C{row}"] = labs_count
-            ws[f"D{row}"] = total_hours
-            for col in ["A", "B", "C", "D"]:
-                ws[f"{col}{row}"].border = border
-                ws[f"{col}{row}"].alignment = center_align
+
+            ws.cell(row=row, column=1, value=_safe_get(teacher, "name", "uid"))
+            ws.cell(row=row, column=2, value=lectures)
+            ws.cell(row=row, column=3, value=labs_count)
+            ws.cell(row=row, column=4, value=total_hours)
+
             row += 1
 
-        ws.column_dimensions["A"].width = 25
-        ws.column_dimensions["B"].width = 12
-        ws.column_dimensions["C"].width = 12
-        ws.column_dimensions["D"].width = 15
-
-    if not wb.sheetnames:
-        ws = wb.create_sheet("Timetable")
-        ws["A1"] = "No data available for selected export view."
-
+    # ---- RESPONSE ----
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     wb.save(response)
+
     return response
 
 
+# =====================================================
+# DOWNLOAD FUNCTIONS (UNCHANGED)
+# =====================================================
 @login_required
 def download_timetable_excel(request, tid, view_type='section'):
-    """Download saved timetable as Excel."""
     try:
         saved_t = SavedTimetable.objects.get(id=tid)
     except SavedTimetable.DoesNotExist:
         raise Http404("Timetable does not exist")
 
     if saved_t.user != request.user:
-        return HttpResponseForbidden("You do not have permission to download this file.")
+        return HttpResponseForbidden("You do not have permission")
 
     classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
+
     return _build_timetable_excel_response(
         classes=classes,
         labs=labs,
@@ -2609,28 +2526,20 @@ def download_timetable_excel(request, tid, view_type='section'):
 
 @login_required
 def download_generated_timetable_excel(request, index, view_type='section'):
-    """Download generated (in-memory) timetable as Excel."""
     try:
         idx = int(index)
-    except (TypeError, ValueError):
-        raise Http404("Invalid timetable index")
+    except:
+        raise Http404("Invalid index")
 
     state = _get_user_state(request.user.id)
-    schedules = state.get("schedules") or []
-    if not schedules:
-        schedules = GLOBAL_GENERATED_SCHEDULES or []
+    schedules = state.get("schedules") or GLOBAL_GENERATED_SCHEDULES or []
 
-    if not schedules:
-        raise Http404("No generated timetables found")
-    if idx < 1 or idx > len(schedules):
-        raise Http404("Invalid timetable index")
+    if not schedules or idx < 1 or idx > len(schedules):
+        raise Http404("Invalid timetable")
 
     selected = schedules[idx - 1]
     classes = list(selected.get("classes", []))
     labs = list(selected.get("labs", []))
-
-    if not classes and not labs:
-        raise Http404("Selected generated timetable has no schedulable data")
 
     return _build_timetable_excel_response(
         classes=classes,
@@ -2639,7 +2548,6 @@ def download_generated_timetable_excel(request, index, view_type='section'):
         filename=f"generated_timetable_{idx}.xlsx",
         view_type=view_type,
     )
-
 
 # UNIFIED CSV CONVERTER (PDF/Excel → CSV) — All Entity Types
 # ============================================================
