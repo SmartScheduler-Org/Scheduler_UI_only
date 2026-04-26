@@ -72,6 +72,7 @@ urlpatterns = [
     path("generate_timetable/loading/", views.generate_timetable_loading, name="generate_timetable_loading"),
     path("generate_timetable/", views.generate_timetables, name="generate_timetables"),
     path("timetables/", views.timetables_page, name="timetables_page"),
+    path("timetable/<int:index>/departments/", views.timetable_dept_select, name="timetable_dept_select"),
     path("timetable/<int:index>/", views.show_timetable, name="show_timetable"),
 
 
