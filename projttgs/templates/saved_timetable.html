@@ -797,6 +797,8 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
                 const targetSlot = target.dataset.slot;
 
                 if (currentDrag.sectionId === targetSection && currentDrag.day === targetDay && currentDrag.slot === targetSlot) return;
+                const reason = await promptForChangeReason("Reason Required", "Enter the reason for moving this slot.");
+                if (!reason) return;
 
                 try {
                     const response = await fetch(
@@ -811,7 +813,8 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
                             body: JSON.stringify({
                                 target_day: targetDay,
                                 target_slot: targetSlot,
-                                move_type: currentDrag.moveType
+                                move_type: currentDrag.moveType,
+                                reason: reason
                             })
                         }
                     );
@@ -830,6 +833,26 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         });
 
         syncDragState();
+    }
+
+    async function promptForChangeReason(title, placeholder) {
+        const result = await Swal.fire({
+            title: title,
+            input: "textarea",
+            inputPlaceholder: placeholder,
+            inputAttributes: { "aria-label": "Reason for change" },
+            showCancelButton: true,
+            confirmButtonText: "Continue",
+            confirmButtonColor: "#4e73df",
+            preConfirm: (value) => {
+                if (!value || !value.trim()) {
+                    Swal.showValidationMessage("Reason is required.");
+                    return false;
+                }
+                return value.trim();
+            }
+        });
+        return result.isConfirmed ? result.value : "";
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -859,7 +882,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         showView(initialView);
         initDragAndDrop();
 
-        document.querySelectorAll(".btn-add, .btn-update, .btn-delete").forEach((link) => {
+        document.querySelectorAll(".btn-add, .btn-update").forEach((link) => {
             link.addEventListener("click", function(event) {
                 if (window.planPermissions.canEditDelete) return;
                 event.preventDefault();
@@ -867,11 +890,33 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             });
         });
 
-        document.querySelectorAll(".btn-substitute").forEach((link) => {
-            link.addEventListener("click", function(event) {
-                if (window.planPermissions.canSubstitute) return;
+        document.querySelectorAll(".btn-delete").forEach((link) => {
+            link.addEventListener("click", async function(event) {
+                if (!window.planPermissions.canEditDelete) {
+                    event.preventDefault();
+                    showPlanUpgradeMessage("Editing Locked", "Please upgrade your plan to use editing features.");
+                    return;
+                }
                 event.preventDefault();
-                showPlanUpgradeMessage("Substitute Locked", "Please upgrade your plan to use substitute features.");
+                const reason = await promptForChangeReason("Reason Required", "Enter the reason for deleting this slot.");
+                if (!reason) return;
+                const joiner = link.href.includes("?") ? "&" : "?";
+                window.location.href = `${link.href}${joiner}reason=${encodeURIComponent(reason)}`;
+            });
+        });
+
+        document.querySelectorAll(".btn-substitute").forEach((link) => {
+            link.addEventListener("click", async function(event) {
+                if (!window.planPermissions.canSubstitute) {
+                    event.preventDefault();
+                    showPlanUpgradeMessage("Substitute Locked", "Please upgrade your plan to use substitute features.");
+                    return;
+                }
+                event.preventDefault();
+                const reason = await promptForChangeReason("Reason Required", "Enter the reason for substitution.");
+                if (!reason) return;
+                const joiner = link.href.includes("?") ? "&" : "?";
+                window.location.href = `${link.href}${joiner}reason=${encodeURIComponent(reason)}`;
             });
         });
 
@@ -959,6 +1004,36 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             <button type="submit" style="background:#43a047; color:white; border:none; border-radius:8px; padding:8px 18px; font-weight:600; cursor:pointer; font-size:14px;">Publish</button>
         </form>
     {% endif %}
+</div>
+{% endif %}
+
+{% if change_logs %}
+<div style="max-width: 1200px; margin: 14px auto 20px; background: #f8fbff; border: 1px solid #d6e9f8; border-radius: 12px; padding: 14px 16px;">
+  <div style="font-weight: 700; color: #0d47a1; margin-bottom: 10px;">Recent Timetable Changes (with Reasons)</div>
+  <div style="max-height: 240px; overflow-y: auto; border-radius: 8px; background: #ffffff; border: 1px solid #e5edf5;">
+    <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+      <thead>
+        <tr style="background:#edf5ff; color:#1e3a8a;">
+          <th style="padding:8px; border-bottom:1px solid #dbe7f3; text-align:left;">When</th>
+          <th style="padding:8px; border-bottom:1px solid #dbe7f3; text-align:left;">Action</th>
+          <th style="padding:8px; border-bottom:1px solid #dbe7f3; text-align:left;">Section / Slot</th>
+          <th style="padding:8px; border-bottom:1px solid #dbe7f3; text-align:left;">Changed By</th>
+          <th style="padding:8px; border-bottom:1px solid #dbe7f3; text-align:left;">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for log in change_logs %}
+        <tr>
+          <td style="padding:8px; border-bottom:1px solid #eef2f7;">{{ log.created_at|date:"d M Y H:i" }}</td>
+          <td style="padding:8px; border-bottom:1px solid #eef2f7;">{{ log.get_action_type_display }}</td>
+          <td style="padding:8px; border-bottom:1px solid #eef2f7;">{{ log.section }} | {{ log.day }} {{ log.slot }}</td>
+          <td style="padding:8px; border-bottom:1px solid #eef2f7;">{% if log.changed_by %}{{ log.changed_by.username }}{% else %}-{% endif %}</td>
+          <td style="padding:8px; border-bottom:1px solid #eef2f7;">{{ log.reason }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endif %}
 

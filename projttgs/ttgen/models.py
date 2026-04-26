@@ -377,6 +377,55 @@ class ScheduledSlot(models.Model):
             )
 
 
+class TimetableChangeLog(models.Model):
+    ACTION_ADD = "ADD"
+    ACTION_UPDATE = "UPDATE"
+    ACTION_DELETE = "DELETE"
+    ACTION_MOVE = "MOVE"
+    ACTION_SUBSTITUTE = "SUBSTITUTE"
+    ACTION_SUBSTITUTE_LAB = "SUBSTITUTE_LAB"
+
+    ACTION_CHOICES = [
+        (ACTION_ADD, "Add"),
+        (ACTION_UPDATE, "Update"),
+        (ACTION_DELETE, "Delete"),
+        (ACTION_MOVE, "Move"),
+        (ACTION_SUBSTITUTE, "Substitute"),
+        (ACTION_SUBSTITUTE_LAB, "Substitute Lab"),
+    ]
+
+    timetable = models.ForeignKey(
+        SavedTimetable,
+        on_delete=models.CASCADE,
+        related_name="change_logs",
+        null=True,
+        blank=True,
+    )
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="timetable_change_logs",
+    )
+    action_type = models.CharField(max_length=32, choices=ACTION_CHOICES)
+    reason = models.TextField()
+    section = models.CharField(max_length=120, blank=True, default="")
+    day = models.CharField(max_length=20, blank=True, default="")
+    slot = models.CharField(max_length=20, blank=True, default="")
+    before_snapshot = models.JSONField(default=dict, blank=True)
+    after_snapshot = models.JSONField(default=dict, blank=True)
+    source = models.CharField(max_length=24, blank=True, default="saved")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        when = self.created_at.strftime("%d %b %Y %H:%M")
+        return f"{self.action_type} | {self.section} {self.day} {self.slot} | {when}"
+
+
 class Profile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

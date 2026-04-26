@@ -847,6 +847,60 @@ def _get_plan_permissions(user):
     }
 
 
+def _normalize_reason(raw_reason):
+    return (raw_reason or "").strip()
+
+
+def _meeting_time_payload(mt):
+    if not mt:
+        return {}
+    return {
+        "day": getattr(mt, "day", ""),
+        "slot": str(getattr(mt, "time", "")),
+        "slot_label": SLOT_LABELS.get(str(getattr(mt, "time", "")), ""),
+    }
+
+
+def _saved_slot_snapshot(slot):
+    if not slot:
+        return {}
+    return {
+        "type": "lab" if slot.is_lab else "class",
+        "section": slot.section.section_id if slot.section else "",
+        "course": slot.course.course_name if slot.course else "",
+        "teacher": slot.instructor.name if slot.instructor else "",
+        "room": slot.room.r_number if slot.room else "",
+        **_meeting_time_payload(slot.meeting_time),
+        "lab_slots": [_meeting_time_payload(mt) for mt in list(slot.lab_slots.all())] if slot.is_lab else [],
+    }
+
+
+def _create_saved_change_log(
+    timetable,
+    request,
+    action_type,
+    reason,
+    section="",
+    day="",
+    slot="",
+    before_snapshot=None,
+    after_snapshot=None,
+    source="saved",
+):
+    TimetableChangeLog.objects.create(
+        timetable=timetable,
+        changed_by=request.user if request.user.is_authenticated else None,
+        action_type=action_type,
+        reason=reason,
+        section=str(section or ""),
+        day=str(day or ""),
+        slot=str(slot or ""),
+        before_snapshot=before_snapshot or {},
+        after_snapshot=after_snapshot or {},
+        source=source,
+    )
+
+
 @login_required
 def saved_timetable_list(request):
     timetables = SavedTimetable.objects.filter(user=request.user)
@@ -862,6 +916,7 @@ def saved_timetable(request, tid):
     room_tables = build_room_tables(classes, labs, user=request.user)
     teacher_tables = build_teacher_tables(classes, labs, user=request.user)
     teacher_workloads = _compute_teacher_workloads(classes, labs)
+    change_logs = saved_t.change_logs.select_related("changed_by")[:40]
 
     permissions = _get_plan_permissions(request.user)
 
@@ -871,6 +926,7 @@ def saved_timetable(request, tid):
         "room_tables": room_tables,
         "teacher_tables": teacher_tables,
         "teacher_workloads": teacher_workloads,
+        "change_logs": change_logs,
         "SLOT_LABELS": SLOT_LABELS,
         "can_edit_delete": permissions["can_edit_delete"],
         "can_substitute": permissions["can_substitute"],
@@ -902,6 +958,11 @@ def saved_substitute_teacher(request, tid, section, day, slot):
     available_teachers = Instructor.objects.filter(user=request.user).exclude(id=scheduled.instructor.id)
 
     if request.method == "POST":
+        reason = _normalize_reason(request.POST.get("reason"))
+        if not reason:
+            messages.error(request, "Reason is required for substitution.")
+            return redirect("saved_substitute_teacher", tid=tid, section=section, day=day, slot=slot)
+
         teacher_id = request.POST.get("teacher")
         if teacher_id:
             try:
@@ -913,8 +974,21 @@ def saved_substitute_teacher(request, tid, section, day, slot):
                 if conflict:
                     messages.error(request, f"{new_teacher.name} already has a class at this time.")
                 else:
+                    before_snapshot = _saved_slot_snapshot(scheduled)
                     scheduled.instructor = new_teacher
                     scheduled.save(update_fields=["instructor"])
+                    _create_saved_change_log(
+                        timetable=saved_t,
+                        request=request,
+                        action_type=TimetableChangeLog.ACTION_SUBSTITUTE,
+                        reason=reason,
+                        section=section,
+                        day=day,
+                        slot=slot,
+                        before_snapshot=before_snapshot,
+                        after_snapshot=_saved_slot_snapshot(scheduled),
+                        source="saved",
+                    )
                     messages.success(request, f"Teacher substituted to {new_teacher.name}.")
                     return redirect("saved_timetable", tid=tid)
             except Instructor.DoesNotExist:
@@ -954,6 +1028,11 @@ def saved_substitute_lab_teacher(request, tid, section, day, slot):
     available_teachers = Instructor.objects.filter(user=request.user).exclude(id=scheduled.instructor.id)
 
     if request.method == "POST":
+        reason = _normalize_reason(request.POST.get("reason"))
+        if not reason:
+            messages.error(request, "Reason is required for lab substitution.")
+            return redirect("saved_substitute_lab_teacher", tid=tid, section=section, day=day, slot=slot)
+
         teacher_id = request.POST.get("teacher")
         if teacher_id:
             try:
@@ -965,8 +1044,21 @@ def saved_substitute_lab_teacher(request, tid, section, day, slot):
                 if conflict:
                     messages.error(request, f"{new_teacher.name} already has a class during this lab.")
                 else:
+                    before_snapshot = _saved_slot_snapshot(scheduled)
                     scheduled.instructor = new_teacher
                     scheduled.save(update_fields=["instructor"])
+                    _create_saved_change_log(
+                        timetable=saved_t,
+                        request=request,
+                        action_type=TimetableChangeLog.ACTION_SUBSTITUTE_LAB,
+                        reason=reason,
+                        section=section,
+                        day=day,
+                        slot=slot,
+                        before_snapshot=before_snapshot,
+                        after_snapshot=_saved_slot_snapshot(scheduled),
+                        source="saved",
+                    )
                     messages.success(request, f"Lab teacher substituted to {new_teacher.name}.")
                     return redirect("saved_timetable", tid=tid)
             except Instructor.DoesNotExist:
@@ -1000,9 +1092,12 @@ def saved_move_slot_dragdrop(request, tid, section, day, slot):
     target_day = payload.get("target_day")
     target_slot = payload.get("target_slot")
     move_type = payload.get("move_type", "class")
+    reason = _normalize_reason(payload.get("reason"))
 
     if not target_day or not target_slot:
         return JsonResponse({"ok": False, "message": "Missing target day/slot."}, status=400)
+    if not reason:
+        return JsonResponse({"ok": False, "message": "Reason is required to move a slot."}, status=400)
 
     source_mt = get_meeting_time(day, slot, user=request.user)
     target_mt = get_meeting_time(target_day, target_slot, user=request.user)
@@ -1024,6 +1119,7 @@ def saved_move_slot_dragdrop(request, tid, section, day, slot):
         return JsonResponse({"ok": False, "message": "No slot found at source."}, status=404)
 
     if move_type == "lab":
+        before_snapshot = _saved_slot_snapshot(scheduled)
         source_lab_times = list(scheduled.lab_slots.all().order_by("time"))
         if not source_lab_times:
             return JsonResponse({"ok": False, "message": "Lab has no time slots."}, status=400)
@@ -1060,9 +1156,22 @@ def saved_move_slot_dragdrop(request, tid, section, day, slot):
         scheduled.meeting_time = new_lab_times[0]
         scheduled.save(update_fields=["meeting_time"])
         scheduled.lab_slots.set(new_lab_times)
+        _create_saved_change_log(
+            timetable=saved_t,
+            request=request,
+            action_type=TimetableChangeLog.ACTION_MOVE,
+            reason=reason,
+            section=section,
+            day=target_day,
+            slot=target_slot,
+            before_snapshot=before_snapshot,
+            after_snapshot=_saved_slot_snapshot(scheduled),
+            source="saved",
+        )
 
     else:
         # Theory class move
+        before_snapshot = _saved_slot_snapshot(scheduled)
         # Check section conflict
         sec_conflict = saved_t.slots.filter(section=sec, meeting_time=target_mt).exclude(id=scheduled.id).exists()
         if sec_conflict:
@@ -1078,6 +1187,18 @@ def saved_move_slot_dragdrop(request, tid, section, day, slot):
 
         scheduled.meeting_time = target_mt
         scheduled.save(update_fields=["meeting_time"])
+        _create_saved_change_log(
+            timetable=saved_t,
+            request=request,
+            action_type=TimetableChangeLog.ACTION_MOVE,
+            reason=reason,
+            section=section,
+            day=target_day,
+            slot=target_slot,
+            before_snapshot=before_snapshot,
+            after_snapshot=_saved_slot_snapshot(scheduled),
+            source="saved",
+        )
 
     return JsonResponse({"ok": True, "message": "Slot moved successfully."})
 
@@ -1153,6 +1274,7 @@ def teacher_view_timetable(request, tid):
     room_tables = build_room_tables(classes, labs, user=owner)
     teacher_tables = build_teacher_tables(classes, labs, user=owner)
     teacher_workloads = _compute_teacher_workloads(classes, labs)
+    change_logs = saved_t.change_logs.select_related("changed_by")[:40]
 
     context = {
         "saved": saved_t,
@@ -1160,6 +1282,7 @@ def teacher_view_timetable(request, tid):
         "room_tables": room_tables,
         "teacher_tables": teacher_tables,
         "teacher_workloads": teacher_workloads,
+        "change_logs": change_logs,
         "SLOT_LABELS": SLOT_LABELS,
         "can_edit_delete": False,
         "can_substitute": False,
