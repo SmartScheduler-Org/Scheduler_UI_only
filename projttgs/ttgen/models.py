@@ -273,6 +273,14 @@ class SavedTimetable(models.Model):
         null=True,
         blank=True,
     )
+    department = models.ForeignKey(
+        "Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="saved_timetables",
+        help_text="If set, this timetable contains only slots for this department.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     is_published = models.BooleanField(default=False)
     publish_code = models.CharField(max_length=50, blank=True, default="")
@@ -281,7 +289,8 @@ class SavedTimetable(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Timetable ({timezone.localtime(self.created_at).strftime('%d %b %Y %H:%M')})"
+        dept_label = f" [{self.department.name}]" if self.department_id else ""
+        return f"Timetable{dept_label} ({self.created_at.strftime('%d %b %Y %H:%M')})"
 
 
 class ScheduledSlot(models.Model):
