@@ -12,6 +12,7 @@ assets/
 projttgs/ttgen/migrations/
 ttgen/migrations/
 migrations/
+projttgs/account/migrations/
 
 
 db.sqlite3
