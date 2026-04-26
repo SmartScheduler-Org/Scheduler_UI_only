@@ -88,6 +88,13 @@ urlpatterns = [
     path("saved_timetable/delete/<int:tid>/", views.delete_saved_timetable, name="delete_saved_timetable"),
 
     path('download_timetable/<int:tid>/', views.download_saved_timetable_pdf, name='download_timetable'),
+    path('download_timetable_excel/<int:tid>/', views.download_timetable_excel, name='download_timetable_excel'),
+    path('download_timetable_excel/<int:tid>/<str:view_type>/', views.download_timetable_excel, name='download_timetable_excel_view'),
+    path(
+        'download_generated_timetable_excel/<int:index>/<str:view_type>/',
+        views.download_generated_timetable_excel,
+        name='download_generated_timetable_excel'
+    ),
     
     # Saved timetable slot editing
     path("saved/<int:tid>/add/<str:section>/", views.saved_add_slot, name="saved_add_slot"),
