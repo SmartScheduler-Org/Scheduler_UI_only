@@ -225,6 +225,25 @@
         <div class="stl-eyebrow">Your Library</div>
         <h1 class="stl-title">Saved Timetables</h1>
         <p class="stl-sub">All your generated and saved timetables in one place.</p>
+
+        {# ── Save-limit indicator ─────────────────────────────────── #}
+        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px;">
+            {% for i in "12" %}
+            <div style="
+                width:52px; height:8px; border-radius:999px;
+                background: {% if forloop.counter <= timetable_count %}linear-gradient(90deg,#5b21ed,#38bdf8){% else %}rgba(148,163,184,0.18){% endif %};
+                transition: background 0.3s;
+            "></div>
+            {% endfor %}
+            <span style="font-size:12px; font-weight:700; color:{% if timetable_count >= save_limit %}#f87171{% else %}#94a3b8{% endif %}; letter-spacing:0.04em;">
+                {{ timetable_count }}&nbsp;/&nbsp;{{ save_limit }} saved
+            </span>
+        </div>
+        {% if timetable_count >= save_limit %}
+        <div style="margin:12px auto 0; max-width:480px; padding:10px 16px; border-radius:14px; background:rgba(239,68,68,0.10); border:1px solid rgba(239,68,68,0.28); color:#fca5a5; font-size:13px; font-weight:600; text-align:center;">
+            Save limit reached — delete a timetable below before saving a new one.
+        </div>
+        {% endif %}
     </div>
 
     {% if timetables %}
@@ -240,7 +259,7 @@
                     {{ t.department.name }}
                 </div>
                 {% else %}
-                <div class="stl-published-badge" style="background:rgba(148,163,184,0.08);border-color:rgba(148,163,184,0.2);color:#94a3b8;">
+                <div class="stl-published-badge" style="background:rgba(56,189,248,0.12);border-color:rgba(56,189,248,0.28);color:#7dd3fc;">
                     All Departments
                 </div>
                 {% endif %}

@@ -937,10 +937,14 @@ body.drag-drop-active .drag-mode-badge {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
     gap: 10px;
-    margin: 18px auto 10px;
+    margin: 0 auto 18px;
     max-width: 1200px;
-    padding: 0 16px;
+    padding: 10px 16px 12px;
+    background: rgba(37,122,122,0.05);
+    border-radius: 18px;
+    border: 1px solid rgba(37,122,122,0.13);
 }
 
 .dept-filter-btn {
@@ -1023,11 +1027,11 @@ body.drag-drop-active .drag-mode-badge {
 
 .export-watermark__grid {
     position: absolute;
-    inset: -8% -10%;
+  inset: -26% -10% auto -10%;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 62px 20px;
-    align-content: center;
+  align-content: start;
     justify-items: center;
     transform: rotate(-28deg);
     transform-origin: center;
@@ -1239,34 +1243,145 @@ body.drag-drop-active .drag-mode-badge {
 }
 
 .fullpage-pdf-btn {
-  padding: 12px 28px;
+  padding: 10px 22px;
   border: none;
   border-radius: 999px;
   background: linear-gradient(135deg, #5b21ed, #7c4dff);
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 12px 24px rgba(91, 33, 237, 0.22);
+  box-shadow: 0 10px 22px rgba(91, 33, 237, 0.22);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.fullpage-pdf-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 28px rgba(91, 33, 237, 0.32); }
+.fullpage-pdf-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(91, 33, 237, 0.32); }
 
 .fullpage-excel-btn {
-  padding: 12px 28px;
+  padding: 10px 22px;
   border: none;
   border-radius: 999px;
   background: linear-gradient(135deg, #166534, #16a34a);
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 12px 24px rgba(22, 101, 52, 0.22);
+  box-shadow: 0 10px 22px rgba(22, 101, 52, 0.22);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.fullpage-excel-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 28px rgba(22, 101, 52, 0.32); }
+.fullpage-excel-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(22, 101, 52, 0.32); }
+
+/* ── Command Bar (unified action + filter row) ── */
+.command-bar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    max-width: 1340px;
+    margin: 18px auto 0;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(240,248,252,0.97));
+    border: 1px solid rgba(37,122,122,0.12);
+    border-radius: 22px;
+    box-shadow: 0 12px 28px rgba(27,79,114,0.07);
+}
+
+.command-bar__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.command-bar__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Department filter dropdown */
+.dept-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(37,122,122,0.06);
+    border: 1px solid rgba(37,122,122,0.18);
+    border-radius: 999px;
+}
+
+.dept-select-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #257a7a;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.dept-select {
+    border: none;
+    background: transparent;
+    color: #1a5c5c;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    padding: 2px 6px;
+    max-width: 220px;
+}
+
+.dept-select:focus {
+    outline: 2px solid rgba(37,122,122,0.35);
+    border-radius: 6px;
+}
+
+/* Export dropdown group */
+.export-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px auto;
+    justify-content: center;
+}
+
+/* Drag-drop smooth drop landing animation */
+@keyframes slotLand {
+    0%   { transform: scale(1.04); box-shadow: 0 0 0 3px rgba(34,197,94,0.35); }
+    60%  { transform: scale(0.98); }
+    100% { transform: scale(1);    box-shadow: none; }
+}
+
+body.drag-drop-active .draggable-slot-item {
+    cursor: grab;
+    transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+body.drag-drop-active .draggable-slot-item.is-dragging {
+    opacity: 0.38;
+    transform: scale(0.96);
+    box-shadow: 0 6px 22px rgba(99,102,241,0.22);
+    cursor: grabbing;
+}
+
+body.drag-drop-active .slot-cell.drop-target {
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+body.drag-drop-active .slot-cell.drop-target.drag-over {
+    background: rgba(34, 197, 94, 0.13);
+    box-shadow: inset 0 0 0 2px rgba(34,197,94,0.50);
+    transform: scale(1.012);
+}
+
+.slot-cell.land-anim > * {
+    animation: slotLand 0.38s cubic-bezier(.18,.89,.32,1.06);
+}
 
 @media (max-width: 768px) {
     .view-switcher {
@@ -1336,13 +1451,44 @@ body.drag-drop-active .drag-mode-badge {
         });
     }
 
+    var _BRAND_SVG_IMG = '<svg viewBox="0 0 200 200" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg_t_img" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="lg_l_img" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="lg_r_img" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs><path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_t_img)"/><path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_l_img)"/><path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_r_img)"/><path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818"/></svg>';
+
+    function _buildImgBrandBar() {
+        var bar = document.createElement('div');
+        bar.id = '_img_brand_bar';
+        bar.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 10px; background:#f0f6ff; border-top:1px solid #dbe7f3; border-bottom:2px solid #c8dcf8; margin-bottom:4px; box-sizing:border-box;';
+        var ico = document.createElement('span');
+        ico.style.cssText = 'flex-shrink:0; filter:drop-shadow(0 0 5px rgba(0,180,255,.5)); line-height:0;';
+        ico.innerHTML = _BRAND_SVG_IMG;
+        bar.appendChild(ico);
+        var lbl = document.createElement('span');
+        lbl.innerHTML = '<span style="font-size:11px;font-weight:800;letter-spacing:0.03em;"><span style="color:#0060d0">Smart</span><span style="color:#0090c8">Scheduler</span></span><span style="font-size:10px;color:#4a6080;font-weight:600;margin-left:6px;">· Generated timetable</span>';
+        bar.appendChild(lbl);
+        return bar;
+    }
+
     function saveAsImage(elementId, filename) {
         _showDownloadPopup();
         var el = document.getElementById(elementId);
         var btns = el.querySelectorAll('.btn-save-tt');
         btns.forEach(function(b) { b.style.display = 'none'; });
 
+        // Inject brand bar just above the first table, remove after capture
+        var bar = _buildImgBrandBar();
+        var tbl = el.querySelector('table');
+        var barParent = null, barNextSibling = null;
+        if (tbl) {
+            barParent = tbl.parentNode;
+            barNextSibling = tbl;
+            barParent.insertBefore(bar, tbl);
+        } else {
+            el.insertBefore(bar, el.firstChild);
+            barParent = el;
+            barNextSibling = bar.nextSibling;
+        }
+
         html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(function(canvas) {
+            bar.remove();
             btns.forEach(function(b) { b.style.display = ''; });
             var link = document.createElement('a');
             link.download = filename + '.png';
@@ -1350,6 +1496,7 @@ body.drag-drop-active .drag-mode-badge {
             link.click();
             _showDownloadDone();
         }).catch(function() {
+            bar.remove();
             btns.forEach(function(b) { b.style.display = ''; });
             Swal.close();
         });
@@ -1358,6 +1505,33 @@ body.drag-drop-active .drag-mode-badge {
     function downloadViewPdf(viewName) {
         var viewEl = document.getElementById(viewName + '-view');
         if (!viewEl) { alert('No timetable view found.'); return; }
+
+      var collegeInput = document.getElementById('collegeNameInput');
+      var collegeName = collegeInput ? collegeInput.value.trim() : '';
+
+      var _NAV_SVG = '<svg viewBox="0 0 200 200" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg_t_pdf" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="lg_l_pdf" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="lg_r_pdf" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs><path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_t_pdf)"/><path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_l_pdf)"/><path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_r_pdf)"/><path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818"/></svg>';
+
+      function _buildPdfBrandHeader() {
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 10px 6px; background:#f0f6ff; border-top:1px solid #dbe7f3; border-bottom:2px solid #c8dcf8; margin-bottom:4px;';
+
+        var logoWrap = document.createElement('span');
+        logoWrap.style.cssText = 'flex-shrink:0; filter:drop-shadow(0 0 5px rgba(0,180,255,.45)); line-height:0;';
+        logoWrap.innerHTML = _NAV_SVG;
+        wrap.appendChild(logoWrap);
+
+        var txt = document.createElement('span');
+        txt.innerHTML = '<span style="font-size:11px; font-weight:800; letter-spacing:0.03em;"><span style="color:#0060d0">Smart</span><span style="color:#0090c8">Scheduler</span></span><span style="font-size:10px; color:#4a6080; font-weight:600; margin-left:6px;">· Generated timetable</span>';
+        wrap.appendChild(txt);
+
+        if (collegeName) {
+          var right = document.createElement('span');
+          right.textContent = collegeName;
+          right.style.cssText = 'margin-left:auto; font-size:10px; font-weight:700; color:#1a237e;';
+          wrap.appendChild(right);
+        }
+        return wrap;
+      }
 
         // Gather cards; filter out any hidden by the dept filter (display:none)
         var allCards = Array.from(viewEl.querySelectorAll('.export-surface'));
@@ -1376,7 +1550,17 @@ body.drag-drop-active .drag-mode-badge {
 
         // Snapshot the HTML now (after hiding buttons), then restore the DOM
         // immediately so the page stays interactive during the async render.
-        var html = cards.map(function(c) { return c.outerHTML; })
+        var html = cards.map(function(c) {
+          var clone = c.cloneNode(true);
+          // Insert brand strip just above the first table (below section heading)
+          var tbl = clone.querySelector('table');
+          if (tbl) {
+            tbl.parentNode.insertBefore(_buildPdfBrandHeader(), tbl);
+          } else {
+            clone.insertBefore(_buildPdfBrandHeader(), clone.firstChild);
+          }
+          return clone.outerHTML;
+        })
             .join('<div style="page-break-after:always; break-after:page; height:0;"></div>');
         hiddenBtns.forEach(function(b) { b.style.display = ''; });
 
@@ -1441,13 +1625,42 @@ body.drag-drop-active .drag-mode-badge {
         }
     }
 
-    function filterByDept(code) {
+function filterByDept(code, label) {
         document.querySelectorAll('.dept-filter-btn').forEach(function(btn) {
             btn.classList.toggle('is-active', btn.dataset.filter === code);
         });
         document.querySelectorAll('#section-view .export-surface[data-dept-code]').forEach(function(card) {
             card.style.display = (code === 'all' || card.dataset.deptCode === code) ? '' : 'none';
         });
+        document.querySelectorAll('#teacher-view .export-surface[data-dept-codes]').forEach(function(card) {
+            var codes = (card.dataset.deptCodes || '').split(',').filter(Boolean);
+            card.style.display = (code === 'all' || codes.indexOf(code) !== -1) ? '' : 'none';
+        });
+        document.querySelectorAll('#room-view .export-surface[data-dept-codes]').forEach(function(card) {
+            var codes = (card.dataset.deptCodes || '').split(',').filter(Boolean);
+            card.style.display = (code === 'all' || codes.indexOf(code) !== -1) ? '' : 'none';
+        });
+
+        // Update download button labels to reflect active filter
+        var deptSuffix = (code === 'all') ? '' : ' — ' + (label || code);
+        var sectionLbl = document.getElementById('section-pdf-label');
+        if (sectionLbl) sectionLbl.textContent = 'Download Section Timetables PDF' + deptSuffix;
+        var teacherLbl = document.getElementById('teacher-pdf-label');
+        if (teacherLbl) teacherLbl.textContent = 'Download Teacher Timetables PDF' + deptSuffix;
+        var roomLbl = document.getElementById('room-pdf-label');
+        if (roomLbl) roomLbl.textContent = 'Download Room Timetables PDF' + deptSuffix;
+
+        // Show/hide active filter indicator
+        var activeLbl = document.getElementById('dept-filter-active-label');
+        if (activeLbl) {
+            if (code === 'all') {
+                activeLbl.style.display = 'none';
+                activeLbl.textContent = '';
+            } else {
+                activeLbl.textContent = '\u2022 Filtering: ' + (label || code);
+                activeLbl.style.display = 'inline';
+            }
+        }
     }
 
     function getCsrfToken() {
@@ -1598,6 +1811,10 @@ function initDragAndDrop() {
                         return;
                     }
 
+                    // Landing animation on the target cell
+                    target.classList.add('land-anim');
+                    target.addEventListener('animationend', function() { target.classList.remove('land-anim'); }, { once: true });
+
                     Swal.fire({
                         icon: "success",
                         title: "Updated",
@@ -1631,32 +1848,43 @@ function initDragAndDrop() {
         const initialView = ["section", "room", "workload", "teacher"].includes(window.location.hash.replace("#", ""))
             ? window.location.hash.replace("#", "")
             : "section";
-        const openFullScreenButton = document.getElementById("openFullScreenButton");
+        // ── Fullscreen toggle ──────────────────────────────────────────
+        const _fsExpandSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>';
+        const _fsMinimizeSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="10" y1="14" x2="3" y2="21"></line><line x1="21" y1="3" x2="14" y2="10"></line></svg>';
 
+        const openFullScreenButton = document.getElementById("openFullScreenButton");
         if (openFullScreenButton) {
             openFullScreenButton.addEventListener("click", function () {
-                const targetUrl = window.location.href;
-                try {
-                    if (window.top && window.top !== window) {
-                        window.top.location.href = targetUrl;
-                        return;
-                    }
-                } catch (error) {}
-
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen().catch(() => {
-                        window.location.href = targetUrl;
-                    });
-                    return;
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen().catch(function() {});
                 }
-
-                window.location.href = targetUrl;
             });
         }
 
+        document.addEventListener("fullscreenchange", function () {
+            const btn = document.getElementById("openFullScreenButton");
+            if (!btn) return;
+            if (document.fullscreenElement) {
+                btn.innerHTML = _fsMinimizeSVG;
+                btn.title = "Exit fullscreen";
+            } else {
+                btn.innerHTML = _fsExpandSVG;
+                btn.title = "Open full screen";
+            }
+        });
+
+        // ── Dept filter select helper ─────────────────────────────────
+        window.filterByDeptSelect = function(sel) {
+            var code = sel.value;
+            var label = sel.options[sel.selectedIndex].dataset.label || code;
+            filterByDept(code, label);
+        };
+
         showView(initialView);
         initDragAndDrop();
-        {% if active_dept %}filterByDept('{{ active_dept|escapejs }}');{% endif %}
+        {% if active_dept %}filterByDept('{{ active_dept|escapejs }}', '{{ active_dept|escapejs }}');{% endif %}
 
         document.querySelectorAll(".btn-add, .btn-update, .btn-delete").forEach((link) => {
             link.addEventListener("click", function(event) {
@@ -1697,6 +1925,73 @@ function initDragAndDrop() {
                 });
             {% endfor %}
         {% endif %}
+
+        // ── Save timetable (AJAX, with limit-warning) ─────────────────────
+        window.saveTimetable = function(idx) {
+            var url = "{% url 'save_timetable' 0 %}".replace('/0/', '/' + idx + '/');
+            Swal.fire({
+                title: 'Saving…',
+                html: '<div style="font-size:15px;color:#555;">Storing your complete timetable…</div>',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: function() { Swal.showLoading(); },
+                customClass: { popup: 'plan-alert-popup' }
+            });
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(function(r) { return r.json().then(function(d) { return {ok: r.ok, status: r.status, data: d}; }); })
+            .then(function(res) {
+                if (res.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Timetable Saved!',
+                        text: res.data.message || 'Your timetable has been saved successfully.',
+                        confirmButtonText: 'View Saved Timetables',
+                        confirmButtonColor: '#5b21ed',
+                        customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+                        buttonsStyling: false,
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            window.location.href = res.data.redirect || '/saved_timetables/';
+                        }
+                    });
+                } else if (res.status === 409) {
+                    // Limit reached
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Save Limit Reached',
+                        html: '<div style="color:#334155;font-size:15px;line-height:1.6;">' + res.data.message + '</div>',
+                        confirmButtonText: 'Manage Saved Timetables',
+                        confirmButtonColor: '#5b21ed',
+                        showCancelButton: true,
+                        cancelButtonText: 'Stay here',
+                        customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+                        buttonsStyling: false,
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            window.location.href = '/saved_timetables/';
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Save Failed',
+                        text: res.data.message || 'An unexpected error occurred.',
+                        customClass: { popup: 'plan-alert-popup' }
+                    });
+                }
+            })
+            .catch(function() {
+                Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not reach the server.', customClass: { popup: 'plan-alert-popup' } });
+            });
+        };
     });
 </script>
 
@@ -1757,23 +2052,38 @@ function initDragAndDrop() {
 </div>
 {% endif %}
 
-{% if index %}
-<div class="top-actions">
-    <a href="{% url 'save_timetable' index %}{% if active_dept %}?dept={{ active_dept }}{% endif %}" class="save-tt-link">
-        <button class="save-tt-hero" type="button">
-            <span class="save-tt-hero__icon">✦</span>
-            <span class="save-tt-hero__text">Save This Timetable</span>
-        </button>
-    </a>
+<div class="command-bar">
+  <div class="command-bar__left">
+    {% if index %}
+    <button class="save-tt-hero" type="button" onclick="saveTimetable({{ index }})">
+        <span class="save-tt-hero__icon">✦</span>
+        <span class="save-tt-hero__text">Save Timetable</span>
+    </button>
     <button id="dragDropToggle" type="button" class="drag-toggle-btn">
-        Activate Drag & Drop
+        Activate Drag &amp; Drop
     </button>
     <div class="drag-mode-badge">
         <span class="drag-mode-badge__dot"></span>
-        Advanced drag mode active
+        Drag mode active
     </div>
+    {% endif %}
+  </div>
+  <div class="command-bar__right">
+    {% if departments|length > 1 %}
+    <div class="dept-select-wrap">
+      <span class="dept-select-label">FILTER:</span>
+      <select id="dept-filter-select" class="dept-select" onchange="filterByDeptSelect(this)">
+        <option value="all" data-label="All Departments">All Departments</option>
+        {% for dept in departments %}
+        <option value="{{ dept.code }}" data-label="{{ dept.name|escapejs }}">{{ dept.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <span id="dept-filter-active-label" style="font-size:11px;font-weight:700;color:#94a3b8;display:none;"></span>
+  </div>
 </div>
-{% endif %}
+
 <div class="view-switcher">
   <button class="view-toggle view-toggle--section is-active" type="button" data-view="section" onclick="showView('section')" aria-pressed="true">
     <span class="view-toggle__label">📘 Section Timetable</span>
@@ -1796,24 +2106,13 @@ function initDragAndDrop() {
 
 {# ===================== SECTION TIMETABLES ===================== #}
 <div id="section-view">
-
-{# ---- Department filter bar (only shown when multiple departments exist) ---- #}
-{% if departments|length > 1 %}
-<div class="dept-filter-bar" id="dept-filter-bar">
-  <button class="dept-filter-btn is-active" data-filter="all" onclick="filterByDept('all')">All Departments</button>
-  {% for dept in departments %}
-  <button class="dept-filter-btn" data-filter="{{ dept.code }}" onclick="filterByDept('{{ dept.code|escapejs }}')">{{ dept.name }}</button>
-  {% endfor %}
-</div>
-{% endif %}
-
-<div style="text-align:center; margin:18px 0 10px;">
-  <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('section')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download All Section Timetables PDF
+<div class="export-group">
+  <button type="button" class="fullpage-pdf-btn" id="section-pdf-btn" onclick="downloadViewPdf('section')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span id="section-pdf-label">Download Section PDF</span>
   </button>
-  <button type="button" class="fullpage-excel-btn" style="margin-left:10px;" onclick="downloadViewExcel('section')">
-    Download All Section Timetables Excel
+  <button type="button" class="fullpage-excel-btn" onclick="downloadViewExcel('section')">
+    Download Section Excel
   </button>
 </div>
 {% for table in tables %}
@@ -2011,19 +2310,19 @@ function initDragAndDrop() {
     <h2 class="room-view-title">Room Timetables</h2>
     <div class="room-view-toolbar__hint">Clean room-wise layout with export-ready separation</div>
   </div>
-  <div>
+  <div class="export-group" style="margin:0;">
     <button class="fullpage-pdf-btn" type="button" onclick="downloadViewPdf('room')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download All Room Timetables PDF
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="room-pdf-label">Download Room PDF</span>
     </button>
-    <button type="button" class="fullpage-excel-btn" style="margin-left:10px;" onclick="downloadViewExcel('room')">
-      Download All Room Timetables Excel
+    <button type="button" class="fullpage-excel-btn" onclick="downloadViewExcel('room')">
+      Download Room Excel
     </button>
   </div>
 </div>
 
 {% for rt in room_tables %}
-  <div id="room-tt-{{ forloop.counter }}" class="room-card export-surface">
+  <div id="room-tt-{{ forloop.counter }}" class="room-card export-surface" data-dept-codes="{{ rt.dept_codes|join:',' }}">
     <div class="export-watermark">
       <div class="export-watermark__grid">
         <span>SmartScheduler</span>
@@ -2043,6 +2342,9 @@ function initDragAndDrop() {
     <div class="room-card__content">
       <div class="room-card__header">
         <h3 class="room-card__title">Room {{ rt.room.r_number }} ({{ rt.room.room_type }})</h3>
+        {% if rt.dept_names %}
+        <div style="font-size:12px; color:#28506e; font-weight:700; margin-top:6px;">Departments: {{ rt.dept_names|join:", " }}</div>
+        {% endif %}
         <div class="room-card__meta">
           <div class="room-optimization">
             <span>Optimization</span>
@@ -2120,13 +2422,13 @@ function initDragAndDrop() {
 
 {# ===================== TEACHER WORKLOAD SUMMARY ===================== #}
 <div id="workload-view" style="display:none;" {% if demo_mode %}class="demo-locked-surface"{% endif %}>
-<div style="text-align:center; margin:18px 0 10px;">
+<div class="export-group">
   <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('workload')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download Workload Summary PDF
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download Workload PDF
   </button>
-  <button type="button" class="fullpage-excel-btn" style="margin-left:10px;" onclick="downloadViewExcel('workload')">
-    Download Workload Summary Excel
+  <button type="button" class="fullpage-excel-btn" onclick="downloadViewExcel('workload')">
+    Download Workload Excel
   </button>
 </div>
 <h1 class="secHead" style="margin-top: 20px;">Teacher Workload Summary</h1>
@@ -2185,19 +2487,19 @@ function initDragAndDrop() {
 
 {# ===================== TEACHER TIMETABLES ===================== #}
 <div id="teacher-view" style="display:none;" {% if demo_mode %}class="demo-locked-surface"{% endif %}>
-<div style="text-align:center; margin:18px 0 10px;">
+<div class="export-group">
   <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('teacher')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download All Teacher Timetables PDF
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span id="teacher-pdf-label">Download Teacher PDF</span>
   </button>
-  <button type="button" class="fullpage-excel-btn" style="margin-left:10px;" onclick="downloadViewExcel('teacher')">
-    Download All Teacher Timetables Excel
+  <button type="button" class="fullpage-excel-btn" onclick="downloadViewExcel('teacher')">
+    Download Teacher Excel
   </button>
 </div>
 <h1 class="secHead" style="margin-top: 20px;">Teacher Timetables</h1>
 
 {% for ttable in teacher_tables %}
-  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface">
+  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface" data-dept-codes="{{ ttable.dept_codes|join:',' }}">
   <div class="export-watermark">
     <div class="export-watermark__grid">
       <span>SmartScheduler</span>
@@ -2221,6 +2523,9 @@ function initDragAndDrop() {
       Save as Image
     </button>
   </h2>
+  {% if ttable.dept_names %}
+  <div style="text-align:center; margin:-6px 0 10px; font-size:12px; color:#28506e; font-weight:700;">Departments: {{ ttable.dept_names|join:", " }}</div>
+  {% endif %}
 
   <table class="table2">
     <thead>

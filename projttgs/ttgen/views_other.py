@@ -1341,7 +1341,11 @@ def _get_plan_permissions(user):
 @login_required
 def saved_timetable_list(request):
     timetables = SavedTimetable.objects.filter(user=request.user)
-    return render(request, "saved_timetable_list.html", {"timetables": timetables})
+    return render(request, "saved_timetable_list.html", {
+        "timetables": timetables,
+        "timetable_count": timetables.count(),
+        "save_limit": 2,
+    })
 
 
 @login_required
