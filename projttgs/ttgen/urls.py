@@ -21,6 +21,15 @@ urlpatterns = [
     path('set-role/hod/', views.admindash_role_set, name='set_role_hod'),
     path('set-role/teacher/', views.teacher_role_set, name='set_role_teacher'),
     path('set-role/dean/', views.dean_role_set, name='set_role_dean'),
+    path('teacher/onboarding/', views.teacher_onboarding, name='teacher_onboarding'),
+    path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/profile/', views.teacher_profile_page, name='teacher_profile_page'),
+    path('teacher/published-timetable/', views.teacher_published_timetable, name='teacher_published_timetable'),
+    path('teacher/my-timetable/', views.teacher_my_timetable, name='teacher_my_timetable'),
+    path('teacher-onboarding-responses/', views.teacher_onboarding_responses_page, name='teacher_onboarding_responses'),
+    path('teacher-onboarding-responses/<int:submission_id>/resubmit/', views.request_teacher_onboarding_resubmission, name='request_teacher_onboarding_resubmission'),
+    path('teacher-onboarding-responses/<int:submission_id>/delete/', views.delete_teacher_onboarding, name='delete_teacher_onboarding'),
+    path('export/teacher-onboarding/csv/', views.export_teacher_onboarding_csv, name='export_teacher_onboarding_csv'),
     path('teacher_timetable/', views.teachertimetable, name='teachertimetable'),
     path('saved_timetables/', views.teachertimetable_list, name='teachertimetable_list'),
     path('add_teachers', views.addInstructor, name='addInstructors'),
@@ -135,3 +144,6 @@ urlpatterns = [
     path('api/pref/parse-emails/',  views.parse_emails_view,         name='pref_parse_emails'),
     path('export/preferences/csv/', views.export_preferences_csv,    name='export_pref_csv'),
 ]
+
+
+
