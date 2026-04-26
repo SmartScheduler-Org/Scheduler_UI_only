@@ -137,3 +137,6 @@ urlpatterns = [
     path('api/pref/parse-emails/',  views.parse_emails_view,         name='pref_parse_emails'),
     path('export/preferences/csv/', views.export_preferences_csv,    name='export_pref_csv'),
 ]
+
+
+
