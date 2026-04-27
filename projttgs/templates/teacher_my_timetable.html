@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Timetable | SmartScheduler{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'teacher_portal.css' %}">
+
+<div class="teacher-page-shell">
+  <section class="teacher-page-header">
+    <div class="teacher-page-badge">Teacher Section</div>
+    <h1>My <span>Timetable</span></h1>
+    <p>
+      This page shows only the timetable for the teacher account linked to your profile. It does not show every teacher, only your assigned classes and labs.
+    </p>
+  </section>
+
+  <div class="teacher-link-row">
+    <a href="{% url 'teacher_dashboard' %}" class="teacher-back-link">Back</a>
+  </div>
+
+  {% if messages %}
+  <div class="teacher-alert-stack">
+    {% for message in messages %}
+    <div class="teacher-alert {% if 'error' in message.tags %}teacher-alert--error{% else %}teacher-alert--success{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <section class="teacher-surface">
+    <h2 class="teacher-section-title">Teacher Only Timetable</h2>
+    <p class="teacher-section-copy">
+      This page is filtered for your linked instructor record, so it only shows your own timetable and workload summary.
+    </p>
+
+    {% if my_teacher_table %}
+    <div class="teacher-summary-grid">
+      <div class="teacher-data-card">
+        <span>Teacher</span>
+        <strong>{{ my_teacher_table.teacher.name }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Faculty UID</span>
+        <strong>{{ my_teacher_table.teacher.uid }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Lectures</span>
+        <strong>{{ teacher_workload.lectures }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Lab Slots</span>
+        <strong>{{ teacher_workload.labs }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Total Load</span>
+        <strong>{{ teacher_workload.total }}</strong>
+      </div>
+    </div>
+
+    <div class="teacher-table-wrap">
+      <table class="teacher-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>{{ slot_labels.1 }}</th>
+            <th>{{ slot_labels.2 }}</th>
+            <th>{{ slot_labels.3 }}</th>
+            <th>{{ slot_labels.4 }}</th>
+            <th>{{ slot_labels.5 }}</th>
+            <th>{{ slot_labels.6 }}</th>
+            <th>{{ slot_labels.7 }}</th>
+            <th>{{ slot_labels.8 }}</th>
+            <th>{{ slot_labels.9 }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in my_teacher_table.rows %}
+          <tr>
+            <th class="teacher-table__day">{{ row.day }}</th>
+            {% for cell in row.cells %}
+              {% if cell.type == "lunch" %}
+              <td class="teacher-table__lunch">Lunch</td>
+              {% elif cell.type == "lab" %}
+              <td colspan="{{ cell.colspan }}" class="teacher-table__lab">
+                {% for lab in cell.labs %}
+                <div class="teacher-table__block">
+                  <strong>{{ lab.course.course_name }} Lab</strong>
+                  <span>Section: {{ lab.section }}</span>
+                  <span>Batch {{ lab.batch }}/{{ lab.total_batches }} - {{ lab.room.r_number }}</span>
+                </div>
+                {% endfor %}
+              </td>
+              {% elif cell.type == "class" %}
+              <td class="teacher-table__class">
+                {% for cls in cell.classes %}
+                <div class="teacher-table__block">
+                  <strong>{{ cls.course.course_name }}</strong>
+                  <span>Section: {{ cls.section }}</span>
+                  <span>{{ cls.room.r_number }}</span>
+                </div>
+                {% endfor %}
+              </td>
+              {% else %}
+              <td class="teacher-table__empty">Free</td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% elif active_timetable and linked_instructor %}
+    <div class="teacher-empty-state">
+      No classes are assigned to <strong>{{ linked_instructor.name }}</strong> in the connected published timetable right now.
+    </div>
+    {% elif not active_timetable %}
+    <div class="teacher-empty-state">
+      Connect the HOD published timetable first from the HOD timetable page. After that, your teacher-only timetable will appear here.
+    </div>
+    {% else %}
+    <div class="teacher-empty-state">
+      Link your faculty UID from the profile page first. Once the teacher account is linked, this page will show only your timetable.
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

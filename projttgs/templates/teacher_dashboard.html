@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Teacher Dashboard | SmartScheduler{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'teacher_portal.css' %}">
+
+<div class="teacher-portal-shell">
+  <div class="teacher-portal-orb teacher-portal-orb--one"></div>
+  <div class="teacher-portal-orb teacher-portal-orb--two"></div>
+  <div class="teacher-portal-orb teacher-portal-orb--three"></div>
+  <div class="teacher-portal-grid"></div>
+
+  <section class="teacher-landing-intro">
+    <div class="teacher-landing-badge">SmartScheduler</div>
+    <div class="teacher-landing-greeting">Welcome, {{ teacher_display_name }} 👋</div>
+    <h1 class="teacher-landing-title">Welcome To <span>SmartScheduler</span></h1>
+    <p class="teacher-landing-copy">
+      Choose the page you want to open. Your teacher section is split into three focused pages for profile details, published timetable access, and your own teacher-only timetable.
+    </p>
+  </section>
+
+  {% if messages %}
+  <div class="teacher-alert-stack">
+    {% for message in messages %}
+    <div class="teacher-alert {% if 'error' in message.tags %}teacher-alert--error{% else %}teacher-alert--success{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <section class="teacher-card-grid">
+    <a href="{% url 'teacher_profile_page' %}" class="teacher-portal-card teacher-portal-card--cyan">
+      <div class="teacher-portal-card__glow"></div>
+      <div class="teacher-portal-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="teacher-portal-card__content">
+        <h2 class="teacher-portal-card__title">Profile</h2>
+        <div class="teacher-portal-card__status">{{ profile_card_state }}</div>
+        <div class="teacher-portal-card__arrow">&#8594;</div>
+      </div>
+    </a>
+
+    <a href="{% url 'teacher_published_timetable' %}" class="teacher-portal-card teacher-portal-card--pink">
+      <div class="teacher-portal-card__glow"></div>
+      <div class="teacher-portal-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19h16"/>
+          <path d="M4 5h16"/>
+          <path d="M4 12h16"/>
+          <path d="M8 5v14"/>
+          <path d="M16 5v14"/>
+        </svg>
+      </div>
+      <div class="teacher-portal-card__content">
+        <h2 class="teacher-portal-card__title">Published Timetable</h2>
+        <div class="teacher-portal-card__status">{{ published_card_state }}</div>
+        <div class="teacher-portal-card__arrow">&#8594;</div>
+      </div>
+    </a>
+
+    <a href="{% url 'teacher_my_timetable' %}" class="teacher-portal-card teacher-portal-card--green">
+      <div class="teacher-portal-card__glow"></div>
+      <div class="teacher-portal-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <path d="M16 2v4"/>
+          <path d="M8 2v4"/>
+          <path d="M3 10h18"/>
+          <path d="M8 14h.01"/>
+          <path d="M12 14h.01"/>
+          <path d="M16 14h.01"/>
+          <path d="M8 18h.01"/>
+          <path d="M12 18h.01"/>
+          <path d="M16 18h.01"/>
+        </svg>
+      </div>
+      <div class="teacher-portal-card__content">
+        <h2 class="teacher-portal-card__title">My Timetable</h2>
+        <div class="teacher-portal-card__status">{{ timetable_card_state }}</div>
+        <div class="teacher-portal-card__arrow">&#8594;</div>
+      </div>
+    </a>
+  </section>
+</div>
+{% endblock %}

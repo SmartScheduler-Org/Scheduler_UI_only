@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Teacher Profile | SmartScheduler{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'teacher_portal.css' %}">
+
+<div class="teacher-page-shell">
+  <section class="teacher-page-header">
+    <div class="teacher-page-badge">Teacher Section</div>
+    <h1>Profile <span>Details</span></h1>
+    <p>
+      Update the teacher profile details that belong to your account. This page stores your contact information and links your login with the correct faculty record.
+    </p>
+  </section>
+
+  <div class="teacher-link-row">
+    <a href="{% url 'teacher_dashboard' %}" class="teacher-back-link">Back</a>
+  </div>
+
+  {% if messages %}
+  <div class="teacher-alert-stack">
+    {% for message in messages %}
+    <div class="teacher-alert {% if 'error' in message.tags %}teacher-alert--error{% else %}teacher-alert--success{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <section class="teacher-surface">
+    <h2 class="teacher-section-title">Teacher Profile Form</h2>
+    <p class="teacher-section-copy">
+      Role, email, and designation are shown here for reference. Contact number and faculty UID can be updated from this page.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="teacher-form-grid">
+        <label class="teacher-field">
+          <span>Teacher Name</span>
+          <input type="text" value="{{ teacher_display_name }}" readonly>
+        </label>
+
+        <label class="teacher-field">
+          <span>Role</span>
+          <input type="text" value="{{ teacher_role_label }}" readonly>
+        </label>
+
+        <label class="teacher-field">
+          <span>Designation</span>
+          <input type="text" value="{{ teacher_designation }}" readonly>
+        </label>
+
+        <label class="teacher-field">
+          <span>Email</span>
+          <input type="text" value="{{ profile_email_value|default:'Not added yet' }}" readonly>
+        </label>
+
+        <label class="teacher-field">
+          <span>Contact Number</span>
+          <input type="text" name="contact_number" value="{{ teacher_profile.contact_number }}" placeholder="Enter contact number">
+        </label>
+
+        <label class="teacher-field">
+          <span>Faculty UID</span>
+          <input
+            type="text"
+            name="faculty_uid"
+            value="{{ faculty_uid_value }}"
+            placeholder="{% if active_timetable %}Enter the faculty UID shared by HOD{% else %}Connect HOD timetable first{% endif %}"
+          >
+        </label>
+      </div>
+
+      <div class="teacher-chip-block">
+        <div class="teacher-chip-label">Subjects</div>
+        {% if teacher_subjects %}
+        <div class="teacher-chip-row">
+          {% for subject in teacher_subjects %}
+          <span class="teacher-chip">{{ subject.course_number }} - {{ subject.course_name }}</span>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="teacher-empty-state">
+          Link your faculty UID and your mapped subjects will appear here automatically.
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="teacher-actions">
+        <button type="submit" class="teacher-btn teacher-btn--primary">Save Profile</button>
+        {% if linked_instructor %}
+        <button type="submit" name="clear_faculty_link" value="1" class="teacher-btn teacher-btn--ghost">Clear Faculty Link</button>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

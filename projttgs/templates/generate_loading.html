@@ -613,15 +613,173 @@
             font-size: 12px;
         }
 
-        .error-state {
+        .error-state { display: none; }
+
+        /* ── Error popup modal ── */
+        .err-overlay {
             display: none;
-            margin-top: 14px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: rgba(127, 29, 29, 0.24);
-            box-shadow: inset 0 0 0 1px rgba(248,113,113,0.26);
-            color: #fecaca;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(2, 6, 23, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            animation: fadeInOverlay 0.28s ease;
+        }
+        .err-overlay.is-open { display: flex; }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        .err-modal {
+            position: relative;
+            width: min(540px, 100%);
+            border-radius: 28px;
+            background: linear-gradient(160deg, #0f172a 0%, #1e1035 100%);
+            border: 1px solid rgba(248, 113, 113, 0.22);
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.04),
+                0 32px 80px rgba(2,6,23,0.7),
+                0 0 60px rgba(239,68,68,0.08);
+            padding: 40px 36px 32px;
+            animation: slideUpModal 0.32s cubic-bezier(0.22,1,0.36,1);
+            overflow: hidden;
+        }
+
+        @keyframes slideUpModal {
+            from { opacity: 0; transform: translateY(28px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .err-modal::before {
+            content: "";
+            position: absolute;
+            inset: -60% -20% auto -20%;
+            height: 240px;
+            background: radial-gradient(ellipse at center, rgba(239,68,68,0.14), transparent 70%);
+            pointer-events: none;
+        }
+
+        .err-icon-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            background: rgba(239,68,68,0.14);
+            border: 1px solid rgba(239,68,68,0.28);
+            margin-bottom: 20px;
+        }
+
+        .err-icon-wrap svg {
+            width: 26px;
+            height: 26px;
+            color: #f87171;
+        }
+
+        .err-eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #f87171;
+            margin-bottom: 8px;
+        }
+
+        .err-title {
+            font-size: clamp(20px, 3vw, 26px);
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: #f8fafc;
+            margin: 0 0 12px;
+            line-height: 1.2;
+        }
+
+        .err-detail {
             font-size: 14px;
+            line-height: 1.65;
+            color: rgba(226,232,240,0.78);
+            margin: 0 0 14px;
+        }
+
+        .err-tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            font-size: 13px;
+            color: rgba(191,219,254,0.82);
+            line-height: 1.55;
+            margin-bottom: 28px;
+        }
+
+        .err-tip::before {
+            content: "💡";
+            flex-shrink: 0;
+            font-size: 15px;
+            margin-top: 1px;
+        }
+
+        .err-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .err-btn-retry {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px 22px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #5b21ed, #38bdf8);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(91,33,237,0.32);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+        .err-btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 32px rgba(56,189,248,0.3);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .err-btn-dash {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px 22px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(226,232,240,0.8);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .err-btn-dash:hover {
+            background: rgba(255,255,255,0.09);
+            color: #fff;
+            text-decoration: none;
         }
 
         @keyframes spin {
@@ -860,6 +1018,7 @@
 
                 <div class="error-state" id="errorState"></div>
             </div>
+            </div>
 
             <aside class="side-metrics">
                 <div class="metric">
@@ -881,6 +1040,33 @@
         </section>
     </main>
 
+    <!-- Error popup -->
+    <div class="err-overlay" id="errOverlay" role="dialog" aria-modal="true" aria-labelledby="errTitle">
+        <div class="err-modal">
+            <div class="err-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <div class="err-eyebrow">Generation Error</div>
+            <h2 class="err-title" id="errTitle">Something went wrong</h2>
+            <p class="err-detail" id="errDetail"></p>
+            <div class="err-tip" id="errTip"></div>
+            <div class="err-actions">
+                <button class="err-btn-retry" id="errRetryBtn" onclick="retryGeneration()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+                    Try Again
+                </button>
+                <a class="err-btn-dash" href="{% url 'admindash' %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
     {{ use_pso|json_script:"use-pso-data" }}
     <script>
         const phases = [
@@ -897,8 +1083,23 @@
         const progressFill = document.getElementById("progressFill");
         const percentText = document.getElementById("percentText");
         const errorState = document.getElementById("errorState");
+        const errOverlay = document.getElementById("errOverlay");
+        const errTitle   = document.getElementById("errTitle");
+        const errDetail  = document.getElementById("errDetail");
+        const errTip     = document.getElementById("errTip");
         const usePso = JSON.parse(document.getElementById("use-pso-data").textContent);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+        function showErrorModal(title, detail, tip) {
+            errTitle.textContent  = title  || "Generation Failed";
+            errDetail.textContent = detail || "An unexpected error stopped the engine.";
+            errTip.textContent    = tip    || "Please check your data setup and try again.";
+            errOverlay.classList.add("is-open");
+        }
+
+        function retryGeneration() {
+            window.location.href = "{% url 'generate_timetable_loading' %}?use_pso=" + (usePso ? "1" : "0");
+        }
 
         const heroMessages = [
             'SmartScheduler cuts down the hours normally lost in <span class="accent">manual timetable planning</span>.',
@@ -967,7 +1168,23 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Generation failed with status ${response.status}`);
+                    let errData = {};
+                    try { errData = await response.json(); } catch (_) {}
+                    window.clearInterval(phaseTimer);
+                    window.clearInterval(progressTimer);
+                    window.clearInterval(heroTimer);
+                    phaseText.textContent = "Generation interrupted";
+                    hintText.textContent  = "The engine could not finish this run.";
+                    showErrorModal(errData.title, errData.detail, errData.tip);
+                    return;
+                }
+
+                let redirectUrl = "{% url 'timetables_page' %}";
+                try {
+                    const data = await response.json();
+                    if (data.redirect) redirectUrl = data.redirect;
+                } catch (_) {
+                    if (response.redirected) redirectUrl = response.url;
                 }
 
                 progressFill.style.width = "100%";
@@ -978,18 +1195,18 @@
                 window.clearInterval(progressTimer);
                 window.clearInterval(heroTimer);
 
-                const destination = response.redirected ? response.url : "{% url 'timetables_page' %}";
-                window.setTimeout(() => {
-                    window.location.href = destination;
-                }, 450);
+                window.setTimeout(() => { window.location.href = redirectUrl; }, 450);
             } catch (error) {
                 window.clearInterval(phaseTimer);
                 window.clearInterval(progressTimer);
                 window.clearInterval(heroTimer);
                 phaseText.textContent = "Generation interrupted";
-                hintText.textContent = "The engine could not finish this run.";
-                errorState.style.display = "block";
-                errorState.textContent = "Timetable generation failed. Please try again.";
+                hintText.textContent  = "The engine could not finish this run.";
+                showErrorModal(
+                    "Connection Error",
+                    "The request to the generation engine was interrupted. This can happen if the server restarted or the network timed out.",
+                    "Make sure the development server is running, then try again."
+                );
                 console.error(error);
             }
         }

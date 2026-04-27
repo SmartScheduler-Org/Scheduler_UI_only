@@ -49,7 +49,7 @@
     <nav class="nav-links" id="navMenu">
       <a class="nav-link" href="{% url 'admindash' %}">Home</a>
       <a class="nav-link" href="{% url 'about' %}">About Us</a>
-      <a class="nav-link" href="#demo">Live demo</a>
+      <a class="nav-link" href="{% url 'live_demo' %}">Live Demo</a>
     </nav>
 
    <div class="nav-actions" style="gap: 14px; margin-left: auto;">
@@ -118,9 +118,9 @@
 
   <!-- Mobile dropdown menu -->
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#features">Home</a>
+    <a href="{% url 'admindash' %}">Home</a>
     <a href="{% url 'about' %}">About Us</a>
-    <a href="#demo">Live demo</a>
+    <a href="{% url 'live_demo' %}">Live Demo</a>
     <a href="#" id="accountMenuButtonMobile" class="js-open-account-modal">Account</a>
     <a href="{% url 'admindash' %}">Dashboard</a>
     <form method="post" action="{% url 'logout' %}" style="margin:0;">

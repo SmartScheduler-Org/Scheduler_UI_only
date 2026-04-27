@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Apply for your institute | SmartScheduler{% endblock %}
+
+{% block content %}
+<style>
+  .application-page {
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 56px 20px 92px;
+    color: #e2e8f0;
+    font-family: "Poppins", sans-serif;
+  }
+
+  .application-hero {
+    text-align: center;
+    margin-bottom: 34px;
+  }
+
+  .application-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #38bdf8;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .application-eyebrow::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.8);
+  }
+
+  .application-hero h1 {
+    margin: 0 0 12px;
+    font-size: clamp(30px, 5vw, 52px);
+    line-height: 1.05;
+    font-weight: 700;
+  }
+
+  .application-hero p {
+    max-width: 620px;
+    margin: 0 auto;
+    color: #94a3b8;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .application-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.35fr);
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .application-panel,
+  .application-form-card {
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background:
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 34%),
+      rgba(7, 18, 37, 0.84);
+    backdrop-filter: blur(16px);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(2, 6, 23, 0.48);
+  }
+
+  .application-panel {
+    padding: 28px;
+  }
+
+  .application-panel h2,
+  .application-form-card h2 {
+    margin: 0 0 16px;
+    color: #f8fafc;
+    font-size: 19px;
+    font-weight: 600;
+  }
+
+  .application-panel p {
+    margin: 0 0 18px;
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .application-points {
+    display: grid;
+    gap: 12px;
+  }
+
+  .application-point {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .application-point span {
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    color: #67e8f9;
+    background: rgba(56, 189, 248, 0.11);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+  }
+
+  .application-form-card {
+    padding: 32px;
+  }
+
+  .alert {
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    color: #fda4af;
+    background: rgba(251, 113, 133, 0.1);
+    border: 1px solid rgba(251, 113, 133, 0.28);
+    font-size: 14px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    margin-bottom: 7px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    outline: none;
+    background: rgba(2, 6, 23, 0.5);
+    color: #e2e8f0;
+    font: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .field select option {
+    color: #e2e8f0;
+    background: #0f172a;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: rgba(56, 189, 248, 0.62);
+    background: rgba(2, 6, 23, 0.72);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.09);
+  }
+
+  .field textarea {
+    min-height: 128px;
+    resize: vertical;
+  }
+
+  .other-type-field {
+    display: none;
+  }
+
+  .other-type-field.is-visible {
+    display: block;
+  }
+
+  .send-application {
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    cursor: pointer;
+    color: #06111f;
+    background: linear-gradient(135deg, #38bdf8, #22c55e);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    box-shadow: 0 18px 44px rgba(14, 165, 233, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .send-application:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 54px rgba(14, 165, 233, 0.34);
+  }
+
+  @media (max-width: 820px) {
+    .application-shell,
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .application-page {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+</style>
+
+<section class="application-page">
+  <div class="application-hero">
+    <div class="application-eyebrow">Institute customization</div>
+    <h1>Apply for your institute</h1>
+    <p>Share your institute type and contact details. Our team will review the request and reach out with the right SmartScheduler setup.</p>
+  </div>
+
+  <div class="application-shell">
+    <aside class="application-panel">
+      <h2>Built around your rules</h2>
+      <p>Tell us what kind of institute you run and what you need customized. We will use these details to understand your scheduling workflow.</p>
+      <div class="application-points">
+        <div class="application-point"><span>1</span><div>School, college, university, coaching, or a custom institute type.</div></div>
+        <div class="application-point"><span>2</span><div>Official contact details so the response reaches the right person.</div></div>
+        <div class="application-point"><span>3</span><div>Optional notes for branding, departments, timetable rules, or integrations.</div></div>
+      </div>
+    </aside>
+
+    <div class="application-form-card">
+      <h2>Application details</h2>
+
+      {% for msg in messages %}
+        <div class="alert">{{ msg }}</div>
+      {% endfor %}
+
+      <form method="POST" action="{% url 'institute_application' %}">
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="institute-type">Which type of institute do you want customization for?</label>
+          <select id="institute-type" name="institute_type" required>
+            <option value="" selected disabled>Select institute type</option>
+            <option value="School">School</option>
+            <option value="College">College</option>
+            <option value="University">University</option>
+            <option value="Coaching Institute">Coaching Institute</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field other-type-field" id="other-type-field">
+          <label for="other-type">Write the type of institute</label>
+          <input type="text" id="other-type" name="other_type" placeholder="Example: Training academy">
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="contact-name">Contact person name</label>
+            <input type="text" id="contact-name" name="contact_name" placeholder="Full name" required>
+          </div>
+
+          <div class="field">
+            <label for="official-email">Official email id</label>
+            <input type="email" id="official-email" name="official_email" placeholder="name@institute.edu" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="contact-number">Contact number</label>
+          <input type="tel" id="contact-number" name="contact_number" placeholder="+91 98765 43210" required>
+        </div>
+
+        <div class="field">
+          <label for="note">Add note</label>
+          <textarea id="note" name="note" placeholder="Mention departments, rules, branding, or anything else you want us to know."></textarea>
+        </div>
+
+        <button class="send-application" type="submit">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const instituteType = document.getElementById("institute-type");
+    const otherField = document.getElementById("other-type-field");
+    const otherInput = document.getElementById("other-type");
+
+    function syncOtherField() {
+      const shouldShow = instituteType.value === "Other";
+      otherField.classList.toggle("is-visible", shouldShow);
+      otherInput.required = shouldShow;
+      if (!shouldShow) {
+        otherInput.value = "";
+      }
+    }
+
+    if (instituteType && otherField && otherInput) {
+      instituteType.addEventListener("change", syncOtherField);
+      syncOtherField();
+    }
+  })();
+</script>
+{% endblock content %}

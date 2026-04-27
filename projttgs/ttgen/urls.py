@@ -5,10 +5,14 @@ from . import views
 urlpatterns = [
     path('', views.index, name='home'),
     path('about', views.about, name='about'),
+    path('live-demo', views.live_demo, name='live_demo'),
+    path('services', views.services, name='services'),
     path('help', views.help, name='help'),
     path('terms', views.terms, name='terms'),
     path('privacy', views.privacy, name='privacy'),
     path('contact', views.contact, name='contact'),
+    path('apply-institute/', views.institute_application, name='institute_application'),
+    path('apply-institute/thanks/', views.institute_application_thanks, name='institute_application_thanks'),
 
     path('admin_dashboard', views.admindash, name='admindash'),
     path('role', views.role, name='role'),
@@ -17,6 +21,15 @@ urlpatterns = [
     path('set-role/hod/', views.admindash_role_set, name='set_role_hod'),
     path('set-role/teacher/', views.teacher_role_set, name='set_role_teacher'),
     path('set-role/dean/', views.dean_role_set, name='set_role_dean'),
+    path('teacher/onboarding/', views.teacher_onboarding, name='teacher_onboarding'),
+    path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/profile/', views.teacher_profile_page, name='teacher_profile_page'),
+    path('teacher/published-timetable/', views.teacher_published_timetable, name='teacher_published_timetable'),
+    path('teacher/my-timetable/', views.teacher_my_timetable, name='teacher_my_timetable'),
+    path('teacher-onboarding-responses/', views.teacher_onboarding_responses_page, name='teacher_onboarding_responses'),
+    path('teacher-onboarding-responses/<int:submission_id>/resubmit/', views.request_teacher_onboarding_resubmission, name='request_teacher_onboarding_resubmission'),
+    path('teacher-onboarding-responses/<int:submission_id>/delete/', views.delete_teacher_onboarding, name='delete_teacher_onboarding'),
+    path('export/teacher-onboarding/csv/', views.export_teacher_onboarding_csv, name='export_teacher_onboarding_csv'),
     path('teacher_timetable/', views.teachertimetable, name='teachertimetable'),
     path('saved_timetables/', views.teachertimetable_list, name='teachertimetable_list'),
     path('add_teachers', views.addInstructor, name='addInstructors'),
@@ -68,6 +81,7 @@ urlpatterns = [
     path("generate_timetable/loading/", views.generate_timetable_loading, name="generate_timetable_loading"),
     path("generate_timetable/", views.generate_timetables, name="generate_timetables"),
     path("timetables/", views.timetables_page, name="timetables_page"),
+    path("timetable/<int:index>/departments/", views.timetable_dept_select, name="timetable_dept_select"),
     path("timetable/<int:index>/", views.show_timetable, name="show_timetable"),
 
 
@@ -86,6 +100,13 @@ urlpatterns = [
     path("saved_timetable/delete/<int:tid>/", views.delete_saved_timetable, name="delete_saved_timetable"),
 
     path('download_timetable/<int:tid>/', views.download_saved_timetable_pdf, name='download_timetable'),
+    path('download_timetable_excel/<int:tid>/', views.download_timetable_excel, name='download_timetable_excel'),
+    path('download_timetable_excel/<int:tid>/<str:view_type>/', views.download_timetable_excel, name='download_timetable_excel_view'),
+    path(
+        'download_generated_timetable_excel/<int:index>/<str:view_type>/',
+        views.download_generated_timetable_excel,
+        name='download_generated_timetable_excel'
+    ),
     
     # Saved timetable slot editing
     path("saved/<int:tid>/add/<str:section>/", views.saved_add_slot, name="saved_add_slot"),
@@ -123,3 +144,6 @@ urlpatterns = [
     path('api/pref/parse-emails/',  views.parse_emails_view,         name='pref_parse_emails'),
     path('export/preferences/csv/', views.export_preferences_csv,    name='export_pref_csv'),
 ]
+
+
+

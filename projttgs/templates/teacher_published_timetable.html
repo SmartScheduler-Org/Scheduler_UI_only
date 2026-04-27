@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Published Timetable | SmartScheduler{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'teacher_portal.css' %}">
+
+<div class="teacher-page-shell">
+  <section class="teacher-page-header">
+    <div class="teacher-page-badge">Teacher Section</div>
+    <h1>Published <span>Timetable</span></h1>
+    <p>
+      Use the publish code shared by HOD to connect the latest timetable to your teacher account, then open the full read-only timetable when you need it.
+    </p>
+  </section>
+
+  <div class="teacher-link-row">
+    <a href="{% url 'teacher_dashboard' %}" class="teacher-back-link">Back</a>
+  </div>
+
+  {% if messages %}
+  <div class="teacher-alert-stack">
+    {% for message in messages %}
+    <div class="teacher-alert {% if 'error' in message.tags %}teacher-alert--error{% else %}teacher-alert--success{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <section class="teacher-surface">
+    <h2 class="teacher-section-title">Connect Published Timetable</h2>
+    <p class="teacher-section-copy">
+      This page stores the timetable published by HOD and keeps it attached to your teacher account for quick access later.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="teacher-form-grid">
+        <label class="teacher-field">
+          <span>Publish Code</span>
+          <input type="text" name="access_code" value="{% if active_timetable %}{{ active_timetable.publish_code }}{% endif %}" placeholder="Enter HOD publish code">
+        </label>
+      </div>
+
+      <div class="teacher-actions">
+        <button type="submit" class="teacher-btn teacher-btn--primary">Connect Timetable</button>
+        {% if active_timetable %}
+        <a href="{% url 'teacher_view_timetable' active_timetable.id %}" class="teacher-btn teacher-btn--soft">Open Full Timetable</a>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if active_timetable %}
+    <div class="teacher-meta-grid">
+      <div class="teacher-data-card">
+        <span>Connected Code</span>
+        <strong>{{ active_timetable.publish_code }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Published By</span>
+        <strong>{{ active_timetable.user.username }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Saved On</span>
+        <strong>{{ active_timetable.created_at|date:"d M Y" }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Sections Included</span>
+        <strong>{{ published_section_count }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Teachers Included</span>
+        <strong>{{ published_teacher_count }}</strong>
+      </div>
+      <div class="teacher-data-card">
+        <span>Linked Faculty</span>
+        <strong>{% if linked_instructor %}{{ linked_instructor.name }}{% else %}Not linked yet{% endif %}</strong>
+      </div>
+    </div>
+    {% else %}
+    <div class="teacher-empty-state" style="margin-top:20px;">
+      No timetable is connected yet. Enter the publish code from HOD and this page will show the active timetable information.
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
