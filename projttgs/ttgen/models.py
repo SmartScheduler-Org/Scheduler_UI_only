@@ -194,6 +194,17 @@ class Course(models.Model):
 
     instructors = models.ManyToManyField(Instructor)
 
+    # Shared lab fields
+    is_shared = models.BooleanField(default=False, help_text="Is this lab shared between two instructors?")
+    shared_instructor = models.ForeignKey(
+        Instructor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="shared_courses",
+        help_text="Secondary instructor for shared labs"
+    )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -312,6 +323,16 @@ class ScheduledSlot(models.Model):
         MeetingTime,
         related_name="lab_extra_slots",
         blank=True,
+    )
+
+    # Co-instructor for shared labs
+    co_instructor = models.ForeignKey(
+        Instructor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="co_instructed_slots",
+        help_text="Secondary instructor for shared labs"
     )
 
     class Meta:
