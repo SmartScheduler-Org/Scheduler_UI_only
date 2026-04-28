@@ -115,19 +115,19 @@
             <span class="wf-connector"></span>
         </div>
         <div class="wf-step-item {% if current_step == 6 %}is-active{% endif %} {% if current_step > 6 %}is-complete{% endif %}">
-            <a href="{% url 'map_teacher_courses' %}" class="wf-step-link" aria-label="Step 6: Map Teachers to Subjects">
+            <a href="{% url 'addSections' %}" class="wf-step-link" aria-label="Step 6: Add Sections">
                 <span class="wf-step-dot">6</span>
             </a>
             <span class="wf-connector"></span>
         </div>
         <div class="wf-step-item {% if current_step == 7 %}is-active{% endif %} {% if current_step > 7 %}is-complete{% endif %}">
-            <a href="{% url 'addSections' %}" class="wf-step-link" aria-label="Step 7: Add Sections">
+            <a href="{% url 'map_teacher_courses' %}" class="wf-step-link" aria-label="Step 7: Map Teachers to Subjects">
                 <span class="wf-step-dot">7</span>
             </a>
             <span class="wf-connector"></span>
         </div>
         <div class="wf-step-item {% if current_step == 8 %}is-active{% endif %} {% if current_step > 8 %}is-complete{% endif %}" style="flex: 0 0 auto; min-width: auto;">
-            <a href="{% url 'map_section_courses' %}" class="wf-step-link" aria-label="Step 8: Map Subjects">
+            <a href="{% url 'map_section_courses' %}" class="wf-step-link" aria-label="Step 8: Map Section Courses">
                 <span class="wf-step-dot">8</span>
             </a>
         </div>

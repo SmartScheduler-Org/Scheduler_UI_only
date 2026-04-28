@@ -172,11 +172,13 @@ class SectionForm(ModelForm):
         model = Section
         fields = [
             "section_id",
+            "program_name",
             "department",
             "student_strength",
         ]
         labels = {
             "section_id": "Section ID",
+            "program_name": "Program Name",
             "department": "Department",
             "student_strength": "Student Strength",
         }

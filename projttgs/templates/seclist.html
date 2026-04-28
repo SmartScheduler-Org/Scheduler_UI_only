@@ -87,6 +87,7 @@
             <thead>
                 <tr>
                     <th>Section ID</th>
+                    <th>Program</th>
                     <th>Department</th>
                     <th>Total Classes / Week</th>
                     <th></th>
@@ -97,6 +98,7 @@
                 {% for sec in sections %}
                 <tr>
                     <td>{{ sec.section_id }}</td>
+                    <td>{{ sec.program_name|default:"-" }}</td>
                     <td>{{ sec.department }}</td>
                     <td>{{ sec.num_class_in_week }}</td>
                     <td>

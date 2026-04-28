@@ -194,17 +194,6 @@ class Course(models.Model):
 
     instructors = models.ManyToManyField(Instructor)
 
-    # Shared lab fields
-    is_shared = models.BooleanField(default=False, help_text="Is this lab shared between two instructors?")
-    shared_instructor = models.ForeignKey(
-        Instructor,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="shared_courses",
-        help_text="Secondary instructor for shared labs"
-    )
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -228,6 +217,7 @@ class Section(models.Model):
         related_name="sections",
     )
     section_id = models.CharField(max_length=50)
+    program_name = models.CharField(max_length=50, blank=True, default="")
     student_strength = models.PositiveIntegerField(default=70)
 
     department = models.ForeignKey(
@@ -273,6 +263,51 @@ class TeacherSection(models.Model):
         return f"{self.instructor.name} -> {self.section.section_id}"
 
 
+class SectionCourseInstructor(models.Model):
+    """
+    Fixed assignment: ek specific section ke ek specific course ke liye
+    ek fixed instructor. Generator is table ko use karke teacher lock karta hai.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="section_course_instructors",
+    )
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name="course_instructors",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="section_instructors",
+    )
+    instructor = models.ForeignKey(
+        Instructor,
+        on_delete=models.CASCADE,
+        related_name="section_course_assignments",
+    )
+    second_instructor = models.ForeignKey(
+        Instructor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="second_section_course_assignments",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "section", "course"],
+                name="unique_instructor_per_section_course",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.instructor.name} → {self.course.course_number} ({self.section.section_id})"
+
+
 # ==============================
 # TIMETABLE STORAGE
 # ==============================
@@ -314,6 +349,13 @@ class ScheduledSlot(models.Model):
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
+    second_instructor = models.ForeignKey(
+        Instructor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="shared_lab_slots",
+    )
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     meeting_time = models.ForeignKey(MeetingTime, on_delete=models.CASCADE)
 
@@ -323,16 +365,6 @@ class ScheduledSlot(models.Model):
         MeetingTime,
         related_name="lab_extra_slots",
         blank=True,
-    )
-
-    # Co-instructor for shared labs
-    co_instructor = models.ForeignKey(
-        Instructor,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="co_instructed_slots",
-        help_text="Secondary instructor for shared labs"
     )
 
     class Meta:
