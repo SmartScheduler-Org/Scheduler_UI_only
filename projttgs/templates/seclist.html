@@ -73,6 +73,110 @@
     transform: scale(1.05);
 }
 
+.update-btn {
+    padding: 5px 12px;
+    background: #28a745cc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    transition: 0.2s;
+    margin-right: 6px;
+}
+
+.update-btn:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+/* Modal styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: #1e1e2e;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 30px;
+    min-width: 360px;
+    max-width: 500px;
+    width: 90%;
+    color: white;
+}
+
+.modal-box h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.modal-field {
+    margin-bottom: 14px;
+}
+
+.modal-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.modal-field input, .modal-field select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.modal-save-btn {
+    padding: 8px 18px;
+    background: #28a745;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-save-btn:hover { background: #218838; }
+
+.modal-cancel-btn {
+    padding: 8px 18px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-cancel-btn:hover { background: rgba(255,255,255,0.25); }
 </style>
 
 <fieldset class="manage-fieldset">
@@ -88,7 +192,7 @@
                 <tr>
                     <th>Section ID</th>
                     <th>Department</th>
-                    <th>Total Classes / Week</th>
+                    <th>Student Strength</th>
                     <th></th>
                 </tr>
             </thead>
@@ -98,9 +202,10 @@
                 <tr>
                     <td>{{ sec.section_id }}</td>
                     <td>{{ sec.department }}</td>
-                    <td>{{ sec.num_class_in_week }}</td>
+                    <td>{{ sec.student_strength }}</td>
                     <td>
-                        <form action="{% url 'deletesection' sec.section_id %}" method="post">
+                        <button class="update-btn" onclick="openSecModal({{ sec.id }}, '{{ sec.section_id|escapejs }}', {{ sec.student_strength }}, {{ sec.department.id }})">Update</button>
+                        <form action="{% url 'deletesection' sec.section_id %}" method="post" style="display:inline;">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>
@@ -115,5 +220,52 @@
 
 </fieldset>
 
+<!-- Edit Section Modal -->
+<div class="modal-overlay" id="secModal">
+    <div class="modal-box">
+        <h3>Edit Section</h3>
+        <form method="post" id="secUpdateForm" action="">
+            {% csrf_token %}
+            <div class="modal-field">
+                <label>Section ID</label>
+                <input type="text" name="section_id" id="secId" required maxlength="50">
+            </div>
+            <div class="modal-field">
+                <label>Student Strength</label>
+                <input type="number" name="student_strength" id="secStrength" min="1" required>
+            </div>
+            <div class="modal-field">
+                <label>Department</label>
+                <select name="department" id="secDepartment">
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }} ({{ dept.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-cancel-btn" onclick="closeSecModal()">Cancel</button>
+                <button type="submit" class="modal-save-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openSecModal(id, sectionId, strength, deptId) {
+    document.getElementById('secId').value = sectionId;
+    document.getElementById('secStrength').value = strength;
+    document.getElementById('secDepartment').value = deptId;
+    document.getElementById('secUpdateForm').action = '/update_section/' + id + '/';
+    document.getElementById('secModal').classList.add('active');
+}
+
+function closeSecModal() {
+    document.getElementById('secModal').classList.remove('active');
+}
+
+document.getElementById('secModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSecModal();
+});
+</script>
 
 {% endblock %}

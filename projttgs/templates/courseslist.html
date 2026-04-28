@@ -72,6 +72,113 @@
     background: #ff3333;
     transform: scale(1.05);
 }
+
+.update-btn {
+    padding: 5px 12px;
+    background: #28a745cc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    transition: 0.2s;
+    margin-right: 6px;
+}
+
+.update-btn:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+/* Modal styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: #1e1e2e;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 30px;
+    min-width: 360px;
+    max-width: 520px;
+    width: 90%;
+    color: white;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-box h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.modal-field {
+    margin-bottom: 14px;
+}
+
+.modal-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.modal-field input, .modal-field select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.modal-save-btn {
+    padding: 8px 18px;
+    background: #28a745;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-save-btn:hover { background: #218838; }
+
+.modal-cancel-btn {
+    padding: 8px 18px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-cancel-btn:hover { background: rgba(255,255,255,0.25); }
 </style>
 
 <fieldset class="manage-fieldset">
@@ -100,7 +207,6 @@
                     <td>{{ crs.course_name }}</td>
                     <td>{{ crs.max_numb_students }}</td>
 
-                    <!-- ✅ ASSIGNED TEACHERS -->
                     <td>
                         {% for teacher in crs.instructors.all %}
                             {{ teacher.name }}{% if not forloop.last %}, {% endif %}
@@ -110,7 +216,8 @@
                     </td>
 
                     <td>
-                        <form action="{% url 'deletecourse' crs.course_number %}" method="post">
+                        <button class="update-btn" onclick="openCrsModal({{ crs.id }}, '{{ crs.course_number|escapejs }}', '{{ crs.course_name|escapejs }}', {{ crs.max_numb_students }}, {{ crs.classes_per_week }}, '{{ crs.room_required|escapejs }}', '{{ crs.required_lab_category|escapejs }}', {{ crs.department.id }})">Update</button>
+                        <form action="{% url 'deletecourse' crs.course_number %}" method="post" style="display:inline;">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>
@@ -124,5 +231,93 @@
     </div>
 
 </fieldset>
+
+<!-- Edit Course Modal -->
+<div class="modal-overlay" id="crsModal">
+    <div class="modal-box">
+        <h3>Edit Course</h3>
+        <form method="post" id="crsUpdateForm" action="">
+            {% csrf_token %}
+            <div class="modal-field">
+                <label>Course Code</label>
+                <input type="text" name="course_number" id="crsNumber" required maxlength="20">
+            </div>
+            <div class="modal-field">
+                <label>Course Name</label>
+                <input type="text" name="course_name" id="crsName" required maxlength="100">
+            </div>
+            <div class="modal-field">
+                <label>Max Students</label>
+                <input type="number" name="max_numb_students" id="crsMaxStudents" min="1" required>
+            </div>
+            <div class="modal-field">
+                <label>Classes Per Week</label>
+                <input type="number" name="classes_per_week" id="crsClassesPerWeek" min="1" required>
+            </div>
+            <div class="modal-field">
+                <label>Room Required</label>
+                <select name="room_required" id="crsRoomRequired" onchange="toggleCrsLabCategory()">
+                    <option value="Lecture Hall">Lecture Hall</option>
+                    <option value="Lab">Lab</option>
+                </select>
+            </div>
+            <div class="modal-field" id="crsLabCategoryField">
+                <label>Required Lab Category</label>
+                <select name="required_lab_category" id="crsLabCategory">
+                    <option value="">-- None --</option>
+                    <option value="General">General</option>
+                    <option value="Electronics Lab">Electronics Lab</option>
+                    <option value="Electrical Lab">Electrical Lab</option>
+                    <option value="Mechanical Workshop">Mechanical Workshop</option>
+                    <option value="Electrical Workshop">Electrical Workshop</option>
+                    <option value="English Lab">English Lab</option>
+                    <option value="Chemistry Lab">Chemistry Lab</option>
+                    <option value="Physics Lab">Physics Lab</option>
+                    <option value="Animation Lab">Animation Lab</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Department</label>
+                <select name="department" id="crsDepartment">
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }} ({{ dept.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-cancel-btn" onclick="closeCrsModal()">Cancel</button>
+                <button type="submit" class="modal-save-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCrsModal(id, courseNumber, courseName, maxStudents, classesPerWeek, roomRequired, labCategory, deptId) {
+    document.getElementById('crsNumber').value = courseNumber;
+    document.getElementById('crsName').value = courseName;
+    document.getElementById('crsMaxStudents').value = maxStudents;
+    document.getElementById('crsClassesPerWeek').value = classesPerWeek;
+    document.getElementById('crsRoomRequired').value = roomRequired;
+    document.getElementById('crsLabCategory').value = labCategory;
+    document.getElementById('crsDepartment').value = deptId;
+    document.getElementById('crsUpdateForm').action = '/update_course/' + id + '/';
+    toggleCrsLabCategory();
+    document.getElementById('crsModal').classList.add('active');
+}
+
+function closeCrsModal() {
+    document.getElementById('crsModal').classList.remove('active');
+}
+
+function toggleCrsLabCategory() {
+    var rr = document.getElementById('crsRoomRequired').value;
+    document.getElementById('crsLabCategoryField').style.display = (rr === 'Lab') ? 'block' : 'none';
+}
+
+document.getElementById('crsModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCrsModal();
+});
+</script>
 
 {% endblock %}

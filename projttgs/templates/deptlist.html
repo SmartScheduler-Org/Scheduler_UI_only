@@ -73,6 +73,110 @@
     transform: scale(1.05);
 }
 
+.update-btn {
+    padding: 5px 12px;
+    background: #28a745cc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    transition: 0.2s;
+    margin-right: 6px;
+}
+
+.update-btn:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+/* Modal styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: #1e1e2e;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 30px;
+    min-width: 360px;
+    max-width: 500px;
+    width: 90%;
+    color: white;
+}
+
+.modal-box h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.modal-field {
+    margin-bottom: 14px;
+}
+
+.modal-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.modal-field input, .modal-field select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.modal-save-btn {
+    padding: 8px 18px;
+    background: #28a745;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-save-btn:hover { background: #218838; }
+
+.modal-cancel-btn {
+    padding: 8px 18px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-cancel-btn:hover { background: rgba(255,255,255,0.25); }
 </style>
 
 <fieldset class="manage-fieldset">
@@ -96,7 +200,8 @@
                 <tr>
                     <td>{{ dept.name }} ({{ dept.code }})</td>
                     <td>
-                        <form action="{% url 'deletedepartment' dept.id %}" method="post">
+                        <button class="update-btn" onclick="openDeptModal({{ dept.id }}, '{{ dept.name|escapejs }}', '{{ dept.code|escapejs }}')">Update</button>
+                        <form action="{% url 'deletedepartment' dept.id %}" method="post" style="display:inline;">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>
@@ -112,6 +217,43 @@
 
 </fieldset>
 
+<!-- Edit Department Modal -->
+<div class="modal-overlay" id="deptModal">
+    <div class="modal-box">
+        <h3>Edit Department</h3>
+        <form method="post" id="deptUpdateForm" action="">
+            {% csrf_token %}
+            <div class="modal-field">
+                <label>Department Name</label>
+                <input type="text" name="name" id="deptName" required>
+            </div>
+            <div class="modal-field">
+                <label>Department Code</label>
+                <input type="text" name="code" id="deptCode" required maxlength="10">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-cancel-btn" onclick="closeDeptModal()">Cancel</button>
+                <button type="submit" class="modal-save-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 
+<script>
+function openDeptModal(id, name, code) {
+    document.getElementById('deptName').value = name;
+    document.getElementById('deptCode').value = code;
+    document.getElementById('deptUpdateForm').action = '/update_department/' + id + '/';
+    document.getElementById('deptModal').classList.add('active');
+}
+
+function closeDeptModal() {
+    document.getElementById('deptModal').classList.remove('active');
+}
+
+document.getElementById('deptModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeptModal();
+});
+</script>
 
 {% endblock %}

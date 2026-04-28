@@ -15,6 +15,7 @@ urlpatterns = [
     path('apply-institute/thanks/', views.institute_application_thanks, name='institute_application_thanks'),
 
     path('admin_dashboard', views.admindash, name='admindash'),
+    path('hod/account/', views.hod_account, name='hod_account'),
     path('role', views.role, name='role'),
     path('teacher-login', views.teacherlogin, name='teacher/login'),
     path('dean-login', views.deanlogin, name='dean/login'),
@@ -35,20 +36,24 @@ urlpatterns = [
     path('add_teachers', views.addInstructor, name='addInstructors'),
     path('teachers_list/', views.inst_list_view , name='editinstructor'),
     path('dashboard_teachers_list/', views.dashboard_inst_list_view, name='dashboard_editinstructor'),
-    path('delete_teacher/<int:pk>/', views.delete_instructor, name='deleteinstructor'), 
+    path('delete_teacher/<int:pk>/', views.delete_instructor, name='deleteinstructor'),
+    path('update_teacher/<int:pk>/', views.update_instructor, name='updateinstructor'),
     path('saved_teacher_timetables/<int:tid>/', views.saved_teacher_timetable, name='saved_teacher_timetable'),
 
     path('add_rooms', views.addRooms, name='addRooms'),
     path('rooms_list/', views.room_list, name='editrooms'),
     path('delete_room/<int:pk>/', views.delete_room, name='deleteroom'),
+    path('update_room/<int:pk>/', views.update_room, name='updateroom'),
 
     path('add_timings', views.addTimings, name='addTimings'),
     path('timings_list/', views.meeting_list_view, name='editmeetingtime'),
     path('delete_meetingtime/<str:pk>/', views.delete_meeting_time, name='deletemeetingtime'),
+    path('update_meetingtime/<int:pk>/', views.update_meeting_time, name='updatemeetingtime'),
 
     path('add_courses', views.addCourses, name='addCourses'),
     path('courses_list/', views.course_list_view, name='editcourse'),
     path('delete_course/<str:pk>/', views.delete_course, name='deletecourse'),
+    path('update_course/<int:pk>/', views.update_course, name='updatecourse'),
     path("map-teacher-courses/",views.map_teacher_courses,name="map_teacher_courses"),
     path(
     "delete-teacher-course/<str:course_number>/<int:instructor_id>/",
@@ -60,11 +65,13 @@ urlpatterns = [
     path('departments_list/', views.department_list, name='editdepartment'),
     path('dashboard_departments_list/', views.dashboard_department_list, name='dashboard_editdepartment'),
     path('delete_department/<int:pk>/', views.delete_department, name='deletedepartment'),
+    path('update_department/<int:pk>/', views.update_department, name='updatedepartment'),
 
     path('add_sections', views.addSections, name='addSections'),
     path('sections_list/', views.section_list, name='editsection'),
     path('dashboard_sections_list/', views.dashboard_section_list, name='dashboard_editsection'),
     path('delete_section/<str:pk>/', views.delete_section, name='deletesection'),
+    path('update_section/<int:pk>/', views.update_section, name='updatesection'),
     path("map-section-courses/",views.map_section_courses,name="map_section_courses"),
     path("view-section-courses/", views.view_section_courses, name="view_section_courses"),
 

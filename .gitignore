@@ -24,3 +24,4 @@ Scheduler_UI/projttgs/.env
 projttgs/graphify-out/
 /projttgs/graphify-out/
 .graphify_python
+.claude/

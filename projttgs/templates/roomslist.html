@@ -74,7 +74,112 @@
     transform: scale(1.05);
 }
 
+.update-btn {
+    padding: 5px 12px;
+    background: #28a745cc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    transition: 0.2s;
+    margin-right: 6px;
+}
+
+.update-btn:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+/* Modal styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: #1e1e2e;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 30px;
+    min-width: 360px;
+    max-width: 500px;
+    width: 90%;
+    color: white;
+}
+
+.modal-box h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.modal-field {
+    margin-bottom: 14px;
+}
+
+.modal-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.modal-field input, .modal-field select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.modal-save-btn {
+    padding: 8px 18px;
+    background: #28a745;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-save-btn:hover { background: #218838; }
+
+.modal-cancel-btn {
+    padding: 8px 18px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-cancel-btn:hover { background: rgba(255,255,255,0.25); }
 </style>
+
 <fieldset class="manage-fieldset">
 
     <a href="{% url 'addRooms' %}" class="back-btn-link">
@@ -100,7 +205,8 @@
                     <td>{{ rm.room_type }}</td>
                     <td>{{ rm.seating_capacity }}</td>
                     <td>
-                        <form action="{% url 'deleteroom' rm.id %}" method="post">
+                        <button class="update-btn" onclick="openRoomModal({{ rm.id }}, '{{ rm.r_number|escapejs }}', '{{ rm.room_type|escapejs }}', '{{ rm.lab_category|escapejs }}', {{ rm.seating_capacity }}, {{ rm.department.id }})">Update</button>
+                        <form action="{% url 'deleteroom' rm.id %}" method="post" style="display:inline;">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>
@@ -115,5 +221,83 @@
 
 </fieldset>
 
+<!-- Edit Room Modal -->
+<div class="modal-overlay" id="roomModal">
+    <div class="modal-box">
+        <h3>Edit Room</h3>
+        <form method="post" id="roomUpdateForm" action="">
+            {% csrf_token %}
+            <div class="modal-field">
+                <label>Room Number</label>
+                <input type="text" name="r_number" id="roomNumber" required>
+            </div>
+            <div class="modal-field">
+                <label>Room Type</label>
+                <select name="room_type" id="roomType" onchange="toggleLabCategory()">
+                    <option value="Lecture Hall">Lecture Hall</option>
+                    <option value="Lab">Lab</option>
+                    <option value="Seminar Room">Seminar Room</option>
+                </select>
+            </div>
+            <div class="modal-field" id="labCategoryField">
+                <label>Lab Category</label>
+                <select name="lab_category" id="roomLabCategory">
+                    <option value="">-- None --</option>
+                    <option value="General">General</option>
+                    <option value="Electronics Lab">Electronics Lab</option>
+                    <option value="Electrical Lab">Electrical Lab</option>
+                    <option value="Mechanical Workshop">Mechanical Workshop</option>
+                    <option value="Electrical Workshop">Electrical Workshop</option>
+                    <option value="English Lab">English Lab</option>
+                    <option value="Chemistry Lab">Chemistry Lab</option>
+                    <option value="Physics Lab">Physics Lab</option>
+                    <option value="Animation Lab">Animation Lab</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Seating Capacity</label>
+                <input type="number" name="seating_capacity" id="roomCapacity" min="1" required>
+            </div>
+            <div class="modal-field">
+                <label>Department</label>
+                <select name="department" id="roomDepartment">
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }} ({{ dept.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-cancel-btn" onclick="closeRoomModal()">Cancel</button>
+                <button type="submit" class="modal-save-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openRoomModal(id, rNumber, roomType, labCategory, capacity, deptId) {
+    document.getElementById('roomNumber').value = rNumber;
+    document.getElementById('roomType').value = roomType;
+    document.getElementById('roomLabCategory').value = labCategory;
+    document.getElementById('roomCapacity').value = capacity;
+    document.getElementById('roomDepartment').value = deptId;
+    document.getElementById('roomUpdateForm').action = '/update_room/' + id + '/';
+    toggleLabCategory();
+    document.getElementById('roomModal').classList.add('active');
+}
+
+function closeRoomModal() {
+    document.getElementById('roomModal').classList.remove('active');
+}
+
+function toggleLabCategory() {
+    var rt = document.getElementById('roomType').value;
+    document.getElementById('labCategoryField').style.display = (rt === 'Lab') ? 'block' : 'none';
+}
+
+document.getElementById('roomModal').addEventListener('click', function(e) {
+    if (e.target === this) closeRoomModal();
+});
+</script>
 
 {% endblock %}
