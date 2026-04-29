@@ -1,243 +1,417 @@
-instructor_name,course_number
-Mr Hansraj,CS025
-Dr Parul Tomar,CS018
-Dr Parul Tomar,CS019
-Dr Shalinder Gupta,CS016
-Ms Archana Aggarwal,CS001
-Ms Diksha,CS020
-Dr Meenu,CS025
-Dr Kuldeep,CS025
-Dr Umesh,CS018
-Dr Rewa,CS018
-Dr Shivi,CS018
-Dr Poonam,CS018
-Dr Umesh,CS019
-Dr Rewa,CS019
-Dr Shivi,CS019
-Dr Nisha Yadav,CS016
-Dr Prashant,CS016
-Mr Vinod,CS016
-Dr Shalinder Gupta,CS017
-Dr Nisha Yadav,CS017
-Dr Prashant,CS017
-Mr Vinod,CS017
-Ms Gunjan Sardana,CS001
-Ms Sunil Jadav,CS001
-Mr Balkrishan,CS001
-Ms Archana Aggarwal,CS002
-Ms Gunjan Sardana,CS002
-Ms Sunil Jadav,CS002
-Ms Jyoti,CS035
-Dr Payal,CS035
-Mr Piyush,CS022
-Mr Piyush,CS023
-Dr Neelam,CS013
-Dr Parul Tomar,CS013
-Mr Piyush,CS013
-Dr Neelam,CS014
-Ms Beenu,CS014
-Dr Preeti,CS029
-Dr Shruti,CS029
-Dr Lalit,CS029
-Dr Preeti,CS030
-Dr Shruti,CS030
-Dr Lalit,CS030
-Dr Atul Mishra,CS030
-Ms Shilpi,CS037
-Dr Lalit,CS037
-Dr Shivi,CS037
-Dr Rashmi,CS024
-Dr Payal,CS024
-Dr Deepika,CS024
-Dr Amita,CS024
-Dr Meena Patel,CS038
-Ms Tejasvita,CS009
-Ms Kalpana,CS200
-Prof Munish,CS200
-Dr Ashlesha,CS006
-Dr Naresh Chauhan,CS031
-Dr Naresh,CS032
-Dr Sonali,CS033
-Dr Sonali,CS034
-Ms Dimple,CS003
-Mr Piyush Gupta,CS012
-Dr Sakshi,CS026
-Mr Satwinder,CS026
-Dr Yogendra Arya,CS026
-Ms Rachna,CS026
-Dr Abhinav Saxena,CS026
-Dr Rashmi,CS007
-Ms Himani,CS028
-Dr Deepika,CS004
-Dr Payal,CS011
-Ms Shilpi,CS011
-Ms Rachna,CS010
-Dr Ashlesha,CS010
-Dr Rewa,CS039
-Dr Amita,CS202
-Dr Umesh,CS205
-Dr Komal Kumar,CS206
-Dr Ashutosh Dixit,CS207
-Dr Ashutosh Dixit,CS015
-Dr Neelam,CS209
-Dr Harish,CS210
-Dr Poonam,CS211
-Dr Sanjeev,CS214
-Dr Rashmi,CS998
-Dr Amita,CS998
-Dr Ashlesha,CS998
-Ms Dimple,CS998
-Dr Parul Gupta,CS013
-Dr Parul Gupta,CS014
-Ms Shikha,CS029
-Prof Neelam Turk,CS200
-Ms Yojana,CS201
-Ms Yojana,CS008
-Dr Parul Gupta,CS007
-Faculty -5,CS007
-Ms Shikha,CS004
-Dr Dimple,CS010
-Faculty 1,CS027
-Guest Faculty -1,CS021
-Faculty 3,CS203
-Ms Yojana,CS204
-Guest Faculty -1,CS212
-Guest Faculty -1,CS213
-Guest Faculty -1,CS005
-Ms Yojana,CS998
-Mrs Vandana,EE
-Dr Dimple,CS003
-Dr Naresh Chauhan,CS032
-Dr Preeti,CS011
-Dr Atul Mishra,CS010
-Ms Sunil Jadav,AES_LAB
-Dr Praveen Gaur,CS215
-Ms Mannu Rohilla,CS215
-Ms Arpita Chatterjee,CS215
-Dr Kuldeep,CS215
-Dr Shilpa Behl,CS216
-Dr Dipti Sharma,CS216
-Dr Pooja Rana,CS216
-Dr Sunil Dhull,CS216
-Ms Vinita,CS217
-Dr Sunil Dhull,CS217
-Dr Anjali,CS217
-Ms Jyoti Kumari,CS217
-Ms Monika,CS217
-Ms Preeti,CS218
-Ms Jhanvi,CS218
-Ms Preeti,CS219
-Ms Jhanvi,CS219
-Ms Shipra Aggarwal,CS220
-Dr Shakuntala,CS220
-Dr Rashmi Aggarwal,CS220
-Dr Sakshi,CS220
-Ms Bharti Thakur,CS220
-Mr Satwinder,CS221
-Ms Bharti Thakur,CS221
-Dr Anubha Gautam,CS221
-Ms Shipra Aggarwal,CS221
-Dr Abhinav Saxena,CS221
-Ms Rachna,CS222
-Prof Manjeet Singh,CA001
-Prof Manjeet Singh,CA002
-Dr Ved Pal,CA003
-Ms Chanchal,CA003
-Guest Faculty CA-2,CA003
-Dr Ved Pal,CA004
-Dr Shilpa Munjal,CA004
-Dr Manvi,CA005
-Dr Manvi,CA006
-Dr Anu,CA007
-Ms Abhilasha,CA007
-Ms Palak Bajaj,CA008
-Ms Palak Bajaj,CA009
-Ms Neha,CA009
-Ms Reetu,CA009
-Guest Faculty CA-6,CA009
-Ms Chanchal,CA009
-Dr Shilpa Munjal,CA010
-Dr Mamta Kathuria,CA011
-Dr Mamta Kathuria,CA012
-Dr Mamta Kathuria,CA013
-Ms Ritika,CA014
-Ms Ritika,CA015
-Dr Anu,CA016
-Dr Anu,CA017
-Ms Aashu,CA018
-Dr Anu,CA019
-Ms Abhilasha,CA019
-Ms Palak Bajaj,CA020
-Ms Chanchal,CA020
-Guest Faculty CA-2,CA020
-Dr Ved Pal,CA021
-Ms Abhilasha,CA021
-Ms Reetu,CA022
-Ms Chanchal,CA022
-Ms Abhilasha,CA022
-Ms Palak Bajaj,CA023
-Guest Faculty CA-6,CA024
-Ms Aashu,CA025
-Ms Palak Bajaj,CA026
-Ms Ritika,CA027
-Ms Aashu,CA028
-Guest Faculty CA-2,CA028
-Ms Palak Bajaj,CA029
-Guest Faculty CA-6,CA029
-Dr Meena Patel,CA030
-Ms Ankita,CA031
-Ms Preeti,CA032
-Manju Dagar,CA033
-Dr Mamta Kathuria,CA034
-Ms Abhilasha,CA035
-Ms Abhilasha,CA036
-Ms Abhilasha,CA037
-Ms Ankita,CA038
-Ms Ankita,CA040
-Ms Ankita,CA041
-Ms Deeviya,CA042
-Ms Ritika,CA043
-Ms Aashu,CA043
-Ms Ankita,CA044
-Mr Deepak,CA045
-Mr Deepak,CA046
-Guest Faculty CA-2,CA047
-Guest Faculty CA-2,CA048
-Guest Faculty CA-2,CA049
-Guest Faculty CA-1,CA050
-Guest Faculty CA-1,CA051
-Guest Faculty CA-1,CA052
-Mr Sunil,CA053
-Guest Faculty CA-3,CA054
-Guest Faculty CA-3,CA055
-Guest Faculty CA-3,CA056
-Guest Faculty CA-4,CA056
-Mr Arko Dey,CA057
-Guest Faculty CA-4,CA058
-Mr Deepak,CA058
-Guest Faculty CA-4,CA059
-Mr Aditya K,CA059
-Guest Faculty CA-4,CA060
-Mr Aditya K,CA061
-Mr Aditya K,CA062
-Mr Aditya K,CA063
-Mr Rajeev Ranjan,CA064
-Mr Rajeev Ranjan,CA065
-Mr Arko Dey,CA066
-Guest Faculty CA-1,CA067
-Mr Deepak,CA068
-Mr Rajeev Ranjan,CA069
-Ms Jyoti,CA070
-Ms Divya,CA071
-Ms Divya,CA072
-Ms Ankita,CA073
-Ms Abhilasha,CA074
-Ms Ankita,CA075
-Dr Manvi,CA076
-Dr Ved Pal,CA077
-Dr Manvi,CA078
-Mr Aditya K,CA079
-Ms Abhilasha,CA080
-Dr Ram Mech_prof,CS222
-Dr Neena German_prof,CA039
-Dr Naresh Stats_prof,CS036
+section_id,course_number,instructor_uid,shared_lab,second_instructor_uid
+BCA 1st Sem,CA025,T086,false,
+BCA 1st Sem,CA026,T077,false,
+BCA 1st Sem,CA027,T082,false,
+BCA 1st Sem,CA028,T086,false,
+BCA 1st Sem,CA029,GF913,false,
+BCA 1st Sem,CA030,T020,false,
+BCA 1st Sem,CA031,T080,false,
+BCA 1st Sem,CA038,T080,false,
+BCA 1st Sem,CA039,T094,false,
+BCA 1st Sem,CA042,T081,false,
+BCA 3rd Sem,CA001,T071,false,
+BCA 3rd Sem,CA002,T071,false,
+BCA 3rd Sem,CA003,T078,false,
+BCA 3rd Sem,CA004,T075,false,
+BCA 3rd Sem,CA019,T076,false,
+BCA 3rd Sem,CA020,T078,false,
+BCA 3rd Sem,CA031,T080,false,
+BCA 3rd Sem,CA032,T062,false,
+BCA 3rd Sem,CA042,T081,false,
+BCA 5th Sem,CA010,T072,false,
+BCA 5th Sem,CA021,T075,false,
+BCA 5th Sem,CA022,T084,true,z0002
+BCA 5th Sem,CA023,T077,false,
+BCA 5th Sem,CA024,GF913,false,
+BCA 5th Sem,CA033,T079,false,
+BCA 5th Sem,CA034,T073,false,
+BSc AM 1st Sem,CA035,T076,false,
+BSc AM 1st Sem,CA036,T076,false,
+BSc AM 1st Sem,CA038,T080,false,
+BSc AM 1st Sem,CA042,T081,false,
+BSc AM 1st Sem,CA045,T090,false,
+BSc AM 1st Sem,CA046,T090,false,
+BSc AM 1st Sem,CA070,T012,false,
+BSc AM 1st Sem,CA073,T080,false,
+BSc AM 3rd Sem,CA022,T076,false,
+BSc AM 3rd Sem,CA041,T080,false,
+BSc AM 3rd Sem,CA042,T081,false,
+BSc AM 3rd Sem,CA051,GF909,false,
+BSc AM 3rd Sem,CA053,T091,false,
+BSc AM 3rd Sem,CA068,T090,false,
+BSc AM 3rd Sem,CA074,T076,false,
+BSc AM 5th Sem,CA054,GF911,false,
+BSc AM 5th Sem,CA055,GF911,false,
+BSc AM 5th Sem,CA056,GF912,false,
+BSc AM 5th Sem,CA057,T089,false,
+BSc AM 5th Sem,CA061,T087,false,
+BSc AM 5th Sem,CA062,T087,false,
+BSc AM 5th Sem,CA063,T087,false,
+BSc AM 5th Sem,CA080,T076,false,
+CE DS 1st Sem,CS215,T066,false,
+CE DS 1st Sem,CS216,T065,false,
+CE DS 1st Sem,CS217,T059,false,
+CE DS 1st Sem,CS218,T068,false,
+CE DS 1st Sem,CS219,T062,false,
+CE DS 1st Sem,CS220,T055,false,
+CE DS 1st Sem,CS221,T063,false,
+CE DS 1st Sem,CS222,T093,false,
+CE Datascience 3rd Sem,CS018,T025,false,
+CE Datascience 3rd Sem,CS019,T005,false,
+CE Datascience 3rd Sem,CS020,T007,false,
+CE Datascience 3rd Sem,CS022,T015,false,
+CE Datascience 3rd Sem,CS023,T015,false,
+CE Datascience 3rd Sem,CS025,T017,false,
+CE Datascience 3rd Sem,CS035,T012,false,
+CE Datascience 3rd Sem,CS036,T095,false,
+CE Datascience 3rd Sem,CS998,GF903,false,
+CE Datascience 5th Sem,CS003,GF904,false,
+CE Datascience 5th Sem,CS008,GF903,false,
+CE Datascience 5th Sem,CS009,T044,false,
+CE Datascience 5th Sem,CS012,T035,false,
+CE Datascience 5th Sem,CS031,T047,false,
+CE Datascience 5th Sem,CS032,T014,false,
+CE Datascience 5th Sem,CS033,T043,false,
+CE Datascience 5th Sem,CS034,T043,false,
+CE Datascience 5th Sem,CS038,T020,false,
+CE Hindi 1st Sem,CS215,T022,false,
+CE Hindi 1st Sem,CS216,T059,false,
+CE Hindi 1st Sem,CS217,T067,false,
+CE Hindi 1st Sem,CS218,T062,false,
+CE Hindi 1st Sem,CS219,T068,false,
+CE Hindi 1st Sem,CS220,T061,false,
+CE Hindi 1st Sem,CS221,T045,false,
+CE Hindi 1st Sem,CS222,T038,false,
+CE Hindi 3rd Sem,CS001,T040,false,
+CE Hindi 3rd Sem,CS002,T003,false,
+CE Hindi 3rd Sem,CS016,T004,false,
+CE Hindi 3rd Sem,CS017,T004,false,
+CE Hindi 3rd Sem,CS018,T037,false,
+CE Hindi 3rd Sem,CS019,T037,true,z0001
+CE Hindi 3rd Sem,CS020,T007,false,
+CE Hindi 3rd Sem,CS025,T017,false,
+CE Hindi 3rd Sem,CS998,T026,false,
+CE Hindi 5th Sem,CS005,GF908,false,
+CE Hindi 5th Sem,CS009,T044,false,
+CE Hindi 5th Sem,CS013,GF900,false,
+CE Hindi 5th Sem,CS014,GF900,false,
+CE Hindi 5th Sem,CS024,T028,false,
+CE Hindi 5th Sem,CS029,GF901,false,
+CE Hindi 5th Sem,CS030,T048,false,
+CE Hindi 5th Sem,CS037,T042,false,
+CE Hindi 5th Sem,CS038,T020,false,
+CE Hindi 5th Sem,CS200,GF902,false,
+CE Hindi 7th Sem,CS004,GF901,false,
+CE Hindi 7th Sem,CS007,GF905,false,
+CE Hindi 7th Sem,CS010,GF904,false,
+CE Hindi 7th Sem,CS011,T042,false,
+CE Hindi 7th Sem,CS026,T036,false,
+CE Hindi 7th Sem,CS028,T046,false,
+CE-DS 7th Sem,CS010,T010,false,
+CE-DS 7th Sem,CS026,T045,false,
+CE-DS 7th Sem,CS202,T028,false,
+CE-DS 7th Sem,CS203,GF907,false,
+CE-DS 7th Sem,CS204,GF903,false,
+CE-DS 7th Sem,CS205,T018,false,
+CE11 1st Sem,CS215,T070,false,
+CE11 1st Sem,CS216,T054,false,
+CE11 1st Sem,CS217,T069,false,
+CE11 1st Sem,CS218,T068,false,
+CE11 1st Sem,CS219,T062,false,
+CE11 1st Sem,CS220,T057,false,
+CE11 1st Sem,CS221,T061,false,
+CE11 1st Sem,CS222,T093,false,
+CE12 1st Sem,CS215,T056,false,
+CE12 1st Sem,CS216,T065,false,
+CE12 1st Sem,CS217,T060,false,
+CE12 1st Sem,CS218,T062,false,
+CE12 1st Sem,CS219,T068,false,
+CE12 1st Sem,CS220,T036,false,
+CE12 1st Sem,CS221,T016,false,
+CE12 1st Sem,CS222,T038,false,
+CE31 3rd Sem,CS001,T033,false,
+CE31 3rd Sem,CS002,T040,false,
+CE31 3rd Sem,CS016,T004,false,
+CE31 3rd Sem,CS017,T008,false,
+CE31 3rd Sem,CS018,T018,false,
+CE31 3rd Sem,CS019,T037,false,
+CE31 3rd Sem,CS020,T007,false,
+CE31 3rd Sem,CS025,T022,false,
+CE31 3rd Sem,CS998,T028,false,
+CE32 3rd Sem,CS001,T011,false,
+CE32 3rd Sem,CS002,T033,false,
+CE32 3rd Sem,CS016,T002,false,
+CE32 3rd Sem,CS017,T002,false,
+CE32 3rd Sem,CS018,T001,false,
+CE32 3rd Sem,CS019,T018,false,
+CE32 3rd Sem,CS020,T007,false,
+CE32 3rd Sem,CS025,T023,false,
+CE32 3rd Sem,CS998,T052,false,
+CE51 5th Sem,CS005,GF908,false,
+CE51 5th Sem,CS009,T044,false,
+CE51 5th Sem,CS013,T025,false,
+CE51 5th Sem,CS014,GF900,false,
+CE51 5th Sem,CS024,T032,false,
+CE51 5th Sem,CS029,T051,false,
+CE51 5th Sem,CS030,T039,false,
+CE51 5th Sem,CS037,T042,false,
+CE51 5th Sem,CS038,T020,false,
+CE51 5th Sem,CS200,T006,false,
+CE52 5th Sem,CS005,GF908,false,
+CE52 5th Sem,CS009,T044,false,
+CE52 5th Sem,CS013,T015,false,
+CE52 5th Sem,CS014,T019,false,
+CE52 5th Sem,CS024,T021,false,
+CE52 5th Sem,CS029,GF901,false,
+CE52 5th Sem,CS030,T051,false,
+CE52 5th Sem,CS037,T042,false,
+CE52 5th Sem,CS038,T020,false,
+CE52 5th Sem,CS200,T034,false,
+CE71 7th Sem,CS004,GF901,false,
+CE71 7th Sem,CS007,GF905,false,
+CE71 7th Sem,CS010,GF904,false,
+CE71 7th Sem,CS011,T039,false,
+CE71 7th Sem,CS026,T036,false,
+CE71 7th Sem,CS028,T046,false,
+CE72 7th Sem,CS004,T021,false,
+CE72 7th Sem,CS007,T052,false,
+CE72 7th Sem,CS010,T048,false,
+CE72 7th Sem,CS011,T032,false,
+CE72 7th Sem,CS026,T013,false,
+CE72 7th Sem,CS028,T046,false,
+ECE 8th Sem,EE401,T016,false,
+ECE 8th Sem,EE402,EE028,false,
+ECE 8th Sem,EE403,T021,false,
+ECE 8th Sem,EE404,EE002,false,
+ECE 8th Sem,EE405,T028,false,
+ECE 8th Sem,EE406,EEG01,false,
+ECE 8th Sem,EE_HUM,EE015,false,
+ECE1 2nd Sem,EE101,EE001,false,
+ECE1 2nd Sem,EE102,EE004,false,
+ECE1 2nd Sem,EE103,EE004,false,
+ECE1 2nd Sem,EE104,T031,false,
+ECE1 2nd Sem,EE105,EE007,false,
+ECE1 2nd Sem,EE106,EE010,false,
+ECE1 2nd Sem,EE107,EE009,false,
+ECE1 2nd Sem,EE108,EE012,false,
+ECE1 2nd Sem,EE109,EE013,false,
+ECE1 2nd Sem,EE110,EE015,false,
+ECE1 4th Sem,EE201,EE016,false,
+ECE1 4th Sem,EE202,EE017,false,
+ECE1 4th Sem,EE203,EE019,false,
+ECE1 4th Sem,EE204,EE005,false,
+ECE1 4th Sem,EE205,EE022,false,
+ECE1 4th Sem,EE206,EE021,false,
+ECE1 4th Sem,EE207,EE023,false,
+ECE1 4th Sem,EE208,EE026,false,
+ECE1 4th Sem,EE209,EE024,false,
+ECE1 4th Sem,EE210,EE027,false,
+ECE1 4th Sem,EE211,EE028,false,
+ECE1 6th Sem,EE301,EE035,false,
+ECE1 6th Sem,EE302,EE002,false,
+ECE1 6th Sem,EE303,EE003,false,
+ECE1 6th Sem,EE304,EE003,false,
+ECE1 6th Sem,EE305,EE039,false,
+ECE1 6th Sem,EE306,EE017,false,
+ECE1 6th Sem,EE307,EE026,false,
+ECE1 6th Sem,EE308,EE033,false,
+ECE1 6th Sem,EE309,EE008,false,
+ECE1 6th Sem,EE310,T050,false,
+ECE1 6th Sem,EE311,EEG01,false,
+ECE1 6th Sem,EE_SEM,EE013,false,
+ECE1 6th Sem,EE_WS,EE012,false,
+ECE2 2nd Sem,EE101,EE001,false,
+ECE2 2nd Sem,EE102,EE006,false,
+ECE2 2nd Sem,EE103,EE004,false,
+ECE2 2nd Sem,EE104,EE007,false,
+ECE2 2nd Sem,EE105,T031,false,
+ECE2 2nd Sem,EE106,EE010,false,
+ECE2 2nd Sem,EE107,EE011,false,
+ECE2 2nd Sem,EE108,EE012,false,
+ECE2 2nd Sem,EE109,EE014,false,
+ECE2 2nd Sem,EE110,EE015,false,
+ECE2 4th Sem,EE201,EE016,false,
+ECE2 4th Sem,EE202,EE017,false,
+ECE2 4th Sem,EE203,EE019,false,
+ECE2 4th Sem,EE204,EE005,false,
+ECE2 4th Sem,EE205,EE021,false,
+ECE2 4th Sem,EE206,EE021,false,
+ECE2 4th Sem,EE207,EE023,false,
+ECE2 4th Sem,EE208,EE025,false,
+ECE2 4th Sem,EE209,EE025,false,
+ECE2 4th Sem,EE210,EE027,false,
+ECE2 4th Sem,EE211,T052,false,
+ECE2 6th Sem,EE301,EE002,false,
+ECE2 6th Sem,EE302,EE035,false,
+ECE2 6th Sem,EE303,EE037,false,
+ECE2 6th Sem,EE304,EE036,false,
+ECE2 6th Sem,EE305,EE038,false,
+ECE2 6th Sem,EE306,EE040,false,
+ECE2 6th Sem,EE307,EE026,false,
+ECE2 6th Sem,EE308,EE033,false,
+ECE2 6th Sem,EE309,T050,false,
+ECE2 6th Sem,EE310,EE008,false,
+ECE2 6th Sem,EE_SEM,EE014,false,
+ECE2 6th Sem,EE_WS,EE011,false,
+EE-IoT 2nd Sem,EE101,EE002,false,
+EE-IoT 2nd Sem,EE102,EE006,false,
+EE-IoT 2nd Sem,EE103,EE004,false,
+EE-IoT 2nd Sem,EE104,T031,false,
+EE-IoT 2nd Sem,EE105,EE007,false,
+EE-IoT 2nd Sem,EE106,EE009,false,
+EE-IoT 2nd Sem,EE107,EE009,false,
+EE-IoT 2nd Sem,EE108,EE012,false,
+EE-IoT 2nd Sem,EE109,EE013,false,
+EE-IoT 2nd Sem,EE110,T028,false,
+EE-IoT 4th Sem,EE201,EE016,false,
+EE-IoT 4th Sem,EE202,EE017,false,
+EE-IoT 4th Sem,EE203,EE019,false,
+EE-IoT 4th Sem,EE204,EE018,false,
+EE-IoT 4th Sem,EE205,EE022,false,
+EE-IoT 4th Sem,EE206,EE020,false,
+EE-IoT 4th Sem,EE207,EE023,false,
+EE-IoT 4th Sem,EE212,EE030,false,
+EE-IoT 4th Sem,EE213,EE032,false,
+EE-IoT 4th Sem,EE214,EE032,false,
+EE-IoT 4th Sem,EE215,EE034,false,
+EE-IoT 6th Sem,EE303,EE037,false,
+EE-IoT 6th Sem,EE307,EE026,false,
+EE-IoT 6th Sem,EE308,EE033,false,
+EE-IoT 6th Sem,EE317,EE030,false,
+EE-IoT 6th Sem,EE318,EE016,false,
+EE-IoT 6th Sem,EE319,EE039,false,
+EE-IoT 6th Sem,EE320,EE031,false,
+EE-IoT 6th Sem,EE321,EEG01,false,
+EE-IoT 6th Sem,EE_SEM,EE014,false,
+EE-IoT 6th Sem,EE_WS,EE012,false,
+EE-IoT 8th Sem,EE405,EE013,false,
+EE-IoT 8th Sem,EE411,EE031,false,
+EE-IoT 8th Sem,EE412,EE034,false,
+EE-IoT 8th Sem,EE413,EE030,false,
+EE-IoT 8th Sem,EE414,EEG01,false,
+EE-IoT 8th Sem,EE_HUM,T028,false,
+ENC 2nd Sem,EE101,EE003,false,
+ENC 2nd Sem,EE102,EE006,false,
+ENC 2nd Sem,EE103,EE005,false,
+ENC 2nd Sem,EE104,EE008,false,
+ENC 2nd Sem,EE105,T031,false,
+ENC 2nd Sem,EE106,EE009,false,
+ENC 2nd Sem,EE107,EE011,false,
+ENC 2nd Sem,EE108,EE011,false,
+ENC 2nd Sem,EE109,EE014,false,
+ENC 2nd Sem,EE110,EE015,false,
+ENC 4th Sem,EE201,EE001,false,
+ENC 4th Sem,EE202,EE002,false,
+ENC 4th Sem,EE203,EE019,false,
+ENC 4th Sem,EE204,EE018,false,
+ENC 4th Sem,EE205,EE022,false,
+ENC 4th Sem,EE206,EE020,false,
+ENC 4th Sem,EE207,T036,false,
+ENC 4th Sem,EE208,EE024,false,
+ENC 4th Sem,EE209,EE025,false,
+ENC 4th Sem,EE210,EE001,false,
+ENC 4th Sem,EE211,EE029,false,
+ENC 6th Sem,EE301,EE002,false,
+ENC 6th Sem,EE302,EE035,false,
+ENC 6th Sem,EE303,EE036,false,
+ENC 6th Sem,EE304,EE036,false,
+ENC 6th Sem,EE312,EE029,false,
+ENC 6th Sem,EE313,EE040,false,
+ENC 6th Sem,EE314,EE040,false,
+ENC 6th Sem,EE315,EE037,false,
+ENC 6th Sem,EE316,EEG01,false,
+ENC 6th Sem,EE_SEM,EE014,false,
+ENC 6th Sem,EE_WS,EE020,false,
+ENC 8th Sem,EE405,EE013,false,
+ENC 8th Sem,EE407,EE040,false,
+ENC 8th Sem,EE408,EE028,false,
+ENC 8th Sem,EE409,EE028,false,
+ENC 8th Sem,EE410,EEG01,false,
+ENC 8th Sem,EE_HUM,EE015,false,
+IT 1st Sem,CS215,T066,false,
+IT 1st Sem,CS216,T058,false,
+IT 1st Sem,CS217,T053,false,
+IT 1st Sem,CS218,T068,false,
+IT 1st Sem,CS219,T068,false,
+IT 1st Sem,CS220,T064,false,
+IT 1st Sem,CS221,T055,false,
+IT 1st Sem,CS222,T038,false,
+IT 3rd Sem,AES_LAB,T003,false,
+IT 3rd Sem,CS001,T011,false,
+IT 3rd Sem,CS016,T008,false,
+IT 3rd Sem,CS017,T041,false,
+IT 3rd Sem,CS018,T001,false,
+IT 3rd Sem,CS019,T025,false,
+IT 3rd Sem,CS020,T007,false,
+IT 3rd Sem,CS025,T023,false,
+IT 3rd Sem,CS998,T010,false,
+IT 5th Sem,CS006,T010,false,
+IT 5th Sem,CS009,T044,false,
+IT 5th Sem,CS013,T019,false,
+IT 5th Sem,CS014,T027,false,
+IT 5th Sem,CS020,T007,false,
+IT 5th Sem,CS029,T029,false,
+IT 5th Sem,CS030,T029,false,
+IT 5th Sem,CS037,T042,false,
+IT 5th Sem,CS038,T020,false,
+IT 5th Sem,CS201,GF903,false,
+IT 7th Sem,CS004,T021,false,
+IT 7th Sem,CS021,GF908,false,
+IT 7th Sem,CS024,T032,false,
+IT 7th Sem,CS026,T013,false,
+IT 7th Sem,CS027,GF906,false,
+IT 7th Sem,CS039,T005,false,
+MCA 1st Bridge,CA001,T071,false,
+MCA 1st Bridge,CA002,T071,false,
+MCA 1st Bridge,CA019,T083,false,
+MCA 1st Bridge,CA029,GF913,false,
+MCA 1st Bridge,CA076,T074,false,
+MCA 1st Bridge,CA077,T075,false,
+MCA 1st Bridge,CA078,T074,false,
+MCA 1st Sem,CA001,T071,false,
+MCA 1st Sem,CA002,T071,false,
+MCA 1st Sem,CA003,GF910,false,
+MCA 1st Sem,CA004,T075,false,
+MCA 1st Sem,CA005,T074,false,
+MCA 1st Sem,CA006,T074,false,
+MCA 1st Sem,CA007,T083,false,
+MCA 1st Sem,CA008,T077,false,
+MCA 1st Sem,CA009,T077,false,
+MCA 1st Sem,CA043,T086,false,
+MCA 1st Sem,CA044,T080,false,
+MCA 3rd Sem,CA011,T073,false,
+MCA 3rd Sem,CA012,T073,false,
+MCA 3rd Sem,CA013,T073,false,
+MCA 3rd Sem,CA014,T082,false,
+MCA 3rd Sem,CA015,T082,false,
+MCA 3rd Sem,CA016,T083,false,
+MCA 3rd Sem,CA017,T083,false,
+MCA 3rd Sem,CA018,T086,false,
+MCA 3rd Sem,CA043,T082,false,
+MCA 3rd Sem,CA044,T080,false,
+MSc AM 1st Sem,CA050,GF909,false,
+MSc AM 1st Sem,CA058,GF912,false,
+MSc AM 1st Sem,CA067,GF909,false,
+MSc AM 3rd Sem,CA057,T089,false,
+MSc AM 3rd Sem,CA064,T088,false,
+MSc AM 3rd Sem,CA065,T088,false,
+MSc AM 3rd Sem,CA075,T080,false,
+MTech 1st Sem,CS015,T049,false,
+MTech 1st Sem,CS206,T030,false,
+MTech 1st Sem,CS207,T049,false,
+MTech 1st Sem,CS209,T019,false,
+MTech 1st Sem,CS210,T050,false,
+MTech 1st Sem,CS211,T001,false,
+MTech 1st Sem,CS212,GF908,false,
+MTech 3rd Sem,CS010,T048,false,
+MTech 3rd Sem,CS213,GF908,false,
+MTech 3rd Sem,CS214,T024,false,
+MTech EE 2nd Sem,EEM01,T024,false,
+MTech EE 2nd Sem,EEM02,T036,false,
+MTech EE 2nd Sem,EEM03,EE016,false,
+MTech EE 2nd Sem,EEM04,EE006,false,
+MTech EE 2nd Sem,EEM05,EE014,false,
+MTech EE 2nd Sem,EEM06,EE023,false,
+MTech EE 4th Sem,EEM07,EE007,false,
+MTech EE 4th Sem,EEM08,EE031,false,
+MTech EE 4th Sem,EEM09,EE003,false,

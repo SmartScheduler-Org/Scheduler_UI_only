@@ -128,11 +128,14 @@ h1 {
 }
 
 .labs-container {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: stretch;
-  padding: 8px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  padding: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
 }
 
 .lab-box {
@@ -141,9 +144,19 @@ h1 {
   border-radius: 8px;
   padding: 12px;
   font-weight: 600;
-  flex: 1;
+  flex: none !important;
   min-width: 0;
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+  width: 100% !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.lab-box.shared-lab {
+  background: linear-gradient(135deg, #fff8d6 0%, #ffe082 100%);
+  border-color: #f9a825;
+  box-shadow: 0 2px 8px rgba(249, 168, 37, 0.25);
 }
 
 .lab-box strong {
@@ -326,7 +339,7 @@ h1 {
 }
 
 body.drag-drop-active .slot-cell.drop-target {
-    transition: background-color 0.18s ease, box-shadow 0.18s ease;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 body.drag-drop-active .slot-cell.drop-target:hover {
@@ -334,8 +347,9 @@ body.drag-drop-active .slot-cell.drop-target:hover {
 }
 
 body.drag-drop-active .slot-cell.drop-target.drag-over {
-    background: rgba(34, 197, 94, 0.12);
-    box-shadow: inset 0 0 0 2px rgba(34,197,94,0.45);
+    background: rgba(34, 197, 94, 0.13);
+    box-shadow: inset 0 0 0 2px rgba(34,197,94,0.50);
+    transform: scale(1.012);
 }
 
 body.drag-drop-active .export-surface {
@@ -383,9 +397,25 @@ body.drag-drop-active .draggable-slot-item::after {
     letter-spacing: 0.04em;
 }
 
+body.drag-drop-active .draggable-slot-item {
+    transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
 body.drag-drop-active .draggable-slot-item.is-dragging {
-    opacity: 0.45;
-    transform: scale(0.98);
+    opacity: 0.38;
+    transform: scale(0.96);
+    box-shadow: 0 6px 22px rgba(99,102,241,0.22);
+    cursor: grabbing;
+}
+
+@keyframes slotLandSaved {
+    0%   { transform: scale(1.04); box-shadow: 0 0 0 3px rgba(34,197,94,0.35); }
+    60%  { transform: scale(0.98); }
+    100% { transform: scale(1);    box-shadow: none; }
+}
+
+.slot-cell.land-anim > * {
+    animation: slotLandSaved 0.38s cubic-bezier(.18,.89,.32,1.06);
 }
 
 .drag-mode-badge {
@@ -505,7 +535,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
 .room-card { position: relative; overflow: hidden; width: min(100%, 2100px); margin: 0 auto 34px; padding: 24px 22px 18px; background: linear-gradient(180deg, #ffffff, #f5fbff); border: 1px solid rgba(27, 79, 114, 0.12); border-radius: 24px; box-shadow: 0 20px 50px rgba(27, 79, 114, 0.1); page-break-inside: avoid; break-inside: avoid; }
 .export-surface { position: relative; overflow: hidden; }
 .export-watermark { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.export-watermark__grid { position: absolute; inset: -8% -10%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 62px 20px; align-content: center; justify-items: center; transform: rotate(-28deg); transform-origin: center; }
+.export-watermark__grid { position: absolute; inset: -26% -10% auto -10%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 62px 20px; align-content: start; justify-items: center; transform: rotate(-28deg); transform-origin: center; }
 .export-watermark__grid span { display: inline-block; font-size: 28px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(17, 103, 216, 0.09); white-space: nowrap; user-select: none; }
 .room-card__content { position: relative; z-index: 1; padding-top: 34px; }
 .room-card__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; margin-bottom: 16px; }
@@ -529,6 +559,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
 .room-slot-card__section { color: #334f63; font-weight: 700; line-height: 1.3; }
 .room-slot-card__teacher { color: #476375; font-size: 13px; font-weight: 600; line-height: 1.25; }
 .room-slot-card--lab { background: linear-gradient(135deg, rgba(227,242,253,0.92), rgba(209,231,255,0.96)); }
+.room-slot-card--lab-shared { background: linear-gradient(135deg, rgba(255,248,214,0.96), rgba(255,224,130,0.96)); border-color: rgba(249,168,37,0.35); }
 .room-slot-card--class { background: linear-gradient(135deg, rgba(234,255,234,0.92), rgba(220,245,223,0.96)); }
 .room-table tbody tr:hover td { background-color: rgba(246, 251, 255, 0.98); }
 .room-pdf-btn { padding: 12px 22px; border: none; border-radius: 999px; background: linear-gradient(135deg, #0f6f7d, #1da0b4); color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 0.02em; box-shadow: 0 12px 24px rgba(15, 111, 125, 0.22); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
@@ -605,13 +636,38 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         });
     }
 
+    var _BRAND_SVG_IMG2 = '<svg viewBox="0 0 200 200" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg_t_im2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="lg_l_im2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="lg_r_im2" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs><path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_t_im2)"/><path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_l_im2)"/><path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_r_im2)"/><path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818"/></svg>';
+
+    function _buildImgBrandBar2() {
+        var bar = document.createElement('div');
+        bar.id = '_img_brand_bar2';
+        bar.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 10px; background:#f0f6ff; border-top:1px solid #dbe7f3; border-bottom:2px solid #c8dcf8; margin-bottom:4px; box-sizing:border-box;';
+        var ico = document.createElement('span');
+        ico.style.cssText = 'flex-shrink:0; filter:drop-shadow(0 0 5px rgba(0,180,255,.5)); line-height:0;';
+        ico.innerHTML = _BRAND_SVG_IMG2;
+        bar.appendChild(ico);
+        var lbl = document.createElement('span');
+        lbl.innerHTML = '<span style="font-size:11px;font-weight:800;letter-spacing:0.03em;"><span style="color:#0060d0">Smart</span><span style="color:#0090c8">Scheduler</span></span><span style="font-size:10px;color:#4a6080;font-weight:600;margin-left:6px;">· Generated timetable</span>';
+        bar.appendChild(lbl);
+        return bar;
+    }
+
     function saveAsImage(elementId, filename) {
         _showDownloadPopup();
         var el = document.getElementById(elementId);
         var btns = el.querySelectorAll('.btn-save-tt');
         btns.forEach(function(b) { b.style.display = 'none'; });
 
+        var bar = _buildImgBrandBar2();
+        var tbl = el.querySelector('table');
+        if (tbl) {
+            tbl.parentNode.insertBefore(bar, tbl);
+        } else {
+            el.insertBefore(bar, el.firstChild);
+        }
+
         html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(function(canvas) {
+            bar.remove();
             btns.forEach(function(b) { b.style.display = ''; });
             var link = document.createElement('a');
             link.download = filename + '.png';
@@ -619,6 +675,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             link.click();
             _showDownloadDone();
         }).catch(function() {
+            bar.remove();
             btns.forEach(function(b) { b.style.display = ''; });
             Swal.close();
         });
@@ -633,34 +690,36 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         var collegeInput = document.getElementById('collegeNameInput');
         var collegeName = collegeInput ? collegeInput.value.trim() : '';
 
-        // Gather table cards from this specific view
-        var cards = viewEl.querySelectorAll('.export-surface');
-        if (!cards.length) { cards = viewEl.querySelectorAll('.room-card'); }
-        if (!cards.length) {
-            // workload view — capture the entire view
-            cards = [viewEl];
+        var cards = Array.from(viewEl.querySelectorAll('.export-surface'));
+        if (!cards.length) { cards = Array.from(viewEl.querySelectorAll('.room-card')); }
+        if (!cards.length) { cards = [viewEl]; }
+
+        var _NAV_SVG2 = '<svg viewBox="0 0 200 200" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg_t_sv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="lg_l_sv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="lg_r_sv" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs><path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_t_sv)"/><path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_l_sv)"/><path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_r_sv)"/><path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818"/></svg>';
+        function _buildPdfBrandHeader() {
+          var wrap = document.createElement('div');
+          wrap.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 10px 6px; background:#f0f6ff; border-top:1px solid #dbe7f3; border-bottom:2px solid #c8dcf8; margin-bottom:4px;';
+
+          var logoWrap = document.createElement('span');
+          logoWrap.style.cssText = 'flex-shrink:0; filter:drop-shadow(0 0 5px rgba(0,180,255,.45)); line-height:0;';
+          logoWrap.innerHTML = _NAV_SVG2;
+          wrap.appendChild(logoWrap);
+
+          var txt = document.createElement('span');
+          txt.innerHTML = '<span style="font-size:11px; font-weight:800; letter-spacing:0.03em;"><span style="color:#0060d0">Smart</span><span style="color:#0090c8">Scheduler</span></span><span style="font-size:10px; color:#4a6080; font-weight:600; margin-left:6px;">· Generated timetable</span>';
+          wrap.appendChild(txt);
+
+          if (collegeName) {
+            var right = document.createElement('span');
+            right.textContent = collegeName;
+            right.style.cssText = 'margin-left:auto; font-size:10px; font-weight:700; color:#1a237e;';
+            wrap.appendChild(right);
+          }
+          return wrap;
         }
 
         // Hide buttons & download bars inside view temporarily
         var hiddenBtns = viewEl.querySelectorAll('.btn-save-tt, .room-pdf-btn, .fullpage-pdf-btn, .action-buttons');
         hiddenBtns.forEach(function(b) { b.style.display = 'none'; });
-
-        // Inject a header into the FIRST card
-        var firstCard = cards[0];
-        var pdfHeader = document.createElement('div');
-        pdfHeader.id = '_pdf_header';
-        pdfHeader.style.cssText = 'text-align:center; padding:8px 0 4px 0; background:#fff;';
-        if (collegeName) {
-            var ch = document.createElement('div');
-            ch.style.cssText = 'font-size:22px; font-weight:800; color:#1a237e; margin-bottom:2px;';
-            ch.textContent = collegeName;
-            pdfHeader.appendChild(ch);
-        }
-        var sub = document.createElement('div');
-        sub.style.cssText = 'font-size:13px; font-weight:700; color:#5b21ed; letter-spacing:1.5px; margin-bottom:4px;';
-        sub.textContent = 'SmartScheduler';
-        pdfHeader.appendChild(sub);
-        firstCard.insertBefore(pdfHeader, firstCard.firstChild);
 
         var labels = { section: 'Section', room: 'Room', workload: 'Workload', teacher: 'Teacher' };
         var fname = 'SmartScheduler_' + (labels[viewName] || viewName) + '_Timetables.pdf';
@@ -668,24 +727,34 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         var opt = {
             margin: [6, 4, 6, 4],
             filename: fname,
-            image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, windowWidth: 1400 },
-            jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+            image: { type: 'jpeg', quality: 0.92 },
+            html2canvas: {
+              scale: 1.5,
+              useCORS: true,
+              backgroundColor: '#ffffff',
+              logging: false,
+            },
+            jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' },
+            pagebreak: { mode: ['css', 'legacy'] },
         };
 
-        // Build multi-page PDF: one page per card
-        var worker = html2pdf().set(opt).from(cards[0]).toContainer().toCanvas().toPdf();
-        for (var i = 1; i < cards.length; i++) {
-            worker = worker.get('pdf').then(function(pdf) { pdf.addPage(); }).from(cards[i]).toContainer().toCanvas().toPdf();
-        }
+          var html = cards.map(function(c) {
+            var clone = c.cloneNode(true);
+            // Insert brand strip just above the first table (below section heading)
+            var tbl = clone.querySelector('table');
+            if (tbl) {
+              tbl.parentNode.insertBefore(_buildPdfBrandHeader(), tbl);
+            } else {
+              clone.insertBefore(_buildPdfBrandHeader(), clone.firstChild);
+            }
+            return clone.outerHTML;
+          }).join('<div style="page-break-after:always; break-after:page; height:0;"></div>');
 
-        function restore() {
-            var hdr = document.getElementById('_pdf_header');
-            if (hdr) hdr.remove();
-            hiddenBtns.forEach(function(b) { b.style.display = ''; });
-        }
+          hiddenBtns.forEach(function(b) { b.style.display = ''; });
 
-        worker.save().then(function() { restore(); _showDownloadDone(); }).catch(function() { restore(); Swal.close(); });
+          html2pdf().set(opt).from(html).save()
+            .then(function() { _showDownloadDone(); })
+            .catch(function() { Swal.close(); });
     }
 
     function showView(view) {
@@ -703,6 +772,13 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             window.history.replaceState(null, "", "#" + view);
         }
     }
+
+      function filterByProgramSelect(sel) {
+        const program = sel.value || "all";
+        const url = new URL(window.location.href);
+        url.searchParams.set("program", program);
+        window.location.href = url.toString();
+      }
 
     function getCsrfToken() {
         const match = document.cookie.match(/csrftoken=([^;]+)/);
@@ -820,6 +896,8 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
                         Swal.fire({ icon: "error", title: "Move Blocked", text: result.message || "Conflict detected. Move cancelled.", confirmButtonColor: "#4e73df" });
                         return;
                     }
+                    target.classList.add('land-anim');
+                    target.addEventListener('animationend', function() { target.classList.remove('land-anim'); }, { once: true });
                     Swal.fire({ icon: "success", title: "Updated", text: result.message || "Slot updated successfully.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
                 } catch (error) {
                     Swal.fire({ icon: "error", title: "Request Failed", text: "Could not move this block right now.", confirmButtonColor: "#4e73df" });
@@ -843,18 +921,31 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             ? window.location.hash.replace("#", "")
             : "section";
 
+        const _fsExpandSVG2 = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>';
+        const _fsMinimizeSVG2 = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="10" y1="14" x2="3" y2="21"></line><line x1="21" y1="3" x2="14" y2="10"></line></svg>';
+
         const openFullScreenButton = document.getElementById("openFullScreenButton");
         if (openFullScreenButton) {
             openFullScreenButton.addEventListener("click", function () {
-                const targetUrl = window.location.href;
-                try { if (window.top && window.top !== window) { window.top.location.href = targetUrl; return; } } catch (error) {}
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen().catch(() => { window.location.href = targetUrl; });
-                    return;
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen().catch(function() {});
                 }
-                window.location.href = targetUrl;
             });
         }
+
+        document.addEventListener("fullscreenchange", function () {
+            const btn = document.getElementById("openFullScreenButton");
+            if (!btn) return;
+            if (document.fullscreenElement) {
+                btn.innerHTML = _fsMinimizeSVG2;
+                btn.title = "Exit fullscreen";
+            } else {
+                btn.innerHTML = _fsExpandSVG2;
+                btn.title = "Open full screen";
+            }
+        });
 
         showView(initialView);
         initDragAndDrop();
@@ -926,7 +1017,22 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
     </a>
 </div>
 
-<h1>SmartScheduler</h1>
+<h1 style="display:flex; align-items:center; justify-content:center; gap:12px;">
+  <span style="line-height:0; filter:drop-shadow(0 0 8px rgba(0,144,200,0.45));">
+    <svg viewBox="0 0 200 200" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg_t_sv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient>
+        <linearGradient id="lg_l_sv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient>
+        <linearGradient id="lg_r_sv" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient>
+      </defs>
+      <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_t_sv)"/>
+      <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_l_sv)"/>
+      <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_r_sv)"/>
+      <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818"/>
+    </svg>
+  </span>
+  SmartScheduler
+</h1>
 <div class="saved-meta">
   {% if is_readonly %}Published Timetable{% else %}Saved Timetable{% endif %} &mdash;
   {{ saved.created_at|date:"d M Y" }} at {{ saved.created_at|date:"h:i A" }}
@@ -974,6 +1080,20 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
 </div>
 {% endif %}
 
+{% if program_options|length > 0 %}
+<div style="display:flex; justify-content:center; margin: 4px 0 16px;">
+  <div style="display:inline-flex; align-items:center; gap:8px; padding:8px 12px; background:#f4f8fb; border:1px solid #d5e3ef; border-radius:10px;">
+    <span style="font-size:12px; font-weight:700; color:#1f4d6b; letter-spacing:0.05em;">PROGRAM:</span>
+    <select onchange="filterByProgramSelect(this)" style="padding:6px 10px; border-radius:8px; border:1px solid #b7c9d8; background:white; color:#0f2f45; font-size:13px; font-weight:600; min-width:170px;">
+      <option value="all" {% if active_program == 'all' %}selected{% endif %}>All Programs</option>
+      {% for program in program_options %}
+      <option value="{{ program }}" {% if active_program == program %}selected{% endif %}>{{ program }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+{% endif %}
+
 <div class="view-switcher">
   <button class="view-toggle view-toggle--section is-active" type="button" data-view="section" onclick="showView('section')" aria-pressed="true">
     <span class="view-toggle__label">Section Timetable</span>
@@ -1009,7 +1129,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
   </div>
   <div style="position:relative; z-index:1;">
   <h2 class="secHead">
-    {{ table.section.section_id }} ({{ table.section.department.dept_name }})
+    {{ table.section.section_id }} ({{ table.section.department.dept_name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
   </h2>
 
   {% if table.subject_counts %}
@@ -1091,7 +1211,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if not is_readonly %}draggable-slot-item{% endif %}" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.course.course_name }} Lab
                     </strong>
@@ -1101,6 +1221,11 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
                     <strong style="color: #283593; font-size: 13px;">
                       {{ lab.instructor.name }}
                     </strong>
+                    {% if lab.second_instructor %}
+                    <strong style="color: #5d4037; font-size: 13px;">
+                      {{ lab.second_instructor.name }}
+                    </strong>
+                    {% endif %}
                     <span style="color: #424242; font-size: 12px;">
                       {{ lab.room.r_number }}
                     </span>
@@ -1229,11 +1354,14 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
 
           {% elif cell.type == "lab" %}
             <td colspan="{{ cell.colspan }}">
-              <div class="room-slot-card room-slot-card--lab">
+              <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor %}room-slot-card--lab-shared{% endif %}">
               {% for lab in cell.labs %}
                 <strong>{{ lab.course.course_name }}</strong>
                 <div class="room-slot-card__section">{{ lab.section }} ({{ lab.group }})</div>
                 <div class="room-slot-card__teacher">{{ lab.instructor.name }}</div>
+                {% if lab.second_instructor %}
+                <div class="room-slot-card__teacher">{{ lab.second_instructor.name }}</div>
+                {% endif %}
               {% endfor %}
               </div>
             </td>
@@ -1379,7 +1507,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             <td colspan="{{ cell.colspan }}">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box">
+                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %}">
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.course.course_name }} Lab
                     </strong>
@@ -1389,6 +1517,14 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
                     <span style="color: #424242;">
                       Section: {{ lab.section }}
                     </span><br>
+                    <strong style="color: #283593; font-size: 13px;">
+                      {{ lab.instructor.name }}
+                    </strong><br>
+                    {% if lab.second_instructor %}
+                    <strong style="color: #5d4037; font-size: 13px;">
+                      + {{ lab.second_instructor.name }}
+                    </strong><br>
+                    {% endif %}
                     <span style="color: #424242; font-size: 12px;">
                       {{ lab.room.r_number }}
                     </span>

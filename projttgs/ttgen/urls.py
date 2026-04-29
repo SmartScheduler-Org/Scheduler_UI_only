@@ -72,6 +72,15 @@ urlpatterns = [
     path('dashboard_sections_list/', views.dashboard_section_list, name='dashboard_editsection'),
     path('delete_section/<str:pk>/', views.delete_section, name='deletesection'),
     path('update_section/<int:pk>/', views.update_section, name='updatesection'),
+    path("map-teacher-courses/",views.map_teacher_courses,name="map_teacher_courses"),
+    path(
+    "delete-teacher-course/<str:course_number>/<int:instructor_id>/",
+    views.delete_teacher_course_mapping,
+    name="delete_teacher_course_mapping"),
+    path(
+    "delete-sci-mapping/<int:mapping_id>/",
+    views.delete_sci_mapping,
+    name="delete_sci_mapping"),
     path("map-section-courses/",views.map_section_courses,name="map_section_courses"),
     path("view-section-courses/", views.view_section_courses, name="view_section_courses"),
 
