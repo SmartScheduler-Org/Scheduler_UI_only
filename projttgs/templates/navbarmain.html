@@ -78,7 +78,7 @@
 
   <!-- Profile dropdown -->
   <div class="profile-dropdown" id="profileDropdown">
-    <button class="profile-btn" id="profileBtn" onclick="document.getElementById('profileMenu').classList.toggle('show')">
+    <button class="profile-btn" id="profileBtn" type="button">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
         <circle cx="12" cy="7" r="4"/>
@@ -86,17 +86,11 @@
     </button>
     <div class="profile-menu" id="profileMenu">
       <div class="profile-menu-header">
-        {% if user.is_authenticated %}
-          <span>{{ user.username }}</span>
-        {% endif %}
+        {% if user.is_authenticated %}<span>{{ user.username }}</span>{% endif %}
       </div>
-      <a href="#" id="accountMenuButton" class="js-open-account-modal">
+      <a href="{% url 'hod_account' %}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Account
-      </a>
-      <a href="{% url 'admindash' %}">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Dashboard
       </a>
       <form method="post" action="{% url 'logout' %}" style="margin:0;">
         {% csrf_token %}
@@ -121,7 +115,7 @@
     <a href="{% url 'admindash' %}">Home</a>
     <a href="{% url 'about' %}">About Us</a>
     <a href="{% url 'live_demo' %}">Live Demo</a>
-    <a href="#" id="accountMenuButtonMobile" class="js-open-account-modal">Account</a>
+    <a href="{% url 'hod_account' %}">Account</a>
     <a href="{% url 'admindash' %}">Dashboard</a>
     <form method="post" action="{% url 'logout' %}" style="margin:0;">
       {% csrf_token %}
@@ -184,8 +178,6 @@ const subscriptionModalFrame = document.getElementById("subscriptionModalFrame")
 const subscriptionModalClose = document.getElementById("subscriptionModalClose");
 const accountModal = document.getElementById("accountModal");
 const accountModalClose = document.getElementById("accountModalClose");
-const accountMenuButton = document.getElementById("accountMenuButton");
-const accountMenuButtonMobile = document.getElementById("accountMenuButtonMobile");
 
 menuBtn.addEventListener("click", () => {
   menuBtn.classList.toggle("active");
@@ -201,12 +193,21 @@ if (themeToggle) {
   });
 }
 
+// Profile dropdown toggle
+const profileBtn = document.getElementById("profileBtn");
+const profileMenu = document.getElementById("profileMenu");
+if (profileBtn && profileMenu) {
+  profileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    profileMenu.classList.toggle("show");
+  });
+}
+
 // Close profile dropdown when clicking outside
 document.addEventListener("click", (e) => {
   const dd = document.getElementById("profileDropdown");
-  const menu = document.getElementById("profileMenu");
-  if (dd && menu && !dd.contains(e.target)) {
-    menu.classList.remove("show");
+  if (dd && profileMenu && !dd.contains(e.target)) {
+    profileMenu.classList.remove("show");
   }
 });
 

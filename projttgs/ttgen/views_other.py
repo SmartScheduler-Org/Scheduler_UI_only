@@ -765,6 +765,34 @@ def institute_application_thanks(request):
     return render(request, "institute_application_thanks.html")
 
 
+# HOD ACCOUNT PAGE
+@login_required
+def hod_account(request):
+    from .models import UserAccessPlan
+    access_plan = None
+    try:
+        access_plan = UserAccessPlan.objects.get(user=request.user)
+    except UserAccessPlan.DoesNotExist:
+        pass
+
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        request.user.first_name = first_name
+        request.user.last_name = last_name
+        if email:
+            request.user.email = email
+        request.user.save()
+        messages.success(request, "Account details updated successfully!")
+        return redirect('hod_account')
+
+    context = {
+        'access_plan': access_plan,
+    }
+    return render(request, 'hod_account.html', context)
+
+
 # ADMIN DASHBOARD
 @login_required
 def admindash(request):
@@ -1837,7 +1865,10 @@ def addCourses(request):
 
 @login_required
 def course_list_view(request):
-    return render(request, 'courseslist.html', {'courses': Course.objects.filter(user=request.user)})
+    return render(request, 'courseslist.html', {
+        'courses': Course.objects.filter(user=request.user),
+        'departments': Department.objects.filter(user=request.user),
+    })
 
 
 @login_required
@@ -1845,6 +1876,32 @@ def delete_course(request, pk):
     if request.method == 'POST':
         Course.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
+        return redirect('editcourse')
+
+
+@login_required
+def update_course(request, pk):
+    if request.method == 'POST':
+        course = Course.objects.filter(pk=pk, user=request.user).first()
+        if course:
+            course.course_number = request.POST.get('course_number', course.course_number).strip()
+            course.course_name = request.POST.get('course_name', course.course_name).strip()
+            max_st = request.POST.get('max_numb_students', '').strip()
+            if max_st.isdigit() and int(max_st) > 0:
+                course.max_numb_students = int(max_st)
+            cpw = request.POST.get('classes_per_week', '').strip()
+            if cpw.isdigit() and int(cpw) > 0:
+                course.classes_per_week = int(cpw)
+            course.room_required = request.POST.get('room_required', course.room_required).strip()
+            course.required_lab_category = request.POST.get('required_lab_category', course.required_lab_category).strip()
+            dept_id = request.POST.get('department', '').strip()
+            if dept_id.isdigit():
+                dept = Department.objects.filter(pk=int(dept_id), user=request.user).first()
+                if dept:
+                    course.department = dept
+            course.save()
+            reset_global_schedule_cache(request.user.id)
+            messages.success(request, "Course updated successfully!")
         return redirect('editcourse')
 
 
@@ -2313,6 +2370,22 @@ def delete_instructor(request, pk):
         return redirect('editinstructor')
 
 
+@login_required
+def update_instructor(request, pk):
+    if request.method == 'POST':
+        inst = Instructor.objects.filter(pk=pk, user=request.user).first()
+        if inst:
+            inst.name = request.POST.get('name', inst.name).strip()
+            inst.designation = request.POST.get('designation', inst.designation).strip()
+            max_wl = request.POST.get('max_workload', '').strip()
+            if max_wl.isdigit() and int(max_wl) >= 1:
+                inst.max_workload = int(max_wl)
+            inst.save()
+            reset_global_schedule_cache(request.user.id)
+            messages.success(request, "Teacher updated successfully!")
+        return redirect('editinstructor')
+
+
 
 
 @login_required
@@ -2434,7 +2507,10 @@ def addRooms(request):
 
 @login_required
 def room_list(request):
-    return render(request, 'roomslist.html', {'rooms': Room.objects.filter(user=request.user)})
+    return render(request, 'roomslist.html', {
+        'rooms': Room.objects.filter(user=request.user),
+        'departments': Department.objects.filter(user=request.user),
+    })
 
 
 @login_required
@@ -2442,6 +2518,28 @@ def delete_room(request, pk):
     if request.method == 'POST':
         Room.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
+        return redirect('editrooms')
+
+
+@login_required
+def update_room(request, pk):
+    if request.method == 'POST':
+        room = Room.objects.filter(pk=pk, user=request.user).first()
+        if room:
+            room.r_number = request.POST.get('r_number', room.r_number).strip()
+            room.room_type = request.POST.get('room_type', room.room_type).strip()
+            room.lab_category = request.POST.get('lab_category', room.lab_category).strip()
+            cap = request.POST.get('seating_capacity', '').strip()
+            if cap.isdigit() and int(cap) > 0:
+                room.seating_capacity = int(cap)
+            dept_id = request.POST.get('department', '').strip()
+            if dept_id.isdigit():
+                dept = Department.objects.filter(pk=int(dept_id), user=request.user).first()
+                if dept:
+                    room.department = dept
+            room.save()
+            reset_global_schedule_cache(request.user.id)
+            messages.success(request, "Room updated successfully!")
         return redirect('editrooms')
 
 
@@ -2559,6 +2657,20 @@ def delete_meeting_time(request, pk):
     if request.method == 'POST':
         MeetingTime.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
+        return redirect('editmeetingtime')
+
+
+@login_required
+def update_meeting_time(request, pk):
+    if request.method == 'POST':
+        mt = MeetingTime.objects.filter(pk=pk, user=request.user).first()
+        if mt:
+            mt.pid = request.POST.get('pid', mt.pid).strip()
+            mt.day = request.POST.get('day', mt.day).strip()
+            mt.time = request.POST.get('time', mt.time).strip()
+            mt.save()
+            reset_global_schedule_cache(request.user.id)
+            messages.success(request, "Timing updated successfully!")
         return redirect('editmeetingtime')
 
 
@@ -2688,6 +2800,19 @@ def delete_department(request, pk):
     if request.method == 'POST':
         Department.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
+        return redirect('editdepartment')
+
+
+@login_required
+def update_department(request, pk):
+    if request.method == 'POST':
+        dept = Department.objects.filter(pk=pk, user=request.user).first()
+        if dept:
+            dept.name = request.POST.get('name', dept.name).strip()
+            dept.code = request.POST.get('code', dept.code).strip().upper()
+            dept.save()
+            reset_global_schedule_cache(request.user.id)
+            messages.success(request, "Department updated successfully!")
         return redirect('editdepartment')
 
 
@@ -2825,7 +2950,10 @@ def addSections(request):
 
 @login_required
 def section_list(request):
-    return render(request, 'seclist.html', {'sections': Section.objects.filter(user=request.user)})
+    return render(request, 'seclist.html', {
+        'sections': Section.objects.filter(user=request.user),
+        'departments': Department.objects.filter(user=request.user),
+    })
 
 
 @login_required
@@ -2838,6 +2966,26 @@ def delete_section(request, pk):
     if request.method == 'POST':
         Section.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
+        return redirect('editsection')
+
+
+@login_required
+def update_section(request, pk):
+    if request.method == 'POST':
+        section = Section.objects.filter(pk=pk, user=request.user).first()
+        if section:
+            section.section_id = request.POST.get('section_id', section.section_id).strip()
+            strength = request.POST.get('student_strength', '').strip()
+            if strength.isdigit() and int(strength) > 0:
+                section.student_strength = int(strength)
+            dept_id = request.POST.get('department', '').strip()
+            if dept_id.isdigit():
+                dept = Department.objects.filter(pk=int(dept_id), user=request.user).first()
+                if dept:
+                    section.department = dept
+            section.save()
+            reset_global_schedule_cache(request.user.id)
+            messages.success(request, "Section updated successfully!")
         return redirect('editsection')
 
 

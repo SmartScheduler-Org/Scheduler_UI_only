@@ -74,6 +74,110 @@
     transform: scale(1.05);
 }
 
+.update-btn {
+    padding: 5px 12px;
+    background: #28a745cc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    transition: 0.2s;
+    margin-right: 6px;
+}
+
+.update-btn:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+/* Modal styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-box {
+    background: #1e1e2e;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 30px;
+    min-width: 360px;
+    max-width: 500px;
+    width: 90%;
+    color: white;
+}
+
+.modal-box h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.modal-field {
+    margin-bottom: 14px;
+}
+
+.modal-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.modal-field input, .modal-field select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.modal-save-btn {
+    padding: 8px 18px;
+    background: #28a745;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-save-btn:hover { background: #218838; }
+
+.modal-cancel-btn {
+    padding: 8px 18px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-cancel-btn:hover { background: rgba(255,255,255,0.25); }
 </style>
 
 <fieldset class="manage-fieldset">
@@ -101,7 +205,8 @@
                     <td>{{ mt.day }}</td>
                     <td>{{ mt.time }}</td>
                     <td>
-                        <form action="{% url 'deletemeetingtime' mt.pid %}" method="post">
+                        <button class="update-btn" onclick="openMtModal({{ mt.id }}, '{{ mt.pid|escapejs }}', '{{ mt.day|escapejs }}', '{{ mt.time|escapejs }}')">Update</button>
+                        <form action="{% url 'deletemeetingtime' mt.pid %}" method="post" style="display:inline;">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>
@@ -116,5 +221,64 @@
 
 </fieldset>
 
+<!-- Edit Timing Modal -->
+<div class="modal-overlay" id="mtModal">
+    <div class="modal-box">
+        <h3>Edit Timing</h3>
+        <form method="post" id="mtUpdateForm" action="">
+            {% csrf_token %}
+            <div class="modal-field">
+                <label>PID</label>
+                <input type="text" name="pid" id="mtPid" required maxlength="5">
+            </div>
+            <div class="modal-field">
+                <label>Day</label>
+                <select name="day" id="mtDay">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Time Slot</label>
+                <select name="time" id="mtTime">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-cancel-btn" onclick="closeMtModal()">Cancel</button>
+                <button type="submit" class="modal-save-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openMtModal(id, pid, day, time) {
+    document.getElementById('mtPid').value = pid;
+    document.getElementById('mtDay').value = day;
+    document.getElementById('mtTime').value = time;
+    document.getElementById('mtUpdateForm').action = '/update_meetingtime/' + id + '/';
+    document.getElementById('mtModal').classList.add('active');
+}
+
+function closeMtModal() {
+    document.getElementById('mtModal').classList.remove('active');
+}
+
+document.getElementById('mtModal').addEventListener('click', function(e) {
+    if (e.target === this) closeMtModal();
+});
+</script>
 
 {% endblock %}
