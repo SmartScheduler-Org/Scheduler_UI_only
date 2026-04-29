@@ -1,6 +1,6 @@
 {% extends "mainbase.html" %}
 {% load static %}
-{% block workflow_progress %}{% include 'workflow_stepper.html' with current_step=6 %}{% endblock %}
+{% block workflow_progress %}{% include 'workflow_stepper.html' with current_step=7 %}{% endblock %}
 {% block content %}
 
 <link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
@@ -174,10 +174,10 @@
             <button class="submit-btn icon-only-btn" type="button" onclick="toggleMappings()" id="toggleBtn" aria-label="View current mappings" title="View current mappings">
                 <i class="fa-solid fa-book-open" aria-hidden="true"></i>
             </button>
-            <a href="{% url 'addCourses' %}" class="next-btn nav-circle-btn" aria-label="Previous">
+            <a href="{% url 'addSections' %}" class="next-btn nav-circle-btn" aria-label="Previous">
                 <span class="nav-arrow">←</span>
             </a>
-            <a href="{% url 'addSections' %}" class="next-btn nav-circle-btn" aria-label="Next">
+            <a href="{% url 'map_section_courses' %}" class="next-btn nav-circle-btn" aria-label="Next">
                 <span class="nav-arrow">→</span>
             </a>
         </div>
@@ -188,13 +188,13 @@
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <fieldset>
-        <label><strong>Upload Teacher–Subject Mapping CSV:</strong></label>
+        <label><strong>Upload Teacher–Subject–Section Mapping CSV:</strong></label>
         <input type="file" name="csv_file" accept=".csv" required>
         <div class="button-row">
             <button type="submit" name="csv_upload" class="submit-btn">Upload CSV</button>
             <a href="{% url 'convert_csv' %}" class="csv-convert-btn"><span class="csv-orb"></span> Convert CSV</a>
         </div>
-        <small style="color:#ccc;">Format: <code>instructor_name,course_number</code></small>
+        <small style="color:#ccc;">Format: <code>section_id, course_number, instructor_uid, shared_lab, second_instructor_uid</code></small>
     </fieldset>
 </form>
 
@@ -202,31 +202,36 @@
 <div id="mappingContainer" style="display:none; margin-top:25px;">
 <fieldset>
 
-<h3>Current Teacher → Subject Mappings</h3>
+<h3>Current Section → Subject → Teacher Mappings</h3>
 
 {% if mappings %}
 <table class="styled-table">
 <thead>
 <tr>
-    <th>Teacher UID</th>
-    <th>Teacher Name</th>
+    <th>Section</th>
     <th>Course Code</th>
     <th>Course Name</th>
+    <th>Teacher UID</th>
+    <th>Teacher Name</th>
+    <th>Shared Lab</th>
+    <th>Second Teacher</th>
     <th>Action</th>
 </tr>
 </thead>
 <tbody>
 
 {% for m in mappings %}
-    {% if m.course.course_number %}
     <tr>
-        <td>{{ m.instructor.uid }}</td>
-        <td>{{ m.instructor.name }}</td>
+        <td>{{ m.section.section_id }}</td>
         <td>{{ m.course.course_number }}</td>
         <td>{{ m.course.course_name }}</td>
+        <td>{{ m.instructor.uid }}</td>
+        <td>{{ m.instructor.name }}</td>
+        <td>{% if m.second_instructor %}Yes{% else %}No{% endif %}</td>
+        <td>{% if m.second_instructor %}{{ m.second_instructor.name }} ({{ m.second_instructor.uid }}){% else %}-{% endif %}</td>
         <td>
             <form method="post"
-                  action="{% url 'delete_teacher_course_mapping' m.course.course_number m.instructor.id %}">
+                  action="{% url 'delete_sci_mapping' m.id %}">
                 {% csrf_token %}
                 <button class="delete-btn"
                         onclick="return confirm('Remove mapping?');">
@@ -235,7 +240,6 @@
             </form>
         </td>
     </tr>
-    {% endif %}
 {% endfor %}
 
 </tbody>
