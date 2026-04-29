@@ -720,10 +720,10 @@ document.addEventListener("DOMContentLoaded", function() {
   var ENTITIES = {
     instructors: {
       label: "Instructors",
-      columns: ["uid", "name", "designation", "max_workload"],
-      headers: ["UID / Teacher ID", "Name / Teacher Name", "Designation / Position", "Max Workload"],
-      placeholders: ["e.g. T001", "e.g. Dr. Amit Sharma", "e.g. Professor", "e.g. 25"],
-      required: ["uid", "name"]
+      columns: ["uid", "name", "designation", "max_workload", "email", "contact_number"],
+      headers: ["UID / Teacher ID", "Name / Teacher Name", "Designation / Position", "Max Workload", "Email", "Contact Number"],
+      placeholders: ["e.g. T001", "e.g. Dr. Amit Sharma", "e.g. Professor", "e.g. 25", "e.g. a@x.com, b@x.com", "e.g. 9810001001, 9810001002"],
+      required: ["uid", "name", "email", "contact_number"]
     },
     courses: {
       label: "Courses",
@@ -755,9 +755,9 @@ document.addEventListener("DOMContentLoaded", function() {
     },
     sections: {
       label: "Sections",
-      columns: ["section_id", "department", "student_strength"],
-      headers: ["Section ID", "Department Code", "Student Strength"],
-      placeholders: ["e.g. CSE-A", "e.g. CSE", "e.g. 70"],
+      columns: ["section_id", "program_name", "department", "student_strength"],
+      headers: ["Section ID", "Program Name", "Department Code", "Student Strength"],
+      placeholders: ["e.g. CSE-A", "e.g. BTech", "e.g. CSE", "e.g. 70"],
       required: ["section_id"]
     },
     section_courses: {
@@ -769,10 +769,10 @@ document.addEventListener("DOMContentLoaded", function() {
     },
     teacher_courses: {
       label: "Teacher-Course Mapping",
-      columns: ["instructor", "course_number"],
-      headers: ["Instructor (Name or UID)", "Course Number"],
-      placeholders: ["e.g. T001 or Dr. Amit", "e.g. CS101"],
-      required: ["instructor", "course_number"]
+      columns: ["section_id", "course_number", "instructor_uid", "shared_lab", "second_instructor_uid"],
+      headers: ["Section ID", "Course Number", "Instructor UID", "Shared Lab", "Second Instructor UID"],
+      placeholders: ["e.g. CSE-A", "e.g. CS101", "e.g. T001", "e.g. false", "e.g. T002"],
+      required: ["section_id", "course_number", "instructor_uid"]
     }
   };
 

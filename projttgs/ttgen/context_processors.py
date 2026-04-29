@@ -3,6 +3,18 @@ from .models import UserAccessPlan
 
 def subscription_nav(request):
     user = getattr(request, "user", None)
+
+    # When bypass is on, report an unlimited subscription so UI never locks.
+    from django.conf import settings as _settings
+    if getattr(_settings, "BYPASS_ACCESS", False):
+        return {
+            "has_active_subscription": True,
+            "subscription_generations_remaining": 999,
+            "account_subscription_plan": "Dev Unlimited",
+            "account_subscription_amount": 0,
+            "account_generations_total": 999,
+        }
+
     has_active_subscription = False
     subscription_generations_remaining = 0
     account_subscription_plan = "No active plan"

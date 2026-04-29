@@ -12,6 +12,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-me")
 
 DEBUG = os.getenv("DEBUG", "False").lower() in {"1", "true", "yes", "on"}
 
+BYPASS_ACCESS = os.getenv("BYPASS_ACCESS", "False").lower() in {"1", "true", "yes", "on"}
+
 ALLOWED_HOSTS = [
    "*"
 ]
@@ -119,7 +121,11 @@ STATIC_ROOT = BASE_DIR / "assets"
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        if not DEBUG
+        else "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
 }
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"

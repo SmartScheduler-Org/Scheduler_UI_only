@@ -64,16 +64,24 @@ class RoomForm(ModelForm):
 class InstructorForm(ModelForm):
     class Meta:
         model = Instructor
-        fields = ['uid', 'name', 'designation', 'max_workload']
+        fields = ['uid', 'name', 'email', 'contact_number', 'designation', 'max_workload']
         labels = {
             "uid": "Teacher UID",
             "name": "Full Name",
+            "email": "Email(s)",
+            "contact_number": "Contact Number(s)",
             "designation": "Designation",
             "max_workload": "Max Workload",
         }
         widgets = {
+            "email": forms.TextInput(attrs={"placeholder": "e.g. a@college.edu, b@college.edu"}),
+            "contact_number": forms.TextInput(attrs={"placeholder": "e.g. 9810001001, 9810001002"}),
             "designation": forms.Select(choices=Instructor.DESIGNATION_CHOICES),
             "max_workload": forms.NumberInput(attrs={"min": 1}),
+        }
+        help_texts = {
+            "email": "Separate multiple emails with commas",
+            "contact_number": "Separate multiple numbers with commas",
         }
 
 

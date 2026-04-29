@@ -1295,8 +1295,9 @@ body.drag-drop-active .drag-mode-badge {
     position: relative;
     z-index: 2;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
     flex-wrap: wrap;
     gap: 12px;
     max-width: 1340px;
@@ -1360,7 +1361,7 @@ body.drag-drop-active .drag-mode-badge {
 
 /* Export dropdown group */
 .export-group {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
@@ -2078,7 +2079,6 @@ function initDragAndDrop() {
 {% endif %}
 
 <div class="command-bar">
-  <div class="command-bar__left">
     {% if index %}
     <button class="save-tt-hero" type="button" onclick="saveTimetable({{ index }})">
         <span class="save-tt-hero__icon">✦</span>
@@ -2092,8 +2092,6 @@ function initDragAndDrop() {
         Drag mode active
     </div>
     {% endif %}
-  </div>
-  <div class="command-bar__right">
     {% if departments|length > 1 %}
     <div class="dept-select-wrap">
       <span class="dept-select-label">FILTER:</span>
@@ -2117,7 +2115,6 @@ function initDragAndDrop() {
     </div>
     {% endif %}
     <span id="dept-filter-active-label" style="font-size:11px;font-weight:700;color:#94a3b8;display:none;"></span>
-  </div>
 </div>
 
 <div class="view-switcher">
@@ -2273,21 +2270,18 @@ function initDragAndDrop() {
                     <span style="color: #424242; font-size: 12px;">
                       {{ lab.room.r_number }}
                     </span>
+                    <div class="action-buttons">
+                      <a href="/update_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}?batch={{ lab.batch }}"
+                         class="action-button btn-update">Update</a>
+                      <a href="/delete_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}?batch={{ lab.batch }}"
+                         class="action-button btn-delete">Delete</a>
+                      <a href="{% url 'substitute_lab_teacher' table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}"
+                         class="action-button btn-substitute">
+                        Substitute Lab
+                      </a>
+                    </div>
                   </div>
                 {% endfor %}
-              </div>
-
-              <div class="action-buttons">
-                <a href="/update_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}"
-                   class="action-button btn-update">Update</a>
-                <a href="/delete_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}"
-                   class="action-button btn-delete">Delete</a>
-
-                {# ✅ LAB SUBSTITUTE BUTTON #}
-                <a href="{% url 'substitute_lab_teacher' table.section.section_id row.day cell.slot_number %}"
-                   class="action-button btn-substitute">
-                  Substitute Lab
-                </a>
               </div>
             </td>
 
