@@ -2254,7 +2254,7 @@ function initDragAndDrop() {
                 {% for lab in cell.labs %}
                   <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} draggable-slot-item" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
-                      {{ lab.course.course_name }} Lab
+                      {{ lab.subject.subject_name }} Lab
                     </strong>
                     <strong style="color: #1565c0; font-size: 13px;">
                       Batch {{ lab.batch }}/{{ lab.total_batches }}
@@ -2289,7 +2289,7 @@ function initDragAndDrop() {
             <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               {% for cls in cell.classes %}
                 <div class="class-box draggable-slot-item" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
-                  <strong>{{ cls.course.course_name }}</strong><br>
+                  <strong>{{ cls.subject.subject_name }}</strong><br>
                   {{ cls.instructor.name }}<br>
                   {{ cls.room.r_number }}
                 </div>
@@ -2420,7 +2420,7 @@ function initDragAndDrop() {
             <td colspan="{{ cell.colspan }}">
               <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor %}room-slot-card--lab-shared{% endif %}">
               {% for lab in cell.labs %}
-                <strong>{{ lab.course.course_name }}</strong>
+                <strong>{{ lab.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ lab.section }} ({{ lab.group }})</div>
                 <div class="room-slot-card__teacher">{{ lab.instructor.name }}</div>
                 {% if lab.second_instructor %}
@@ -2434,7 +2434,7 @@ function initDragAndDrop() {
             <td>
               <div class="room-slot-card room-slot-card--class">
               {% for cls in cell.classes %}
-                <strong>{{ cls.course.course_name }}</strong>
+                <strong>{{ cls.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ cls.section }}</div>
                 <div class="room-slot-card__teacher">{{ cls.instructor.name }}</div>
               {% endfor %}
@@ -2601,7 +2601,7 @@ function initDragAndDrop() {
                 {% for lab in cell.labs %}
                   <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %}">
                     <strong style="font-size: 14px; color: #0d47a1;">
-                      {{ lab.course.course_name }} Lab
+                      {{ lab.subject.subject_name }} Lab
                     </strong>
                     <strong style="color: #1565c0; font-size: 13px;">
                       Batch {{ lab.batch }}/{{ lab.total_batches }}
@@ -2629,7 +2629,7 @@ function initDragAndDrop() {
             <td>
               {% for cls in cell.classes %}
                 <div class="class-box">
-                  <strong>{{ cls.course.course_name }}</strong><br>
+                  <strong>{{ cls.subject.subject_name }}</strong><br>
                   Section: {{ cls.section }}<br>
                   {{ cls.room.r_number }}
                 </div>

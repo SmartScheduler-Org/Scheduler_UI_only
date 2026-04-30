@@ -1,4 +1,4 @@
-"department_code","course_number","course_name","room_required","required_lab_category","classes_per_week","max_numb_students"
+"department_code","subject_number","subject_name","room_required","required_lab_category","classes_per_week","max_numb_students"
 "CS","CS001","AEC","Lecture Hall","","3","80"
 "CS","CS002","AEC Lab","Lab","Electrical Lab","4","80"
 "CS","CS003","AI","Lecture Hall","","3","80"

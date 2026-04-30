@@ -177,7 +177,7 @@
             <a href="{% url 'addSections' %}" class="next-btn nav-circle-btn" aria-label="Previous">
                 <span class="nav-arrow">←</span>
             </a>
-            <a href="{% url 'map_section_courses' %}" class="next-btn nav-circle-btn" aria-label="Next">
+            <a href="{% url 'map_section_subjects' %}" class="next-btn nav-circle-btn" aria-label="Next">
                 <span class="nav-arrow">→</span>
             </a>
         </div>
@@ -194,7 +194,7 @@
             <button type="submit" name="csv_upload" class="submit-btn">Upload CSV</button>
             <a href="{% url 'convert_csv' %}" class="csv-convert-btn"><span class="csv-orb"></span> Convert CSV</a>
         </div>
-        <small style="color:#ccc;">Format: <code>section_id, course_number, instructor_uid, shared_lab, second_instructor_uid</code></small>
+        <small style="color:#ccc;">Format: <code>section_id, subject_number, instructor_uid, shared_lab, second_instructor_uid</code></small>
     </fieldset>
 </form>
 
@@ -209,8 +209,8 @@
 <thead>
 <tr>
     <th>Section</th>
-    <th>Course Code</th>
-    <th>Course Name</th>
+    <th>Subject Code</th>
+    <th>Subject Name</th>
     <th>Teacher UID</th>
     <th>Teacher Name</th>
     <th>Shared Lab</th>
@@ -223,8 +223,8 @@
 {% for m in mappings %}
     <tr>
         <td>{{ m.section.section_id }}</td>
-        <td>{{ m.course.course_number }}</td>
-        <td>{{ m.course.course_name }}</td>
+        <td>{{ m.subject.subject_number }}</td>
+        <td>{{ m.subject.subject_name }}</td>
         <td>{{ m.instructor.uid }}</td>
         <td>{{ m.instructor.name }}</td>
         <td>{% if m.second_instructor %}Yes{% else %}No{% endif %}</td>

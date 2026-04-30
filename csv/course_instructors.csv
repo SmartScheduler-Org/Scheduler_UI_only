@@ -1,4 +1,4 @@
-section_id,course_number,instructor_uid,shared_lab,second_instructor_uid
+section_id,subject_number,instructor_uid,shared_lab,second_instructor_uid
 BCA 1st Sem,CA025,T086,false,
 BCA 1st Sem,CA026,T077,false,
 BCA 1st Sem,CA027,T082,false,

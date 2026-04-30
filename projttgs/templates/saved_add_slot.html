@@ -87,10 +87,10 @@
             <option value="9">Slot 9</option>
         </select>
 
-        <label>Course</label>
-        <select name="course">
-            {% for c in courses %}
-            <option value="{{ c.id }}">{{ c.course_name }}</option>
+        <label>Subject</label>
+        <select name="subject">
+            {% for c in subjects %}
+            <option value="{{ c.id }}">{{ c.subject_name }}</option>
             {% endfor %}
         </select>
 
