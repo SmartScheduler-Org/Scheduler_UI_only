@@ -2902,50 +2902,15 @@ def download_saved_timetable_pdf(request, tid):
             status=503,
         )
 
-    # 1. Fetch saved timetable securely
-    try:
-        saved_t = SavedTimetable.objects.get(id=tid)
-    except SavedTimetable.DoesNotExist:
-        raise Http404("Timetable does not exist")
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
 
-    if saved_t.user != request.user:
-        return HttpResponseForbidden("You do not have permission to download this PDF.")
+    # Rebuild in-memory classes and labs (with proper batch grouping)
+    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
 
-    # 2. Rebuild in-memory classes and labs
-    slots = saved_t.slots.all()
+    # Build tables scoped to the current user
+    tables = build_section_tables(classes, labs, user=request.user)
 
-    classes = []
-    labs = []
-
-    for slot in slots:
-        if slot.is_lab:
-            lab_obj = Lab(
-                id=0,
-                dept=slot.section.department,
-                section=slot.section.section_id,
-                subject=slot.subject
-            )
-            lab_obj.instructor = slot.instructor
-            lab_obj.second_instructor = getattr(slot, "second_instructor", None)
-            lab_obj.room = slot.room
-            lab_obj.meeting_times = list(slot.lab_slots.all())
-            labs.append(lab_obj)
-        else:
-            cls = Class(
-                id=0,
-                dept=slot.section.department,
-                section=slot.section.section_id,
-                subject=slot.subject
-            )
-            cls.instructor = slot.instructor
-            cls.room = slot.room
-            cls.meeting_time = slot.meeting_time
-            classes.append(cls)
-
-    # 3. Build tables (using your existing function)
-    tables = build_section_tables(classes, labs)
-
-    # 4. Expand cells for PDF so colspan renders properly
+    # Expand cells for PDF so colspan renders properly in xhtml2pdf
     for table in tables:
         for row in table["rows"]:
             for cell in row["cells"]:
@@ -2954,44 +2919,20 @@ def download_saved_timetable_pdf(request, tid):
                 else:
                     cell["width"] = 85
 
-    # 5. Render HTML template
     html = render_to_string("saved_timetable_pdf.html", {
         "tables": tables,
         "SLOT_LABELS": SLOT_LABELS
     })
 
-    # 6. Prepare response object
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="timetable_{tid}.pdf"'
 
-    # 7. Create PDF
     pisa_status = pisa.CreatePDF(html, dest=response)
 
-    # 8. If PDF fails, return HTML for debugging instead of crashing
     if pisa_status.err:
         return HttpResponse("PDF creation crashed.<br><br>" + html)
 
-    # 9. Always return a response
     return response
-
-
-
-    # ------------------------------------------------------------------
-    # Build tables (returns list of dictionaries)
-    # ------------------------------------------------------------------
-    tables = build_section_tables(classes, labs)
-
-    # ------------------------------------------------------------------
-    # ⭐ FIX A: Add width to each cell for xhtml2pdf (dict-safe) ⭐
-    # ------------------------------------------------------------------
-    for table in tables:
-        for row in table["rows"]:            # dict access
-            for cell in row["cells"]:        # dict access
-                if cell["type"] == "lab":
-                    cell["width"] = 85 * cell["colspan"]
-                else:
-                    cell["width"] = 85
-    # ------------------------------------------------------------------
 
     # Render HTML
     html = render_to_string("saved_timetable_pdf.html", {

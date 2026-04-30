@@ -684,7 +684,6 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
     function downloadViewPdf(viewName) {
         var viewEl = document.getElementById(viewName + '-view');
         if (!viewEl) { alert('No timetable view found.'); return; }
-        _showDownloadPopup();
 
         // Check for college name (teacher / readonly mode)
         var collegeInput = document.getElementById('collegeNameInput');
@@ -693,6 +692,12 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         var cards = Array.from(viewEl.querySelectorAll('.export-surface'));
         if (!cards.length) { cards = Array.from(viewEl.querySelectorAll('.room-card')); }
         if (!cards.length) { cards = [viewEl]; }
+        cards = cards.filter(function(c) {
+            return window.getComputedStyle(c).display !== 'none';
+        });
+        if (!cards.length) { alert('No visible sections to export.'); return; }
+
+        _showDownloadPopup();
 
         var _NAV_SVG2 = '<svg viewBox="0 0 200 200" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg_t_sv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="lg_l_sv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="lg_r_sv" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs><path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_t_sv)"/><path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_l_sv)"/><path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_r_sv)"/><path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818"/></svg>';
         function _buildPdfBrandHeader() {
@@ -721,6 +726,19 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         var hiddenBtns = viewEl.querySelectorAll('.btn-save-tt, .room-pdf-btn, .fullpage-pdf-btn, .action-buttons');
         hiddenBtns.forEach(function(b) { b.style.display = 'none'; });
 
+        // Clone each card now (while buttons are hidden) and add brand headers
+        var clones = cards.map(function(c) {
+          var clone = c.cloneNode(true);
+          var tbl = clone.querySelector('table');
+          if (tbl) {
+            tbl.parentNode.insertBefore(_buildPdfBrandHeader(), tbl);
+          } else {
+            clone.insertBefore(_buildPdfBrandHeader(), clone.firstChild);
+          }
+          return clone;
+        });
+        hiddenBtns.forEach(function(b) { b.style.display = ''; });
+
         var labels = { section: 'Section', room: 'Room', workload: 'Workload', teacher: 'Teacher' };
         var fname = 'SmartScheduler_' + (labels[viewName] || viewName) + '_Timetables.pdf';
 
@@ -738,23 +756,18 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             pagebreak: { mode: ['css', 'legacy'] },
         };
 
-          var html = cards.map(function(c) {
-            var clone = c.cloneNode(true);
-            // Insert brand strip just above the first table (below section heading)
-            var tbl = clone.querySelector('table');
-            if (tbl) {
-              tbl.parentNode.insertBefore(_buildPdfBrandHeader(), tbl);
-            } else {
-              clone.insertBefore(_buildPdfBrandHeader(), clone.firstChild);
-            }
-            return clone.outerHTML;
-          }).join('<div style="page-break-after:always; break-after:page; height:0;"></div>');
-
-          hiddenBtns.forEach(function(b) { b.style.display = ''; });
-
-          html2pdf().set(opt).from(html).save()
+        // Process each card individually to avoid browser canvas size limits
+        var worker = html2pdf().set(opt).from(clones[0]).toContainer().toCanvas().toPdf();
+        for (var i = 1; i < clones.length; i++) {
+            (function(card) {
+                worker = worker.get('pdf').then(function(pdf) {
+                    pdf.addPage();
+                }).from(card).toContainer().toCanvas().toPdf();
+            })(clones[i]);
+        }
+        worker.save()
             .then(function() { _showDownloadDone(); })
-            .catch(function() { Swal.close(); });
+            .catch(function(err) { console.error('PDF generation failed:', err); Swal.close(); });
     }
 
     function showView(view) {
