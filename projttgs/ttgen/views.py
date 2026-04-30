@@ -23,11 +23,15 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
+from django.conf import settings as django_settings
+
 from . import views_other as public_core
 from .models import UserAccessPlan
 from .views_other import *  # noqa: F401,F403
 
 logger = logging.getLogger(__name__)
+
+_BYPASS_ACCESS_CHECKS = getattr(django_settings, "BYPASS_ACCESS", False)
 
 _GENERATOR_VIEW_NAMES = (
     "generate",
@@ -310,25 +314,35 @@ def _remaining_generations(user):
 
 
 def _has_generate_credit(user):
+    if _BYPASS_ACCESS_CHECKS:
+        return True
     return _remaining_generations(user) > 0
 
 
 def _has_edit_delete_access(user):
+    if _BYPASS_ACCESS_CHECKS:
+        return True
     access_plan = _get_user_access_plan(user)
     return bool(access_plan and access_plan.is_active and access_plan.can_edit_delete)
 
 
 def _has_substitute_access(user):
+    if _BYPASS_ACCESS_CHECKS:
+        return True
     access_plan = _get_user_access_plan(user)
     return bool(access_plan and access_plan.is_active and access_plan.can_substitute)
 
 
 def _has_drag_drop_access(user):
+    if _BYPASS_ACCESS_CHECKS:
+        return True
     access_plan = _get_user_access_plan(user)
     return bool(access_plan and access_plan.is_active and access_plan.can_drag_drop)
 
 
 def _consume_generation_credit(user):
+    if _BYPASS_ACCESS_CHECKS:
+        return True
     access_plan = _get_user_access_plan(user)
     if not access_plan or not access_plan.is_active or access_plan.generations_remaining <= 0:
         return False

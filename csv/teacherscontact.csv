@@ -1,0 +1,112 @@
+uid,name,designation,max_workload,email,contact_number
+GF900,Dr Parul Gupta,Professor,25,"parul.gupta@college.edu, parul.g@gmail.com","9810001001, 9810001099"
+GF901,Ms Shikha,Associate Professor,25,shikha@college.edu,9810001002
+GF902,Prof Neelam Turk,Associate Professor,25,neelam.turk@college.edu,9810001003
+GF903,Ms Yojana,Associate Professor,25,yojana@college.edu,9810001004
+GF904,Dr Dimple,Professor,25,dimple@college.edu,9810001005
+GF905,Faculty -5,Associate Professor,25,faculty5@college.edu,9810001006
+GF906,Faculty 1,Associate Professor,25,faculty1@college.edu,9810001007
+GF907,Faculty 3,Associate Professor,25,faculty3@college.edu,9810001008
+GF908,Guest Faculty -1,Associate Professor,25,guestfaculty1@college.edu,9810001009
+T001,Dr Poonam,Professor,25,"poonam@college.edu, poonam.personal@gmail.com","9810002001, 9810002099"
+T002,Dr Shalinder Gupta,Professor,25,shalinder.gupta@college.edu,9810002002
+T003,Ms Sunil Jadav,Associate Professor,25,sunil.jadav@college.edu,9810002003
+T004,Mr Vinod,Associate Professor,25,vinod@college.edu,9810002004
+T005,Dr Rewa,Professor,25,rewa@college.edu,9810002005
+T006,Ms Kalpana,Associate Professor,25,kalpana@college.edu,9810002006
+T007,Ms Diksha,Associate Professor,25,diksha@college.edu,9810002007
+T008,Dr Nisha Yadav,Professor,25,nisha.yadav@college.edu,9810002008
+T009,Dr Yojana,Professor,25,dr.yojana@college.edu,9810002009
+T010,Dr Ashlesha,Professor,25,ashlesha@college.edu,9810002010
+T011,Mr Balkrishan,Associate Professor,25,balkrishan@college.edu,9810002011
+T012,Ms Jyoti,Associate Professor,25,jyoti@college.edu,9810002012
+T013,Dr Yogendra Arya,Professor,25,"yogendra.arya@college.edu, yogendra@iitd.ac.in, arya.y@gmail.com","9810002013, 9810002098, 9810002097"
+T014,Dr Naresh,Professor,25,naresh@college.edu,9810002014
+T015,Mr Piyush,Associate Professor,25,piyush@college.edu,9810002015
+T016,Dr Abhinav Saxena,Professor,25,abhinav.saxena@college.edu,9810002016
+T017,Dr Meenu,Professor,25,meenu@college.edu,9810002017
+T018,Dr Umesh,Professor,25,umesh@college.edu,9810002018
+T019,Dr Neelam,Professor,25,neelam@college.edu,9810002019
+T020,Dr Meena Patel,Professor,25,meena.patel@college.edu,9810002020
+T021,Dr Deepika,Professor,25,deepika@college.edu,9810002021
+T022,Dr Kuldeep,Professor,25,kuldeep@college.edu,9810002022
+T023,Mr Hansraj,Associate Professor,25,hansraj@college.edu,9810002023
+T024,Dr Sanjeev,Professor,25,sanjeev@college.edu,9810002024
+T025,Dr Parul Tomar,Professor,25,parul.tomar@college.edu,9810002025
+T026,Ms Dimple,Associate Professor,25,ms.dimple@college.edu,9810002026
+T027,Ms Beenu,Associate Professor,25,beenu@college.edu,9810002027
+T028,Dr Amita,Professor,25,amita@college.edu,9810002028
+T029,Dr Shruti,Professor,25,shruti@college.edu,9810002029
+T030,Dr Komal Kumar,Professor,25,komal.kumar@college.edu,9810002030
+T031,Mrs Vandana,Associate Professor,25,vandana@college.edu,9810002031
+T032,Dr Payal,Professor,25,payal@college.edu,9810002032
+T033,Ms Gunjan Sardana,Associate Professor,25,gunjan.sardana@college.edu,9810002033
+T034,Prof Munish,Associate Professor,25,munish@college.edu,9810002034
+T035,Mr Piyush Gupta,Associate Professor,25,piyush.gupta@college.edu,9810002035
+T036,Dr Sakshi,Professor,25,sakshi@college.edu,9810002036
+T037,Dr Shivi,Professor,25,shivi@college.edu,9810002037
+T038,Ms Rachna,Associate Professor,25,rachna@college.edu,9810002038
+T039,Dr Preeti,Professor,25,dr.preeti@college.edu,9810002039
+T040,Ms Archana Aggarwal,Associate Professor,25,archana.aggarwal@college.edu,9810002040
+T041,Dr Prashant,Professor,25,prashant@college.edu,9810002041
+T042,Ms Shilpi,Associate Professor,25,shilpi@college.edu,9810002042
+T043,Dr Sonali,Professor,25,sonali@college.edu,9810002043
+T044,Ms Tejasvita,Associate Professor,25,tejasvita@college.edu,9810002044
+T045,Mr Satwinder,Associate Professor,25,satwinder@college.edu,9810002045
+T046,Ms Himani,Associate Professor,25,himani@college.edu,9810002046
+T047,Dr Naresh Chauhan,Professor,25,naresh.chauhan@college.edu,9810002047
+T048,Dr Atul Mishra,Professor,25,atul.mishra@college.edu,9810002048
+T049,Dr Ashutosh Dixit,Professor,25,ashutosh.dixit@college.edu,9810002049
+T050,Dr Harish,Professor,25,harish@college.edu,9810002050
+T051,Dr Lalit,Professor,25,lalit@college.edu,9810002051
+T052,Dr Rashmi,Professor,25,rashmi@college.edu,9810002052
+T053,Ms Vinita,Associate Professor,25,vinita@college.edu,9810002053
+T054,Dr Shilpa Behl,Professor,25,shilpa.behl@college.edu,9810002054
+T055,Ms Shipra Aggarwal,Associate Professor,25,shipra.aggarwal@college.edu,9810002055
+T056,Dr Praveen Gaur,Professor,25,praveen.gaur@college.edu,9810002056
+T057,Dr Shakuntala,Professor,25,shakuntala@college.edu,9810002057
+T058,Dr Dipti Sharma,Professor,25,dipti.sharma@college.edu,9810002058
+T059,Dr Sunil Dhull,Professor,25,sunil.dhull@college.edu,9810002059
+T060,Dr Anjali,Professor,25,anjali@college.edu,9810002060
+T061,Ms Bharti Thakur,Associate Professor,25,bharti.thakur@college.edu,9810002061
+T062,Ms Preeti,Associate Professor,25,ms.preeti@college.edu,9810002062
+T063,Dr Anubha Gautam,Professor,25,anubha.gautam@college.edu,9810002063
+T064,Dr Rashmi Aggarwal,Professor,25,rashmi.aggarwal@college.edu,9810002064
+T065,Dr Pooja Rana,Professor,25,pooja.rana@college.edu,9810002065
+T066,Ms Mannu Rohilla,Associate Professor,25,mannu.rohilla@college.edu,9810002066
+T067,Ms Jyoti Kumari,Associate Professor,25,jyoti.kumari@college.edu,9810002067
+T068,Ms Jhanvi,Associate Professor,25,jhanvi@college.edu,9810002068
+T069,Ms Monika,Associate Professor,25,monika@college.edu,9810002069
+T070,Ms Arpita Chatterjee,Associate Professor,25,arpita.chatterjee@college.edu,9810002070
+T071,Prof Manjeet Singh,Professor,25,manjeet.singh@college.edu,9810002071
+T072,Dr Shilpa Munjal,Professor,25,shilpa.munjal@college.edu,9810002072
+T073,Dr Mamta Kathuria,Professor,25,mamta.kathuria@college.edu,9810002073
+T074,Dr Manvi,Professor,25,manvi@college.edu,9810002074
+T075,Dr Ved Pal,Professor,25,ved.pal@college.edu,9810002075
+T076,Ms Abhilasha,Associate Professor,25,abhilasha@college.edu,9810002076
+T077,Ms Palak Bajaj,Associate Professor,25,palak.bajaj@college.edu,9810002077
+T078,Ms Chanchal,Associate Professor,25,chanchal@college.edu,9810002078
+T079,Manju Dagar,Associate Professor,25,manju.dagar@college.edu,9810002079
+T080,Ms Ankita,Associate Professor,25,ankita@college.edu,9810002080
+T081,Ms Deeviya,Associate Professor,25,deeviya@college.edu,9810002081
+T082,Ms Ritika,Associate Professor,25,ritika@college.edu,9810002082
+T083,Dr Anu,Professor,25,anu@college.edu,9810002083
+T084,Ms Reetu,Associate Professor,25,reetu@college.edu,9810002084
+T085,Ms Neha,Associate Professor,25,neha@college.edu,9810002085
+T086,Ms Aashu,Associate Professor,25,aashu@college.edu,9810002086
+T087,Mr Aditya K,Associate Professor,25,aditya.k@college.edu,9810002087
+T088,Mr Rajeev Ranjan,Associate Professor,25,rajeev.ranjan@college.edu,9810002088
+T089,Mr Arko Dey,Associate Professor,25,arko.dey@college.edu,9810002089
+T090,Mr Deepak,Associate Professor,25,deepak@college.edu,9810002090
+T091,Mr Sunil,Associate Professor,25,sunil@college.edu,9810002091
+T092,Ms Divya,Associate Professor,25,divya@college.edu,9810002092
+GF909,Guest Faculty CA-1,Associate Professor,25,guestca1@college.edu,9810003001
+GF910,Guest Faculty CA-2,Associate Professor,25,guestca2@college.edu,9810003002
+GF911,Guest Faculty CA-3,Associate Professor,25,guestca3@college.edu,9810003003
+GF912,Guest Faculty CA-4,Associate Professor,25,guestca4@college.edu,9810003004
+GF913,Guest Faculty CA-6,Associate Professor,25,guestca6@college.edu,9810003005
+T093,Dr Ram Mech_prof,Professor,25,ram.mech@college.edu,9810002093
+T094,Dr Neena German_prof,Professor,25,neena.german@college.edu,9810002094
+T095,Dr Naresh Stats_prof,Professor,25,naresh.stats@college.edu,9810002095
+z0001,sam,Associate Professor,25,sam@college.edu,9810004001
+z0002,sanjeevan,Associate Professor,25,sanjeevan@college.edu,9810004002

@@ -113,6 +113,8 @@ class Instructor(models.Model):
     )
     uid = models.CharField(max_length=6)
     name = models.CharField(max_length=100)
+    email = models.CharField(max_length=500)
+    contact_number = models.CharField(max_length=200)
     designation = models.CharField(
         max_length=50,
         choices=DESIGNATION_CHOICES,

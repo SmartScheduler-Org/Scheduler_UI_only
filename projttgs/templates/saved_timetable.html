@@ -1229,20 +1229,19 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
                     <span style="color: #424242; font-size: 12px;">
                       {{ lab.room.r_number }}
                     </span>
+                    {% if not is_readonly %}
+                    <div class="action-buttons">
+                      <a href="{% url 'saved_update_slot' saved.id table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}"
+                         class="action-button btn-update">Update</a>
+                      <a href="{% url 'saved_delete_slot' saved.id table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}"
+                         class="action-button btn-delete">Delete</a>
+                      <a href="{% url 'saved_substitute_lab_teacher' saved.id table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}"
+                         class="action-button btn-substitute">Substitute Lab</a>
+                    </div>
+                    {% endif %}
                   </div>
                 {% endfor %}
               </div>
-
-              {% if not is_readonly %}
-              <div class="action-buttons">
-                <a href="{% url 'saved_update_slot' saved.id table.section.section_id row.day cell.slot_number %}"
-                   class="action-button btn-update">Update</a>
-                <a href="{% url 'saved_delete_slot' saved.id table.section.section_id row.day cell.slot_number %}"
-                   class="action-button btn-delete">Delete</a>
-                <a href="{% url 'saved_substitute_lab_teacher' saved.id table.section.section_id row.day cell.slot_number %}"
-                   class="action-button btn-substitute">Substitute Lab</a>
-              </div>
-              {% endif %}
             </td>
 
           {% elif cell.type == "class" %}
