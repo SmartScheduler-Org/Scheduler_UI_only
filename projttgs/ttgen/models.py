@@ -159,23 +159,23 @@ class MeetingTime(models.Model):
         return f"{self.day} - Slot {self.time}"
 
 
-class Course(models.Model):
+class Subject(models.Model):
     """
-    Unified model for theory + lab courses
+    Unified model for theory + lab subjects
     """
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="courses",
+        related_name="subjects",
     )
-    course_number = models.CharField(max_length=20)
-    course_name = models.CharField(max_length=100)
+    subject_number = models.CharField(max_length=20, db_column="course_number")
+    subject_name = models.CharField(max_length=100, db_column="course_name")
 
     department = models.ForeignKey(
         Department,
         on_delete=models.CASCADE,
-        related_name="courses",
+        related_name="subjects",
     )
 
     max_numb_students = models.PositiveIntegerField()
@@ -194,18 +194,19 @@ class Course(models.Model):
     )
     classes_per_week = models.PositiveIntegerField(default=3)
 
-    instructors = models.ManyToManyField(Instructor)
+    instructors = models.ManyToManyField(Instructor, db_table="ttgen_course_instructors")
 
     class Meta:
+        db_table = "ttgen_course"
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "course_number"],
+                fields=["user", "subject_number"],
                 name="unique_course_number_per_user",
             ),
         ]
 
     def __str__(self):
-        return f"{self.course_number} - {self.course_name}"
+        return f"{self.subject_number} - {self.subject_name}"
 
 
 class Section(models.Model):
@@ -228,10 +229,11 @@ class Section(models.Model):
         related_name="sections",
     )
 
-    allowed_courses = models.ManyToManyField(
-        Course,
+    allowed_subjects = models.ManyToManyField(
+        Subject,
         related_name="allowed_sections",
         blank=True,
+        db_table="ttgen_section_allowed_courses",
     )
 
     class Meta:
@@ -265,49 +267,51 @@ class TeacherSection(models.Model):
         return f"{self.instructor.name} -> {self.section.section_id}"
 
 
-class SectionCourseInstructor(models.Model):
+class SectionSubjectInstructor(models.Model):
     """
-    Fixed assignment: ek specific section ke ek specific course ke liye
+    Fixed assignment: ek specific section ke ek specific subject ke liye
     ek fixed instructor. Generator is table ko use karke teacher lock karta hai.
     """
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="section_course_instructors",
+        related_name="section_subject_instructors",
     )
     section = models.ForeignKey(
         Section,
         on_delete=models.CASCADE,
-        related_name="course_instructors",
+        related_name="subject_instructors",
     )
-    course = models.ForeignKey(
-        Course,
+    subject = models.ForeignKey(
+        Subject,
         on_delete=models.CASCADE,
         related_name="section_instructors",
+        db_column="course_id",
     )
     instructor = models.ForeignKey(
         Instructor,
         on_delete=models.CASCADE,
-        related_name="section_course_assignments",
+        related_name="section_subject_assignments",
     )
     second_instructor = models.ForeignKey(
         Instructor,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="second_section_course_assignments",
+        related_name="second_section_subject_assignments",
     )
 
     class Meta:
+        db_table = "ttgen_sectioncourseinstructor"
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "section", "course"],
+                fields=["user", "section", "subject"],
                 name="unique_instructor_per_section_course",
             ),
         ]
 
     def __str__(self):
-        return f"{self.instructor.name} → {self.course.course_number} ({self.section.section_id})"
+        return f"{self.instructor.name} → {self.subject.subject_number} ({self.section.section_id})"
 
 
 # ==============================
@@ -349,7 +353,7 @@ class ScheduledSlot(models.Model):
     )
 
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, db_column="course_id")
     instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
     second_instructor = models.ForeignKey(
         Instructor,
@@ -385,32 +389,32 @@ class ScheduledSlot(models.Model):
         """
 
         # COMMON: instructor must exist
-        if not self.instructor or not self.course:
+        if not self.instructor or not self.subject:
             return
 
         if self.is_lab:
-            if self.course.room_required != "Lab":
-                raise ValidationError({"course": "Only lab courses can be scheduled as labs."})
+            if self.subject.room_required != "Lab":
+                raise ValidationError({"subject": "Only lab subjects can be scheduled as labs."})
 
-            required_category = (self.course.required_lab_category or "").strip()
+            required_category = (self.subject.required_lab_category or "").strip()
             room_category = (self.room.lab_category or "").strip()
             if required_category and required_category != room_category:
                 raise ValidationError(
                     {
                         "room": (
                             f"{self.room.r_number} is '{room_category or 'Unspecified'}', "
-                            f"but {self.course.course_name} requires '{required_category}'."
+                            f"but {self.subject.subject_name} requires '{required_category}'."
                         )
                     }
                 )
 
-            # Lab instructor must be assigned to the course.
-            if self.instructor not in self.course.instructors.all():
+            # Lab instructor must be assigned to the subject.
+            if self.instructor not in self.subject.instructors.all():
                 raise ValidationError(
                     {
                         "instructor": (
                             f"{self.instructor.name} is not assigned to teach "
-                            f"{self.course.course_name}."
+                            f"{self.subject.subject_name}."
                         )
                     }
                 )

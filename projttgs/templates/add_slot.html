@@ -34,10 +34,10 @@
     <option value="9">Slot 9</option>
   </select>
 
-  <label class="mt-2">Course</label>
-  <select name="course" class="form-control">
-    {% for c in courses %}
-      <option value="{{ c.pk }}">{{ c.course_name }}</option>
+  <label class="mt-2">Subject</label>
+  <select name="subject" class="form-control">
+    {% for c in subjects %}
+      <option value="{{ c.pk }}">{{ c.subject_name }}</option>
     {% endfor %}
   </select>
 

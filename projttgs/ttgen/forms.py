@@ -4,7 +4,7 @@ from .models import (
     Room,
     Instructor,
     MeetingTime,
-    Course,
+    Subject,
     Section,
     Department,
     LAB_CATEGORY_CHOICES,
@@ -116,16 +116,16 @@ class MeetingTimeForm(ModelForm):
 
 
 # ==================================================
-# COURSE FORM
+# SUBJECT FORM
 # ==================================================
 
-class CourseForm(ModelForm):
+class SubjectForm(ModelForm):
     class Meta:
-        model = Course
+        model = Subject
         fields = [
             'department',
-            'course_number',
-            'course_name',
+            'subject_number',
+            'subject_name',
             'max_numb_students',
             'room_required',
             'required_lab_category',
@@ -134,8 +134,8 @@ class CourseForm(ModelForm):
         ]
         labels = {
             "department": "Department",
-            "course_number": "Course ID",
-            "course_name": "Course Name",
+            "subject_number": "Subject ID",
+            "subject_name": "Subject Name",
             "max_numb_students": "Max Students",
             "room_required": "Required Room Type",
             "required_lab_category": "Required Lab Category",
@@ -157,7 +157,7 @@ class CourseForm(ModelForm):
             }),
         }
         help_texts = {
-            "classes_per_week": "How many times this course runs per week",
+            "classes_per_week": "How many times this subject runs per week",
         }
 
     def __init__(self, *args, user=None, **kwargs):

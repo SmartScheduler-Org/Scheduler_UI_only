@@ -76,8 +76,8 @@
 
 <fieldset class="manage-fieldset">
 
-    <a href="{% url 'addCourses' %}">
-        <button class="back-btn">← Back to Add Courses</button>
+    <a href="{% url 'addSubjects' %}">
+        <button class="back-btn">← Back to Add Subjects</button>
     </a>
 
     <div class="edit-container">
@@ -85,8 +85,8 @@
         <table class="styled-table">
             <thead>
                 <tr>
-                    <th>Course Code</th>
-                    <th>Course Name</th>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
                     <th>Max Students</th>
                     <th>Assigned Teachers</th>
                     <th></th>
@@ -94,15 +94,15 @@
             </thead>
 
             <tbody>
-                {% for crs in courses %}
+                {% for subj in subjects %}
                 <tr>
-                    <td>{{ crs.course_number }}</td>
-                    <td>{{ crs.course_name }}</td>
-                    <td>{{ crs.max_numb_students }}</td>
+                    <td>{{ subj.subject_number }}</td>
+                    <td>{{ subj.subject_name }}</td>
+                    <td>{{ subj.max_numb_students }}</td>
 
-                    <!-- ✅ ASSIGNED TEACHERS -->
+                    <!-- ASSIGNED TEACHERS -->
                     <td>
-                        {% for teacher in crs.instructors.all %}
+                        {% for teacher in subj.instructors.all %}
                             {{ teacher.name }}{% if not forloop.last %}, {% endif %}
                         {% empty %}
                             <span style="opacity:0.6;">No teacher assigned</span>
@@ -110,7 +110,7 @@
                     </td>
 
                     <td>
-                        <form action="{% url 'deletecourse' crs.course_number %}" method="post">
+                        <form action="{% url 'deletesubject' subj.subject_number %}" method="post">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>

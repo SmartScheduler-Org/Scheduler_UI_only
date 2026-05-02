@@ -91,7 +91,7 @@
     <div class="info-box">
         <strong>Current Assignment</strong>
         Section: {{ section.section_id }}<br>
-        Course: {{ scheduled.course.course_name }}{% if is_lab %} (Lab){% endif %}<br>
+        Subject: {{ scheduled.subject.subject_name }}{% if is_lab %} (Lab){% endif %}<br>
         Day: {{ day }} | Slot: {{ SLOT_LABELS|dictsort:"key" }}
         Current Teacher: {{ scheduled.instructor.name }}
     </div>

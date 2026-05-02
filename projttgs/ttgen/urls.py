@@ -46,9 +46,9 @@ urlpatterns = [
     path('timings_list/', views.meeting_list_view, name='editmeetingtime'),
     path('delete_meetingtime/<str:pk>/', views.delete_meeting_time, name='deletemeetingtime'),
 
-    path('add_courses', views.addCourses, name='addCourses'),
-    path('courses_list/', views.course_list_view, name='editcourse'),
-    path('delete_course/<str:pk>/', views.delete_course, name='deletecourse'),
+    path('add_subjects', views.addSubjects, name='addSubjects'),
+    path('subjects_list/', views.subject_list_view, name='editsubject'),
+    path('delete_subject/<str:pk>/', views.delete_subject, name='deletesubject'),
 
     path('add_departments', views.addDepts, name='addDepts'),
     path('departments_list/', views.department_list, name='editdepartment'),
@@ -59,17 +59,17 @@ urlpatterns = [
     path('sections_list/', views.section_list, name='editsection'),
     path('dashboard_sections_list/', views.dashboard_section_list, name='dashboard_editsection'),
     path('delete_section/<str:pk>/', views.delete_section, name='deletesection'),
-    path("map-teacher-courses/",views.map_teacher_courses,name="map_teacher_courses"),
+    path("map-teacher-subjects/",views.map_teacher_subjects,name="map_teacher_subjects"),
     path(
-    "delete-teacher-course/<str:course_number>/<int:instructor_id>/",
-    views.delete_teacher_course_mapping,
-    name="delete_teacher_course_mapping"),
+    "delete-teacher-subject/<str:subject_number>/<int:instructor_id>/",
+    views.delete_teacher_subject_mapping,
+    name="delete_teacher_subject_mapping"),
     path(
     "delete-sci-mapping/<int:mapping_id>/",
     views.delete_sci_mapping,
     name="delete_sci_mapping"),
-    path("map-section-courses/",views.map_section_courses,name="map_section_courses"),
-    path("view-section-courses/", views.view_section_courses, name="view_section_courses"),
+    path("map-section-subjects/",views.map_section_subjects,name="map_section_subjects"),
+    path("view-section-subjects/", views.view_section_subjects, name="view_section_subjects"),
 
 
 

@@ -58,12 +58,12 @@
     margin: 0 0 12px;
 }
 
-.course-list {
+.subject-list {
     margin: 0;
     padding-left: 18px;
 }
 
-.course-list li + li {
+.subject-list li + li {
     margin-top: 6px;
 }
 
@@ -75,20 +75,20 @@
 <div class="mapping-wrapper">
     <div class="top-actions">
         <div>
-            <h2>Section Course Mappings</h2>
+            <h2>Section Subject Mappings</h2>
             <p>View all subjects currently mapped to each section.</p>
         </div>
-        <a href="{% url 'map_section_courses' %}" class="action-btn">Back to Mapping</a>
+        <a href="{% url 'map_section_subjects' %}" class="action-btn">Back to Mapping</a>
     </div>
 
     <div class="section-grid">
         {% for section in section_mappings %}
             <div class="section-card">
                 <h3>{{ section.section_id }}</h3>
-                {% if section.courses %}
-                    <ul class="course-list">
-                        {% for course in section.courses %}
-                            <li>{{ course.course_number }} - {{ course.course_name }}</li>
+                {% if section.subjects %}
+                    <ul class="subject-list">
+                        {% for subject in section.subjects %}
+                            <li>{{ subject.subject_number }} - {{ subject.subject_name }}</li>
                         {% endfor %}
                     </ul>
                 {% else %}

@@ -963,7 +963,7 @@
                     <p class="phase" id="phaseText">Initializing generation core...</p>
                     <div class="percent" id="percentText">08%</div>
                 </div>
-                <p class="hint" id="hintText">Preparing section, room, and course graph.</p>
+                <p class="hint" id="hintText">Preparing section, room, and subject graph.</p>
                 <div class="progress-track" aria-hidden="true">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -1070,7 +1070,7 @@
     {{ use_pso|json_script:"use-pso-data" }}
     <script>
         const phases = [
-            ["Initializing generation core...", "Preparing section, room, and course graph."],
+            ["Initializing generation core...", "Preparing section, room, and subject graph."],
             ["Mapping faculty workloads...", "Balancing teaching assignments with room availability."],
             ["Resolving clashes across sections...", "Scanning slot overlaps and lab dependencies."],
             ["Refining the two strongest candidates...", "Scoring timetable paths for stability and resource fit."],
