@@ -131,6 +131,7 @@ class SubjectForm(ModelForm):
             'required_lab_category',
             'instructors',
             'classes_per_week',
+            'duration',
         ]
         labels = {
             "department": "Department",
@@ -141,6 +142,7 @@ class SubjectForm(ModelForm):
             "required_lab_category": "Required Lab Category",
             "instructors": "Assigned Teacher",
             "classes_per_week": "Classes Per Week",
+            "duration": "Duration (Hours)",
         }
         widgets = {
             "department": forms.Select(),
@@ -155,9 +157,15 @@ class SubjectForm(ModelForm):
                 'max': 10,
                 'placeholder': 'e.g., 3',
             }),
+            "duration": forms.NumberInput(attrs={
+                'min': 1,
+                'max': 4,
+                'placeholder': 'e.g., 1',
+            }),
         }
         help_texts = {
             "classes_per_week": "How many times this subject runs per week",
+            "duration": "1 hour = 1 slot. Default is 1. Set 2 for a 2-hour class.",
         }
 
     def __init__(self, *args, user=None, **kwargs):

@@ -1,0 +1,8 @@
+"department_code","subject_number","subject_name","room_required","required_lab_category","classes_per_week","max_numb_students","duration"
+"DM","DM001","Mechanics","Lecture Hall","","3","80","1"
+"DM","DM002","Thermodynamics","Lecture Hall","","3","80","1"
+"DM","DM003","Calculus","Lecture Hall","","3","80","1"
+"DM","DM004","Literature","Lecture Hall","","3","80","2"
+"DM","DM005","Algorithms","Lecture Hall","","3","80","1"
+"DM","DM006","Mechanics Lab","Lab","Simulation","4","80","2"
+"DM","DM007","Algorithms Lab","Lab","Simulation","4","80","4"

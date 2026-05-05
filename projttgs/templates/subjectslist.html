@@ -88,6 +88,7 @@
                     <th>Subject Code</th>
                     <th>Subject Name</th>
                     <th>Max Students</th>
+                    <th>Duration</th>
                     <th>Assigned Teachers</th>
                     <th></th>
                 </tr>
@@ -99,6 +100,7 @@
                     <td>{{ subj.subject_number }}</td>
                     <td>{{ subj.subject_name }}</td>
                     <td>{{ subj.max_numb_students }}</td>
+                    <td>{{ subj.duration }} hr</td>
 
                     <!-- ASSIGNED TEACHERS -->
                     <td>
@@ -110,7 +112,7 @@
                     </td>
 
                     <td>
-                        <form action="{% url 'deletesubject' subj.subject_number %}" method="post">
+                        <form action="{% url 'deletesubject' subj.pk %}" method="post">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>

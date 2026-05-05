@@ -193,6 +193,10 @@ class Subject(models.Model):
         default="",
     )
     classes_per_week = models.PositiveIntegerField(default=3)
+    duration = models.PositiveIntegerField(
+        default=1,
+        help_text="Duration in hours (1 hour = 1 slot). e.g. 2 means 2 consecutive slots.",
+    )
 
     instructors = models.ManyToManyField(Instructor, db_table="ttgen_course_instructors")
 
