@@ -1,0 +1,5 @@
+"r_number","department_code","seating_capacity","room_type","lab_category"
+"DM-H101","DM","70","Lecture Hall",""
+"DM-SIM1","DM","35","Lab","Simulation"
+"DM-SIM2","DM","35","Lab","Simulation"
+"DM-SIM3","DM","35","Lab","Simulation"

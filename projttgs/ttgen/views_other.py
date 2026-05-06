@@ -73,6 +73,13 @@ VALID_LAB_START_SLOTS = ["1", "6"]
 LUNCH_SLOT = "5"
 
 
+def get_valid_start_slots(duration):
+    """Return valid start slots for a given duration, avoiding lunch (slot 5)."""
+    pre_lunch = [str(s) for s in range(1, 5) if s + duration - 1 <= 4]
+    post_lunch = [str(s) for s in range(6, 10) if s + duration - 1 <= 9]
+    return pre_lunch + post_lunch
+
+
 
 
 # placeholder for private generation algorithm loaded outside this repo
@@ -916,8 +923,10 @@ if "Class" not in globals():
             self.subject = subject
             self.instructor = None
             self.meeting_time = None
+            self.meeting_times = []
             self.room = None
             self.section = section
+            self.duration = getattr(subject, 'duration', 1)
 
         def set_instructor(self, instructor): self.instructor = instructor
         def set_meetingTime(self, mt): self.meeting_time = mt
@@ -934,7 +943,7 @@ if "Lab" not in globals():
             self.second_instructor = None   # shared lab: optional second teacher
             self.room = None
             self.section = section
-            self.duration = LAB_DURATION
+            self.duration = getattr(subject, 'duration', LAB_DURATION)
             self.meeting_times = []
             self.batch = batch
             self.total_batches = total_batches
@@ -993,7 +1002,7 @@ if "build_section_tables" not in globals():
                         continue
                     cell_data = grid[day].get(s, {"classes": [], "labs": []})
                     if cell_data["labs"]:
-                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        lab_span = max((len(lb.meeting_times) for lb in cell_data["labs"] if lb.meeting_times), default=getattr(cell_data["labs"][0], 'duration', LAB_DURATION))
                         cells.append({
                             "type": "lab",
                             "colspan": lab_span,
@@ -1002,12 +1011,15 @@ if "build_section_tables" not in globals():
                         })
                         skip_until = s + lab_span - 1
                     elif cell_data["classes"]:
+                        cls_dur = getattr(cell_data["classes"][0], 'duration', 1)
                         cells.append({
                             "type": "class",
-                            "colspan": 1,
+                            "colspan": cls_dur,
                             "slot_number": s,
                             "classes": cell_data["classes"],
                         })
+                        if cls_dur > 1:
+                            skip_until = s + cls_dur - 1
                     else:
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
@@ -1075,17 +1087,20 @@ if "build_teacher_tables" not in globals():
                         continue
                     cell_data = grid[day].get(s, {"classes": [], "labs": []})
                     if cell_data["labs"]:
-                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        lab_span = max((len(lb.meeting_times) for lb in cell_data["labs"] if lb.meeting_times), default=getattr(cell_data["labs"][0], 'duration', LAB_DURATION))
                         cells.append({
                             "type": "lab", "colspan": lab_span, "slot_number": s,
                             "labs": cell_data["labs"],
                         })
                         skip_until = s + lab_span - 1
                     elif cell_data["classes"]:
+                        cls_dur = getattr(cell_data["classes"][0], 'duration', 1)
                         cells.append({
-                            "type": "class", "colspan": 1, "slot_number": s,
+                            "type": "class", "colspan": cls_dur, "slot_number": s,
                             "classes": cell_data["classes"],
                         })
+                        if cls_dur > 1:
+                            skip_until = s + cls_dur - 1
                     else:
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
@@ -1148,17 +1163,20 @@ if "build_room_tables" not in globals():
                         continue
                     cell_data = grid[day].get(s, {"classes": [], "labs": []})
                     if cell_data["labs"]:
-                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        lab_span = max((len(lb.meeting_times) for lb in cell_data["labs"] if lb.meeting_times), default=getattr(cell_data["labs"][0], 'duration', LAB_DURATION))
                         cells.append({
                             "type": "lab", "colspan": lab_span, "slot_number": s,
                             "labs": cell_data["labs"],
                         })
                         skip_until = s + lab_span - 1
                     elif cell_data["classes"]:
+                        cls_dur = getattr(cell_data["classes"][0], 'duration', 1)
                         cells.append({
-                            "type": "class", "colspan": 1, "slot_number": s,
+                            "type": "class", "colspan": cls_dur, "slot_number": s,
                             "classes": cell_data["classes"],
                         })
+                        if cls_dur > 1:
+                            skip_until = s + cls_dur - 1
                     else:
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
@@ -1250,6 +1268,16 @@ def _rebuild_classes_and_labs_from_saved(saved_t):
     labs = []
     lab_slots_list = []
 
+    # Pre-fetch all meeting times grouped by day for multi-slot class reconstruction
+    from ttgen.models import MeetingTime as MT
+    all_mts = list(MT.objects.filter(user=saved_t.user))
+    mts_by_day = {}
+    slot_order = ["1","2","3","4","5","6","7","8","9"]
+    for m in all_mts:
+        mts_by_day.setdefault(m.day, []).append(m)
+    for d in mts_by_day:
+        mts_by_day[d].sort(key=lambda x: slot_order.index(x.time) if x.time in slot_order else 99)
+
     for slot in slots:
         if slot.is_lab:
             lab_slots_list.append(slot)
@@ -1263,6 +1291,17 @@ def _rebuild_classes_and_labs_from_saved(saved_t):
             cls.instructor = slot.instructor
             cls.room = slot.room
             cls.meeting_time = slot.meeting_time
+            # Rebuild meeting_times for multi-slot classes
+            cls_dur = getattr(slot.subject, 'duration', 1)
+            if cls_dur > 1:
+                day_mts = mts_by_day.get(slot.meeting_time.day, [])
+                start_idx = next((i for i, m in enumerate(day_mts) if m.time == slot.meeting_time.time), None)
+                if start_idx is not None and start_idx + cls_dur <= len(day_mts):
+                    cls.meeting_times = day_mts[start_idx:start_idx + cls_dur]
+                else:
+                    cls.meeting_times = [slot.meeting_time]
+            else:
+                cls.meeting_times = [slot.meeting_time]
             classes.append(cls)
 
     # Group labs by (section, starting day/time) to compute batch numbers
@@ -1297,15 +1336,16 @@ def _compute_teacher_workloads(classes, labs):
     workloads = {}
     for cls in classes:
         teacher = cls.instructor
+        cls_dur = getattr(cls, 'duration', 1)
         if teacher not in workloads:
             workloads[teacher] = {"lectures": 0, "labs": 0, "total": 0}
-        workloads[teacher]["lectures"] += 1
-        workloads[teacher]["total"] += 1
+        workloads[teacher]["lectures"] += cls_dur
+        workloads[teacher]["total"] += cls_dur
     for lab in labs:
         teacher = lab.instructor
         if teacher not in workloads:
             workloads[teacher] = {"lectures": 0, "labs": 0, "total": 0}
-        lab_slot_count = len(lab.meeting_times) if lab.meeting_times else LAB_DURATION
+        lab_slot_count = len(lab.meeting_times) if lab.meeting_times else getattr(lab, 'duration', LAB_DURATION)
         workloads[teacher]["labs"] += lab_slot_count
         workloads[teacher]["total"] += lab_slot_count
         second_teacher = getattr(lab, "second_instructor", None)
@@ -1737,7 +1777,8 @@ def addSubjects(request):
         if form.is_valid():
             subject = form.save(commit=False)
             subject.user = request.user
-            subject.room_required = (subject.room_required or "").strip()
+            raw_room = (subject.room_required or "").strip().lower()
+            subject.room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room, subject.room_required)
             subject.required_lab_category = normalize_lab_category(subject.required_lab_category)
 
             if subject.room_required == "Lab" and not subject.required_lab_category:
@@ -1794,7 +1835,8 @@ def addSubjects(request):
                 for row in reader:
                     dept_code = row["department_code"].strip().upper()
                     subject_number = row["subject_number"].strip()
-                    room_required = row["room_required"].strip()
+                    raw_room = row["room_required"].strip()
+                    room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room.lower(), raw_room)
                     required_lab_category = normalize_lab_category(row["required_lab_category"])
 
                     try:
@@ -1822,6 +1864,7 @@ def addSubjects(request):
                         required_lab_category=required_lab_category,
                         classes_per_week=int(row["classes_per_week"]),
                         max_numb_students=int(row.get("max_numb_students", 70) or 70),
+                        duration=int(row.get("duration", 1) or 1),
                     )
 
                     created_count += 1
@@ -3233,7 +3276,7 @@ ENTITY_CONFIGS = {
     },
     "subjects": {
         "label": "Subjects",
-        "columns": ["department_code", "subject_number", "subject_name", "room_required", "required_lab_category", "classes_per_week"],
+        "columns": ["department_code", "subject_number", "subject_name", "room_required", "required_lab_category", "classes_per_week", "duration"],
         "filename": "subjects.csv",
         "required": ["subject_number", "subject_name"],
         "keywords": {
@@ -3243,6 +3286,7 @@ ENTITY_CONFIGS = {
             "room_required": ["room_required", "room required", "room type", "room"],
             "required_lab_category": ["lab_category", "lab category", "required_lab", "lab"],
             "classes_per_week": ["classes_per_week", "classes per week", "classes", "per week", "frequency", "weekly"],
+            "duration": ["duration", "hours", "duration_hours", "slot_duration", "slots"],
         },
     },
     "rooms": {
