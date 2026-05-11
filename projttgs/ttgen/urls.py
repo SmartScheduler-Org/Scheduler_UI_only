@@ -50,9 +50,9 @@ urlpatterns = [
     path('delete_meetingtime/<str:pk>/', views.delete_meeting_time, name='deletemeetingtime'),
     path('update_meetingtime/<int:pk>/', views.update_meeting_time, name='updatemeetingtime'),
 
-    path('add_courses', views.addCourses, name='addCourses'),
-    path('courses_list/', views.course_list_view, name='editcourse'),
-    path('delete_course/<str:pk>/', views.delete_course, name='deletecourse'),
+    path('add_subjects', views.addSubjects, name='addSubjects'),
+    path('subjects_list/', views.subject_list_view, name='editsubject'),
+    path('delete_subject/<str:pk>/', views.delete_subject, name='deletesubject'),
     path('update_course/<int:pk>/', views.update_course, name='updatecourse'),
     path("map-teacher-courses/",views.map_teacher_courses,name="map_teacher_courses"),
     path(
@@ -74,15 +74,15 @@ urlpatterns = [
     path('update_section/<int:pk>/', views.update_section, name='updatesection'),
     path("map-teacher-courses/",views.map_teacher_courses,name="map_teacher_courses"),
     path(
-    "delete-teacher-course/<str:course_number>/<int:instructor_id>/",
-    views.delete_teacher_course_mapping,
-    name="delete_teacher_course_mapping"),
+    "delete-teacher-subject/<str:subject_number>/<int:instructor_id>/",
+    views.delete_teacher_subject_mapping,
+    name="delete_teacher_subject_mapping"),
     path(
     "delete-sci-mapping/<int:mapping_id>/",
     views.delete_sci_mapping,
     name="delete_sci_mapping"),
-    path("map-section-courses/",views.map_section_courses,name="map_section_courses"),
-    path("view-section-courses/", views.view_section_courses, name="view_section_courses"),
+    path("map-section-subjects/",views.map_section_subjects,name="map_section_subjects"),
+    path("view-section-subjects/", views.view_section_subjects, name="view_section_subjects"),
 
 
 

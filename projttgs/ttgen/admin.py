@@ -6,11 +6,11 @@ class SectionAdmin(admin.ModelAdmin):
     list_display = ("section_id", "department")
     list_filter = ("department",)
     search_fields = ("section_id",)
-    filter_horizontal = ("allowed_courses",)   # ⭐ nice multi-select widget
+    filter_horizontal = ("allowed_subjects",)   # nice multi-select widget
 
 # (register others as usual)
 admin.site.register(Department)
-admin.site.register(Course)
+admin.site.register(Subject)
 admin.site.register(Room)
 admin.site.register(Instructor)
 admin.site.register(MeetingTime)

@@ -3,7 +3,7 @@
 {% block workflow_progress %}{% include 'workflow_stepper.html' with current_step=5 %}{% endblock %}
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}"> 
+<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
 
 <style>
 /* ======================================= */
@@ -80,17 +80,17 @@
     margin-bottom: 20px;
 }
 
-.courses-header {
+.subjects-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) max-content;
     align-items: center;
 }
 
-.courses-header .page-header-left {
+.subjects-header .page-header-left {
     max-width: 720px;
 }
 
-.courses-header .right-block {
+.subjects-header .right-block {
     width: auto;
     margin-top: 0;
     display: flex;
@@ -100,7 +100,7 @@
     min-width: max-content;
 }
 
-.courses-header .nav-action-group {
+.subjects-header .nav-action-group {
     display: flex;
     align-items: center;
     gap: 14px;
@@ -108,12 +108,12 @@
 }
 
 @media (max-width: 900px) {
-    .courses-header .right-block {
+    .subjects-header .right-block {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .courses-header .nav-action-group {
+    .subjects-header .nav-action-group {
         flex-wrap: wrap;
     }
 }
@@ -131,15 +131,15 @@
 
 <!-- ================= PAGE HEADER ================= -->
 
-<div class="page-header courses-header">
+<div class="page-header subjects-header">
     <div class="page-header-left">
-        <h2>Add Courses</h2>
-        
+        <h2>Add Subjects</h2>
+
     </div>
 
     <div class="right-block">
         <div class="nav-action-group">
-            <a href="{% url 'editcourse' %}" class="edit-btn icon-only-btn" aria-label="View or edit courses" title="View or edit courses">
+            <a href="{% url 'editsubject' %}" class="edit-btn icon-only-btn" aria-label="View or edit subjects" title="View or edit subjects">
                 <i class="fa-solid fa-book-open" aria-hidden="true"></i>
             </a>
             <a href="{% url 'addTimings' %}" class="next-btn nav-circle-btn" aria-label="Previous">
@@ -157,7 +157,7 @@
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <fieldset>
-        <label><strong>Upload Courses CSV:</strong></label>
+        <label><strong>Upload Subjects CSV:</strong></label>
         <input type="file" name="csv_file" accept=".csv" required class="form-control">
 
         <div class="button-row">
@@ -179,12 +179,13 @@
 <div class="info-icon-container">
     <span class="info-icon">i</span>
     <div class="info-tooltip">
-        <strong>Course Input Guide</strong><br><br>
-        • Course Code → Unique subject code (e.g. CS001)<br>
-        • Course Name → Subject name<br>
+        <strong>Subject Input Guide</strong><br><br>
+        • Subject Code → Unique subject code (e.g. CS001)<br>
+        • Subject Name → Subject name<br>
         • Max Students → Intake capacity<br>
         • Room Type → Lecture / Lab<br>
-        • Classes per Week → Weekly frequency<br><br>
+        • Classes per Week → Weekly frequency<br>
+        • Duration → Hours per class (default 1)<br><br>
         Teachers are assigned in the next step.
     </div>
 </div>
@@ -206,8 +207,8 @@
 {% endfor %}
 
 <div class="button-row">
-    <button type="submit" name="add_course" class="submit-btn">
-        Add Course
+    <button type="submit" name="add_subject" class="submit-btn">
+        Add Subject
     </button>
 </div>
 

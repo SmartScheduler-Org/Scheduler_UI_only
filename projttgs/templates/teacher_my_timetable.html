@@ -85,7 +85,7 @@
               <td colspan="{{ cell.colspan }}" class="teacher-table__lab">
                 {% for lab in cell.labs %}
                 <div class="teacher-table__block">
-                  <strong>{{ lab.course.course_name }} Lab</strong>
+                  <strong>{{ lab.subject.subject_name }} Lab</strong>
                   <span>Section: {{ lab.section }}</span>
                   <span>Batch {{ lab.batch }}/{{ lab.total_batches }} - {{ lab.room.r_number }}</span>
                 </div>
@@ -95,7 +95,7 @@
               <td class="teacher-table__class">
                 {% for cls in cell.classes %}
                 <div class="teacher-table__block">
-                  <strong>{{ cls.course.course_name }}</strong>
+                  <strong>{{ cls.subject.subject_name }}</strong>
                   <span>Section: {{ cls.section }}</span>
                   <span>{{ cls.room.r_number }}</span>
                 </div>

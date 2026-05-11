@@ -67,7 +67,7 @@ border: 2px solid #cc0000;
 <h1>Generated Timetable</h1>
 
 {% for table in tables %}
-<h2>{{ table.section.section_id }} ({{ table.section.department.dept_name }})</h2>
+<h2>{{ table.section.section_id }} ({{ table.section.department.name }})</h2>
 
 <table border="1" cellspacing="0" cellpadding="4">
 <thead>
@@ -110,7 +110,7 @@ border: 2px solid #cc0000;
             <td colspan="{{ cell.colspan }}" width="{{ cell.width }}" class="lab">
                 {% for lab in cell.labs %}
                 <div style="margin-bottom: 6px;">
-                    <strong>{{ lab.course.course_name }} Lab (Batch {{ lab.batch }}/{{ lab.total_batches }})</strong><br>
+                    <strong>{{ lab.subject.subject_name }} Lab (Batch {{ lab.batch }}/{{ lab.total_batches }})</strong><br>
                     {{ lab.instructor.name }}<br>
                     Room: {{ lab.room.r_number }}
                     <hr style="border:0.5px solid #666;">
@@ -122,7 +122,7 @@ border: 2px solid #cc0000;
             <td width="{{ cell.width }}">
                 {% for cls in cell.classes %}
                 <div style="margin-bottom:6px;">
-                    <strong>{{ cls.course.course_name }}</strong><br>
+                    <strong>{{ cls.subject.subject_name }}</strong><br>
                     {{ cls.instructor.name }}<br>
                     Room: {{ cls.room.r_number }}
                 </div>

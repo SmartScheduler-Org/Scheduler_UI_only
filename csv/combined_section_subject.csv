@@ -1,4 +1,4 @@
-section_id,course_number
+section_id,subject_number
 CE71 7th Sem,CS028
 CE71 7th Sem,CS026
 CE71 7th Sem,CS007
@@ -258,3 +258,24 @@ MSc AM 3rd Sem,CA064
 MSc AM 3rd Sem,CA065
 MSc AM 3rd Sem,CA075
 MSc AM 3rd Sem,CA057
+DM-A 1st Sem,DM001
+DM-A 1st Sem,DM002
+DM-A 1st Sem,DM003
+DM-A 1st Sem,DM004
+DM-A 1st Sem,DM005
+DM-A 1st Sem,DM006
+DM-A 1st Sem,DM007
+DM-B 1st Sem,DM001
+DM-B 1st Sem,DM002
+DM-B 1st Sem,DM003
+DM-B 1st Sem,DM004
+DM-B 1st Sem,DM005
+DM-B 1st Sem,DM006
+DM-B 1st Sem,DM007
+DM-C 1st Sem,DM001
+DM-C 1st Sem,DM002
+DM-C 1st Sem,DM003
+DM-C 1st Sem,DM004
+DM-C 1st Sem,DM005
+DM-C 1st Sem,DM006
+DM-C 1st Sem,DM007

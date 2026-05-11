@@ -151,6 +151,18 @@ h1 {
   box-shadow: 0 2px 8px rgba(249, 168, 37, 0.25);
 }
 
+.lab-box.short-duration, .class-box.short-duration {
+  background: linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%) !important;
+  border: 2px solid #43a047 !important;
+  box-shadow: 0 2px 8px rgba(67, 160, 71, 0.25) !important;
+}
+
+.class-box.theory-in-lab, .room-slot-card.theory-in-lab {
+  background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%) !important;
+  border: 2px solid #e91e63 !important;
+  box-shadow: 0 2px 8px rgba(233, 30, 99, 0.25) !important;
+}
+
 .lab-box strong {
   display: block;
   margin-bottom: 4px;
@@ -1237,6 +1249,11 @@ body.drag-drop-active .drag-mode-badge {
     background: linear-gradient(135deg, rgba(234, 255, 234, 0.92), rgba(220, 245, 223, 0.96));
 }
 
+.room-slot-card.short-duration {
+    background: linear-gradient(135deg, #e8f5e9, #a5d6a7) !important;
+    border-color: #43a047 !important;
+}
+
 .room-table tbody tr:hover td {
     background-color: rgba(246, 251, 255, 0.98);
 }
@@ -1295,8 +1312,9 @@ body.drag-drop-active .drag-mode-badge {
     position: relative;
     z-index: 2;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
     flex-wrap: wrap;
     gap: 12px;
     max-width: 1340px;
@@ -1360,7 +1378,7 @@ body.drag-drop-active .drag-mode-badge {
 
 /* Export dropdown group */
 .export-group {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
@@ -1566,20 +1584,17 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
         var hiddenBtns = viewEl.querySelectorAll('.btn-save-tt, .room-pdf-btn, .fullpage-pdf-btn, .fullpage-excel-btn, .action-buttons');
         hiddenBtns.forEach(function(b) { b.style.display = 'none'; });
 
-        // Snapshot the HTML now (after hiding buttons), then restore the DOM
-        // immediately so the page stays interactive during the async render.
-        var html = cards.map(function(c) {
+        // Clone each card now (while buttons are hidden) and add brand headers
+        var clones = cards.map(function(c) {
           var clone = c.cloneNode(true);
-          // Insert brand strip just above the first table (below section heading)
           var tbl = clone.querySelector('table');
           if (tbl) {
             tbl.parentNode.insertBefore(_buildPdfBrandHeader(), tbl);
           } else {
             clone.insertBefore(_buildPdfBrandHeader(), clone.firstChild);
           }
-          return clone.outerHTML;
-        })
-            .join('<div style="page-break-after:always; break-after:page; height:0;"></div>');
+          return clone;
+        });
         hiddenBtns.forEach(function(b) { b.style.display = ''; });
 
         var labels = { section: 'Section', room: 'Room', workload: 'Workload', teacher: 'Teacher' };
@@ -1599,9 +1614,19 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
             pagebreak: { mode: ['css', 'legacy'] },
         };
 
-        html2pdf().set(opt).from(html).save()
+        // Process each card individually to avoid browser canvas size limits
+        // that cause blank pages when rendering many large tables at once.
+        var worker = html2pdf().set(opt).from(clones[0]).toContainer().toCanvas().toPdf();
+        for (var i = 1; i < clones.length; i++) {
+            (function(card) {
+                worker = worker.get('pdf').then(function(pdf) {
+                    pdf.addPage();
+                }).from(card).toContainer().toCanvas().toPdf();
+            })(clones[i]);
+        }
+        worker.save()
             .then(function() { _showDownloadDone(); })
-            .catch(function() { Swal.close(); });
+            .catch(function(err) { console.error('PDF generation failed:', err); Swal.close(); });
     }
 
     function downloadViewExcel(viewName) {
@@ -2078,7 +2103,6 @@ function initDragAndDrop() {
 {% endif %}
 
 <div class="command-bar">
-  <div class="command-bar__left">
     {% if index %}
     <button class="save-tt-hero" type="button" onclick="saveTimetable({{ index }})">
         <span class="save-tt-hero__icon">✦</span>
@@ -2092,8 +2116,6 @@ function initDragAndDrop() {
         Drag mode active
     </div>
     {% endif %}
-  </div>
-  <div class="command-bar__right">
     {% if departments|length > 1 %}
     <div class="dept-select-wrap">
       <span class="dept-select-label">FILTER:</span>
@@ -2117,7 +2139,6 @@ function initDragAndDrop() {
     </div>
     {% endif %}
     <span id="dept-filter-active-label" style="font-size:11px;font-weight:700;color:#94a3b8;display:none;"></span>
-  </div>
 </div>
 
 <div class="view-switcher">
@@ -2255,9 +2276,9 @@ function initDragAndDrop() {
             <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} draggable-slot-item" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} draggable-slot-item" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
-                      {{ lab.course.course_name }} Lab
+                      {{ lab.subject.subject_name }} Lab
                     </strong>
                     <strong style="color: #1565c0; font-size: 13px;">
                       Batch {{ lab.batch }}/{{ lab.total_batches }}
@@ -2273,29 +2294,26 @@ function initDragAndDrop() {
                     <span style="color: #424242; font-size: 12px;">
                       {{ lab.room.r_number }}
                     </span>
+                    <div class="action-buttons">
+                      <a href="/update_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}?batch={{ lab.batch }}"
+                         class="action-button btn-update">Update</a>
+                      <a href="/delete_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}?batch={{ lab.batch }}"
+                         class="action-button btn-delete">Delete</a>
+                      <a href="{% url 'substitute_lab_teacher' table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}"
+                         class="action-button btn-substitute">
+                        Substitute Lab
+                      </a>
+                    </div>
                   </div>
                 {% endfor %}
-              </div>
-
-              <div class="action-buttons">
-                <a href="/update_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}"
-                   class="action-button btn-update">Update</a>
-                <a href="/delete_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}"
-                   class="action-button btn-delete">Delete</a>
-
-                {# ✅ LAB SUBSTITUTE BUTTON #}
-                <a href="{% url 'substitute_lab_teacher' table.section.section_id row.day cell.slot_number %}"
-                   class="action-button btn-substitute">
-                  Substitute Lab
-                </a>
               </div>
             </td>
 
           {% elif cell.type == "class" %}
             <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               {% for cls in cell.classes %}
-                <div class="class-box draggable-slot-item" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
-                  <strong>{{ cls.course.course_name }}</strong><br>
+                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} draggable-slot-item" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                  <strong>{{ cls.subject.subject_name }}</strong><br>
                   {{ cls.instructor.name }}<br>
                   {{ cls.room.r_number }}
                 </div>
@@ -2424,9 +2442,9 @@ function initDragAndDrop() {
 
           {% elif cell.type == "lab" %}
             <td colspan="{{ cell.colspan }}">
-              <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor %}room-slot-card--lab-shared{% endif %}">
+              <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor %}room-slot-card--lab-shared{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
               {% for lab in cell.labs %}
-                <strong>{{ lab.course.course_name }}</strong>
+                <strong>{{ lab.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ lab.section }} ({{ lab.group }})</div>
                 <div class="room-slot-card__teacher">{{ lab.instructor.name }}</div>
                 {% if lab.second_instructor %}
@@ -2437,10 +2455,10 @@ function initDragAndDrop() {
             </td>
 
           {% elif cell.type == "class" %}
-            <td>
-              <div class="room-slot-card room-slot-card--class">
+            <td colspan="{{ cell.colspan }}">
+              <div class="room-slot-card room-slot-card--class {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
               {% for cls in cell.classes %}
-                <strong>{{ cls.course.course_name }}</strong>
+                <strong>{{ cls.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ cls.section }}</div>
                 <div class="room-slot-card__teacher">{{ cls.instructor.name }}</div>
               {% endfor %}
@@ -2605,9 +2623,9 @@ function initDragAndDrop() {
             <td colspan="{{ cell.colspan }}">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %}">
+                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
                     <strong style="font-size: 14px; color: #0d47a1;">
-                      {{ lab.course.course_name }} Lab
+                      {{ lab.subject.subject_name }} Lab
                     </strong>
                     <strong style="color: #1565c0; font-size: 13px;">
                       Batch {{ lab.batch }}/{{ lab.total_batches }}
@@ -2634,8 +2652,8 @@ function initDragAndDrop() {
           {% elif cell.type == "class" %}
             <td>
               {% for cls in cell.classes %}
-                <div class="class-box">
-                  <strong>{{ cls.course.course_name }}</strong><br>
+                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% endif %}">
+                  <strong>{{ cls.subject.subject_name }}</strong><br>
                   Section: {{ cls.section }}<br>
                   {{ cls.room.r_number }}
                 </div>

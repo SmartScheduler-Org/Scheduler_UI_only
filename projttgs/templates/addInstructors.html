@@ -232,7 +232,8 @@
         </div>
 
         <small style="color:#aaa;">
-            CSV Format: <code>uid,name,designation,max_workload</code>
+            CSV Format: <code>uid,name,designation,max_workload,email,contact_number</code><br>
+            <em>Email &amp; Contact are required. Use quotes for multiple values: <code>"a@x.com, b@x.com"</code></em>
         </small>
     </fieldset>
 </form>
@@ -250,14 +251,18 @@
                 <strong>Teacher Input Guide</strong><br>
                 • UID → Institute / ERP ID<br>
                 • Name → Full teacher name<br>
-                • Designation → Professor / Associate / Assistant<br><br>
+                • Email → Required, comma-separated for multiple<br>
+                • Contact → Required, comma-separated for multiple<br>
+                • Designation → Professor / Associate / Assistant<br>
                 • Max Workload → Maximum teaching load per week<br><br>
-                Subjects are assigned in the Courses step.
+                Subjects are assigned in the Subjects step.
             </div>
         </div>
 
         <p>{{ form.uid.label_tag }} {{ form.uid }}</p>
         <p>{{ form.name.label_tag }} {{ form.name }}</p>
+        <p>{{ form.email.label_tag }} {{ form.email }}</p>
+        <p>{{ form.contact_number.label_tag }} {{ form.contact_number }}</p>
         <p>{{ form.designation.label_tag }} {{ form.designation }}</p>
         <p>{{ form.max_workload.label_tag }} {{ form.max_workload }}</p>
 

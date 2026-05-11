@@ -384,11 +384,11 @@
 
       <div class="faq-item">
         <button class="faq-q" onclick="toggleFaq(this)">
-          Can I bulk-import departments, instructors, and courses via CSV?
+          Can I bulk-import departments, instructors, and subjects via CSV?
           <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
         </button>
         <div class="faq-a"><div class="faq-a-inner">
-          Yes. SmartScheduler supports CSV upload for instructors and course-teacher mappings. The expected format is <code style="background:rgba(56,189,248,0.1);padding:1px 6px;border-radius:4px;font-size:13px;">instructor_name, course_number</code> per row. You can also use the Convert CSV tool to reformat data from other systems before importing.
+          Yes. SmartScheduler supports CSV upload for instructors and subject-teacher mappings. The expected format is <code style="background:rgba(56,189,248,0.1);padding:1px 6px;border-radius:4px;font-size:13px;">instructor_name, subject_number</code> per row. You can also use the Convert CSV tool to reformat data from other systems before importing.
         </div></div>
       </div>
 
@@ -416,11 +416,11 @@
 
       <div class="faq-item">
         <button class="faq-q" onclick="toggleFaq(this)">
-          How does SmartScheduler handle theory vs. lab courses?
+          How does SmartScheduler handle theory vs. lab subjects?
           <span class="faq-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
         </button>
         <div class="faq-a"><div class="faq-a-inner">
-          The scheduler uses a unified Course model that distinguishes theory and lab slots. Hard constraint validation ensures lab sessions are scheduled in lab-designated rooms and are not placed back-to-back in ways that violate your institution's rules. These constraints run before any timetable is accepted.
+          The scheduler uses a unified Subject model that distinguishes theory and lab slots. Hard constraint validation ensures lab sessions are scheduled in lab-designated rooms and are not placed back-to-back in ways that violate your institution's rules. These constraints run before any timetable is accepted.
         </div></div>
       </div>
 

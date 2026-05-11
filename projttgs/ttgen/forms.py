@@ -4,7 +4,7 @@ from .models import (
     Room,
     Instructor,
     MeetingTime,
-    Course,
+    Subject,
     Section,
     Department,
     LAB_CATEGORY_CHOICES,
@@ -64,16 +64,24 @@ class RoomForm(ModelForm):
 class InstructorForm(ModelForm):
     class Meta:
         model = Instructor
-        fields = ['uid', 'name', 'designation', 'max_workload']
+        fields = ['uid', 'name', 'email', 'contact_number', 'designation', 'max_workload']
         labels = {
             "uid": "Teacher UID",
             "name": "Full Name",
+            "email": "Email(s)",
+            "contact_number": "Contact Number(s)",
             "designation": "Designation",
             "max_workload": "Max Workload",
         }
         widgets = {
+            "email": forms.TextInput(attrs={"placeholder": "e.g. a@college.edu, b@college.edu"}),
+            "contact_number": forms.TextInput(attrs={"placeholder": "e.g. 9810001001, 9810001002"}),
             "designation": forms.Select(choices=Instructor.DESIGNATION_CHOICES),
             "max_workload": forms.NumberInput(attrs={"min": 1}),
+        }
+        help_texts = {
+            "email": "Separate multiple emails with commas",
+            "contact_number": "Separate multiple numbers with commas",
         }
 
 
@@ -108,31 +116,33 @@ class MeetingTimeForm(ModelForm):
 
 
 # ==================================================
-# COURSE FORM
+# SUBJECT FORM
 # ==================================================
 
-class CourseForm(ModelForm):
+class SubjectForm(ModelForm):
     class Meta:
-        model = Course
+        model = Subject
         fields = [
             'department',
-            'course_number',
-            'course_name',
+            'subject_number',
+            'subject_name',
             'max_numb_students',
             'room_required',
             'required_lab_category',
             'instructors',
             'classes_per_week',
+            'duration',
         ]
         labels = {
             "department": "Department",
-            "course_number": "Course ID",
-            "course_name": "Course Name",
+            "subject_number": "Subject ID",
+            "subject_name": "Subject Name",
             "max_numb_students": "Max Students",
             "room_required": "Required Room Type",
             "required_lab_category": "Required Lab Category",
             "instructors": "Assigned Teacher",
             "classes_per_week": "Classes Per Week",
+            "duration": "Duration (Hours)",
         }
         widgets = {
             "department": forms.Select(),
@@ -147,9 +157,15 @@ class CourseForm(ModelForm):
                 'max': 10,
                 'placeholder': 'e.g., 3',
             }),
+            "duration": forms.NumberInput(attrs={
+                'min': 1,
+                'max': 4,
+                'placeholder': 'e.g., 1',
+            }),
         }
         help_texts = {
-            "classes_per_week": "How many times this course runs per week",
+            "classes_per_week": "How many times this subject runs per week",
+            "duration": "1 hour = 1 slot. Default is 1. Set 2 for a 2-hour class.",
         }
 
     def __init__(self, *args, user=None, **kwargs):

@@ -32,8 +32,10 @@
         <span class="tag">Name / Teacher Name</span>
         <span class="tag">Designation / Position</span>
         <span class="tag">Max Workload / Workload</span>
+        <span class="tag">Email</span>
+        <span class="tag">Contact Number</span>
       </div>
-      <p class="hint">Column names are flexible &mdash; we auto-detect them. If no headers are found, we assume the order: uid, name, designation, max_workload.</p>
+      <p class="hint">Column names are flexible &mdash; we auto-detect them. If no headers are found, we assume the order: uid, name, designation, max_workload, email, contact_number.</p>
     </div>
 
     <form method="POST" enctype="multipart/form-data" class="converter-form">
@@ -86,6 +88,8 @@
             <th>Name / Teacher Name</th>
             <th>Designation / Position</th>
             <th>Max Workload</th>
+            <th>Email</th>
+            <th>Contact Number</th>
             <th class="th-action"></th>
           </tr>
         </thead>
@@ -584,6 +588,8 @@ document.addEventListener("DOMContentLoaded", () => {
       '<td><input type="text" placeholder="e.g. Dr. Amit Sharma" data-col="name"></td>' +
       '<td><input type="text" placeholder="e.g. Professor" data-col="designation"></td>' +
       '<td><input type="text" placeholder="e.g. 25" data-col="max_workload"></td>' +
+      '<td><input type="text" placeholder="e.g. a@x.com, b@x.com" data-col="email"></td>' +
+      '<td><input type="text" placeholder="e.g. 9810001001, 9810001002" data-col="contact_number"></td>' +
       '<td><button type="button" class="del-row-btn" title="Delete row"><i class="fas fa-times"></i></button></td>';
     tr.querySelector(".del-row-btn").addEventListener("click", function() {
       tr.remove();
@@ -621,16 +627,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Convert & Download CSV
   document.getElementById("manual-convert-btn").addEventListener("click", function() {
     var tableRows = tbody.querySelectorAll("tr");
-    var csvRows = [["uid", "name", "designation", "max_workload"]];
+    var csvRows = [["uid", "name", "designation", "max_workload", "email", "contact_number"]];
 
     tableRows.forEach(function(tr) {
       var uid = tr.querySelector('[data-col="uid"]').value.trim();
       var name = tr.querySelector('[data-col="name"]').value.trim();
       var designation = tr.querySelector('[data-col="designation"]').value.trim();
       var workload = tr.querySelector('[data-col="max_workload"]').value.trim();
+      var email = tr.querySelector('[data-col="email"]').value.trim();
+      var contact = tr.querySelector('[data-col="contact_number"]').value.trim();
 
       if (uid && name) {
-        csvRows.push([uid, name, designation, workload]);
+        csvRows.push([uid, name, designation, workload, email, contact]);
       }
     });
 

@@ -73,6 +73,13 @@ VALID_LAB_START_SLOTS = ["1", "6"]
 LUNCH_SLOT = "5"
 
 
+def get_valid_start_slots(duration):
+    """Return valid start slots for a given duration, avoiding lunch (slot 5)."""
+    pre_lunch = [str(s) for s in range(1, 5) if s + duration - 1 <= 4]
+    post_lunch = [str(s) for s in range(6, 10) if s + duration - 1 <= 9]
+    return pre_lunch + post_lunch
+
+
 
 
 # placeholder for private generation algorithm loaded outside this repo
@@ -171,8 +178,8 @@ def get_section_signature(section_id):
     return semester, tuple(tokens)
 
 
-def clone_section_courses_from_similar(section):
-    if section.allowed_courses.exists():
+def clone_section_subjects_from_similar(section):
+    if section.allowed_subjects.exists():
         return None
 
     semester, tokens = get_section_signature(section.section_id)
@@ -185,10 +192,10 @@ def clone_section_courses_from_similar(section):
     candidates = (
         Section.objects.filter(department=section.department, user=section.user)
         .exclude(pk=section.pk)
-        .prefetch_related("allowed_courses")
+        .prefetch_related("allowed_subjects")
     )
     for candidate in candidates:
-        if not candidate.allowed_courses.exists():
+        if not candidate.allowed_subjects.exists():
             continue
         candidate_semester, candidate_tokens = get_section_signature(candidate.section_id)
         if candidate_semester != semester:
@@ -196,7 +203,7 @@ def clone_section_courses_from_similar(section):
         overlap = len(set(tokens) & set(candidate_tokens))
         if overlap <= 0:
             continue
-        score = (overlap, candidate.allowed_courses.count(), -len(candidate.section_id))
+        score = (overlap, candidate.allowed_subjects.count(), -len(candidate.section_id))
         if best_score is None or score > best_score:
             best_score = score
             best_match = candidate
@@ -204,11 +211,11 @@ def clone_section_courses_from_similar(section):
     if not best_match:
         return None
 
-    courses_to_copy = list(best_match.allowed_courses.all())
-    if not courses_to_copy:
+    subjects_to_copy = list(best_match.allowed_subjects.all())
+    if not subjects_to_copy:
         return None
 
-    section.allowed_courses.add(*courses_to_copy)
+    section.allowed_subjects.add(*subjects_to_copy)
     return best_match
 
 
@@ -380,10 +387,10 @@ def _resolve_teacher_dashboard_context(request, profile):
 
     if linked_instructor:
         teacher_subjects = list(
-            Course.objects.filter(
+            Subject.objects.filter(
                 user=linked_instructor.user,
                 instructors=linked_instructor,
-            ).order_by("course_name", "course_number").distinct()
+            ).order_by("subject_name", "subject_number").distinct()
         )
 
     if active_timetable:
@@ -938,14 +945,16 @@ if "DAYS" not in globals():
 
 if "Class" not in globals():
     class Class:
-        def __init__(self, id, dept, section, course):
+        def __init__(self, id, dept, section, subject):
             self.section_id = id
             self.department = dept
-            self.course = course
+            self.subject = subject
             self.instructor = None
             self.meeting_time = None
+            self.meeting_times = []
             self.room = None
             self.section = section
+            self.duration = getattr(subject, 'duration', 1)
 
         def set_instructor(self, instructor): self.instructor = instructor
         def set_meetingTime(self, mt): self.meeting_time = mt
@@ -954,15 +963,15 @@ if "Class" not in globals():
 
 if "Lab" not in globals():
     class Lab:
-        def __init__(self, id, dept, section, course, batch=1, total_batches=1):
+        def __init__(self, id, dept, section, subject, batch=1, total_batches=1):
             self.section_id = id
             self.department = dept
-            self.course = course
+            self.subject = subject
             self.instructor = None
             self.second_instructor = None   # shared lab: optional second teacher
             self.room = None
             self.section = section
-            self.duration = LAB_DURATION
+            self.duration = getattr(subject, 'duration', LAB_DURATION)
             self.meeting_times = []
             self.batch = batch
             self.total_batches = total_batches
@@ -1021,7 +1030,7 @@ if "build_section_tables" not in globals():
                         continue
                     cell_data = grid[day].get(s, {"classes": [], "labs": []})
                     if cell_data["labs"]:
-                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        lab_span = max((len(lb.meeting_times) for lb in cell_data["labs"] if lb.meeting_times), default=getattr(cell_data["labs"][0], 'duration', LAB_DURATION))
                         cells.append({
                             "type": "lab",
                             "colspan": lab_span,
@@ -1030,12 +1039,15 @@ if "build_section_tables" not in globals():
                         })
                         skip_until = s + lab_span - 1
                     elif cell_data["classes"]:
+                        cls_dur = getattr(cell_data["classes"][0], 'duration', 1)
                         cells.append({
                             "type": "class",
-                            "colspan": 1,
+                            "colspan": cls_dur,
                             "slot_number": s,
                             "classes": cell_data["classes"],
                         })
+                        if cls_dur > 1:
+                            skip_until = s + cls_dur - 1
                     else:
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
@@ -1103,17 +1115,20 @@ if "build_teacher_tables" not in globals():
                         continue
                     cell_data = grid[day].get(s, {"classes": [], "labs": []})
                     if cell_data["labs"]:
-                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        lab_span = max((len(lb.meeting_times) for lb in cell_data["labs"] if lb.meeting_times), default=getattr(cell_data["labs"][0], 'duration', LAB_DURATION))
                         cells.append({
                             "type": "lab", "colspan": lab_span, "slot_number": s,
                             "labs": cell_data["labs"],
                         })
                         skip_until = s + lab_span - 1
                     elif cell_data["classes"]:
+                        cls_dur = getattr(cell_data["classes"][0], 'duration', 1)
                         cells.append({
-                            "type": "class", "colspan": 1, "slot_number": s,
+                            "type": "class", "colspan": cls_dur, "slot_number": s,
                             "classes": cell_data["classes"],
                         })
+                        if cls_dur > 1:
+                            skip_until = s + cls_dur - 1
                     else:
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
@@ -1176,17 +1191,20 @@ if "build_room_tables" not in globals():
                         continue
                     cell_data = grid[day].get(s, {"classes": [], "labs": []})
                     if cell_data["labs"]:
-                        lab_span = len(cell_data["labs"][0].meeting_times) if cell_data["labs"][0].meeting_times else LAB_DURATION
+                        lab_span = max((len(lb.meeting_times) for lb in cell_data["labs"] if lb.meeting_times), default=getattr(cell_data["labs"][0], 'duration', LAB_DURATION))
                         cells.append({
                             "type": "lab", "colspan": lab_span, "slot_number": s,
                             "labs": cell_data["labs"],
                         })
                         skip_until = s + lab_span - 1
                     elif cell_data["classes"]:
+                        cls_dur = getattr(cell_data["classes"][0], 'duration', 1)
                         cells.append({
-                            "type": "class", "colspan": 1, "slot_number": s,
+                            "type": "class", "colspan": cls_dur, "slot_number": s,
                             "classes": cell_data["classes"],
                         })
+                        if cls_dur > 1:
+                            skip_until = s + cls_dur - 1
                     else:
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
@@ -1271,12 +1289,22 @@ for _runtime_view_name in (
 def _rebuild_classes_and_labs_from_saved(saved_t):
     """Rebuild in-memory Class and Lab objects from ScheduledSlot records."""
     slots = saved_t.slots.select_related(
-        "section", "section__department", "course", "instructor", "second_instructor", "room", "meeting_time",
+        "section", "section__department", "subject", "instructor", "second_instructor", "room", "meeting_time",
     ).prefetch_related("lab_slots").all()
 
     classes = []
     labs = []
     lab_slots_list = []
+
+    # Pre-fetch all meeting times grouped by day for multi-slot class reconstruction
+    from ttgen.models import MeetingTime as MT
+    all_mts = list(MT.objects.filter(user=saved_t.user))
+    mts_by_day = {}
+    slot_order = ["1","2","3","4","5","6","7","8","9"]
+    for m in all_mts:
+        mts_by_day.setdefault(m.day, []).append(m)
+    for d in mts_by_day:
+        mts_by_day[d].sort(key=lambda x: slot_order.index(x.time) if x.time in slot_order else 99)
 
     for slot in slots:
         if slot.is_lab:
@@ -1286,11 +1314,22 @@ def _rebuild_classes_and_labs_from_saved(saved_t):
                 id=0,
                 dept=slot.section.department,
                 section=slot.section.section_id,
-                course=slot.course,
+                subject=slot.subject,
             )
             cls.instructor = slot.instructor
             cls.room = slot.room
             cls.meeting_time = slot.meeting_time
+            # Rebuild meeting_times for multi-slot classes
+            cls_dur = getattr(slot.subject, 'duration', 1)
+            if cls_dur > 1:
+                day_mts = mts_by_day.get(slot.meeting_time.day, [])
+                start_idx = next((i for i, m in enumerate(day_mts) if m.time == slot.meeting_time.time), None)
+                if start_idx is not None and start_idx + cls_dur <= len(day_mts):
+                    cls.meeting_times = day_mts[start_idx:start_idx + cls_dur]
+                else:
+                    cls.meeting_times = [slot.meeting_time]
+            else:
+                cls.meeting_times = [slot.meeting_time]
             classes.append(cls)
 
     # Group labs by (section, starting day/time) to compute batch numbers
@@ -1307,7 +1346,7 @@ def _rebuild_classes_and_labs_from_saved(saved_t):
                 id=0,
                 dept=slot.section.department,
                 section=slot.section.section_id,
-                course=slot.course,
+                subject=slot.subject,
                 batch=batch_num,
                 total_batches=total_batches,
             )
@@ -1325,15 +1364,16 @@ def _compute_teacher_workloads(classes, labs):
     workloads = {}
     for cls in classes:
         teacher = cls.instructor
+        cls_dur = getattr(cls, 'duration', 1)
         if teacher not in workloads:
             workloads[teacher] = {"lectures": 0, "labs": 0, "total": 0}
-        workloads[teacher]["lectures"] += 1
-        workloads[teacher]["total"] += 1
+        workloads[teacher]["lectures"] += cls_dur
+        workloads[teacher]["total"] += cls_dur
     for lab in labs:
         teacher = lab.instructor
         if teacher not in workloads:
             workloads[teacher] = {"lectures": 0, "labs": 0, "total": 0}
-        lab_slot_count = len(lab.meeting_times) if lab.meeting_times else LAB_DURATION
+        lab_slot_count = len(lab.meeting_times) if lab.meeting_times else getattr(lab, 'duration', LAB_DURATION)
         workloads[teacher]["labs"] += lab_slot_count
         workloads[teacher]["total"] += lab_slot_count
         second_teacher = getattr(lab, "second_instructor", None)
@@ -1384,6 +1424,13 @@ def _get_saved_timetable_or_404(tid, user):
 
 def _get_plan_permissions(user):
     """Return plan permission flags for a user."""
+    from django.conf import settings as _settings
+    if getattr(_settings, "BYPASS_ACCESS", False):
+        return {
+            "can_edit_delete": True,
+            "can_substitute": True,
+            "can_drag_drop": True,
+        }
     try:
         plan = UserAccessPlan.objects.get(user=user)
         if plan.is_active:
@@ -1748,57 +1795,57 @@ from django.shortcuts import redirect, render
 from django.db import transaction
 
 @login_required
-def addCourses(request):
-    form = CourseForm(request.POST or None, user=request.user)
+def addSubjects(request):
+    form = SubjectForm(request.POST or None, user=request.user)
 
     # ============================
-    # MANUAL ADD COURSE
+    # MANUAL ADD SUBJECT
     # ============================
-    if request.method == "POST" and "add_course" in request.POST:
+    if request.method == "POST" and "add_subject" in request.POST:
         if form.is_valid():
-            course = form.save(commit=False)
-            course.user = request.user
-            course.room_required = (course.room_required or "").strip()
-            course.required_lab_category = normalize_lab_category(course.required_lab_category)
+            subject = form.save(commit=False)
+            subject.user = request.user
+            raw_room = (subject.room_required or "").strip().lower()
+            subject.room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room, subject.room_required)
+            subject.required_lab_category = normalize_lab_category(subject.required_lab_category)
 
-            if course.room_required == "Lab" and not course.required_lab_category:
-                messages.error(request, "Lab courses must have a Required Lab Category.")
-                return redirect("addCourses")
-            if course.room_required != "Lab":
-                course.required_lab_category = ""
+            if subject.room_required == "Lab" and not subject.required_lab_category:
+                messages.error(request, "Lab subjects must have a Required Lab Category.")
+                return redirect("addSubjects")
+            if subject.room_required != "Lab":
+                subject.required_lab_category = ""
 
             # Auto-set classes per week
-            if course.room_required == "Lab":
-                course.classes_per_week = 4
+            if subject.room_required == "Lab":
+                subject.classes_per_week = 4
             else:
-                course.classes_per_week = 3
+                subject.classes_per_week = 3
 
-            course.save()
+            subject.save()
             form.save_m2m()
 
             reset_global_schedule_cache(request.user.id)
-            messages.success(request, "Course added successfully!")
-            return redirect("addCourses")
+            messages.success(request, "Subject added successfully!")
+            return redirect("addSubjects")
 
     # ============================
-    # CSV UPLOAD COURSES (FIXED)
+    # CSV UPLOAD SUBJECTS
     # ============================
     if request.method == "POST" and "csv_upload" in request.POST:
         csv_file = request.FILES.get("csv_file")
 
         if not csv_file or not csv_file.name.endswith(".csv"):
             messages.error(request, "Please upload a valid CSV file.")
-            return redirect("addCourses")
+            return redirect("addSubjects")
 
         try:
             decoded_file = csv_file.read().decode("utf-8").splitlines()
             reader = csv.DictReader(decoded_file)
 
-            # ✅ REQUIRED columns (MATCH YOUR CSV)
             required_columns = [
                 "department_code",
-                "course_number",
-                "course_name",
+                "subject_number",
+                "subject_name",
                 "room_required",
                 "required_lab_category",
                 "classes_per_week",
@@ -1808,57 +1855,59 @@ def addCourses(request):
             for col in required_columns:
                 if col not in reader.fieldnames:
                     messages.error(request, f"Missing required column: {col}")
-                    return redirect("addCourses")
+                    return redirect("addSubjects")
 
             created_count = 0
 
             with transaction.atomic():
                 for row in reader:
                     dept_code = row["department_code"].strip().upper()
-                    course_number = row["course_number"].strip()
-                    room_required = row["room_required"].strip()
+                    subject_number = row["subject_number"].strip()
+                    raw_room = row["room_required"].strip()
+                    room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room.lower(), raw_room)
                     required_lab_category = normalize_lab_category(row["required_lab_category"])
 
                     try:
-                        course_department = Department.objects.get(code=dept_code, user=request.user)
+                        subject_department = Department.objects.get(code=dept_code, user=request.user)
                     except Department.DoesNotExist:
                         raise ValueError(f"Department with code '{dept_code}' does not exist.")
 
                     # Skip duplicates
-                    if Course.objects.filter(course_number=course_number, user=request.user).exists():
+                    if Subject.objects.filter(subject_number=subject_number, user=request.user).exists():
                         continue
 
                     if room_required == "Lab" and not required_lab_category:
                         raise ValueError(
-                            f"Course '{course_number}' is a Lab but required_lab_category is blank."
+                            f"Subject '{subject_number}' is a Lab but required_lab_category is blank."
                         )
                     if room_required != "Lab":
                         required_lab_category = ""
 
-                    course = Course.objects.create(
+                    subject = Subject.objects.create(
                         user=request.user,
-                        course_number=course_number,
-                        course_name=row["course_name"].strip(),
-                        department=course_department,
+                        subject_number=subject_number,
+                        subject_name=row["subject_name"].strip(),
+                        department=subject_department,
                         room_required=room_required,
                         required_lab_category=required_lab_category,
                         classes_per_week=int(row["classes_per_week"]),
                         max_numb_students=int(row.get("max_numb_students", 70) or 70),
+                        duration=int(row.get("duration", 1) or 1),
                     )
 
                     created_count += 1
 
             reset_global_schedule_cache(request.user.id)
             messages.success(
-                request, f"{created_count} courses uploaded successfully!"
+                request, f"{created_count} subjects uploaded successfully!"
             )
 
         except Exception as e:
             messages.error(request, f"CSV upload failed: {str(e)}")
 
-        return redirect("addCourses")
+        return redirect("addSubjects")
 
-    return render(request, "addCourses.html", {"form": form})
+    return render(request, "addSubjects.html", {"form": form})
 
 
 
@@ -1872,10 +1921,36 @@ def course_list_view(request):
 
 
 @login_required
-def delete_course(request, pk):
+def delete_subject(request, pk):
     if request.method == 'POST':
-        Course.objects.filter(pk=pk, user=request.user).delete()
+        Subject.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
+        return redirect('editsubject')
+
+
+@login_required
+def update_course(request, pk):
+    if request.method == 'POST':
+        course = Course.objects.filter(pk=pk, user=request.user).first()
+        if course:
+            course.course_number = request.POST.get('course_number', course.course_number).strip()
+            course.course_name = request.POST.get('course_name', course.course_name).strip()
+            max_st = request.POST.get('max_numb_students', '').strip()
+            if max_st.isdigit() and int(max_st) > 0:
+                course.max_numb_students = int(max_st)
+            cpw = request.POST.get('classes_per_week', '').strip()
+            if cpw.isdigit() and int(cpw) > 0:
+                course.classes_per_week = int(cpw)
+            course.room_required = request.POST.get('room_required', course.room_required).strip()
+            course.required_lab_category = request.POST.get('required_lab_category', course.required_lab_category).strip()
+            dept_id = request.POST.get('department', '').strip()
+            if dept_id.isdigit():
+                dept = Department.objects.filter(pk=int(dept_id), user=request.user).first()
+                if dept:
+                    course.department = dept
+            course.save()
+            reset_global_schedule_cache(request.user.id)
+            messages.success(request, "Course updated successfully!")
         return redirect('editcourse')
 
 
@@ -1992,7 +2067,9 @@ def addInstructor(request):
             uid, name = row[0].strip(), row[1].strip()
             designation = row[2].strip() if len(row) > 2 else ""
             max_workload = row[3].strip() if len(row) > 3 else ""
-            if uid and name and not Instructor.objects.filter(uid=uid, user=request.user).exists():
+            email = row[4].strip() if len(row) > 4 else ""
+            contact_number = row[5].strip() if len(row) > 5 else ""
+            if uid and name and email and contact_number and not Instructor.objects.filter(uid=uid, user=request.user).exists():
                 resolved_designation, resolved_workload = teacher_payload(
                     name,
                     designation,
@@ -2002,6 +2079,8 @@ def addInstructor(request):
                     user=request.user,
                     uid=uid,
                     name=name,
+                    email=email,
+                    contact_number=contact_number,
                     designation=resolved_designation,
                     max_workload=resolved_workload,
                 )
@@ -2018,9 +2097,9 @@ def addInstructor(request):
     })
 
 @login_required
-def map_section_courses(request):
+def map_section_subjects(request):
     sections = Section.objects.filter(user=request.user).order_by("section_id")
-    courses = Course.objects.filter(user=request.user).order_by("course_number")
+    subjects = Subject.objects.filter(user=request.user).order_by("subject_number")
 
     def resolve_section(section_identifier):
         section_identifier = (section_identifier or "").strip()
@@ -2036,43 +2115,43 @@ def map_section_courses(request):
 
     if request.method == "POST" and "manual_add" in request.POST:
         section_identifier = request.POST.get("section_id", "").strip()
-        selected_course_ids = request.POST.getlist("courses")
+        selected_subject_ids = request.POST.getlist("subjects")
 
-        if not section_identifier or not selected_course_ids:
+        if not section_identifier or not selected_subject_ids:
             messages.error(request, "Please select a section and at least one subject.")
-            return redirect("map_section_courses")
+            return redirect("map_section_subjects")
 
         try:
             section = resolve_section(section_identifier)
         except Section.DoesNotExist:
             messages.error(request, f"Section not found: {section_identifier}")
-            return redirect("map_section_courses")
+            return redirect("map_section_subjects")
 
-        valid_courses = list(Course.objects.filter(pk__in=selected_course_ids, user=request.user))
-        if not valid_courses:
+        valid_subjects = list(Subject.objects.filter(pk__in=selected_subject_ids, user=request.user))
+        if not valid_subjects:
             messages.error(request, "No valid subjects were selected.")
-            return redirect("map_section_courses")
+            return redirect("map_section_subjects")
 
-        for course in valid_courses:
-            section.allowed_courses.add(course)
+        for subj in valid_subjects:
+            section.allowed_subjects.add(subj)
 
         reset_global_schedule_cache(request.user.id)
         messages.success(
             request,
-            f"{len(valid_courses)} subject mappings saved for {section.section_id}."
+            f"{len(valid_subjects)} subject mappings saved for {section.section_id}."
         )
-        return redirect("map_section_courses")
+        return redirect("map_section_subjects")
 
     if request.method == "POST" and "csv_upload" in request.POST:
         csv_file = request.FILES.get("csv_file")
 
         if not csv_file:
             messages.error(request, "No CSV file selected.")
-            return redirect("map_section_courses")
+            return redirect("map_section_subjects")
 
         if not csv_file.name.endswith(".csv"):
             messages.error(request, "Invalid file format. Upload CSV only.")
-            return redirect("map_section_courses")
+            return redirect("map_section_subjects")
 
         decoded = csv_file.read().decode("utf-8").splitlines()
         reader = csv.reader(decoded)
@@ -2090,20 +2169,20 @@ def map_section_courses(request):
                 continue
 
             section_identifier = row[0].strip()
-            course_number = row[1].strip()
+            subject_number = row[1].strip()
 
             try:
                 section = resolve_section(section_identifier)
-                course = Course.objects.get(course_number=course_number, user=request.user)
-            except (Section.DoesNotExist, Course.DoesNotExist):
+                subj = Subject.objects.get(subject_number=subject_number, user=request.user)
+            except (Section.DoesNotExist, Subject.DoesNotExist):
                 skipped += 1
                 continue
 
-            if course in section.allowed_courses.all():
+            if subj in section.allowed_subjects.all():
                 skipped += 1
                 continue
 
-            section.allowed_courses.add(course)
+            section.allowed_subjects.add(subj)
             added += 1
 
         reset_global_schedule_cache(request.user.id)
@@ -2111,45 +2190,45 @@ def map_section_courses(request):
             request,
             f"{added} section-subject mappings added. {skipped} skipped."
         )
-        return redirect("map_section_courses")
+        return redirect("map_section_subjects")
 
-    return render(request, "map_section_courses.html", {
+    return render(request, "map_section_subjects.html", {
         "sections": sections,
-        "courses": courses
+        "subjects": subjects
     })
 
 
 @login_required
-def view_section_courses(request):
+def view_section_subjects(request):
     sections = (
         Section.objects.filter(user=request.user)
         .order_by("section_id")
-        .prefetch_related("allowed_courses")
+        .prefetch_related("allowed_subjects")
     )
     section_mappings = [
         {
             "section_id": section.section_id,
-            "courses": list(section.allowed_courses.all().order_by("course_number")),
+            "subjects": list(section.allowed_subjects.all().order_by("subject_number")),
         }
         for section in sections
     ]
     return render(
         request,
-        "view_section_courses.html",
+        "view_section_subjects.html",
         {"section_mappings": section_mappings},
     )
 
 @login_required
-def map_teacher_courses(request):
+def map_teacher_subjects(request):
     """
     Step 7: Fixed Teacher–Subject–Section mapping (after Sections are created in Step 6).
 
     CSV format (3-col legacy):
-        section_id,course_number,instructor_uid
+        section_id,subject_number,instructor_uid
         CE-A,CS101,T001
 
     CSV format (5-col with shared lab):
-        section_id,course_number,instructor_uid,shared_lab,second_instructor_uid
+        section_id,subject_number,instructor_uid,shared_lab,second_instructor_uid
         CE-A,CS101,T001,false,
         BSc AM 3rd Sem,CA022,T076,true,T080
     """
@@ -2163,11 +2242,11 @@ def map_teacher_courses(request):
 
         if not csv_file:
             messages.error(request, "No CSV file selected.")
-            return redirect("map_teacher_courses")
+            return redirect("map_teacher_subjects")
 
         if not csv_file.name.endswith(".csv"):
             messages.error(request, "Invalid file format. Upload CSV only.")
-            return redirect("map_teacher_courses")
+            return redirect("map_teacher_subjects")
 
         decoded = csv_file.read().decode("utf-8").splitlines()
         reader = csv.reader(decoded)
@@ -2199,7 +2278,7 @@ def map_teacher_courses(request):
                 continue
 
             section_id     = row[0].strip()
-            course_number  = row[1].strip()
+            subject_number = row[1].strip()
             instructor_uid = row[2].strip()
 
             # Optional shared-lab columns (col 3 = shared_lab bool, col 4 = second instructor uid)
@@ -2228,11 +2307,11 @@ def map_teacher_courses(request):
                 continue
 
             try:
-                course = Course.objects.get(course_number=course_number, user=request.user)
-            except Course.DoesNotExist:
+                subj = Subject.objects.get(subject_number=subject_number, user=request.user)
+            except Subject.DoesNotExist:
                 skipped += 1
                 validation_errors.append(
-                    f"Row {row_number}: course not found '{course_number}'"
+                    f"Row {row_number}: subject not found '{subject_number}'"
                 )
                 continue
 
@@ -2247,10 +2326,10 @@ def map_teacher_courses(request):
             # Resolve second instructor if shared lab
             second_instructor = None
             if shared_lab_flag:
-                if course.room_required != "Lab":
+                if subj.room_required != "Lab":
                     skipped += 1
                     validation_errors.append(
-                        f"Row {row_number}: shared_lab=true allowed only for Lab courses ({course_number})"
+                        f"Row {row_number}: shared_lab=true allowed only for Lab subjects ({subject_number})"
                     )
                     continue
                 if not second_instructor_uid:
@@ -2276,16 +2355,16 @@ def map_teacher_courses(request):
             # -------------------------
             # CREATE / UPDATE MAPPING
             # -------------------------
-            SectionCourseInstructor.objects.update_or_create(
+            SectionSubjectInstructor.objects.update_or_create(
                 user=request.user,
                 section=section,
-                course=course,
+                subject=subj,
                 defaults={"instructor": instructor, "second_instructor": second_instructor},
             )
-            # Also ensure instructor is in Course.instructors (for validation)
-            course.instructors.add(instructor)
+            # Also ensure instructor is in Subject.instructors (for validation)
+            subj.instructors.add(instructor)
             if second_instructor:
-                course.instructors.add(second_instructor)
+                subj.instructors.add(second_instructor)
             added += 1
 
         messages.success(
@@ -2299,47 +2378,46 @@ def map_teacher_courses(request):
                 preview += f" | ...and {remaining} more"
             messages.warning(request, f"Validation details: {preview}")
         reset_global_schedule_cache(request.user.id)
-        return redirect("map_teacher_courses")
+        return redirect("map_teacher_subjects")
 
     # =========================
     # DISPLAY EXISTING MAPPINGS
     # =========================
-    mappings = SectionCourseInstructor.objects.filter(
+    mappings = SectionSubjectInstructor.objects.filter(
         user=request.user
     ).select_related(
-        "section", "course", "instructor", "second_instructor"
-    ).order_by("section__section_id", "course__course_number")
+        "section", "subject", "instructor", "second_instructor"
+    ).order_by("section__section_id", "subject__subject_number")
 
     return render(
         request,
-        "map_teacher_courses.html",
+        "map_teacher_subjects.html",
         {"mappings": mappings},
     )
 
 
 @login_required
-def delete_teacher_course_mapping(request, course_number, instructor_id):
-    # Kept for backward compatibility
+def delete_teacher_subject_mapping(request, subject_number, instructor_id):
     if request.method == "POST":
         try:
-            course = Course.objects.get(course_number=course_number, user=request.user)
+            subj = Subject.objects.get(subject_number=subject_number, user=request.user)
             instructor = Instructor.objects.get(id=instructor_id, user=request.user)
-            course.instructors.remove(instructor)
+            subj.instructors.remove(instructor)
             messages.success(request, "Mapping removed successfully.")
         except Exception as e:
             messages.error(request, f"Error removing mapping: {e}")
-    return redirect("map_teacher_courses")
+    return redirect("map_teacher_subjects")
 
 
 @login_required
 def delete_sci_mapping(request, mapping_id):
     if request.method == "POST":
-        SectionCourseInstructor.objects.filter(
+        SectionSubjectInstructor.objects.filter(
             id=mapping_id, user=request.user
         ).delete()
         reset_global_schedule_cache(request.user.id)
         messages.success(request, "Mapping removed.")
-    return redirect("map_teacher_courses")
+    return redirect("map_teacher_subjects")
 
 
 
@@ -2828,7 +2906,7 @@ def addSections(request):
             section = form.save(commit=False)
             section.user = request.user
             section.save()
-            template_section = clone_section_courses_from_similar(section)
+            template_section = clone_section_subjects_from_similar(section)
             reset_global_schedule_cache(request.user.id)
             if template_section:
                 messages.success(
@@ -2937,7 +3015,7 @@ def addSections(request):
                 student_strength=int(student_strength),
                 department=dept,
             )
-            clone_section_courses_from_similar(section)
+            clone_section_subjects_from_similar(section)
 
             added += 1
 
@@ -3041,50 +3119,15 @@ def download_saved_timetable_pdf(request, tid):
             status=503,
         )
 
-    # 1. Fetch saved timetable securely
-    try:
-        saved_t = SavedTimetable.objects.get(id=tid)
-    except SavedTimetable.DoesNotExist:
-        raise Http404("Timetable does not exist")
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
 
-    if saved_t.user != request.user:
-        return HttpResponseForbidden("You do not have permission to download this PDF.")
+    # Rebuild in-memory classes and labs (with proper batch grouping)
+    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
 
-    # 2. Rebuild in-memory classes and labs
-    slots = saved_t.slots.all()
+    # Build tables scoped to the current user
+    tables = build_section_tables(classes, labs, user=request.user)
 
-    classes = []
-    labs = []
-
-    for slot in slots:
-        if slot.is_lab:
-            lab_obj = Lab(
-                id=0,
-                dept=slot.section.department,
-                section=slot.section.section_id,
-                course=slot.course
-            )
-            lab_obj.instructor = slot.instructor
-            lab_obj.second_instructor = getattr(slot, "second_instructor", None)
-            lab_obj.room = slot.room
-            lab_obj.meeting_times = list(slot.lab_slots.all())
-            labs.append(lab_obj)
-        else:
-            cls = Class(
-                id=0,
-                dept=slot.section.department,
-                section=slot.section.section_id,
-                course=slot.course
-            )
-            cls.instructor = slot.instructor
-            cls.room = slot.room
-            cls.meeting_time = slot.meeting_time
-            classes.append(cls)
-
-    # 3. Build tables (using your existing function)
-    tables = build_section_tables(classes, labs)
-
-    # 4. Expand cells for PDF so colspan renders properly
+    # Expand cells for PDF so colspan renders properly in xhtml2pdf
     for table in tables:
         for row in table["rows"]:
             for cell in row["cells"]:
@@ -3093,44 +3136,20 @@ def download_saved_timetable_pdf(request, tid):
                 else:
                     cell["width"] = 85
 
-    # 5. Render HTML template
     html = render_to_string("saved_timetable_pdf.html", {
         "tables": tables,
         "SLOT_LABELS": SLOT_LABELS
     })
 
-    # 6. Prepare response object
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="timetable_{tid}.pdf"'
 
-    # 7. Create PDF
     pisa_status = pisa.CreatePDF(html, dest=response)
 
-    # 8. If PDF fails, return HTML for debugging instead of crashing
     if pisa_status.err:
         return HttpResponse("PDF creation crashed.<br><br>" + html)
 
-    # 9. Always return a response
     return response
-
-
-
-    # ------------------------------------------------------------------
-    # Build tables (returns list of dictionaries)
-    # ------------------------------------------------------------------
-    tables = build_section_tables(classes, labs)
-
-    # ------------------------------------------------------------------
-    # ⭐ FIX A: Add width to each cell for xhtml2pdf (dict-safe) ⭐
-    # ------------------------------------------------------------------
-    for table in tables:
-        for row in table["rows"]:            # dict access
-            for cell in row["cells"]:        # dict access
-                if cell["type"] == "lab":
-                    cell["width"] = 85 * cell["colspan"]
-                else:
-                    cell["width"] = 85
-    # ------------------------------------------------------------------
 
     # Render HTML
     html = render_to_string("saved_timetable_pdf.html", {
@@ -3257,12 +3276,12 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
                         class_items = cell_data.get("classes", [])
                         if class_items:
                             cls = class_items[0]
-                            course = getattr(cls, "course", None)
+                            subj = getattr(cls, "subject", None)
                             instructor = getattr(cls, "instructor", None)
                             room = getattr(cls, "room", None)
 
                             xl_cell.value = "\n".join([
-                                str(_safe_get(course, "course_number", "course_name", default="Class")),
+                                str(_safe_get(subj, "subject_number", "subject_name", default="Class")),
                                 str(_safe_get(instructor, "name", "uid", default="TBD")),
                                 str(_safe_get(room, "r_number", default="Room TBD")),
                             ])
@@ -3271,12 +3290,12 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
                         lab_items = cell_data.get("labs", [])
                         if lab_items:
                             lab = lab_items[0]
-                            course = getattr(lab, "course", None)
+                            subj = getattr(lab, "subject", None)
                             instructor = getattr(lab, "instructor", None)
                             room = getattr(lab, "room", None)
 
                             xl_cell.value = "\n".join([
-                                f"{_safe_get(course, 'course_number', 'course_name', default='Lab')} (Lab)",
+                                f"{_safe_get(subj, 'subject_number', 'subject_name', default='Lab')} (Lab)",
                                 str(_safe_get(instructor, "name", "uid", default="TBD")),
                                 str(_safe_get(room, "r_number", default="Room TBD")),
                             ])
@@ -3417,28 +3436,31 @@ def download_generated_timetable_excel(request, index, view_type='section'):
 ENTITY_CONFIGS = {
     "instructors": {
         "label": "Instructors",
-        "columns": ["uid", "name", "designation", "max_workload"],
+        "columns": ["uid", "name", "designation", "max_workload", "email", "contact_number"],
         "filename": "instructors.csv",
-        "required": ["uid", "name"],
+        "required": ["uid", "name", "email", "contact_number"],
         "keywords": {
             "uid": ["uid", "id", "teacher id", "teacherid", "faculty id", "code", "teacher_id"],
             "name": ["name", "teacher name", "teachername", "faculty name", "instructor", "faculty"],
             "designation": ["designation", "position", "role", "rank", "post"],
             "max_workload": ["max_workload", "workload", "max workload", "load", "hours"],
+            "email": ["email", "e-mail", "mail", "email id", "email_id"],
+            "contact_number": ["contact_number", "contact", "phone", "mobile", "phone number", "contact no"],
         },
     },
-    "courses": {
-        "label": "Courses",
-        "columns": ["department_code", "course_number", "course_name", "room_required", "required_lab_category", "classes_per_week"],
-        "filename": "courses.csv",
-        "required": ["course_number", "course_name"],
+    "subjects": {
+        "label": "Subjects",
+        "columns": ["department_code", "subject_number", "subject_name", "room_required", "required_lab_category", "classes_per_week", "duration"],
+        "filename": "subjects.csv",
+        "required": ["subject_number", "subject_name"],
         "keywords": {
             "department_code": ["department", "dept", "department_code", "dept_code"],
-            "course_number": ["course_number", "course no", "course_id", "course id", "code", "number"],
-            "course_name": ["course_name", "course name", "name", "title", "subject"],
+            "subject_number": ["subject_number", "subject no", "subject_id", "subject id", "code", "number", "course_number", "course no", "course_id"],
+            "subject_name": ["subject_name", "subject name", "name", "title", "course_name", "course name"],
             "room_required": ["room_required", "room required", "room type", "room"],
             "required_lab_category": ["lab_category", "lab category", "required_lab", "lab"],
             "classes_per_week": ["classes_per_week", "classes per week", "classes", "per week", "frequency", "weekly"],
+            "duration": ["duration", "hours", "duration_hours", "slot_duration", "slots"],
         },
     },
     "rooms": {
@@ -3487,24 +3509,24 @@ ENTITY_CONFIGS = {
             "student_strength": ["student_strength", "student strength", "strength", "students", "size"],
         },
     },
-    "section_courses": {
-        "label": "Section-Course Mapping",
-        "columns": ["section_id", "course_number"],
-        "filename": "section_courses.csv",
-        "required": ["section_id", "course_number"],
+    "section_subjects": {
+        "label": "Section-Subject Mapping",
+        "columns": ["section_id", "subject_number"],
+        "filename": "section_subjects.csv",
+        "required": ["section_id", "subject_number"],
         "keywords": {
             "section_id": ["section_id", "section id", "section", "batch"],
-            "course_number": ["course_number", "course no", "course_id", "course id", "course", "subject"],
+            "subject_number": ["subject_number", "subject no", "subject_id", "subject id", "subject", "course_number", "course no", "course"],
         },
     },
-    "teacher_courses": {
-        "label": "Teacher-Course Mapping",
-        "columns": ["instructor", "course_number"],
-        "filename": "teacher_courses.csv",
-        "required": ["instructor", "course_number"],
+    "teacher_subjects": {
+        "label": "Teacher-Subject Mapping",
+        "columns": ["instructor", "subject_number"],
+        "filename": "teacher_subjects.csv",
+        "required": ["instructor", "subject_number"],
         "keywords": {
             "instructor": ["instructor", "teacher", "uid", "name", "faculty", "teacher name", "instructor_name"],
-            "course_number": ["course_number", "course no", "course_id", "course id", "course", "subject"],
+            "subject_number": ["subject_number", "subject no", "subject_id", "subject id", "subject", "course_number", "course no", "course"],
         },
     },
 }
