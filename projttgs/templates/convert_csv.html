@@ -727,9 +727,9 @@ document.addEventListener("DOMContentLoaded", function() {
     },
     subjects: {
       label: "Subjects",
-      columns: ["department_code", "subject_number", "subject_name", "room_required", "required_lab_category", "classes_per_week"],
-      headers: ["Dept Code", "Subject Number", "Subject Name", "Room Required", "Lab Category", "Classes/Week"],
-      placeholders: ["e.g. CSE", "e.g. CS101", "e.g. Data Structures", "e.g. Lecture Hall", "e.g. General", "e.g. 3"],
+      columns: ["department_code", "subject_number", "subject_name", "room_required", "required_lab_category", "specific_equipment/software_lab", "classes_per_week", "duration", "group_count"],
+      headers: ["Dept Code", "Subject Number", "Subject Name", "Room Required", "Lab Category", "Specific Room(s)", "Classes/Week", "Duration", "Groups"],
+      placeholders: ["e.g. CSE", "e.g. CS101", "e.g. Data Structures", "e.g. Lecture Hall", "e.g. General", "e.g. CC01;CC02", "e.g. 3", "e.g. 1", "e.g. 1"],
       required: ["subject_number", "subject_name"]
     },
     rooms: {
@@ -1038,6 +1038,19 @@ document.addEventListener("DOMContentLoaded", function() {
     if (cols.indexOf("classes_per_week") !== -1) {
       aliases["classes"] = "classes_per_week";
       aliases["frequency"] = "classes_per_week";
+    }
+    if (cols.indexOf("specific_equipment/software_lab") !== -1) {
+      aliases["specific rooms"] = "specific_equipment/software_lab";
+      aliases["specific room"] = "specific_equipment/software_lab";
+      aliases["software_lab"] = "specific_equipment/software_lab";
+      aliases["software lab"] = "specific_equipment/software_lab";
+      aliases["equipment"] = "specific_equipment/software_lab";
+      aliases["room lock"] = "specific_equipment/software_lab";
+    }
+    if (cols.indexOf("group_count") !== -1) {
+      aliases["groups"] = "group_count";
+      aliases["group number"] = "group_count";
+      aliases["group_number"] = "group_count";
     }
     if (cols.indexOf("pid") !== -1) {
       aliases["period"] = "pid";

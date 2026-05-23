@@ -1,0 +1,5 @@
+r_number,department_code,seating_capacity,room_type,lab_category
+EL-LH1,EL,80,Lecture Hall,
+EL-LH2,EL,80,Lecture Hall,
+EL-LH3,EL,80,Lecture Hall,
+EL-LAB1,EL,40,Lab,General

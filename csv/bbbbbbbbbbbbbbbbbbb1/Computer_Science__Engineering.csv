@@ -1,0 +1,56 @@
+uid,name,designation,max_workload,email,contact_number,department_code
+CSE01,Dr.Naresh Chauhan,Professor,12,nareshchauhan19@jcboseust.ac.in,9871160135,CSE
+CSE02,Dr.Komal Kr Bhatia,Professor,12,komalbhatia13@gmail.com,9953637670,CSE
+CSE03,Dr.Atul Mishra,Professor,12,atulmishra@jcboseust.ac.in,9818769772,CSE
+CSE04,Dr.Ashutosh Dixit,Professor,12,dixit.ashutosh@jcboseust.ac.in,9873356911,CSE
+CSE05,Dr. Sapna Gambhir,Associate Professor,14,sapnagambhir@gmail.com,9810340200,CSE
+CSE06,Dr.Neelam Duhan,Associate Professor,14,neelamduhan@jcboseust.ac.in,9818462006,CSE
+CSE07,Dr. Parul Gupta,Associate Professor,14,parulgupta_gem@yahoo.com,9810588553,CSE
+CSE08,Dr.Parul Tomar,Associate Professor,14,ptomar_p@hotmail.com,9818923336,CSE
+CSE09,Dr. Harish Kumar,Associate Professor,14,htanwar@gmail.com,9911911782,CSE
+CSE10,Dr. Poonam,Associate Professor,14,poonamgarg1984@gmail.com,9899284595,CSE
+CSE11,Dr. Deepika Punj,Associate Professor,14,deepikapunj@gmail.com,9911571006,CSE
+CSE12,Dr. Preeti Sethi,Associate Professor,14,preetisethi22@gmail.com,9810374948,CSE
+CSE13,Dr .Ashlesha Gupta,Associate Professor,14,gupta_ashlesha@yahoo.co.in,9891466310,CSE
+CSE 14,Dr Rashmi Popli,Associate Professor,14,rashmimukhija@gmail.com,9810862658,CSE
+CSE15,Dr. Shruti Sharma,Associate Professor,14,shruti.mattu@gmail.com,9958993483,CSE
+CSE 16,Dr. Payal Gulati,Associate Professor,14,gulatipayal@yahoo.co.in,8800311601,CSE
+CSE 17,Dr. Amita Arora,Associate Professor,14,amita.arora@gmail.com,9891874947,CSE
+CSE 18,Dr. Sonali Gupta,Associate Professor,14,sonali.goyal@yahoo.com,9999971057,CSE
+CSE 19,Dr.Umesh Kumar,Assistant Professor,18,umesh554@gmail.com,9810794167,CSE
+CSE 20,Dr. Shivi Garg,Assistant Professor,18,shivigarg@jcboseust.ac.in,9968681034,CSE
+CSE 21,Dr. Rewa Sharma,Assistant Professor,18,rewasharma@jcboseust.ac.in,9582236664,CSE
+CSE 22,Mr. Piyush Gupta,Assistant Professor,18,piyushgpt.er@gmail.com,9541650297,CSE
+CSE 23,Dr. Lalit Mohan Goyal,Assistant Professor,18,lalitgoyal78@gmail.com,8882212748,CSE
+CSE 24,Ms. Shikha Gupta,Assistant Professor,18,shikha.0909@gmail.com,7988278860,CSE
+CSE 25,Ms. Shilpi,Assistant Professor,18,shilpisanghi@jcboseust.ac.in,8178033531,CSE
+CSE 26,Ms. Yojana,Assistant Professor,18,yojana@jcboseust.ac.in,9671811922,CSE
+CSE 27,Ms. Rachna,Assistant Professor,18,rachnagupta.ce@jcboseust.ac.in,8901412192,CSE
+CSE 28,Ms. Dimple,Assistant Professor,18,dimplechehal@jcboseust.ac.in,9810234838,CSE
+CSE 29,Ms Garima,Assistant Professor,18,garimagoyal@jcboseust.ac.in,9355685955,CSE
+CSE 30,Ms. Abhilasha,Assistant Professor,18,work3123@gmail.com,9315411834,CSE
+CSE 31,Ms. Meenakshi,Assistant Professor,18,meenakshi.chaudhary47@gmail.com,9999340608,CSE
+CSE 32,Ms. Pratima,Assistant Professor,18,pratima7521@gmail.com,8800472099,CSE
+CSE 33,Ms. Anjana,Assistant Professor,18,anjanarani2814@gmail.com,9910082772,CSE
+CSE 34,Mr. Yogesh,Assistant Professor,18,yogeshymca7@gmail.com,9582515851,CSE
+CSE 35,Ms. Priyanka,Assistant Professor,18,priyanka798257@gmail.com,9315090229,CSE
+CSE 36,Ms. Piyusha,Assistant Professor,18,pyu.sharma19@gmail.com,7011434765,CSE
+CSE 37,Ms. Chanchal,Assistant Professor,18,chanchalchauhan77@gmail.com,7011434765,CSE
+CSE 38,Bindiya Ahuja,Assistant Professor,18,cse38@gmail.com,9876543210,CSE
+CSE 39,x,Assistant Professor,18,cse39@gmail.com,9876543210,CSE
+CSE 40,y,Assistant Professor,18,cse40@gmail.com,9876543210,CSE
+CSE 41,Ms. Sangeeta,Ph.D Scholar,10,goelsangeeta43@gmail.com,8076016404,CSE
+CSE 42,Dr. Mukesh Gupta,Lab Staff,18,singla.mkg@gmail.com,9999181735,CSE
+CSE 43,Mr. Sanjay Kumar,Lab Staff,18,sanjay.123k@gmail.com,9990260995,CSE
+CSE 44,Mr. Krishan Kumar,Lab Staff,18,krishanbhardwajcse@gmail.com,9671696203,CSE
+CSE 45,Mr. Mohan Singh,Lab Staff,18,singh081285@gmail.com,9953115458,CSE
+CSE 46,Dr. Diksha Tripathi,Assistant Professor,18,Deeksha2318tripathi@gmail.com,9680810472,CSE
+CSE 47,Dr. Meena Patel,Assistant Professor,18,cse47@gmail.com,9876543210,CSE
+CSE 48,A,Assistant Professor,18,cse48@gmail.com,9876543210,CSE
+CSE 49,B,Assistant Professor,18,cse49@gmail.com,9876543210,CSE
+CSE 50,C,Assistant Professor,18,cse50@gmail.com,9876543210,CSE
+CSE 51,D,Assistant Professor,18,cse51@gmail.com,9876543210,CSE
+CSE53,Sh. Sanjay,Lab Staff,8,cse52@gmail.com,9876543210,CSE
+CSE54,Sh. Krishan,Lab Staff,8,cse53@gmail.com,9876543210,CSE
+CSE55,Sh. Mohan Singh,Lab Staff,8,cse54@gmail.com,9876543210,CSE
+CSE56,E,Assistant Professor,18,cse55@gmail.com,9876543210,CSE

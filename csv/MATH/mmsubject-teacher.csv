@@ -1,0 +1,65 @@
+section_id,subject_code,Teacher_id,is_shared_lab,second_teacher_id,Groups for Lab
+BSc Math 1st sem,MTU-101-V,MATH09,,,
+BSc Math 1st sem,MTU-103-V,MATH09,yes,MATH22,G1
+BSc Math & Computing 1st sem,MTU-103-V,MATH09,yes,MATH18,G2
+BSc Math 1st sem,MTU-105-V,MATH03,,,
+BSc Math 1st sem,OSU-103-V,CSE49,,,
+BSc Math 1st sem,OSU-111-V,CHE17,,,
+BSc Math & Computing 1st sem,PHU-109-V,PHY19,,,
+BSc Math 1st sem,OSU-107-V,MATH06,yes,MATH20,G1
+BSc Math & Computing 1st sem,OSU-107-V,MATH06,yes,MATH19,G2
+BSc Math 1st sem,AEC-101-V,LL10,,,
+BSc Math 1st sem,MTU-107-V,MATH16,,,
+BSc Math 1st sem,VAC-201-V,ES10,,,
+BSc Math & Computing 1st sem,MTU-101-V,MATH09,,,
+BSc Math & Computing 1st sem,MTU-105-V,MATH03,,,
+BSc Math & Computing 1st sem,OSU-103-V,CSE49,,,
+BSc Math & Computing 1st sem,AEC-101-V,LL10,,,
+BSc Math & Computing 1st sem,MTU-107-V,MATH16,,,
+BSc Math & Computing 1st sem,VAC-201-V,ES10,,,
+BSc Math & Computing 1st sem,BCG-101-V,CSA09,,,
+BSc Math 3rd sem,MTU-201-V,MATH05,,,
+BSc Math 3rd sem,MTU-203-V,MATH07,,,
+BSc Math 3rd sem,MTU-205-V,MATH07,yes,MATH22,G1
+BSc Math 3rd sem,MTU-205-V,MATH07,yes,MATH22,G2
+BSc Math 3rd sem,CHU-241-V,CHE07,,,
+BSc Math 3rd sem,PHU-209-V,PHY11,,,
+BSc Math 3rd sem,OSU-201-V,CSE51,,,
+BSc Math 3rd sem,OSU-207-V,CSE51,no,,G1
+BSc Math 3rd sem,OSU-207-V,CSE51,no,,G2
+BSc Math 3rd sem,AEC-103-V,LL11,,,
+BSc Math 3rd sem,MTU-207-V,MATH15,,,
+BSc Math 3rd sem,VAC-202-V,ES08,,,
+BSc Math 5th sem,MTU-301-V,MATH03,,,
+BSc Math 5th sem,MTU-303-V,MATH01,yes,MATH18,G1
+BSc Math 5th sem,MTU-303-V,MATH01,yes,MATH18,G2
+BSc Math 5th sem,MTU-313-V,MATH04,,,
+BSc Math 5th sem,MTU-309-V,MATH08,,,
+BSc Math 5th sem,MTU-305-V,MATH07,,,
+MSc Math 1st sem,MATH21-701,MATH06,,,
+MSc Math 1st sem,MATH21-702,MATH09,,,
+MSc Math 1st sem,MATH21-703,MATH04,,,
+MSc Math 1st sem,MATH21-704,MATH01,,,
+MSc Math 1st sem,MATH21-705,CSE39,,,
+MSc Math 1st sem,MATH21-706,MATH05,yes,MATH23,G1
+MSc Math 1st sem,MATH21-706,MATH04,yes,MATH20,G2
+MSc Math 1st sem,VAC-001,LL12,,,
+MSc Math 3rd sem,MATH21-801,MATH06,,,
+MSc Math 3rd sem,MATH21-802,MATH07,,,
+MSc Math 3rd sem,MATH21-803,MATH02,,,
+MSc Math 3rd sem,MATH21-804,MATH01,,,
+MSc Math 3rd sem,MATH21-805B,MATH10,,,
+MSc Math 3rd sem,MATH21-806,MATH08,yes,MATH19,G1
+MSc Math 3rd sem,MATH21-806,MATH02,yes,MATH21,G2
+MSc Math 3rd sem,OES301B,ES06,,,
+B.Tech. Computer Science and Applied Mathematics 1st sem,ELU-101V,EL13,,,
+B.Tech. Computer Science and Applied Mathematics 1st sem,CHU-141V,CHE17,,,
+B.Tech. Computer Science and Applied Mathematics 1st sem,ENG-101V,LL13,,,
+B.Tech. Computer Science and Applied Mathematics 1st sem,ELU-103V,EL13,no,,G1
+B.Tech. Computer Science and Applied Mathematics 1st sem,ELU-103V,EL13,no,,G2
+B.Tech. Computer Science and Applied Mathematics 1st sem,CHU-142V,CHE25,no,,G1
+B.Tech. Computer Science and Applied Mathematics 1st sem,CHU-142V,CHE25,no,,G2
+B.Tech. Computer Science and Applied Mathematics 1st sem,ENG-103V,LL13,no,,G1
+B.Tech. Computer Science and Applied Mathematics 1st sem,ENG-103V,LL13,no,,G2
+B.Tech. Computer Science and Applied Mathematics 1st sem,ESC104,MATH15;MATH16;MATH17,,,
+B.Tech. Computer Science and Applied Mathematics 1st sem,MTU-145V,MATH10,,,

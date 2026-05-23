@@ -1,0 +1,24 @@
+uid,name,designation,max_workload,email,contact_number,department_code
+PHY01,Dr. Anuradha Sharma,Professor,12,anuradhasharma@jcboseust.ac.in,9818244641,PHY
+PHY02,Dr. Sonia,Professor,12,soniabansal@jcboseust.ac.in,9013162800,PHY
+PHY03,Dr. Maneesha Garg,Professor,12,maneeshagarg@jcboseust.ac.in,9958483470,PHY
+PHY04,Dr. Anuj Kumar,Associate Professor,14,anujkumarom@jcboseust.ac.in,9899486397,PHY
+PHY05,Dr. M.K. Yadav,Associate Professor,14,manikantyadav@jcboseust.ac.in,7982942450,PHY
+PHY06,Dr. Parveen Kumar,Assistant Professor,16,parveenkumar@jcboseust.ac.in,9910941458,PHY
+PHY07,Dr. Ompal Singh,Assistant Professor,16,om19901990@jcboseust.ac.in,7206609638,PHY
+PHY08,Dr. Arun Kumar,Assistant Professor,16,arunkumar@jcboseust.ac.in,9889925403,PHY
+PHY09,Dr. Yogita,Assistant Professor,16,yogita.batra@jcboseust.ac.in,9910046111,PHY
+PHY10,Dr. Rashi Gupta,Assistant Professor,16,rashigupta@jcboseust.ac.in,7503328965,PHY
+PHY11,Dr. Aman Joshi,Assistant Professor,16,amanjoshi@jcboseust.ac.in,9729122912,PHY
+PHY12,Dr. Suresh Panchal,Assistant Professor,16,sureshpanchal@jcboseust.ac.in,9416444033,PHY
+PHY13,Dr. Kaushal Kumar,Assistant Professor,16,kaushal@jcboseust.ac.in,9634894474,PHY
+PHY14,Dr. Shweta,Assistant Professor,16,shweta@jcboseust.ac.in,9953895708,PHY
+PHY15,Dr. Aarti,Assistant Professor,16,aarti@jcboseust.ac.in,8950893056,PHY
+PHY16,Dr. Nitin Gupta,Assistant Professor,16,nitinphysics@jcboseust.ac.in,9810632361,PHY
+PHY17,Mr. Shashi Kumar,Ph.D Scholar,8,shashiyadavdhana@jcboseust.ac.in,9050121190,PHY
+PHY18,Mr. Nitesh Kumar,Ph.D Scholar,8,niteshrawatphy@gmail.com,8168784441,PHY
+PHY19,Ms. Poonam Saini,Ph.D Scholar,8,poonam05dahiya@gmail.com,7206250712,PHY
+PHY20,Ms. Nivedita,Ph.D Scholar,8,niveditasharma3098@gmail.com,9034056780,PHY
+PHY21,Ms. Anita,Ph.D Scholar,8,anitakirori90@gmail.com,9499107608,PHY
+PHY22,Ms. Mohini,Ph.D Scholar,8,mohinichoudhary27@gmail.com,7494979758,PHY
+PHY23,Ms.Seema Dagar,Ph.D Scholar,8,seemadagar313@gmail.com,8168495311,PHY

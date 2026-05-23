@@ -1,0 +1,10 @@
+section_id,subject_number,elective_section_id
+EL-A 7th Sem,EL-T1,
+EL-A 7th Sem,EL-T2,
+EL-A 7th Sem,ELEC-PYTHON,EL-B 7th Sem;EL-C 7th Sem
+EL-A 7th Sem,ELEC-ML,EL-B 7th Sem
+EL-B 7th Sem,EL-T3,
+EL-B 7th Sem,EL-T4,
+EL-B 7th Sem,ELEC-JAVA,EL-C 7th Sem
+EL-C 7th Sem,EL-T5,
+EL-C 7th Sem,EL-T6,

@@ -129,9 +129,11 @@ class SubjectForm(ModelForm):
             'max_numb_students',
             'room_required',
             'required_lab_category',
+            'specific_rooms',
             'instructors',
             'classes_per_week',
             'duration',
+            'group_count',
         ]
         labels = {
             "department": "Department",
@@ -140,9 +142,11 @@ class SubjectForm(ModelForm):
             "max_numb_students": "Max Students",
             "room_required": "Required Room Type",
             "required_lab_category": "Required Lab Category",
+            "specific_rooms": "Specific Room(s)",
             "instructors": "Assigned Teacher",
             "classes_per_week": "Classes Per Week",
             "duration": "Duration (Hours)",
+            "group_count": "Groups",
         }
         widgets = {
             "department": forms.Select(),
@@ -151,6 +155,9 @@ class SubjectForm(ModelForm):
                 ('Lab', 'Lab'),
             ]),
             "required_lab_category": forms.Select(choices=[("", "---------")] + list(LAB_CATEGORY_CHOICES)),
+            "specific_rooms": forms.TextInput(attrs={
+                "placeholder": "e.g., CC01;CC02",
+            }),
             "instructors": forms.Select(),
             "classes_per_week": forms.NumberInput(attrs={
                 'min': 1,
@@ -162,10 +169,17 @@ class SubjectForm(ModelForm):
                 'max': 4,
                 'placeholder': 'e.g., 1',
             }),
+            "group_count": forms.NumberInput(attrs={
+                'min': 1,
+                'max': 10,
+                'placeholder': 'e.g., 1',
+            }),
         }
         help_texts = {
             "classes_per_week": "How many times this subject runs per week",
             "duration": "1 hour = 1 slot. Default is 1. Set 2 for a 2-hour class.",
+            "group_count": "Each group gets the subject's full weekly class count.",
+            "specific_rooms": "Optional hard room lock. Separate multiple rooms with semicolons.",
         }
 
     def __init__(self, *args, user=None, **kwargs):

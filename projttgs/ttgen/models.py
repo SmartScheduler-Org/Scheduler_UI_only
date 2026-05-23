@@ -192,10 +192,21 @@ class Subject(models.Model):
         blank=True,
         default="",
     )
+    specific_rooms = models.CharField(
+        max_length=500,
+        blank=True,
+        default="",
+        help_text="Optional semicolon-separated room numbers that this subject must use.",
+    )
     classes_per_week = models.PositiveIntegerField(default=3)
     duration = models.PositiveIntegerField(
         default=1,
         help_text="Duration in hours (1 hour = 1 slot). e.g. 2 means 2 consecutive slots.",
+    )
+    group_count = models.PositiveIntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+        help_text="Number of timetable groups to create for this subject.",
     )
 
     instructors = models.ManyToManyField(Instructor, db_table="ttgen_course_instructors")
@@ -252,6 +263,36 @@ class Section(models.Model):
         return self.section_id
 
 
+class ElectiveSharedSlot(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="elective_shared_slots",
+    )
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name="elective_shared_slots",
+    )
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name="elective_shared_slots",
+    )
+    linked_sections = models.CharField(
+        max_length=500,
+        blank=True,
+        default="",
+        help_text="Semicolon-separated section_ids that also attend this elective. E.g. 'EL-B 7th Sem;EL-C 7th Sem'",
+    )
+
+    class Meta:
+        unique_together = [("user", "section", "subject")]
+
+    def __str__(self):
+        return f"{self.section.section_id} — {self.subject.subject_number} → [{self.linked_sections}]"
+
+
 class TeacherSection(models.Model):
     instructor = models.ForeignKey(
         Instructor,
@@ -297,6 +338,7 @@ class SectionSubjectInstructor(models.Model):
         on_delete=models.CASCADE,
         related_name="section_subject_assignments",
     )
+    group_number = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     second_instructor = models.ForeignKey(
         Instructor,
         on_delete=models.SET_NULL,
@@ -309,13 +351,13 @@ class SectionSubjectInstructor(models.Model):
         db_table = "ttgen_sectioncourseinstructor"
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "section", "subject"],
+                fields=["user", "section", "subject", "group_number"],
                 name="unique_instructor_per_section_course",
             ),
         ]
 
     def __str__(self):
-        return f"{self.instructor.name} → {self.subject.subject_number} ({self.section.section_id})"
+        return f"{self.instructor.name} → {self.subject.subject_number} G{self.group_number} ({self.section.section_id})"
 
 
 # ==============================

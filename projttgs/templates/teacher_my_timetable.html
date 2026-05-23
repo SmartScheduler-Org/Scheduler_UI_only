@@ -87,7 +87,7 @@
                 <div class="teacher-table__block">
                   <strong>{{ lab.subject.subject_name }} Lab</strong>
                   <span>Section: {{ lab.section }}</span>
-                  <span>Batch {{ lab.batch }}/{{ lab.total_batches }} - {{ lab.room.r_number }}</span>
+                  <span>{% if lab.total_batches > 1 %}{{ lab.group_label|default:lab.group }} - {% endif %}{{ lab.room.r_number }}</span>
                 </div>
                 {% endfor %}
               </td>

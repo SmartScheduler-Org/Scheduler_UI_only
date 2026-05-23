@@ -1,0 +1,24 @@
+uid,name,designation,max_workload,email,contact_number,department_code
+MATH01,Prof. Neetu Gupta,Professor,12,neetuymca@yahoo.co.in,9953505828,MATH
+MATH02,Dr. Reena Garg,Assistant Professor,18,reenagargymca@gmail.com,9899390778,MATH
+MATH03,Ms. Nisha,Assistant Professor,18,nishsingh@jcboseust.ac.in,9818809102,MATH
+MATH04,Dr. Arpita Chatterjee,Assistant Professor,18,arpita.sps@gmail.com,8527635535,MATH
+MATH05,Dr. Ramu Dubey,Assistant Professor,18,rdubeyjiya@gmail.com,9140263832,MATH
+MATH06,Mr. Abhishek,Assistant Professor,18,abbhi1310@gmail.com,9873893198,MATH
+MATH07,Dr. Suraj Goyal,Assistant Professor,18,surajgoyal87@gmail.com,9417728292,MATH
+MATH08,Dr. Pooja Gupta,Assistant Professor,18,poojagupta@jcboseust.ac.in,9813390244,MATH
+MATH09,Dr. Manu Rohila,Assistant Professor,18,manurohilla259@gmail.com,7838812533,MATH
+MATH10,Dr. Parveen,Assistant Professor,18,parveengaur1980@gmail.com,9416526411,MATH
+MATH11,Mr. Kuldeep Singh,Assistant Professor,18,kuldeepsinghbhati599@gmail.com,7027353765,MATH
+MATH12,Dr. Meenu Chawla,Assistant Professor,18,meenuchawla@jcboseust.ac.in,9654587013,MATH
+MATH13,Dr. Shashi Sharma,Assistant Professor,18,shashisharma1984@gmail.com,9034887178,MATH
+MATH14,Mr Hansraj,Assistant Professor,18,hansrajs922@gmail.com,9015171181,MATH
+MATH15,Ms. Preeti,Assistant Professor,18,preetirwt677@gmail.com,9518066866,MATH
+MATH16,Guest3,Assistant Professor,18,math16@gmail.com,9876543210,MATH
+MATH17,Guest4,Assistant Professor,18,math17@gmail.com,9876543210,MATH
+MATH18,Mr. Piyush,Ph.D Scholar,8,piyush1goenka@gmail.com,8285213133,MATH
+MATH19,Mr. Swapnil,Ph.D Scholar,8,swapnilsabharwal@gmail.com,9315130764,MATH
+MATH20,Ms. Ankita,Ph.D Scholar,8,ankitapanghal1998@gmail.com,9518816694,MATH
+MATH21,Ms. Komal,Ph.D Scholar,8,komaljangra479@gmail.com,8700382314,MATH
+MATH22,Ms. Bhawna,Ph.D Scholar,8,bhawnayadav489@gmail.com,9306335705,MATH
+MATH23,Mr Sanjay Kumar,Ph.D Scholar,8,sanjuvashist11@gmail.com,8368461156,MATH
