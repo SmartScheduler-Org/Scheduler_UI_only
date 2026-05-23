@@ -1,0 +1,27 @@
+uid,name,designation,max_workload,email,contact_number,department_code
+MECH01,Dr. Raj Kumar,Professor,14,rajkumar@jcboseust.ac.in,9818312533,MECH
+MECH02,Dr. Arvind Gupta,Professor,14,arvindgupta@jcboseust.ac.in,9953167399,MECH
+MECH03,Dr. Hari Om,Professor,14,hariom@jcboseust.ac.in,9818219940,MECH
+MECH04,Dr. Lakhwinder Singh,Professor,14,lakhwinder@jcboseust.ac.in,9958300440,MECH
+MECH05,Dr. Vikas Kumar,Professor,14,vikaskumar@jcboseust.ac.in,9312899357,MECH
+MECH06,Dr. Sanjeev Kumar,Professor,14,sanjeevkumar@jcboseust.ac.in,9818187936,MECH
+MECH07,Dr. Vasdev Malhotra,Professor,14,vasdev@jcboseust.ac.in,9990201765,MECH
+MECH08,Dr. Sandhya Dixit,Professor,14,sandhyadixit@jcboseust.ac.in,9899804575,MECH
+MECH09,Dr. Sanjeev Goyal,Professor,14,sanjeev@jcboseust.ac.in,8700682560,MECH
+MECH10,Dr. Bhaskar Nagar,Associate Professor,14,bhaskarnagar@jcboseust.ac.in,9990772988,MECH
+MECH11,Dr. Nikhil Dev,Associate Professor,14,nikhildev@jcboseust.ac.in,9711812394,MECH
+MECH12,Dr. Rajeev Saha,Associate Professor,14,rajeevsaha@jcboseust.ac.in,9911921584,MECH
+MECH13,Dr. Mukesh Gupta,Assistant Professor,16,mukesh@jcboseust.ac.in,9999766752,MECH
+MECH14,Dr. Rajesh Attri,Assistant Professor,16,rajeshattri@jcboseust.ac.in,7503644151,MECH
+MECH15,Dr. Krishan Verma,Assistant Professor,16,krishankumar@jcboseust.ac.in,9896596710,MECH
+MECH16,Dr. Mahesh Chand,Assistant Professor,16,mchanddce@jcboseust.ac.in,9999917830,MECH
+MECH17,Dr. O.P. Mishra,Assistant Professor,16,opmishra@jcboseust.ac.in,9818602901,MECH
+MECH18,Mr. Surender Sing,Assistant Professor,16,surendersingh@jcboseust.ac.in,9416992291,MECH
+MECH19,Dr. Bhupender Singh,Assistant Professor,16,bhupee_28@jcboseust.ac.in,9416702828,MECH
+MECH20,Dr. Shefali Trivedi,Assistant Professor,16,shefalitrivedi@jcboseust.ac.in,9953907492,MECH
+MECH21,Dr. Sanjay Kumar,Assistant Professor,16,sanjaykpec@jcboseust.ac.in,7828721130,MECH
+MECH22,Dr. Nitin Panwar,Assistant Professor,16,nitinpanwar@jcboseust.ac.in,9911267977,MECH
+MECH23,Dr. Nisha Bhatt,Assistant Professor,16,nishabhatt@jcboseust.ac.in,9953962939,MECH
+MECH24,X,Assistant Professor,16,mech24@gmail.com,9876543210,MECH
+MECH25,Y,Assistant Professor,16,mech25@gmail.com,9876543210,MECH
+MECH26,Z,Assistant Professor,16,mech26@gmail.com,9876543210,MECH

@@ -1,0 +1,10 @@
+section_id,subject_number,instructor_uid,shared_lab,second_instructor_uid
+EL-A 7th Sem,EL-T1,ET01,,
+EL-A 7th Sem,EL-T2,ET02,,
+EL-A 7th Sem,ELEC-PYTHON,ET07,,
+EL-A 7th Sem,ELEC-ML,ET08,,
+EL-B 7th Sem,EL-T3,ET03,,
+EL-B 7th Sem,EL-T4,ET04,,
+EL-B 7th Sem,ELEC-JAVA,ET09,,
+EL-C 7th Sem,EL-T5,ET05,,
+EL-C 7th Sem,EL-T6,ET06,,

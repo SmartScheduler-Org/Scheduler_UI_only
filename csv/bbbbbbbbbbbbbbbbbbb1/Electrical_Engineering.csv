@@ -1,0 +1,19 @@
+uid,name,designation,max_workload,email,contact_number,department_code
+EL01,Dr. Rajesh Kumar Ahuja,Professor,14,rajeshahuja@jcboseust.ac.in,9990477433,EL
+EL02,Dr. Anju Gupta,Professor,14,anjugupta@jcboseust.ac.in,9810571704,EL
+EL03,Dr. Shakuntla,Associate Professor,14,shakuntla@jcboseust.ac.in,9811384551,EL
+EL04,Dr. Sakshi,Associate Professor,14,sakshi@jcboseust.ac.in,8860988607,EL
+EL05,Dr. Yogendra Arya,Associate Professor,14,yarya@jcboseust.ac.in,9891484801,EL
+EL06,Dr. Rashmi Aggarwal,Associate Professor,14,rashmiagarwal@jcboseust.ac.in,9891595209,EL
+EL07,Mr. Nitin Goel,Assistant Professor,16,nitingoel@jcboseust.ac.in,9313241442,EL
+EL08,Dr. Anubha Gautam,Assistant Professor,16,anubhagautam@jcboseust.ac.in,9990287227,EL
+EL09,Ms. Shipra Aggarwal,Assistant Professor,16,shiprajain@jcboseust.ac.in,9582182997,EL
+EL10,Mr. Satvinder Singh,Assistant Professor,16,satvinder@jcboseust.ac.in,9319246899,EL
+EL11,Ms. Rachna,Assistant Professor,16,rachna@jcboseust.ac.in,8585972708,EL
+EL12,Dr. Atma Ram,Assistant Professor,16,atmaram@jcboseust.ac.in,9467959798,EL
+EL13,Dr. Abhinav Saxena,Assistant Professor,16,abhinavsaxena@jcboseust.ac.in,8909263616,EL
+EL14,Dr. Bharti,Assistant Professor,16,thakur.bharti21@gmail.com,9654035561,EL
+EL 15,Mr. Alok Vijay Bhatnagar,Professor,14,bhatnagaralokvijay@gmail.com,9810829404,EL
+EL 16,Mr. Satpal,Workshop Staff,20,satpalverma@gmail.com,9868903566,EL
+EL 17,Faculty X1,Assistant Professor,20,el17@gmail.com,9876543210,EL
+EL 18,FACULTY X2,Assistant Professor,20,el18@gmail.com,9876543210,EL

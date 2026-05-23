@@ -175,6 +175,12 @@ h1 {
   padding: 8px;
 }
 
+.class-box.elective-slot {
+  background: linear-gradient(135deg, #f5deb3, #c8956c) !important;
+  border: 2px solid #8b5e3c !important;
+  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.25) !important;
+}
+
 .lunch-cell {
   background: #ffffff;
   font-weight: 700;
@@ -2280,9 +2286,11 @@ function initDragAndDrop() {
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
+                    {% if lab.total_groups > 1 %}
                     <strong style="color: #1565c0; font-size: 13px;">
-                      Batch {{ lab.batch }}/{{ lab.total_batches }}
+                      {{ lab.group_label|default:lab.group }}
                     </strong>
+                    {% endif %}
                     <strong style="color: #283593; font-size: 13px;">
                       {{ lab.instructor.name }}
                     </strong>
@@ -2312,8 +2320,9 @@ function initDragAndDrop() {
           {% elif cell.type == "class" %}
             <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               {% for cls in cell.classes %}
-                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} draggable-slot-item" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                <div class="class-box {% if cell.is_elective %}elective-slot{% elif cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} draggable-slot-item" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
+                  {% if cls.total_groups > 1 %}{{ cls.group_label|default:cls.group }}<br>{% endif %}
                   {{ cls.instructor.name }}<br>
                   {{ cls.room.r_number }}
                 </div>
@@ -2445,7 +2454,9 @@ function initDragAndDrop() {
               <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor %}room-slot-card--lab-shared{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
               {% for lab in cell.labs %}
                 <strong>{{ lab.subject.subject_name }}</strong>
-                <div class="room-slot-card__section">{{ lab.section }} ({{ lab.group }})</div>
+                <div class="room-slot-card__section">
+                  {{ lab.section }}{% if lab.total_groups > 1 %} ({{ lab.group_label|default:lab.group }}){% endif %}
+                </div>
                 <div class="room-slot-card__teacher">{{ lab.instructor.name }}</div>
                 {% if lab.second_instructor %}
                 <div class="room-slot-card__teacher">{{ lab.second_instructor.name }}</div>
@@ -2456,7 +2467,7 @@ function initDragAndDrop() {
 
           {% elif cell.type == "class" %}
             <td colspan="{{ cell.colspan }}">
-              <div class="room-slot-card room-slot-card--class {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+              <div class="room-slot-card room-slot-card--class {% if cell.is_elective %}elective-slot{% elif cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
               {% for cls in cell.classes %}
                 <strong>{{ cls.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ cls.section }}</div>
@@ -2627,9 +2638,11 @@ function initDragAndDrop() {
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
+                    {% if lab.total_groups > 1 %}
                     <strong style="color: #1565c0; font-size: 13px;">
-                      Batch {{ lab.batch }}/{{ lab.total_batches }}
+                      {{ lab.group_label|default:lab.group }}
                     </strong>
+                    {% endif %}
                     <span style="color: #424242;">
                       Section: {{ lab.section }}
                     </span><br>
@@ -2652,8 +2665,9 @@ function initDragAndDrop() {
           {% elif cell.type == "class" %}
             <td>
               {% for cls in cell.classes %}
-                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% endif %}">
+                <div class="class-box {% if cell.is_elective %}elective-slot{% elif cell.theory_in_lab %}theory-in-lab{% endif %}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
+                  {% if cls.total_groups > 1 %}{{ cls.group_label|default:cls.group }}<br>{% endif %}
                   Section: {{ cls.section }}<br>
                   {{ cls.room.r_number }}
                 </div>

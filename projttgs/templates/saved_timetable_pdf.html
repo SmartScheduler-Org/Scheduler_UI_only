@@ -110,7 +110,9 @@ border: 2px solid #cc0000;
             <td colspan="{{ cell.colspan }}" width="{{ cell.width }}" class="lab">
                 {% for lab in cell.labs %}
                 <div style="margin-bottom: 6px;">
-                    <strong>{{ lab.subject.subject_name }} Lab (Batch {{ lab.batch }}/{{ lab.total_batches }})</strong><br>
+                    <strong>
+                        {{ lab.subject.subject_name }} Lab{% if lab.total_batches > 1 %} ({{ lab.group_label|default:lab.group }}){% endif %}
+                    </strong><br>
                     {{ lab.instructor.name }}<br>
                     Room: {{ lab.room.r_number }}
                     <hr style="border:0.5px solid #666;">
@@ -142,4 +144,3 @@ border: 2px solid #cc0000;
 
 </body>
 </html>
-

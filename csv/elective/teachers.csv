@@ -1,0 +1,10 @@
+uid,name,designation,max_workload,email,contact_number
+ET01,Prof Amit Kumar,Professor,25,amit@test.edu,9800000001
+ET02,Dr Sneha Sharma,Associate Professor,25,sneha@test.edu,9800000002
+ET03,Mr Rohan Singh,Assistant Professor,25,rohan@test.edu,9800000003
+ET04,Dr Priya Gupta,Professor,25,priya@test.edu,9800000004
+ET05,Prof Vikram Das,Professor,25,vikram@test.edu,9800000005
+ET06,Ms Ankita Joshi,Assistant Professor,25,ankita@test.edu,9800000006
+ET07,Dr Karan Mehta,Associate Professor,25,karan@test.edu,9800000007
+ET08,Prof Neha Patel,Professor,25,neha@test.edu,9800000008
+ET09,Dr Siddharth Rao,Associate Professor,25,siddharth@test.edu,9800000009

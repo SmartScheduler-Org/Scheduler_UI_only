@@ -1,0 +1,375 @@
+section_id,teacher_name,subjects_assigned
+BCA 1st Sem,Dr Meena Patel,IKS
+BCA 1st Sem,Dr Neena German_prof,GERMAN
+BCA 1st Sem,Guest Faculty CA-6,MFCS (CA)
+BCA 1st Sem,Ms Aashu,COA Lab (CA); PPS (CA)
+BCA 1st Sem,Ms Ankita,ECC; General English (CA)
+BCA 1st Sem,Ms Deeviya,EVS (CA)
+BCA 1st Sem,Ms Palak Bajaj,PPS Lab (CA)
+BCA 1st Sem,Ms Ritika,COA (CA)
+BCA 3rd Sem,Dr Ved Pal,OOPS Lab (CA)
+BCA 3rd Sem,Ms Abhilasha,IWT
+BCA 3rd Sem,Ms Ankita,ECC
+BCA 3rd Sem,Ms Chanchal,IWT Lab; OOPS (CA)
+BCA 3rd Sem,Ms Deeviya,EVS (CA)
+BCA 3rd Sem,Ms Preeti,ALGEBRA
+BCA 3rd Sem,Prof Manjeet Singh,DSA (CA); DSA Lab (CA)
+BCA 5th Sem,Dr Mamta Kathuria,SE
+BCA 5th Sem,Dr Shilpa Munjal,ML (CA)
+BCA 5th Sem,Dr Ved Pal,JAVA (CA)
+BCA 5th Sem,Guest Faculty CA-6,ADA Lab
+BCA 5th Sem,Manju Dagar,SAP
+BCA 5th Sem,Ms Palak Bajaj,ADA
+BCA 5th Sem,Ms Reetu,JAVA Lab (CA)
+BSc AM 1st Sem,Mr Deepak,Visual Art Lab; Visual Arts
+BSc AM 1st Sem,Ms Abhilasha,FIWT; FIWT Lab
+BSc AM 1st Sem,Ms Ankita,General English (CA); WSAAR
+BSc AM 1st Sem,Ms Deeviya,EVS (CA)
+BSc AM 1st Sem,Ms Jyoti,Mathematics (CA)
+BSc AM 3rd Sem,Guest Faculty CA-1,DAVE Lab
+BSc AM 3rd Sem,Mr Deepak,CD
+BSc AM 3rd Sem,Mr Sunil,PA
+BSc AM 3rd Sem,Ms Abhilasha,JAVA Lab (CA); Java Programming (BSc)
+BSc AM 3rd Sem,Ms Ankita,CMR
+BSc AM 3rd Sem,Ms Deeviya,EVS (CA)
+BSc AM 5th Sem,Guest Faculty CA-3,UI Design; UI Design Lab
+BSc AM 5th Sem,Guest Faculty CA-4,Interior & Exterior Design
+BSc AM 5th Sem,Mr Aditya K,FVE; FVE Lab; Motion Graphics
+BSc AM 5th Sem,Mr Arko Dey,Minor Project
+BSc AM 5th Sem,Ms Abhilasha,Python Programming Lab
+CE DS 1st Sem,Dr Anubha Gautam,BET Lab
+CE DS 1st Sem,Dr Pooja Rana,Chemistry
+CE DS 1st Sem,Dr Ram Mech_prof,Workshop-I
+CE DS 1st Sem,Dr Sunil Dhull,Chemistry Lab
+CE DS 1st Sem,Ms Jhanvi,English
+CE DS 1st Sem,Ms Mannu Rohilla,Mathematics-I
+CE DS 1st Sem,Ms Preeti,English Lab
+CE DS 1st Sem,Ms Shipra Aggarwal,BET
+CE Datascience 3rd Sem,Dr Meenu,Maths
+CE Datascience 3rd Sem,Dr Naresh Stats_prof,Stats
+CE Datascience 3rd Sem,Dr Parul Tomar,DSA
+CE Datascience 3rd Sem,Dr Rewa,DSA Lab
+CE Datascience 3rd Sem,Mr Piyush,FDB; FDB Lab
+CE Datascience 3rd Sem,Ms Diksha,ETC
+CE Datascience 3rd Sem,Ms Jyoti,Stat Lab
+CE Datascience 3rd Sem,Ms Yojana,IT Workshop
+CE Datascience 5th Sem,Dr Dimple,AI
+CE Datascience 5th Sem,Dr Meena Patel,UHV
+CE Datascience 5th Sem,Dr Naresh,OS Lab
+CE Datascience 5th Sem,Dr Naresh Chauhan,OS
+CE Datascience 5th Sem,Dr Sonali,Soft Computing; Soft Computing Lab
+CE Datascience 5th Sem,Mr Piyush Gupta,DAA
+CE Datascience 5th Sem,Ms Tejasvita,COI
+CE Datascience 5th Sem,Ms Yojana,COA
+CE Hindi 1st Sem,Dr Kuldeep,Mathematics-I
+CE Hindi 1st Sem,Dr Sunil Dhull,Chemistry
+CE Hindi 1st Sem,Mr Satwinder,BET Lab
+CE Hindi 1st Sem,Ms Bharti Thakur,BET
+CE Hindi 1st Sem,Ms Jhanvi,English Lab
+CE Hindi 1st Sem,Ms Jyoti Kumari,Chemistry Lab
+CE Hindi 1st Sem,Ms Preeti,English
+CE Hindi 1st Sem,Ms Rachna,Workshop-I
+CE Hindi 3rd Sem,Dr Meenu,Maths
+CE Hindi 3rd Sem,Dr Shivi,DSA; DSA Lab
+CE Hindi 3rd Sem,Mr Vinod,DE; DE Lab
+CE Hindi 3rd Sem,Ms Archana Aggarwal,AEC
+CE Hindi 3rd Sem,Ms Diksha,ETC
+CE Hindi 3rd Sem,Ms Dimple,IT Workshop
+CE Hindi 3rd Sem,Ms Sunil Jadav,AEC Lab
+CE Hindi 3rd Sem,sam,DSA Lab [shared]
+CE Hindi 5th Sem,Dr Amita,ML
+CE Hindi 5th Sem,Dr Atul Mishra,OOPS Lab
+CE Hindi 5th Sem,Dr Meena Patel,UHV
+CE Hindi 5th Sem,Dr Parul Gupta,DBMS; DBMS Lab
+CE Hindi 5th Sem,Guest Faculty -1,Biology
+CE Hindi 5th Sem,Ms Shikha,OOPS
+CE Hindi 5th Sem,Ms Shilpi,TOC
+CE Hindi 5th Sem,Ms Tejasvita,COI
+CE Hindi 5th Sem,Prof Neelam Turk,System and Signals
+CE Hindi 7th Sem,Dr Dimple,Cloud Computing
+CE Hindi 7th Sem,Dr Sakshi,NCES
+CE Hindi 7th Sem,Faculty -5,CNS
+CE Hindi 7th Sem,Ms Himani,OB
+CE Hindi 7th Sem,Ms Shikha,AOS
+CE Hindi 7th Sem,Ms Shilpi,DA
+CE-DS 7th Sem,Dr Amita,Deep Learning & IP
+CE-DS 7th Sem,Dr Ashlesha,Cloud Computing
+CE-DS 7th Sem,Dr Umesh,HSN
+CE-DS 7th Sem,Faculty 3,Speech and NLP
+CE-DS 7th Sem,Mr Satwinder,NCES
+CE-DS 7th Sem,Ms Yojana,BIPA
+CE11 1st Sem,Dr Ram Mech_prof,Workshop-I
+CE11 1st Sem,Dr Shakuntala,BET
+CE11 1st Sem,Dr Shilpa Behl,Chemistry
+CE11 1st Sem,Ms Arpita Chatterjee,Mathematics-I
+CE11 1st Sem,Ms Bharti Thakur,BET Lab
+CE11 1st Sem,Ms Jhanvi,English
+CE11 1st Sem,Ms Monika,Chemistry Lab
+CE11 1st Sem,Ms Preeti,English Lab
+CE12 1st Sem,Dr Abhinav Saxena,BET Lab
+CE12 1st Sem,Dr Anjali,Chemistry Lab
+CE12 1st Sem,Dr Pooja Rana,Chemistry
+CE12 1st Sem,Dr Praveen Gaur,Mathematics-I
+CE12 1st Sem,Dr Sakshi,BET
+CE12 1st Sem,Ms Jhanvi,English Lab
+CE12 1st Sem,Ms Preeti,English
+CE12 1st Sem,Ms Rachna,Workshop-I
+CE31 3rd Sem,Dr Amita,IT Workshop
+CE31 3rd Sem,Dr Kuldeep,Maths
+CE31 3rd Sem,Dr Nisha Yadav,DE Lab
+CE31 3rd Sem,Dr Shivi,DSA Lab
+CE31 3rd Sem,Dr Umesh,DSA
+CE31 3rd Sem,Mr Vinod,DE
+CE31 3rd Sem,Ms Archana Aggarwal,AEC Lab
+CE31 3rd Sem,Ms Diksha,ETC
+CE31 3rd Sem,Ms Gunjan Sardana,AEC
+CE32 3rd Sem,Dr Poonam,DSA
+CE32 3rd Sem,Dr Rashmi,IT Workshop
+CE32 3rd Sem,Dr Shalinder Gupta,DE; DE Lab
+CE32 3rd Sem,Dr Umesh,DSA Lab
+CE32 3rd Sem,Mr Balkrishan,AEC
+CE32 3rd Sem,Mr Hansraj,Maths
+CE32 3rd Sem,Ms Diksha,ETC
+CE32 3rd Sem,Ms Gunjan Sardana,AEC Lab
+CE51 5th Sem,Dr Lalit,OOPS
+CE51 5th Sem,Dr Meena Patel,UHV
+CE51 5th Sem,Dr Parul Gupta,DBMS Lab
+CE51 5th Sem,Dr Parul Tomar,DBMS
+CE51 5th Sem,Dr Payal,ML
+CE51 5th Sem,Dr Preeti,OOPS Lab
+CE51 5th Sem,Guest Faculty -1,Biology
+CE51 5th Sem,Ms Kalpana,System and Signals
+CE51 5th Sem,Ms Shilpi,TOC
+CE51 5th Sem,Ms Tejasvita,COI
+CE52 5th Sem,Dr Deepika,ML
+CE52 5th Sem,Dr Lalit,OOPS Lab
+CE52 5th Sem,Dr Meena Patel,UHV
+CE52 5th Sem,Dr Neelam,DBMS Lab
+CE52 5th Sem,Guest Faculty -1,Biology
+CE52 5th Sem,Mr Piyush,DBMS
+CE52 5th Sem,Ms Shikha,OOPS
+CE52 5th Sem,Ms Shilpi,TOC
+CE52 5th Sem,Ms Tejasvita,COI
+CE52 5th Sem,Prof Munish,System and Signals
+CE71 7th Sem,Dr Dimple,Cloud Computing
+CE71 7th Sem,Dr Preeti,DA
+CE71 7th Sem,Dr Sakshi,NCES
+CE71 7th Sem,Faculty -5,CNS
+CE71 7th Sem,Ms Himani,OB
+CE71 7th Sem,Ms Shikha,AOS
+CE72 7th Sem,Dr Atul Mishra,Cloud Computing
+CE72 7th Sem,Dr Deepika,AOS
+CE72 7th Sem,Dr Payal,DA
+CE72 7th Sem,Dr Rashmi,CNS
+CE72 7th Sem,Dr Yogendra Arya,NCES
+CE72 7th Sem,Ms Himani,OB
+ECE 8th Sem,Dr Abhinav Saxena,EE401
+ECE 8th Sem,Dr Amita,EE405
+ECE 8th Sem,Dr Deepika,EE403
+ECE 8th Sem,EE002,EE404
+ECE 8th Sem,EE015,EE_HUM
+ECE 8th Sem,EE028,EE402
+ECE 8th Sem,EEG01,EE406
+ECE1 2nd Sem,EE001,EE101
+ECE1 2nd Sem,EE004,EE102; EE103
+ECE1 2nd Sem,EE007,EE105
+ECE1 2nd Sem,EE009,EE107
+ECE1 2nd Sem,EE010,EE106
+ECE1 2nd Sem,EE012,EE108
+ECE1 2nd Sem,EE013,EE109
+ECE1 2nd Sem,EE015,EE110
+ECE1 2nd Sem,Mrs Vandana,EE104
+ECE1 4th Sem,EE005,EE204
+ECE1 4th Sem,EE016,EE201
+ECE1 4th Sem,EE017,EE202
+ECE1 4th Sem,EE019,EE203
+ECE1 4th Sem,EE021,EE206
+ECE1 4th Sem,EE022,EE205
+ECE1 4th Sem,EE023,EE207
+ECE1 4th Sem,EE024,EE209
+ECE1 4th Sem,EE026,EE208
+ECE1 4th Sem,EE027,EE210
+ECE1 4th Sem,EE028,EE211
+ECE1 6th Sem,Dr Harish,EE310
+ECE1 6th Sem,EE002,EE302
+ECE1 6th Sem,EE003,EE303; EE304
+ECE1 6th Sem,EE008,EE309
+ECE1 6th Sem,EE012,EE_WS
+ECE1 6th Sem,EE013,EE_SEM
+ECE1 6th Sem,EE017,EE306
+ECE1 6th Sem,EE026,EE307
+ECE1 6th Sem,EE033,EE308
+ECE1 6th Sem,EE035,EE301
+ECE1 6th Sem,EE039,EE305
+ECE1 6th Sem,EEG01,EE311
+ECE2 2nd Sem,EE001,EE101
+ECE2 2nd Sem,EE004,EE103
+ECE2 2nd Sem,EE006,EE102
+ECE2 2nd Sem,EE007,EE104
+ECE2 2nd Sem,EE010,EE106
+ECE2 2nd Sem,EE011,EE107
+ECE2 2nd Sem,EE012,EE108
+ECE2 2nd Sem,EE014,EE109
+ECE2 2nd Sem,EE015,EE110
+ECE2 2nd Sem,Mrs Vandana,EE105
+ECE2 4th Sem,Dr Rashmi,EE211
+ECE2 4th Sem,EE005,EE204
+ECE2 4th Sem,EE016,EE201
+ECE2 4th Sem,EE017,EE202
+ECE2 4th Sem,EE019,EE203
+ECE2 4th Sem,EE021,EE205; EE206
+ECE2 4th Sem,EE023,EE207
+ECE2 4th Sem,EE025,EE208; EE209
+ECE2 4th Sem,EE027,EE210
+ECE2 6th Sem,Dr Harish,EE309
+ECE2 6th Sem,EE002,EE301
+ECE2 6th Sem,EE008,EE310
+ECE2 6th Sem,EE011,EE_WS
+ECE2 6th Sem,EE014,EE_SEM
+ECE2 6th Sem,EE026,EE307
+ECE2 6th Sem,EE033,EE308
+ECE2 6th Sem,EE035,EE302
+ECE2 6th Sem,EE036,EE304
+ECE2 6th Sem,EE037,EE303
+ECE2 6th Sem,EE038,EE305
+ECE2 6th Sem,EE040,EE306
+EE-IoT 2nd Sem,Dr Amita,EE110
+EE-IoT 2nd Sem,EE002,EE101
+EE-IoT 2nd Sem,EE004,EE103
+EE-IoT 2nd Sem,EE006,EE102
+EE-IoT 2nd Sem,EE007,EE105
+EE-IoT 2nd Sem,EE009,EE106; EE107
+EE-IoT 2nd Sem,EE012,EE108
+EE-IoT 2nd Sem,EE013,EE109
+EE-IoT 2nd Sem,Mrs Vandana,EE104
+EE-IoT 4th Sem,EE016,EE201
+EE-IoT 4th Sem,EE017,EE202
+EE-IoT 4th Sem,EE018,EE204
+EE-IoT 4th Sem,EE019,EE203
+EE-IoT 4th Sem,EE020,EE206
+EE-IoT 4th Sem,EE022,EE205
+EE-IoT 4th Sem,EE023,EE207
+EE-IoT 4th Sem,EE030,EE212
+EE-IoT 4th Sem,EE032,EE213; EE214
+EE-IoT 4th Sem,EE034,EE215
+EE-IoT 6th Sem,EE012,EE_WS
+EE-IoT 6th Sem,EE014,EE_SEM
+EE-IoT 6th Sem,EE016,EE318
+EE-IoT 6th Sem,EE026,EE307
+EE-IoT 6th Sem,EE030,EE317
+EE-IoT 6th Sem,EE031,EE320
+EE-IoT 6th Sem,EE033,EE308
+EE-IoT 6th Sem,EE037,EE303
+EE-IoT 6th Sem,EE039,EE319
+EE-IoT 6th Sem,EEG01,EE321
+EE-IoT 8th Sem,Dr Amita,EE_HUM
+EE-IoT 8th Sem,EE013,EE405
+EE-IoT 8th Sem,EE030,EE413
+EE-IoT 8th Sem,EE031,EE411
+EE-IoT 8th Sem,EE034,EE412
+EE-IoT 8th Sem,EEG01,EE414
+ENC 2nd Sem,EE003,EE101
+ENC 2nd Sem,EE005,EE103
+ENC 2nd Sem,EE006,EE102
+ENC 2nd Sem,EE008,EE104
+ENC 2nd Sem,EE009,EE106
+ENC 2nd Sem,EE011,EE107; EE108
+ENC 2nd Sem,EE014,EE109
+ENC 2nd Sem,EE015,EE110
+ENC 2nd Sem,Mrs Vandana,EE105
+ENC 4th Sem,Dr Sakshi,EE207
+ENC 4th Sem,EE001,EE201; EE210
+ENC 4th Sem,EE002,EE202
+ENC 4th Sem,EE018,EE204
+ENC 4th Sem,EE019,EE203
+ENC 4th Sem,EE020,EE206
+ENC 4th Sem,EE022,EE205
+ENC 4th Sem,EE024,EE208
+ENC 4th Sem,EE025,EE209
+ENC 4th Sem,EE029,EE211
+ENC 6th Sem,EE002,EE301
+ENC 6th Sem,EE014,EE_SEM
+ENC 6th Sem,EE020,EE_WS
+ENC 6th Sem,EE029,EE312
+ENC 6th Sem,EE035,EE302
+ENC 6th Sem,EE036,EE303; EE304
+ENC 6th Sem,EE037,EE315
+ENC 6th Sem,EE040,EE313; EE314
+ENC 6th Sem,EEG01,EE316
+ENC 8th Sem,EE013,EE405
+ENC 8th Sem,EE015,EE_HUM
+ENC 8th Sem,EE028,EE408; EE409
+ENC 8th Sem,EE040,EE407
+ENC 8th Sem,EEG01,EE410
+IT 1st Sem,Dr Dipti Sharma,Chemistry
+IT 1st Sem,Dr Rashmi Aggarwal,BET
+IT 1st Sem,Ms Jhanvi,English; English Lab
+IT 1st Sem,Ms Mannu Rohilla,Mathematics-I
+IT 1st Sem,Ms Rachna,Workshop-I
+IT 1st Sem,Ms Shipra Aggarwal,BET Lab
+IT 1st Sem,Ms Vinita,Chemistry Lab
+IT 3rd Sem,Dr Ashlesha,IT Workshop
+IT 3rd Sem,Dr Nisha Yadav,DE
+IT 3rd Sem,Dr Parul Tomar,DSA Lab
+IT 3rd Sem,Dr Poonam,DSA
+IT 3rd Sem,Dr Prashant,DE Lab
+IT 3rd Sem,Mr Balkrishan,AEC
+IT 3rd Sem,Mr Hansraj,Maths
+IT 3rd Sem,Ms Diksha,ETC
+IT 3rd Sem,Ms Sunil Jadav,AES Lab
+IT 5th Sem,Dr Ashlesha,CN
+IT 5th Sem,Dr Meena Patel,UHV
+IT 5th Sem,Dr Neelam,DBMS
+IT 5th Sem,Dr Shruti,OOPS; OOPS Lab
+IT 5th Sem,Ms Beenu,DBMS Lab
+IT 5th Sem,Ms Diksha,ETC
+IT 5th Sem,Ms Shilpi,TOC
+IT 5th Sem,Ms Tejasvita,COI
+IT 5th Sem,Ms Yojana,WTIR
+IT 7th Sem,Dr Deepika,AOS
+IT 7th Sem,Dr Payal,ML
+IT 7th Sem,Dr Rewa,WCAN
+IT 7th Sem,Dr Yogendra Arya,NCES
+IT 7th Sem,Faculty 1,NNDL
+IT 7th Sem,Guest Faculty -1,EVS
+MCA 1st Bridge,Dr Anu,IWT
+MCA 1st Bridge,Dr Manvi,FCIT; Web Technologies
+MCA 1st Bridge,Dr Ved Pal,Computer Programming
+MCA 1st Bridge,Guest Faculty CA-6,MFCS (CA)
+MCA 1st Bridge,Prof Manjeet Singh,DSA (CA); DSA Lab (CA)
+MCA 1st Sem,Dr Anu,CN (CA)
+MCA 1st Sem,Dr Manvi,OS (CA); OS Lab (CA)
+MCA 1st Sem,Dr Ved Pal,OOPS Lab (CA)
+MCA 1st Sem,Guest Faculty CA-2,OOPS (CA)
+MCA 1st Sem,Ms Aashu,Seminar
+MCA 1st Sem,Ms Ankita,Audit Course
+MCA 1st Sem,Ms Palak Bajaj,DBMS (CA); DBMS Lab (CA)
+MCA 1st Sem,Prof Manjeet Singh,DSA (CA); DSA Lab (CA)
+MCA 3rd Sem,Dr Anu,Big Data; Hadoop Lab
+MCA 3rd Sem,Dr Mamta Kathuria,DWDM; SC; SC Lab
+MCA 3rd Sem,Ms Aashu,NS
+MCA 3rd Sem,Ms Ankita,Audit Course
+MCA 3rd Sem,Ms Ritika,.NET; .NET Lab; Seminar
+MSc AM 1st Sem,Guest Faculty CA-1,BOC; SWS
+MSc AM 1st Sem,Guest Faculty CA-4,Animation Art
+MSc AM 3rd Sem,Mr Arko Dey,Minor Project
+MSc AM 3rd Sem,Mr Rajeev Ranjan,DSE; DSE Lab
+MSc AM 3rd Sem,Ms Ankita,Open Elective
+MTech 1st Sem,Dr Ashutosh Dixit,DCN; DCN Lab
+MTech 1st Sem,Dr Harish,RMIPR
+MTech 1st Sem,Dr Komal Kumar,WITR
+MTech 1st Sem,Dr Neelam,MFCS
+MTech 1st Sem,Dr Poonam,ADS
+MTech 1st Sem,Guest Faculty -1,English
+MTech 3rd Sem,Dr Atul Mishra,Cloud Computing
+MTech 3rd Sem,Dr Sanjeev,Industrial Safety
+MTech 3rd Sem,Guest Faculty -1,Message of Bhagwat Geeta
+MTech EE 2nd Sem,Dr Sakshi,EEM02
+MTech EE 2nd Sem,Dr Sanjeev,EEM01
+MTech EE 2nd Sem,EE006,EEM04
+MTech EE 2nd Sem,EE014,EEM05
+MTech EE 2nd Sem,EE016,EEM03
+MTech EE 2nd Sem,EE023,EEM06
+MTech EE 4th Sem,EE003,EEM09
+MTech EE 4th Sem,EE007,EEM07
+MTech EE 4th Sem,EE031,EEM08

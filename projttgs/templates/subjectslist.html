@@ -89,6 +89,8 @@
                     <th>Subject Name</th>
                     <th>Max Students</th>
                     <th>Duration</th>
+                    <th>Groups</th>
+                    <th>Specific Rooms</th>
                     <th>Assigned Teachers</th>
                     <th></th>
                 </tr>
@@ -101,6 +103,8 @@
                     <td>{{ subj.subject_name }}</td>
                     <td>{{ subj.max_numb_students }}</td>
                     <td>{{ subj.duration }} hr</td>
+                    <td>{{ subj.group_count }}</td>
+                    <td>{{ subj.specific_rooms|default:"-" }}</td>
 
                     <!-- ASSIGNED TEACHERS -->
                     <td>

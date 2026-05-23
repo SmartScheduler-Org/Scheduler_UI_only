@@ -1,0 +1,10 @@
+department_code,subject_number,subject_name,room_required,required_lab_category,classes_per_week,max_numb_students,duration
+EL,EL-T1,Data Structures,Lecture Hall,,3,80,1
+EL,EL-T2,Operating Systems,Lecture Hall,,3,80,1
+EL,EL-T3,Computer Networks,Lecture Hall,,3,80,1
+EL,EL-T4,Database Management,Lecture Hall,,3,80,1
+EL,EL-T5,Software Engineering,Lecture Hall,,3,80,1
+EL,EL-T6,Computer Architecture,Lecture Hall,,3,80,1
+EL,ELEC-PYTHON,Python Programming,Lecture Hall,,2,80,1
+EL,ELEC-ML,Machine Learning,Lecture Hall,,2,80,1
+EL,ELEC-JAVA,Advanced Java,Lecture Hall,,2,80,1

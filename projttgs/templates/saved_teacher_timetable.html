@@ -179,7 +179,7 @@ h1 {
               {% for lab in cell.labs %}
                 <div class="lab-box">
                   <strong>{{ lab.subject.subject_name }} Lab</strong><br>
-                  Batch {{ lab.batch }}/{{ lab.total_batches }}<br>
+                  {% if lab.total_batches > 1 %}{{ lab.group_label|default:lab.group }}<br>{% endif %}
                   {{ lab.instructor.name }}<br>
                   {{ lab.room.r_number }}
                 </div>
