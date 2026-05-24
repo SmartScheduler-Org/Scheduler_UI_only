@@ -1,0 +1,39 @@
+department_code,subject_number,subject_name,room_required,required_lab_category,specific_equipment/software_lab,classes_per_week,max_numb_students,duration,group_count
+CS,CS215,Mathematics-I,Lecture Hall,,,3,80,1,1
+CS,CS216,Chemistry,Lecture Hall,,,3,80,1,1
+CS,CS217,Chemistry Lab,Lab,Chemistry Lab,,4,80,3,1
+CS,CS218,English,Lecture Hall,,,3,80,1,1
+CS,CS219,English Lab,Lab,English Lab,,4,80,2,1
+CS,CS220,BET,Lecture Hall,,,3,80,1,1
+CS,CS221,BET Lab,Lab,Electrical Lab,,4,80,2,1
+CS,CS222,Workshop-I,Lab,Mechanical Workshop,,4,80,4,1
+CS,CS001,AEC,Lecture Hall,,,3,80,1,1
+CS,CS002,AEC Lab,Lab,Electrical Lab,,4,80,2,1
+CS,CS016,DE,Lecture Hall,,,3,80,1,1
+CS,CS017,DE Lab,Lab,Electronics Lab,,4,80,2,1
+CS,CS018,DSA,Lecture Hall,,,3,80,1,1
+CS,CS019,DSA Lab,Lab,General,,4,80,2,1
+CS,CS020,ETC,Lecture Hall,,,3,80,1,1
+CS,CS025,Maths,Lecture Hall,,,3,80,1,1
+CS,CS998,IT Workshop,Lab,General,,4,80,4,2
+CS,CA025,PPS (CA),Lecture Hall,,,3,80,1,1
+CS,CA026,PPS Lab (CA),Lab,General,,4,80,2,1
+CS,CA027,COA (CA),Lecture Hall,,,3,80,1,1
+CS,CA028,COA Lab (CA),Lab,General,,4,80,2,1
+CS,CA029,MFCS (CA),Lecture Hall,,,3,80,1,1
+CS,CA030,IKS,Lecture Hall,,,3,80,1,1
+CS,CA031,ECC,Lecture Hall,,,3,80,1,1
+CS,CA038,General English (CA),Lecture Hall,,,3,80,1,1
+CS,CA039,GERMAN,Lecture Hall,,,3,80,1,1
+CS,CA042,EVS (CA),Lecture Hall,,,3,80,1,1
+CS,CA001,DSA (CA),Lecture Hall,,,3,80,1,1
+CS,CA002,DSA Lab (CA),Lab,General,,4,80,2,1
+CS,CA003,OOPS (CA),Lecture Hall,,,3,80,1,1
+CS,CA004,OOPS Lab (CA),Lab,General,,4,80,2,1
+CS,CA005,OS (CA),Lecture Hall,,,3,80,1,1
+CS,CA006,OS Lab (CA),Lab,General,,4,80,3,1
+CS,CA007,CN (CA),Lecture Hall,,,3,80,1,1
+CS,CA008,DBMS (CA),Lecture Hall,,,3,80,2,1
+CS,CA009,DBMS Lab (CA),Lab,General,,4,80,2,1
+CS,CA043,Seminar,Lecture Hall,,,1,80,1,1
+CS,CA044,Audit Course,Lecture Hall,,,1,80,1,1
