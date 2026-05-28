@@ -192,6 +192,7 @@ class Subject(models.Model):
         blank=True,
         default="",
     )
+    specific_rooms = models.CharField(max_length=255, blank=True, default="")
     classes_per_week = models.PositiveIntegerField(default=3)
     duration = models.PositiveIntegerField(
         default=1,
@@ -252,6 +253,28 @@ class Section(models.Model):
         return self.section_id
 
 
+class SectionSubjectMapping(models.Model):
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name="subject_mappings",
+    )
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name="section_mappings",
+    )
+    group_count = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        db_table = "ttgen_section_allowed_courses"
+        managed = False
+        unique_together = ("section", "subject")
+
+    def __str__(self):
+        return f"{self.section.section_id} → {self.subject.subject_number} (groups={self.group_count})"
+
+
 class TeacherSection(models.Model):
     instructor = models.ForeignKey(
         Instructor,
@@ -304,6 +327,8 @@ class SectionSubjectInstructor(models.Model):
         blank=True,
         related_name="second_section_subject_assignments",
     )
+    group_instructor_ids = models.JSONField(default=list, blank=True)
+    group_second_instructor_ids = models.JSONField(default=list, blank=True)
 
     class Meta:
         db_table = "ttgen_sectioncourseinstructor"

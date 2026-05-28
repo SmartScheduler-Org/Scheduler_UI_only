@@ -956,24 +956,136 @@ if "Lab" not in globals():
 
 if "build_section_tables" not in globals():
     def build_section_tables(all_classes, all_labs, user=None):
-        from collections import defaultdict, OrderedDict
+        from collections import OrderedDict
+
         section_map = OrderedDict()
+        section_qs = Section.objects.all()
+        if user is not None:
+            section_qs = section_qs.filter(user=user)
+        section_qs = section_qs.select_related("department").prefetch_related("allowed_subjects__instructors")
+
+        for section in section_qs:
+            section_map.setdefault(
+                section.section_id,
+                {"classes": [], "labs": [], "section": section, "dept": section.department},
+            )
+
         for cls in all_classes:
             sec_key = cls.section
             if sec_key not in section_map:
-                section_map[sec_key] = {"classes": [], "labs": [], "dept": cls.department}
+                section_map[sec_key] = {"classes": [], "labs": [], "section": None, "dept": cls.department}
             section_map[sec_key]["classes"].append(cls)
+
         for lab in all_labs:
             sec_key = lab.section
             if sec_key not in section_map:
-                section_map[sec_key] = {"classes": [], "labs": [], "dept": lab.department}
+                section_map[sec_key] = {"classes": [], "labs": [], "section": None, "dept": lab.department}
             section_map[sec_key]["labs"].append(lab)
+
+        lecture_rooms_qs = Room.objects.exclude(room_type="Lab")
+        lab_rooms_qs = Room.objects.filter(room_type="Lab")
+        if user is not None:
+            lecture_rooms_qs = lecture_rooms_qs.filter(user=user)
+            lab_rooms_qs = lab_rooms_qs.filter(user=user)
+        lecture_rooms = list(lecture_rooms_qs.select_related("department"))
+        lab_rooms = list(lab_rooms_qs.select_related("department"))
+
+        def _slots_for_class(cls):
+            if getattr(cls, "meeting_times", None):
+                return list(cls.meeting_times)
+            if getattr(cls, "meeting_time", None):
+                return [cls.meeting_time]
+            return []
+
+        def _register_busy(container, key, slots):
+            busy = container.setdefault(key, set())
+            for mt in slots:
+                busy.add((mt.day, mt.time))
+
+        room_busy = {}
+        section_busy = {}
+        instructor_busy = {}
+
+        for cls in all_classes:
+            slots = _slots_for_class(cls)
+            if cls.room:
+                _register_busy(room_busy, cls.room.r_number, slots)
+            _register_busy(section_busy, cls.section, slots)
+            if cls.instructor:
+                _register_busy(instructor_busy, cls.instructor.pk, slots)
+
+        for lab in all_labs:
+            slots = list(getattr(lab, "meeting_times", []) or [])
+            if lab.room:
+                _register_busy(room_busy, lab.room.r_number, slots)
+            _register_busy(section_busy, lab.section, slots)
+            if lab.instructor:
+                _register_busy(instructor_busy, lab.instructor.pk, slots)
+            second_instructor = getattr(lab, "second_instructor", None)
+            if second_instructor:
+                _register_busy(instructor_busy, second_instructor.pk, slots)
+
+        def _iter_candidate_blocks(duration):
+            valid_slots = [slot for slot in range(1, 10) if slot != int(LUNCH_SLOT)]
+            for day in DAYS:
+                for slot in valid_slots:
+                    block = [str(slot + offset) for offset in range(duration)]
+                    if any(int(value) == int(LUNCH_SLOT) for value in block):
+                        continue
+                    if any(int(value) not in valid_slots for value in block):
+                        continue
+                    yield day, block
+
+        def _build_suggested_slots(section_obj, subject):
+            if subject.room_required == "Lab":
+                return []
+
+            duration = max(1, getattr(subject, "duration", 1) or 1)
+            instructors = list(subject.instructors.all())
+            if not instructors or section_obj is None:
+                return []
+
+            candidate_rooms = [
+                room for room in lecture_rooms
+                if room.department == section_obj.department
+            ] or lecture_rooms
+
+            suggestions = []
+            seen = set()
+            for day, block in _iter_candidate_blocks(duration):
+                if any((day, slot) in section_busy.get(section_obj.section_id, set()) for slot in block):
+                    continue
+                for room in candidate_rooms:
+                    if any((day, slot) in room_busy.get(room.r_number, set()) for slot in block):
+                        continue
+                    available_teacher = next(
+                        (
+                            teacher for teacher in instructors
+                            if not any((day, slot) in instructor_busy.get(teacher.pk, set()) for slot in block)
+                        ),
+                        None,
+                    )
+                    if available_teacher is None:
+                        continue
+                    key = (day, block[0], room.r_number)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    suggestions.append(
+                        {
+                            "day": day,
+                            "slot_label": SLOT_LABELS.get(block[0], f"Slot {block[0]}"),
+                            "room": room.r_number,
+                        }
+                    )
+                    break
+                if len(suggestions) >= 3:
+                    break
+            return suggestions
 
         tables = []
         for sec_id, data in section_map.items():
-            grid = {}
-            for day in DAYS:
-                grid[day] = {}
+            grid = {day: {} for day in DAYS}
             for cls in data["classes"]:
                 if cls.meeting_time:
                     day = cls.meeting_time.day
@@ -1002,7 +1114,10 @@ if "build_section_tables" not in globals():
                         continue
                     cell_data = grid[day].get(s, {"classes": [], "labs": []})
                     if cell_data["labs"]:
-                        lab_span = max((len(lb.meeting_times) for lb in cell_data["labs"] if lb.meeting_times), default=getattr(cell_data["labs"][0], 'duration', LAB_DURATION))
+                        lab_span = max(
+                            (len(lb.meeting_times) for lb in cell_data["labs"] if lb.meeting_times),
+                            default=getattr(cell_data["labs"][0], "duration", LAB_DURATION),
+                        )
                         cells.append({
                             "type": "lab",
                             "colspan": lab_span,
@@ -1011,7 +1126,7 @@ if "build_section_tables" not in globals():
                         })
                         skip_until = s + lab_span - 1
                     elif cell_data["classes"]:
-                        cls_dur = getattr(cell_data["classes"][0], 'duration', 1)
+                        cls_dur = getattr(cell_data["classes"][0], "duration", 1)
                         cells.append({
                             "type": "class",
                             "colspan": cls_dur,
@@ -1024,15 +1139,92 @@ if "build_section_tables" not in globals():
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
 
-            class _SectionProxy:
-                def __init__(self, sid, dept):
-                    self.section_id = sid
-                    self.department = dept
+            section_obj = data.get("section")
+
+            if section_obj is None:
+                class _SectionProxy:
+                    def __init__(self, sid, dept):
+                        self.section_id = sid
+                        self.department = dept
+                section_obj = _SectionProxy(sec_id, data["dept"])
+                allowed_subjects = []
+            else:
+                allowed_subjects = list(section_obj.allowed_subjects.all())
+
+            class_counts = {}
+            for cls in data["classes"]:
+                subject_pk = getattr(cls.subject, "pk", None)
+                class_counts[subject_pk] = class_counts.get(subject_pk, 0) + 1
+
+            lab_counts = {}
+            for lab in data["labs"]:
+                subject_pk = getattr(lab.subject, "pk", None)
+                if not lab.meeting_times:
+                    continue
+                first_mt = lab.meeting_times[0]
+                lab_counts.setdefault(subject_pk, set()).add((first_mt.day, first_mt.time))
+
+            subject_counts = []
+            missed_labs = []
+            total_missing_classes = 0
+
+            for subject in sorted(
+                allowed_subjects,
+                key=lambda item: (0 if item.room_required == "Lab" else 1, item.subject_number, item.subject_name),
+            ):
+                required = max(0, getattr(subject, "classes_per_week", 0) or 0)
+                is_lab = subject.room_required == "Lab"
+                count = len(lab_counts.get(subject.pk, set())) if is_lab else class_counts.get(subject.pk, 0)
+                count = min(count, required) if required else count
+                missing = max(required - count, 0)
+                total_missing_classes += missing
+
+                reason = ""
+                suggested_slots = []
+                instructors = list(subject.instructors.all())
+                if missing:
+                    if not instructors:
+                        reason = "Teacher not mapped"
+                    elif is_lab:
+                        required_category = normalize_lab_category(getattr(subject, "required_lab_category", ""))
+                        matching_rooms = [
+                            room for room in lab_rooms
+                            if not required_category or normalize_lab_category(room.lab_category) == required_category
+                        ]
+                        if required_category and not matching_rooms:
+                            reason = "Required lab category unavailable"
+                        else:
+                            reason = "No conflict-free lab slot available"
+                    else:
+                        reason = "No conflict-free lecture slot available"
+                        suggested_slots = _build_suggested_slots(section_obj, subject)
+
+                entry = {
+                    "name": subject.subject_name,
+                    "count": count,
+                    "required": required,
+                    "missing": missing,
+                    "unfulfilled": missing,
+                    "is_lab": is_lab,
+                    "reason": reason,
+                    "suggested_slots": suggested_slots,
+                }
+                subject_counts.append(entry)
+                if is_lab and missing:
+                    missed_labs.append(
+                        {
+                            "name": subject.subject_name,
+                            "missing": missing,
+                            "reason": reason,
+                        }
+                    )
+
             tables.append({
-                "section": _SectionProxy(sec_id, data["dept"]),
+                "section": section_obj,
                 "rows": rows,
-                "subject_counts": [],
-                "total_missing_classes": 0,
+                "subject_counts": subject_counts,
+                "missed_labs": missed_labs,
+                "total_missing_classes": total_missing_classes,
             })
         return tables
 
@@ -1219,6 +1411,14 @@ if "normalize_lab_category" not in globals():
             if lower in key or key in lower:
                 return canonical
         return value
+
+
+if "normalize_specific_rooms" not in globals():
+    def normalize_specific_rooms(value):
+        if not value:
+            return ""
+        tokens = [token.strip() for token in re.split(r"[;,\n]+", str(value)) if token.strip()]
+        return ";".join(tokens)
 
 
 if "teacher_payload" not in globals():
@@ -1814,20 +2014,24 @@ def addSubjects(request):
             decoded_file = csv_file.read().decode("utf-8").splitlines()
             reader = csv.DictReader(decoded_file)
 
+            fieldnames = reader.fieldnames or []
             required_columns = [
                 "department_code",
                 "subject_number",
                 "subject_name",
                 "room_required",
-                "required_lab_category",
                 "classes_per_week",
             ]
 
             # Header validation
             for col in required_columns:
-                if col not in reader.fieldnames:
+                if col not in fieldnames:
                     messages.error(request, f"Missing required column: {col}")
                     return redirect("addSubjects")
+
+            if not ({"required_lab_category", "lab_category_required"} & set(fieldnames)):
+                messages.error(request, "Missing required column: required_lab_category or lab_category_required")
+                return redirect("addSubjects")
 
             created_count = 0
 
@@ -1837,7 +2041,12 @@ def addSubjects(request):
                     subject_number = row["subject_number"].strip()
                     raw_room = row["room_required"].strip()
                     room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room.lower(), raw_room)
-                    required_lab_category = normalize_lab_category(row["required_lab_category"])
+                    required_lab_category = normalize_lab_category(
+                        row.get("required_lab_category") or row.get("lab_category_required")
+                    )
+                    specific_rooms = normalize_specific_rooms(
+                        row.get("specific_equipment/software_lab") or row.get("specific_rooms")
+                    )
 
                     try:
                         subject_department = Department.objects.get(code=dept_code, user=request.user)
@@ -1862,9 +2071,10 @@ def addSubjects(request):
                         department=subject_department,
                         room_required=room_required,
                         required_lab_category=required_lab_category,
+                        specific_rooms=specific_rooms,
                         classes_per_week=int(row["classes_per_week"]),
                         max_numb_students=int(row.get("max_numb_students", 70) or 70),
-                        duration=int(row.get("duration", 1) or 1),
+                        duration=int(row.get("duration") or row.get("duration (in hr)") or 1),
                     )
 
                     created_count += 1
@@ -2018,6 +2228,18 @@ def map_section_subjects(request):
     sections = Section.objects.filter(user=request.user).order_by("section_id")
     subjects = Subject.objects.filter(user=request.user).order_by("subject_number")
 
+    def parse_group_count(raw_value):
+        value = str(raw_value or "").strip()
+        if not value:
+            return 1
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            raise ValueError("Group count must be a whole number.")
+        if parsed < 1:
+            raise ValueError("Group count must be at least 1.")
+        return parsed
+
     def resolve_section(section_identifier):
         section_identifier = (section_identifier or "").strip()
         if not section_identifier:
@@ -2033,9 +2255,16 @@ def map_section_subjects(request):
     if request.method == "POST" and "manual_add" in request.POST:
         section_identifier = request.POST.get("section_id", "").strip()
         selected_subject_ids = request.POST.getlist("subjects")
+        raw_group_count = request.POST.get("group_count", "1")
 
         if not section_identifier or not selected_subject_ids:
             messages.error(request, "Please select a section and at least one subject.")
+            return redirect("map_section_subjects")
+
+        try:
+            group_count = parse_group_count(raw_group_count)
+        except ValueError as exc:
+            messages.error(request, str(exc))
             return redirect("map_section_subjects")
 
         try:
@@ -2049,13 +2278,23 @@ def map_section_subjects(request):
             messages.error(request, "No valid subjects were selected.")
             return redirect("map_section_subjects")
 
+        created = 0
+        updated = 0
         for subj in valid_subjects:
-            section.allowed_subjects.add(subj)
+            mapping, was_created = SectionSubjectMapping.objects.update_or_create(
+                section=section,
+                subject=subj,
+                defaults={"group_count": group_count},
+            )
+            if was_created:
+                created += 1
+            elif mapping.group_count == group_count:
+                updated += 1
 
         reset_global_schedule_cache(request.user.id)
         messages.success(
             request,
-            f"{len(valid_subjects)} subject mappings saved for {section.section_id}."
+            f"{created} subject mappings saved for {section.section_id}. {updated} group counts updated."
         )
         return redirect("map_section_subjects")
 
@@ -2074,6 +2313,7 @@ def map_section_subjects(request):
         reader = csv.reader(decoded)
 
         added = 0
+        updated = 0
         skipped = 0
         first = True
 
@@ -2089,23 +2329,32 @@ def map_section_subjects(request):
             subject_number = row[1].strip()
 
             try:
+                group_count = parse_group_count(row[2] if len(row) > 2 else "1")
+            except ValueError:
+                skipped += 1
+                continue
+
+            try:
                 section = resolve_section(section_identifier)
                 subj = Subject.objects.get(subject_number=subject_number, user=request.user)
             except (Section.DoesNotExist, Subject.DoesNotExist):
                 skipped += 1
                 continue
 
-            if subj in section.allowed_subjects.all():
-                skipped += 1
-                continue
-
-            section.allowed_subjects.add(subj)
-            added += 1
+            _, was_created = SectionSubjectMapping.objects.update_or_create(
+                section=section,
+                subject=subj,
+                defaults={"group_count": group_count},
+            )
+            if was_created:
+                added += 1
+            else:
+                updated += 1
 
         reset_global_schedule_cache(request.user.id)
         messages.success(
             request,
-            f"{added} section-subject mappings added. {skipped} skipped."
+            f"{added} section-subject mappings added. {updated} group counts updated. {skipped} skipped."
         )
         return redirect("map_section_subjects")
 
@@ -2117,15 +2366,15 @@ def map_section_subjects(request):
 
 @login_required
 def view_section_subjects(request):
-    sections = (
-        Section.objects.filter(user=request.user)
-        .order_by("section_id")
-        .prefetch_related("allowed_subjects")
-    )
+    sections = Section.objects.filter(user=request.user).order_by("section_id")
     section_mappings = [
         {
             "section_id": section.section_id,
-            "subjects": list(section.allowed_subjects.all().order_by("subject_number")),
+            "subjects": list(
+                SectionSubjectMapping.objects.filter(section=section)
+                .select_related("subject")
+                .order_by("subject__subject_number")
+            ),
         }
         for section in sections
     ]
@@ -2148,6 +2397,11 @@ def map_teacher_subjects(request):
         section_id,subject_number,instructor_uid,shared_lab,second_instructor_uid
         CE-A,CS101,T001,false,
         BSc AM 3rd Sem,CA022,T076,true,T080
+
+    Group-wise CSV format:
+        section_id,subject_number,instructor_uid,shared_lab,second_instructor_uid
+        CE-A,CS101,T001;T002,false,
+        CE-A,CA022,T001;T002,true,T003;T004
     """
 
     # =========================
@@ -2181,6 +2435,43 @@ def map_teacher_subjects(request):
                     return Instructor.objects.get(name=value, user=request.user)
                 except (Instructor.DoesNotExist, Instructor.MultipleObjectsReturned):
                     return None
+
+        def _split_teacher_tokens(raw_value):
+            if raw_value is None:
+                return []
+            text = str(raw_value).strip()
+            if not text:
+                return []
+            return [token.strip() for token in text.split(";")]
+
+        def _resolve_group_assignments(raw_value, slot_count, field_label, allow_empty=False):
+            tokens = _split_teacher_tokens(raw_value)
+            if not tokens:
+                return [None] * slot_count
+
+            if len(tokens) == 1 and slot_count > 1:
+                tokens = tokens * slot_count
+            elif len(tokens) < slot_count:
+                tokens = tokens + ([""] * (slot_count - len(tokens)))
+
+            resolved = []
+            for index, token in enumerate(tokens[:slot_count], start=1):
+                if not token:
+                    if allow_empty:
+                        resolved.append(None)
+                        continue
+                    validation_errors.append(
+                        f"Row {row_number}: {field_label} missing for group {index}"
+                    )
+                    return None
+                instructor_obj = _resolve_instructor(token)
+                if not instructor_obj:
+                    validation_errors.append(
+                        f"Row {row_number}: {field_label} not found '{token}'"
+                    )
+                    return None
+                resolved.append(instructor_obj)
+            return resolved
 
         valid_bool_values = {"", "true", "false", "1", "0", "yes", "no"}
         row_number = 0
@@ -2232,16 +2523,35 @@ def map_teacher_subjects(request):
                 )
                 continue
 
-            instructor = _resolve_instructor(instructor_uid)
-            if not instructor:
+            section_group_count = 1
+            section_subject_mapping = SectionSubjectMapping.objects.filter(section=section, subject=subj).only("group_count").first()
+            if section_subject_mapping is not None:
+                section_group_count = max(1, section_subject_mapping.group_count or 1)
+
+            primary_tokens = _split_teacher_tokens(instructor_uid)
+            secondary_tokens = _split_teacher_tokens(second_instructor_uid)
+            inferred_group_count = max(
+                section_group_count,
+                len(primary_tokens) if primary_tokens else 0,
+                len(secondary_tokens) if secondary_tokens else 0,
+                1,
+            )
+
+            primary_group_instructors = _resolve_group_assignments(
+                instructor_uid,
+                inferred_group_count,
+                "primary instructor",
+                allow_empty=False,
+            )
+            if primary_group_instructors is None:
                 skipped += 1
-                validation_errors.append(
-                    f"Row {row_number}: primary instructor not found '{instructor_uid}'"
-                )
                 continue
+
+            instructor = primary_group_instructors[0]
 
             # Resolve second instructor if shared lab
             second_instructor = None
+            second_group_instructors = [None] * inferred_group_count
             if shared_lab_flag:
                 if subj.room_required != "Lab":
                     skipped += 1
@@ -2255,18 +2565,26 @@ def map_teacher_subjects(request):
                         f"Row {row_number}: shared_lab=true but second_instructor_uid missing"
                     )
                     continue
-                second_instructor = _resolve_instructor(second_instructor_uid)
-                if not second_instructor:
+                second_group_instructors = _resolve_group_assignments(
+                    second_instructor_uid,
+                    inferred_group_count,
+                    "second instructor",
+                    allow_empty=True,
+                )
+                if second_group_instructors is None:
                     skipped += 1
-                    validation_errors.append(
-                        f"Row {row_number}: second instructor not found '{second_instructor_uid}'"
-                    )
                     continue
-                if second_instructor.id == instructor.id:
-                    skipped += 1
-                    validation_errors.append(
-                        f"Row {row_number}: primary and second instructor cannot be same for shared lab"
-                    )
+                second_instructor = next((teacher for teacher in second_group_instructors if teacher is not None), None)
+                for index, primary_teacher in enumerate(primary_group_instructors):
+                    paired_second = second_group_instructors[index] if index < len(second_group_instructors) else None
+                    if paired_second is not None and paired_second.id == primary_teacher.id:
+                        skipped += 1
+                        validation_errors.append(
+                            f"Row {row_number}: primary and second instructor cannot be same for group {index + 1}"
+                        )
+                        second_group_instructors = None
+                        break
+                if second_group_instructors is None:
                     continue
 
             # -------------------------
@@ -2276,12 +2594,19 @@ def map_teacher_subjects(request):
                 user=request.user,
                 section=section,
                 subject=subj,
-                defaults={"instructor": instructor, "second_instructor": second_instructor},
+                defaults={
+                    "instructor": instructor,
+                    "second_instructor": second_instructor,
+                    "group_instructor_ids": [teacher.id for teacher in primary_group_instructors],
+                    "group_second_instructor_ids": [teacher.id if teacher is not None else None for teacher in second_group_instructors],
+                },
             )
             # Also ensure instructor is in Subject.instructors (for validation)
-            subj.instructors.add(instructor)
-            if second_instructor:
-                subj.instructors.add(second_instructor)
+            for teacher in primary_group_instructors:
+                subj.instructors.add(teacher)
+            for teacher in second_group_instructors:
+                if teacher is not None:
+                    subj.instructors.add(teacher)
             added += 1
 
         messages.success(

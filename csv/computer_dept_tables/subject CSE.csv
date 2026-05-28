@@ -1,0 +1,75 @@
+department_code,subject_number,subject_name,room_required,required_lab_category,specific_equipment/software_lab,classes_per_week,max_numb_students,duration
+CSE,MTU-145-V,Maths 1,,,,4,,1
+CSE,CHU-141-V,Chemistry,LECTURE HALL,,,4,,1
+CSE,CHU-142-V,Chemistry Lab ,LAB,Physics Lab,,1,,2
+CSE,ENG-101-V,English ,LECTURE HALL,,,2,,1
+CSE,ENG-103-V,English Lab ,LAB,English Lab,,1,,2
+CSE,ELU-101-V,Basics of Electrical Engineering ,LECTURE HALL,,,4,,1
+CSE,ELU-103-V,Basics of Electrical Engineering Lab ,LAB,Ekectrical Lab ,,1,,2
+CSE,MEU-101-V,Workshop ,LAB,Computer Lab,,1,,4
+CSE,PCC-CS-301,Data Structures& Algorithms,LECTURE HALL,,,3,,1
+CSE,ESC-302,Digital Electronics,LECTURE HALL,,,3,,1
+CSE,BSC-301,Mathematics- III (Calculus and Ordinary Differential Equations),LECTURE HALL,,,3,,1
+CSE,HSMC-01,Effective Technical Communication,LECTURE HALL,,,3,,1
+CSE,PCC-CS-302,IT Workshop,LAB,Computer Lab,,1,,4
+CSE,ESC-303,Analog Electronic Circuits Lab,LAB,Electronics Lab,,1,,4
+CSE,ESC-304,Digital Electronics Lab,LAB,Electronics Lab,,1,,4
+CSE,ESC-501,Signals & Systems,LECTURE HALL,,,3,,1
+CSE,PCC-CS-501,Database Management Systems,LECTURE HALL,,,3,,1
+CSE,BSC-01,Biology,LECTURE HALL,,,3,,1
+CSE,(PEC-CS-D-501),Basics of Machine Learning,LECTURE HALL,,,3,,1
+CSE,H-102,"Universal Human Values
+ 2: Understanding Harmony",LECTURE HALL,,,2,,1
+CSE,PCC-CS-505,Object Oriented Programming Lab,LAB,Computer Lab,CC07,1,,4
+CSE,PEC-CS-S-701(I),Advanced Operating Systems,LECTURE HALL,,,3,,1
+CSE,PEC-CS-D-702(I),Data Analytics,LECTURE HALL,,,3,,1
+CSE,PEC-CS-A-703,Cryptography and Network Security,LECTURE HALL,,,3,,1
+CSE,OEC-CS-701(IV),Non-Conventional Energy Sources,LECTURE HALL,,,3,,1
+CSE,PEC-IT-I-703,Basics of Cloud Computing,LECTURE HALL,,,3,,1
+CSE,HSMC-03,Organizational Behaviour,LECTURE HALL,,,3,,1
+CSE,BSC- DS-301,Mathematics for Data Science,LECTURE HALL,,,3,,1
+CSE,PCC- CS-301,Data Structures & Algorithms,LECTURE HALL,,,3,,1
+CSE,PCC- DS-301,Fundamentals to Database Systems,LECTURE HALL,,,3,,1
+CSE,BSC- DS-302,Statistics -1,LECTURE HALL,,,3,,1
+CSE,HSMC- 01,Effective Technical Communication,LECTURE HALL,,,3,,1
+CSE,PCC- DS-302,IT Workshop (Python),LAB,Computer Lab,CC08,1,,4
+CSE,BSC- DS-303,Statistics Lab MS-Excel,LAB,Computer Lab,,1,,4
+CSE,PCC- DS-303,Database systems Lab,LAB,Computer Lab,CC06,1,,4
+CSE,PCC- CS-303,Data Structure & Algorithms Lab,LAB,Computer Lab,,1,,4
+CSE,PCC-DS- 501,Principles of Artificial Intelligence,LECTURE HALL,,,3,,1
+CSE,PCC-CS- 404,Design and Analysis of Algorithms,LECTURE HALL,,,3,,1
+CSE,PCC-DS- 502,Soft Computing Principles,LECTURE HALL,,,3,,1
+CSE,PCC-CS- 403,Operating System,LECTURE HALL,,,3,,1
+CSE,PCC-DS- 503,Computer Architecture,LECTURE HALL,,,3,,1
+CSE,MC-01,Constitution of India,LECTURE HALL,,,2,,1
+CSE,PCC-DS- 504,Soft Computing Principles lab,LAB,Computer Lab,CC08,1,,4
+CSE,PCC-CS- 406,Operating System Lab,LAB,Computer Lab,CC09,1,,4
+CSE,PCC-DS- 701,Cloud Computing,LECTURE HALL,,,3,,1
+CSE,PEC-CS-D-701,Speech and Natural language Processing,LECTURE HALL,,,3,,1
+CSE,PCC-DS- 703,Deep Learning and Image Processing,LECTURE HALL,,,3,,1
+CSE,OEC-CS-702(IV),High Speed Network,LECTURE HALL,,,3,,1
+CSE,PCC-DS- 704,Business Intelligence and Predictive Analysis,LECTURE HALL,,,3,,1
+CSE,ESC-301,Analog Electronic Circuits,LECTURE HALL,,,3,,1
+CSE,HSMC-02,Economics For Engineers,LECTURE HALL,,,3,,1
+CSE,PCC-CS-303,Data Structure & Algorithms Lab,LAB,Computer Lab,,1,,4
+CSE,PCC-CS-502,"Formal Languages , Automata and Compiler Design",LECTURE HALL,,,3,,1
+CSE,PCC-CS-503,Object Oriented Programming,LECTURE HALL,,,3,,1
+CSE,PCC-CS-602,Computer Networks,LECTURE HALL,,,3,,1
+CSE,PEC-CS-A-702,Web and Internet Technology,LECTURE HALL,,,3,,1
+CSE,PCC-CS-504,Database Management Systems Lab,LAB,Computer Lab,CC06,1,,4
+CSE,PEC-IT-I-701,Wireless communications and Ad-hoc Networks,LECTURE HALL,,,3,,4
+CSE,PEC-CS-D-501,Basics of Machine Learning,LECTURE HALL,,,3,,4
+CSE,PEC-CS-D-703,Neural Network and Deep learning,LECTURE HALL,,,3,,4
+CSE,OEC-CS-S-701(I),Advanced Operating System,LECTURE HALL,,,3,,4
+CSE,ESU-203-V,Environmental Science,LECTURE HALL,,,3,,1
+CSE,MCS-18-101,Mathematical Foundations of Computer Science,SMART CLASS ROOM,,Smart Class Room,3,,1
+CSE,MCS-18-102,Advanced Data Structures,SMART CLASS ROOM,,Smart Class Room,3,,1
+CSE,MCN-18-101,Data Communication and Networks,SMART CLASS ROOM,,Smart Class Room,3,,1
+CSE,MCS-18-112,Web Search  and Information Retrieval,SMART CLASS ROOM,,Smart Class Room,3,,1
+CSE,RMI-101,Research Methodology and IPR,SMART CLASS ROOM,,Smart Class Room,3,,1
+CSE,AUD-01,English for Research Paper Writing,SMART CLASS ROOM,,Smart Class Room,3,,1
+CSE,MCS-18-104,Advanced Data Structures Lab,LAB,Computer Lab,SPCD Lab,1,,4
+CSE,MCN-18-112A,Data Communication and Networks Lab,LAB,Computer Lab,CC02,1,,4
+CSE,MCS-18-304,Cloud Computing,LAB,Computer Lab,SPCD Lab,3,,1
+CSE,OEC-102A,Industrial Safety,LAB,Computer Lab,SPCD Lab,3,,1
+CSE,AC-02,Message of Bhagwat Geeta,LAB,Computer Lab,SPCD Lab,3,,1

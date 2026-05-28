@@ -87,8 +87,8 @@
                 <h3>{{ section.section_id }}</h3>
                 {% if section.subjects %}
                     <ul class="subject-list">
-                        {% for subject in section.subjects %}
-                            <li>{{ subject.subject_number }} - {{ subject.subject_name }}</li>
+                        {% for mapping in section.subjects %}
+                            <li>{{ mapping.subject.subject_number }} - {{ mapping.subject.subject_name }} {% if mapping.group_count > 1 %}(groups: {{ mapping.group_count }}){% endif %}</li>
                         {% endfor %}
                     </ul>
                 {% else %}

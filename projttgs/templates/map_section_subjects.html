@@ -301,9 +301,9 @@ label strong {
             <span class="info-icon">i</span>
             <div class="info-tooltip">
                 <strong>CSV Format</strong><br>
-                section_id,subject_number<br>
-                CE31 3rd Sem,CS001<br>
-                CE31 3rd Sem,CS002
+                section_id,subject_number,group_count[,elective_section_id]<br>
+                CE31 3rd Sem,CS001,1<br>
+                CE31 3rd Sem,CS002,2
             </div>
         </div>
 
@@ -342,6 +342,11 @@ label strong {
         <option value="{{ s.section_id }}">{{ s.section_id }}</option>
     {% endfor %}
 </select>
+
+<br>
+
+<label><strong>Group count</strong></label>
+<input type="number" name="group_count" class="form-control" min="1" value="1" required>
 
 <br>
 
