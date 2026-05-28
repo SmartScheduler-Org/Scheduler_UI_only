@@ -2195,7 +2195,25 @@ function initDragAndDrop() {
     {{ table.section.section_id }} ({{ table.section.department.name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
   </h2>
 
-  <!-- {% if table.subject_counts %}
+  {% if table.missed_labs %}
+    <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
+      <div style="font-weight: 700; color: #9a3412; margin-bottom: 8px;">Missed Labs</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        {% for lab in table.missed_labs %}
+          <span style="display: inline-block; padding: 6px 10px; background: #ffffff; border: 1px solid #fdba74; border-radius: 16px; color: #9a3412; font-size: 13px; font-weight: 600; max-width: 360px;">
+            {{ lab.name }}: Missed {{ lab.missing }}
+            {% if lab.reason %}
+              <div style="margin-top: 4px; font-size: 11px; font-weight: 500; color: #7c2d12; line-height: 1.35;">
+                Reason: {{ lab.reason }}
+              </div>
+            {% endif %}
+          </span>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if table.subject_counts %}
     <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #f7fbff; border: 1px solid #d6e9f8; border-radius: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
         <div style="font-weight: 700; color: #0d47a1;">
@@ -2231,7 +2249,7 @@ function initDragAndDrop() {
         {% endfor %}
       </div>
     </div>
-  {% endif %} -->
+  {% endif %}
 
   <div style="text-align:center; margin-bottom: 15px;">
       <a href="/add_slot/{{ table.section.section_id }}/" class="action-button btn-add"

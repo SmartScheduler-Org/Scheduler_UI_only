@@ -1,0 +1,135 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
+
+<style>
+.edit-entity-shell {
+    width: min(760px, 92%);
+    margin: 24px auto;
+}
+
+.edit-entity-card {
+    padding: 24px 28px;
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+}
+
+.edit-entity-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+
+.edit-entity-title {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.05;
+}
+
+.edit-entity-subtitle {
+    margin: 8px 0 0;
+    color: rgba(255,255,255,0.72);
+    font-size: 14px;
+}
+
+.back-btn {
+    padding: 8px 16px;
+    background: #ffffffdd;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.back-btn:hover {
+    background: white;
+    transform: translateY(-2px);
+}
+
+.field-block {
+    margin-bottom: 18px;
+}
+
+.field-block label {
+    display: block;
+    margin-bottom: 8px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.field-block small {
+    display: block;
+    margin-top: 7px;
+    color: rgba(255,255,255,0.68);
+}
+
+.checkbox-scroll {
+    max-height: 240px;
+    overflow: auto;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.checkbox-scroll label {
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.errorlist {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: #fda4af;
+}
+
+.button-row {
+    margin-top: 20px;
+}
+</style>
+
+<div class="edit-entity-shell">
+    <div class="edit-entity-card">
+        <div class="edit-entity-top">
+            <div>
+                <h2 class="edit-entity-title">{{ title }}</h2>
+                <p class="edit-entity-subtitle">Update the selected record and save your changes.</p>
+            </div>
+            <a href="{% url back_url_name %}">
+                <button type="button" class="back-btn">{{ back_label }}</button>
+            </a>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="field-block">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.name == "instructors" %}
+                    <div class="checkbox-scroll">{{ field }}</div>
+                {% else %}
+                    {{ field }}
+                {% endif %}
+                {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                {{ field.errors }}
+            </div>
+            {% endfor %}
+
+            <div class="button-row">
+                <button type="submit" class="submit-btn">{{ submit_label }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

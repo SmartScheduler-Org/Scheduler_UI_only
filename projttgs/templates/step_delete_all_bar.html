@@ -1,0 +1,165 @@
+<style>
+.step-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.danger-btn {
+    padding: 8px 16px;
+    background: rgba(220, 53, 69, 0.92);
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    color: white;
+    transition: 0.2s;
+}
+
+.danger-btn:hover {
+    background: #b52a37;
+    transform: translateY(-1px);
+}
+
+.step-inline-form {
+    margin: 0;
+}
+
+.step-top-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.step-search-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: min(100%, 360px);
+}
+
+.step-search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.step-search-input {
+    flex: 1 1 220px;
+    min-width: 180px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(15, 23, 42, 0.55);
+    color: white;
+    outline: none;
+}
+
+.step-search-input::placeholder {
+    color: rgba(226, 232, 240, 0.58);
+}
+
+.step-search-input:focus {
+    border-color: rgba(56, 189, 248, 0.9);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+.step-search-btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    background: rgba(14, 165, 233, 0.18);
+    color: #e0f2fe;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.step-search-status {
+    min-height: 18px;
+    font-size: 12px;
+    color: rgba(226, 232, 240, 0.72);
+}
+
+.step-row-hidden {
+    display: none !important;
+}
+</style>
+
+<div class="step-top-bar">
+    <a href="{% url back_url_name %}" class="back-btn-link">
+        <button class="back-btn" type="button">{{ back_label }}</button>
+    </a>
+
+    <div class="step-top-actions">
+        <div class="step-search-panel" data-table-search>
+            <div class="step-search-row">
+                <input type="search" class="step-search-input" data-search-input placeholder="Search exact item...">
+                <button type="button" class="step-search-btn" data-search-button>
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Search
+                </button>
+            </div>
+            <div class="step-search-status" data-search-status></div>
+        </div>
+
+        <form method="post" action="{% url delete_url_name %}" class="step-inline-form js-confirm-form" data-confirm-title="Delete all data?" data-confirm-message="{{ confirm_message }}" data-confirm-accept="Yes, Delete All">
+            {% csrf_token %}
+            <button class="danger-btn" type="submit">Delete All</button>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    document.querySelectorAll("[data-table-search]").forEach(function (panel) {
+        var root = panel.closest(".manage-fieldset") || document;
+        var input = panel.querySelector("[data-search-input]");
+        var button = panel.querySelector("[data-search-button]");
+        var status = panel.querySelector("[data-search-status]");
+
+        function runSearch() {
+            var term = (input.value || "").trim().toLowerCase();
+            var rows = root.querySelectorAll("tbody tr");
+            var shown = 0;
+
+            rows.forEach(function (row) {
+                var text = row.textContent.toLowerCase();
+                var match = !term || text.indexOf(term) !== -1;
+                row.classList.toggle("step-row-hidden", !match);
+                if (match) shown += 1;
+            });
+
+            if (status) {
+                status.textContent = term ? shown + " matching row(s)" : "";
+            }
+        }
+
+        if (input) {
+            input.addEventListener("input", runSearch);
+            input.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    runSearch();
+                }
+            });
+        }
+        if (button) button.addEventListener("click", runSearch);
+    });
+
+    document.querySelectorAll(".js-confirm-form").forEach(function (form) {
+        form.addEventListener("submit", function (event) {
+            var message = form.getAttribute("data-confirm-message") || "Are you sure?";
+            if (!window.confirm(message)) {
+                event.preventDefault();
+            }
+        });
+    });
+})();
+</script>
