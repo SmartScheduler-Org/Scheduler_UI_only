@@ -38,6 +38,21 @@ import random as rnd
 logger = logging.getLogger(__name__)
 
 
+def _delete_all_step_entries(request, queryset, redirect_name, entity_label):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+
+    total = queryset.count()
+    if total == 0:
+        messages.info(request, f"No {entity_label} found to delete.")
+        return redirect(redirect_name)
+
+    queryset.delete()
+    reset_global_schedule_cache(request.user.id)
+    messages.success(request, f"Deleted {total} {entity_label}.")
+    return redirect(redirect_name)
+
+
 # ---------------- PER-USER STATE ----------------
 _USER_STATE = {}  # {user_id: {"classes": ..., "labs": ..., "schedules": [...], "view_mode": ..., "data": ...}}
 
@@ -80,6 +95,15 @@ def get_valid_start_slots(duration):
     return pre_lunch + post_lunch
 
 
+def _csv_issue(issues, row_number, detail):
+    issues.append(f"Row {row_number}: {detail}")
+
+
+def _emit_csv_issues(request, issues):
+    for issue in issues:
+        messages.warning(request, issue)
+
+
 
 
 # placeholder for private generation algorithm loaded outside this repo
@@ -87,6 +111,11 @@ data = None
 GENERATOR_RULES_AVAILABLE = False
 GENERATOR_ALGO_AVAILABLE = False
 GENERATOR_RUNTIME_AVAILABLE = False
+_PRIVATE_GENERATOR_MTIMES = {
+    "rules": None,
+    "algo": None,
+    "runtime": None,
+}
 
 
 def _private_file_path(env_var, filename):
@@ -106,11 +135,16 @@ def _load_private_generator_rules():
     if not os.path.exists(rules_path):
         return
 
+    current_mtime = os.path.getmtime(rules_path)
+    if _PRIVATE_GENERATOR_MTIMES["rules"] == current_mtime:
+        return
+
     with open(rules_path, "r", encoding="utf-8") as rules_file:
         code = compile(rules_file.read(), rules_path, "exec")
 
     exec(code, globals())
     GENERATOR_RULES_AVAILABLE = True
+    _PRIVATE_GENERATOR_MTIMES["rules"] = current_mtime
 
 
 def _load_private_generator_algo():
@@ -120,11 +154,16 @@ def _load_private_generator_algo():
     if not os.path.exists(algo_path):
         return
 
+    current_mtime = os.path.getmtime(algo_path)
+    if _PRIVATE_GENERATOR_MTIMES["algo"] == current_mtime:
+        return
+
     with open(algo_path, "r", encoding="utf-8") as algo_file:
         code = compile(algo_file.read(), algo_path, "exec")
 
     exec(code, globals())
     GENERATOR_ALGO_AVAILABLE = True
+    _PRIVATE_GENERATOR_MTIMES["algo"] = current_mtime
 
 
 def _load_private_generator_runtime():
@@ -134,11 +173,22 @@ def _load_private_generator_runtime():
     if not os.path.exists(runtime_path):
         return
 
+    current_mtime = os.path.getmtime(runtime_path)
+    if _PRIVATE_GENERATOR_MTIMES["runtime"] == current_mtime:
+        return
+
     with open(runtime_path, "r", encoding="utf-8") as runtime_file:
         code = compile(runtime_file.read(), runtime_path, "exec")
 
     exec(code, globals())
     GENERATOR_RUNTIME_AVAILABLE = True
+    _PRIVATE_GENERATOR_MTIMES["runtime"] = current_mtime
+
+
+def ensure_private_generator_loaded():
+    _load_private_generator_rules()
+    _load_private_generator_algo()
+    _load_private_generator_runtime()
 
 
 _load_private_generator_rules()
@@ -989,6 +1039,7 @@ if "build_section_tables" not in globals():
             lab_rooms_qs = lab_rooms_qs.filter(user=user)
         lecture_rooms = list(lecture_rooms_qs.select_related("department"))
         lab_rooms = list(lab_rooms_qs.select_related("department"))
+        all_rooms = lecture_rooms + lab_rooms
 
         def _slots_for_class(cls):
             if getattr(cls, "meeting_times", None):
@@ -1186,12 +1237,22 @@ if "build_section_tables" not in globals():
                     if not instructors:
                         reason = "Teacher not mapped"
                     elif is_lab:
-                        required_category = normalize_lab_category(getattr(subject, "required_lab_category", ""))
+                        specific_room_tokens = [
+                            token for token in normalize_specific_rooms(getattr(subject, "specific_rooms", "")).split(";")
+                            if token
+                        ]
+                        specific_rooms = [
+                            room for room in all_rooms
+                            if room.r_number in specific_room_tokens
+                        ]
+                        required_categories = normalize_lab_categories(getattr(subject, "required_lab_category", ""))
                         matching_rooms = [
                             room for room in lab_rooms
-                            if not required_category or normalize_lab_category(room.lab_category) == required_category
+                            if not required_categories or lab_category_matches(room.lab_category, required_categories)
                         ]
-                        if required_category and not matching_rooms:
+                        if specific_room_tokens:
+                            reason = "No conflict-free lab slot available" if specific_rooms else "Assigned specific room unavailable"
+                        elif required_categories and not matching_rooms:
                             reason = "Required lab category unavailable"
                         else:
                             reason = "No conflict-free lab slot available"
@@ -1413,6 +1474,37 @@ if "normalize_lab_category" not in globals():
         return value
 
 
+if "normalize_lab_categories" not in globals():
+    def normalize_lab_categories(value):
+        if not value:
+            return []
+        tokens = [token.strip() for token in re.split(r"[;\n]+", str(value)) if token.strip()]
+        categories = []
+        seen = set()
+        for token in tokens:
+            normalized = normalize_lab_category(token)
+            if not normalized:
+                continue
+            key = normalized.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            categories.append(normalized)
+        return categories
+
+
+if "normalize_lab_categories_value" not in globals():
+    def normalize_lab_categories_value(value):
+        return ";".join(normalize_lab_categories(value))
+
+
+if "lab_category_matches" not in globals():
+    def lab_category_matches(room_category, required_categories):
+        normalized_room = normalize_lab_category(room_category)
+        required = normalize_lab_categories(required_categories)
+        return not required or normalized_room in required
+
+
 if "normalize_specific_rooms" not in globals():
     def normalize_specific_rooms(value):
         if not value:
@@ -1430,6 +1522,23 @@ if "teacher_payload" not in globals():
         except (TypeError, ValueError):
             resolved_workload = 12
         return resolved_designation, resolved_workload
+
+
+if "normalize_section_id_list" not in globals():
+    def normalize_section_id_list(raw_value):
+        if not raw_value:
+            return ""
+        sections = []
+        seen = set()
+        for token in re.split(r"[;,\n]+", str(raw_value)):
+            value = token.strip()
+            normalized = re.sub(r"\s+", " ", value)
+            key = normalized.casefold()
+            if not normalized or key in seen:
+                continue
+            sections.append(normalized)
+            seen.add(key)
+        return ";".join(sections)
 
 
 for _runtime_view_name in (
@@ -1979,12 +2088,12 @@ def addSubjects(request):
             subject.user = request.user
             raw_room = (subject.room_required or "").strip().lower()
             subject.room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room, subject.room_required)
-            subject.required_lab_category = normalize_lab_category(subject.required_lab_category)
+            subject.required_lab_category = normalize_lab_categories_value(subject.required_lab_category)
 
             if subject.room_required == "Lab" and not subject.required_lab_category:
                 messages.error(request, "Lab subjects must have a Required Lab Category.")
                 return redirect("addSubjects")
-            if subject.room_required != "Lab":
+            if subject.room_required not in {"Lab", "Lecture Hall"}:
                 subject.required_lab_category = ""
 
             # Auto-set classes per week
@@ -2012,7 +2121,11 @@ def addSubjects(request):
 
         try:
             decoded_file = csv_file.read().decode("utf-8").splitlines()
-            reader = csv.DictReader(decoded_file)
+            reader = csv.DictReader(decoded_file, skipinitialspace=True)
+            reader.fieldnames = [
+                ((name or "").lstrip("\ufeff")).strip()
+                for name in (reader.fieldnames or [])
+            ]
 
             fieldnames = reader.fieldnames or []
             required_columns = [
@@ -2034,14 +2147,42 @@ def addSubjects(request):
                 return redirect("addSubjects")
 
             created_count = 0
+            skipped_count = 0
+            issues = []
 
             with transaction.atomic():
-                for row in reader:
-                    dept_code = row["department_code"].strip().upper()
-                    subject_number = row["subject_number"].strip()
-                    raw_room = row["room_required"].strip()
+                for row_number, row in enumerate(reader, start=2):
+                    dept_code = (row.get("department_code") or "").strip().upper()
+                    subject_number = (row.get("subject_number") or "").strip()
+                    subject_name = (row.get("subject_name") or "").strip()
+                    raw_room = (row.get("room_required") or "").strip()
+                    raw_classes_per_week = (row.get("classes_per_week") or "").strip()
+
+                    if not any((value or "").strip() for value in row.values()):
+                        continue
+                    if not dept_code:
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, "department_code is blank")
+                        continue
+                    if not subject_number:
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, "subject_number is blank")
+                        continue
+                    if not subject_name:
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, "subject_name is blank")
+                        continue
+                    if not raw_room:
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, f"room_required is blank for subject '{subject_number}'")
+                        continue
+                    if not raw_classes_per_week:
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, f"classes_per_week is blank for subject '{subject_number}'")
+                        continue
+
                     room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room.lower(), raw_room)
-                    required_lab_category = normalize_lab_category(
+                    required_lab_category = normalize_lab_categories_value(
                         row.get("required_lab_category") or row.get("lab_category_required")
                     )
                     specific_rooms = normalize_specific_rooms(
@@ -2051,38 +2192,66 @@ def addSubjects(request):
                     try:
                         subject_department = Department.objects.get(code=dept_code, user=request.user)
                     except Department.DoesNotExist:
-                        raise ValueError(f"Department with code '{dept_code}' does not exist.")
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, f"department_code '{dept_code}' does not exist")
+                        continue
 
                     # Skip duplicates
                     if Subject.objects.filter(subject_number=subject_number, user=request.user).exists():
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, f"subject_number '{subject_number}' already exists")
                         continue
 
                     if room_required == "Lab" and not required_lab_category:
-                        raise ValueError(
-                            f"Subject '{subject_number}' is a Lab but required_lab_category is blank."
-                        )
-                    if room_required != "Lab":
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, f"subject '{subject_number}' is Lab but required_lab_category is blank")
+                        continue
+                    if room_required not in {"Lab", "Lecture Hall"}:
                         required_lab_category = ""
+
+                    try:
+                        classes_per_week = int(raw_classes_per_week)
+                    except (TypeError, ValueError):
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, f"classes_per_week '{raw_classes_per_week}' is not a whole number")
+                        continue
+
+                    raw_max_students = (row.get("max_numb_students", 70) or 70)
+                    raw_duration = row.get("duration") or row.get("duration (in hr)") or 1
+                    try:
+                        max_numb_students = int(raw_max_students)
+                    except (TypeError, ValueError):
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, f"max_numb_students '{raw_max_students}' is not a whole number")
+                        continue
+
+                    try:
+                        duration = int(raw_duration)
+                    except (TypeError, ValueError):
+                        skipped_count += 1
+                        _csv_issue(issues, row_number, f"duration '{raw_duration}' is not a whole number")
+                        continue
 
                     subject = Subject.objects.create(
                         user=request.user,
                         subject_number=subject_number,
-                        subject_name=row["subject_name"].strip(),
+                        subject_name=subject_name,
                         department=subject_department,
                         room_required=room_required,
                         required_lab_category=required_lab_category,
                         specific_rooms=specific_rooms,
-                        classes_per_week=int(row["classes_per_week"]),
-                        max_numb_students=int(row.get("max_numb_students", 70) or 70),
-                        duration=int(row.get("duration") or row.get("duration (in hr)") or 1),
+                        classes_per_week=classes_per_week,
+                        max_numb_students=max_numb_students,
+                        duration=duration,
                     )
 
                     created_count += 1
 
             reset_global_schedule_cache(request.user.id)
             messages.success(
-                request, f"{created_count} subjects uploaded successfully!"
+                request, f"{created_count} subjects uploaded successfully! {skipped_count} skipped."
             )
+            _emit_csv_issues(request, issues)
 
         except Exception as e:
             messages.error(request, f"CSV upload failed: {str(e)}")
@@ -2105,6 +2274,16 @@ def delete_subject(request, pk):
         Subject.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editsubject')
+
+
+@login_required
+def delete_all_subjects(request):
+    return _delete_all_step_entries(
+        request,
+        Subject.objects.filter(user=request.user),
+        "addSubjects",
+        "subjects",
+    )
 
 
 @login_required
@@ -2183,12 +2362,19 @@ def addInstructor(request):
         first = True
 
         added = 0
-        for row in reader:
-            if not row or len(row) < 2:
+        skipped = 0
+        issues = []
+        for row_number, row in enumerate(reader, start=1):
+            if not row:
                 continue
 
             if first:
                 first = False
+                continue
+
+            if len(row) < 2:
+                skipped += 1
+                _csv_issue(issues, row_number, "expected at least uid and name columns")
                 continue
 
             uid, name = row[0].strip(), row[1].strip()
@@ -2196,25 +2382,45 @@ def addInstructor(request):
             max_workload = row[3].strip() if len(row) > 3 else ""
             email = row[4].strip() if len(row) > 4 else ""
             contact_number = row[5].strip() if len(row) > 5 else ""
-            if uid and name and email and contact_number and not Instructor.objects.filter(uid=uid, user=request.user).exists():
-                resolved_designation, resolved_workload = teacher_payload(
-                    name,
-                    designation,
-                    max_workload,
-                )
-                Instructor.objects.create(
-                    user=request.user,
-                    uid=uid,
-                    name=name,
-                    email=email,
-                    contact_number=contact_number,
-                    designation=resolved_designation,
-                    max_workload=resolved_workload,
-                )
-                added += 1
+            if not uid:
+                skipped += 1
+                _csv_issue(issues, row_number, "uid is blank")
+                continue
+            if not name:
+                skipped += 1
+                _csv_issue(issues, row_number, f"name is blank for uid '{uid}'")
+                continue
+            if not email:
+                skipped += 1
+                _csv_issue(issues, row_number, f"email is blank for uid '{uid}'")
+                continue
+            if not contact_number:
+                skipped += 1
+                _csv_issue(issues, row_number, f"contact_number is blank for uid '{uid}'")
+                continue
+            if Instructor.objects.filter(uid=uid, user=request.user).exists():
+                skipped += 1
+                _csv_issue(issues, row_number, f"uid '{uid}' already exists")
+                continue
+            resolved_designation, resolved_workload = teacher_payload(
+                name,
+                designation,
+                max_workload,
+            )
+            Instructor.objects.create(
+                user=request.user,
+                uid=uid,
+                name=name,
+                email=email,
+                contact_number=contact_number,
+                designation=resolved_designation,
+                max_workload=resolved_workload,
+            )
+            added += 1
 
         reset_global_schedule_cache(request.user.id)
-        messages.success(request, f"{added} teachers imported successfully!")
+        messages.success(request, f"{added} teachers imported successfully! {skipped} skipped.")
+        _emit_csv_issues(request, issues)
         return redirect("addInstructors")
 
     popup_data = request.session.get("api_teachers", [])
@@ -2256,6 +2462,7 @@ def map_section_subjects(request):
         section_identifier = request.POST.get("section_id", "").strip()
         selected_subject_ids = request.POST.getlist("subjects")
         raw_group_count = request.POST.get("group_count", "1")
+        raw_elective_section_ids = request.POST.get("elective_section_id", "")
 
         if not section_identifier or not selected_subject_ids:
             messages.error(request, "Please select a section and at least one subject.")
@@ -2266,6 +2473,8 @@ def map_section_subjects(request):
         except ValueError as exc:
             messages.error(request, str(exc))
             return redirect("map_section_subjects")
+
+        elective_section_ids = normalize_section_id_list(raw_elective_section_ids)
 
         try:
             section = resolve_section(section_identifier)
@@ -2284,7 +2493,10 @@ def map_section_subjects(request):
             mapping, was_created = SectionSubjectMapping.objects.update_or_create(
                 section=section,
                 subject=subj,
-                defaults={"group_count": group_count},
+                defaults={
+                    "group_count": group_count,
+                    "elective_section_ids": elective_section_ids,
+                },
             )
             if was_created:
                 created += 1
@@ -2316,35 +2528,62 @@ def map_section_subjects(request):
         updated = 0
         skipped = 0
         first = True
+        issues = []
 
-        for row in reader:
-            if not row or len(row) < 2:
+        for row_number, row in enumerate(reader, start=1):
+            if not row:
                 continue
 
             if first:
                 first = False
                 continue
 
+            if len(row) < 2:
+                skipped += 1
+                _csv_issue(issues, row_number, "expected at least section_id and subject_number columns")
+                continue
+
             section_identifier = row[0].strip()
             subject_number = row[1].strip()
+            elective_section_ids = normalize_section_id_list(row[3] if len(row) > 3 else "")
+
+            if not section_identifier:
+                skipped += 1
+                _csv_issue(issues, row_number, "section_id is blank")
+                continue
+            if not subject_number:
+                skipped += 1
+                _csv_issue(issues, row_number, f"subject_number is blank for section '{section_identifier}'")
+                continue
 
             try:
                 group_count = parse_group_count(row[2] if len(row) > 2 else "1")
-            except ValueError:
+            except ValueError as exc:
                 skipped += 1
+                _csv_issue(issues, row_number, str(exc))
                 continue
 
             try:
                 section = resolve_section(section_identifier)
-                subj = Subject.objects.get(subject_number=subject_number, user=request.user)
-            except (Section.DoesNotExist, Subject.DoesNotExist):
+            except Section.DoesNotExist:
                 skipped += 1
+                _csv_issue(issues, row_number, f"section not found '{section_identifier}'")
+                continue
+
+            try:
+                subj = Subject.objects.get(subject_number=subject_number, user=request.user)
+            except Subject.DoesNotExist:
+                skipped += 1
+                _csv_issue(issues, row_number, f"subject not found '{subject_number}'")
                 continue
 
             _, was_created = SectionSubjectMapping.objects.update_or_create(
                 section=section,
                 subject=subj,
-                defaults={"group_count": group_count},
+                defaults={
+                    "group_count": group_count,
+                    "elective_section_ids": elective_section_ids,
+                },
             )
             if was_created:
                 added += 1
@@ -2356,6 +2595,7 @@ def map_section_subjects(request):
             request,
             f"{added} section-subject mappings added. {updated} group counts updated. {skipped} skipped."
         )
+        _emit_csv_issues(request, issues)
         return redirect("map_section_subjects")
 
     return render(request, "map_section_subjects.html", {
@@ -2478,16 +2718,38 @@ def map_teacher_subjects(request):
 
         for row in reader:
             row_number += 1
-            if not row or len(row) < 3:
+            if not row:
                 continue
 
             if first:
                 first = False
                 continue
 
+            if len(row) < 3:
+                skipped += 1
+                validation_errors.append(
+                    f"Row {row_number}: expected at least section_id, subject_number, instructor_uid columns"
+                )
+                continue
+
             section_id     = row[0].strip()
             subject_number = row[1].strip()
             instructor_uid = row[2].strip()
+
+            if not section_id:
+                skipped += 1
+                validation_errors.append(f"Row {row_number}: section_id is blank")
+                continue
+            if not subject_number:
+                skipped += 1
+                validation_errors.append(f"Row {row_number}: subject_number is blank")
+                continue
+            if not instructor_uid:
+                skipped += 1
+                validation_errors.append(
+                    f"Row {row_number}: primary instructor is blank for subject '{subject_number}'"
+                )
+                continue
 
             # Optional shared-lab columns (col 3 = shared_lab bool, col 4 = second instructor uid)
             shared_lab_flag = False
@@ -2512,6 +2774,9 @@ def map_teacher_subjects(request):
                 section = Section.objects.get(section_id=section_id, user=request.user)
             except Section.DoesNotExist:
                 skipped += 1
+                validation_errors.append(
+                    f"Row {row_number}: section not found '{section_id}'"
+                )
                 continue
 
             try:
@@ -2614,11 +2879,7 @@ def map_teacher_subjects(request):
             f"{added} section–subject–teacher mappings saved. {skipped} skipped."
         )
         if validation_errors:
-            preview = " | ".join(validation_errors[:5])
-            remaining = len(validation_errors) - 5
-            if remaining > 0:
-                preview += f" | ...and {remaining} more"
-            messages.warning(request, f"Validation details: {preview}")
+            _emit_csv_issues(request, validation_errors)
         reset_global_schedule_cache(request.user.id)
         return redirect("map_teacher_subjects")
 
@@ -2635,6 +2896,26 @@ def map_teacher_subjects(request):
         request,
         "map_teacher_subjects.html",
         {"mappings": mappings},
+    )
+
+
+@login_required
+def delete_all_section_subject_mappings(request):
+    return _delete_all_step_entries(
+        request,
+        SectionSubjectMapping.objects.filter(section__user=request.user),
+        "map_section_subjects",
+        "section-subject mappings",
+    )
+
+
+@login_required
+def delete_all_teacher_subject_mappings(request):
+    return _delete_all_step_entries(
+        request,
+        SectionSubjectInstructor.objects.filter(user=request.user),
+        "map_teacher_subjects",
+        "section-subject-teacher mappings",
     )
 
 
@@ -2690,6 +2971,16 @@ def delete_instructor(request, pk):
         return redirect('editinstructor')
 
 
+@login_required
+def delete_all_instructors(request):
+    return _delete_all_step_entries(
+        request,
+        Instructor.objects.filter(user=request.user),
+        "addInstructors",
+        "teachers",
+    )
+
+
 
 
 @login_required
@@ -2741,9 +3032,13 @@ def addRooms(request):
         added = 0
         updated = 0
         first = True
+        skipped = 0
+        issues = []
+        skipped = 0
+        issues = []
 
-        for row in reader:
-            if not row or len(row) < 5:
+        for row_number, row in enumerate(reader, start=1):
+            if not row:
                 continue
 
             if first:
@@ -2764,11 +3059,25 @@ def addRooms(request):
                 category_index = header.index("lab_category")
                 continue
 
+            if len(row) < 5:
+                skipped += 1
+                _csv_issue(issues, row_number, "expected at least 5 columns: r_number, department, seating_capacity, room_type, lab_category")
+                continue
+
             r_number = row[rid_index].strip()
             department_value = row[dept_index].strip()
             seating_capacity = row[cap_index].strip()
             room_type = row[type_index].strip()
             lab_category = normalize_lab_category(row[category_index].strip()) if category_index < len(row) else ""
+
+            if not r_number:
+                skipped += 1
+                _csv_issue(issues, row_number, "r_number is blank")
+                continue
+            if not department_value:
+                skipped += 1
+                _csv_issue(issues, row_number, f"department is blank for room '{r_number}'")
+                continue
 
             room_map = {
                 "lecture hall": "Lecture Hall",
@@ -2780,15 +3089,21 @@ def addRooms(request):
                 lab_category = ""
             elif not lab_category:
                 # Lab rooms must have a category in CSV.
+                skipped += 1
+                _csv_issue(issues, row_number, f"lab_category is blank for lab room '{r_number}'")
                 continue
 
             if not seating_capacity.isdigit():
+                skipped += 1
+                _csv_issue(issues, row_number, f"seating_capacity '{seating_capacity}' is not a whole number")
                 continue
 
             seating_capacity = int(seating_capacity)
             try:
                 department = resolve_department(department_value)
             except Department.DoesNotExist:
+                skipped += 1
+                _csv_issue(issues, row_number, f"department '{department_value}' not found")
                 continue
 
             if not Room.objects.filter(r_number=r_number, user=request.user).exists():
@@ -2801,9 +3116,13 @@ def addRooms(request):
                     department=department
                 )
                 added += 1
+            else:
+                skipped += 1
+                _csv_issue(issues, row_number, f"room '{r_number}' already exists")
 
         reset_global_schedule_cache(request.user.id)
-        messages.success(request, f"{added} room(s) added from CSV!")
+        messages.success(request, f"{added} room(s) added from CSV! {skipped} skipped.")
+        _emit_csv_issues(request, issues)
         return redirect("addRooms")
 
     return render(request, "addRooms.html", {"form": form})
@@ -2820,6 +3139,16 @@ def delete_room(request, pk):
         Room.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editrooms')
+
+
+@login_required
+def delete_all_rooms(request):
+    return _delete_all_step_entries(
+        request,
+        Room.objects.filter(user=request.user),
+        "addRooms",
+        "rooms",
+    )
 
 
 @login_required
@@ -2863,11 +3192,13 @@ def addTimings(request):
         added = 0
         updated = 0
         first = True
+        skipped = 0
+        issues = []
 
-        for row in reader:
+        for row_number, row in enumerate(reader, start=1):
 
             # Skip empty or incomplete rows
-            if not row or len(row) < 3:
+            if not row:
                 continue
 
             # Skip header row
@@ -2876,9 +3207,27 @@ def addTimings(request):
                 if row[0].strip().lower() == "pid":
                     continue
 
+            if len(row) < 3:
+                skipped += 1
+                _csv_issue(issues, row_number, "expected pid, time, and day columns")
+                continue
+
             pid = row[0].strip()
             time = row[1].strip()
             day_raw = row[2].strip()
+
+            if not pid:
+                skipped += 1
+                _csv_issue(issues, row_number, "pid is blank")
+                continue
+            if not time:
+                skipped += 1
+                _csv_issue(issues, row_number, f"time is blank for pid '{pid}'")
+                continue
+            if not day_raw:
+                skipped += 1
+                _csv_issue(issues, row_number, f"day is blank for pid '{pid}'")
+                continue
 
             # --------------------------
             # FIXED DAY PARSING
@@ -2903,22 +3252,28 @@ def addTimings(request):
             # Validate day
             valid_days = [d[0] for d in DAYS_OF_WEEK]  # ['Monday', 'Tuesday',...]
             if day not in valid_days:
-                print("Invalid mapped day:", day)
+                skipped += 1
+                _csv_issue(issues, row_number, f"day '{day_raw}' is invalid after normalization")
                 continue
 
             # Validate time slot
             valid_times = [t[0] for t in TIME_SLOTS]  # ['1','2','3','4',...]
             if time not in valid_times:
-                print("Invalid time:", time)
+                skipped += 1
+                _csv_issue(issues, row_number, f"time '{time}' is not a valid slot")
                 continue
 
             # Avoid duplicates
             if not MeetingTime.objects.filter(pid=pid, user=request.user).exists():
                 MeetingTime.objects.create(user=request.user, pid=pid, day=day, time=time)
                 added += 1
+            else:
+                skipped += 1
+                _csv_issue(issues, row_number, f"pid '{pid}' already exists")
 
         reset_global_schedule_cache(request.user.id)
-        messages.success(request, f"{added} timing(s) added from CSV!")
+        messages.success(request, f"{added} timing(s) added from CSV! {skipped} skipped.")
+        _emit_csv_issues(request, issues)
         return redirect("addTimings")
 
 
@@ -2937,6 +3292,16 @@ def delete_meeting_time(request, pk):
         MeetingTime.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editmeetingtime')
+
+
+@login_required
+def delete_all_meeting_times(request):
+    return _delete_all_step_entries(
+        request,
+        MeetingTime.objects.filter(user=request.user),
+        "addTimings",
+        "timings",
+    )
 
 
 @login_required
@@ -2981,11 +3346,12 @@ def addDepts(request):
         updated = 0
         first = True
         skipped = 0
+        issues = []
 
-        for row in reader:
+        for row_number, row in enumerate(reader, start=1):
 
             # Skip blank rows
-            if not row or len(row) < 2:
+            if not row:
                 continue
 
             # Handle header row
@@ -3017,17 +3383,33 @@ def addDepts(request):
                 
                 continue
 
+            if len(row) < 2:
+                skipped += 1
+                _csv_issue(issues, row_number, "expected name and code columns")
+                continue
+
             # Extract values
             dept_name = row[name_i].strip()
             dept_code = row[code_i].strip().upper()
 
+            if not dept_name:
+                skipped += 1
+                _csv_issue(issues, row_number, "department name is blank")
+                continue
+            if not dept_code:
+                skipped += 1
+                _csv_issue(issues, row_number, f"department code is blank for '{dept_name}'")
+                continue
+
             # Skip if department already exists (check both name and code)
             if Department.objects.filter(code=dept_code, user=request.user).exists():
                 skipped += 1
+                _csv_issue(issues, row_number, f"department code '{dept_code}' already exists")
                 continue
 
             if Department.objects.filter(name=dept_name, user=request.user).exists():
                 skipped += 1
+                _csv_issue(issues, row_number, f"department name '{dept_name}' already exists")
                 continue
 
             # Create Department
@@ -3039,12 +3421,13 @@ def addDepts(request):
                 )
                 added += 1
             except Exception as e:
-                print(f"Error creating department {dept_name}: {e}")
                 skipped += 1
+                _csv_issue(issues, row_number, f"could not create department '{dept_name}': {e}")
                 continue
 
         reset_global_schedule_cache(request.user.id)
         messages.success(request, f"{added} department(s) added from CSV! {skipped} skipped.")
+        _emit_csv_issues(request, issues)
         return redirect("addDepts")
 
     return render(request, 'addDepts.html', {'form': form})
@@ -3066,6 +3449,16 @@ def delete_department(request, pk):
         Department.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editdepartment')
+
+
+@login_required
+def delete_all_departments(request):
+    return _delete_all_step_entries(
+        request,
+        Department.objects.filter(user=request.user),
+        "addDepts",
+        "departments",
+    )
 
 
 @login_required
@@ -3116,6 +3509,8 @@ def addSections(request):
         added = 0
         updated = 0
         first = True
+        skipped = 0
+        issues = []
 
         def resolve_department(dept_identifier):
             dept_identifier = (dept_identifier or "").strip()
@@ -3128,10 +3523,15 @@ def addSections(request):
             except Department.DoesNotExist:
                 return Department.objects.get(name=dept_identifier, user=request.user)
 
-        for row in reader:
+        def row_value(row, index):
+            if index is None or index >= len(row):
+                return ""
+            return row[index].strip()
+
+        for row_number, row in enumerate(reader, start=1):
 
             # Skip empty or insufficient rows
-            if not row or len(row) < 2:
+            if not row:
                 continue
 
             # Auto-detect column positions using header row
@@ -3150,26 +3550,42 @@ def addSections(request):
                 dept_i = index("department", index("department_code", index("department_id", 1)))
                 if dept_i == 1 and program_i == 1:
                     dept_i = index("department", index("department_code", index("department_id", 2)))
-                strength_i = index("student_strength", 2 if program_i is None else 3)
+                strength_i = index("student_strength", index("section_strength", 2 if program_i is None else 3))
 
                 # Skip header
                 continue
 
+            if len(row) < 2:
+                skipped += 1
+                _csv_issue(issues, row_number, "expected at least section_id and department columns")
+                continue
+
             # Extract values
-            section_id = row[section_i].strip()
-            program_name = row[program_i].strip() if program_i is not None and len(row) > program_i else ""
-            dept_name = row[dept_i].strip()
-            student_strength = row[strength_i].strip() if len(row) > strength_i else "70"
+            section_id = row_value(row, section_i)
+            program_name = row_value(row, program_i)
+            dept_name = row_value(row, dept_i)
+            student_strength = row_value(row, strength_i) or "70"
+
+            if not section_id:
+                skipped += 1
+                _csv_issue(issues, row_number, "section_id is blank")
+                continue
+            if not dept_name:
+                skipped += 1
+                _csv_issue(issues, row_number, f"department is blank for section '{section_id}'")
+                continue
 
             # Validate Department
             try:
                 dept = resolve_department(dept_name)
             except Department.DoesNotExist:
-                print("Invalid department:", dept_name)
+                skipped += 1
+                _csv_issue(issues, row_number, f"department '{dept_name}' not found")
                 continue
 
             if not student_strength.isdigit():
-                print("Invalid student strength:", student_strength)
+                skipped += 1
+                _csv_issue(issues, row_number, f"student_strength '{student_strength}' is not a whole number")
                 continue
 
             existing_section = Section.objects.filter(section_id=section_id, user=request.user).first()
@@ -3194,7 +3610,8 @@ def addSections(request):
             added += 1
 
         reset_global_schedule_cache(request.user.id)
-        messages.success(request, f"{added} section(s) added and {updated} section(s) updated from CSV!")
+        messages.success(request, f"{added} section(s) added and {updated} section(s) updated from CSV! {skipped} skipped.")
+        _emit_csv_issues(request, issues)
         return redirect("addSections")
 
     return render(request, "addSections.html", {"form": form})
@@ -3216,6 +3633,16 @@ def delete_section(request, pk):
         Section.objects.filter(pk=pk, user=request.user).delete()
         reset_global_schedule_cache(request.user.id)
         return redirect('editsection')
+
+
+@login_required
+def delete_all_sections(request):
+    return _delete_all_step_entries(
+        request,
+        Section.objects.filter(user=request.user),
+        "addSections",
+        "sections",
+    )
 
 
 @login_required

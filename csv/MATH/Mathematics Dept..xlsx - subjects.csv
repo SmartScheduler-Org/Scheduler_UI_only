@@ -1,0 +1,49 @@
+department_code,subject_code,subject_name,room_type_required,lab_category_required,specific_equipment/software_lab(null accepted),duration (in slots),classes_per_week,,,,,,,,,,,,,,,,,,group_count
+MATH,MTU-101-V,Calculus,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MTU-103-V,Calculus Lab,LAB,MATH LAB,,2,1,,,,,,,,,,,,,,,,,,2
+MATH,MTU-105-V,Algebra,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,BCG-101-V,Fundamentals of Computers,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,OSU-103-V,Fundamentals of Programming,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,2
+MATH,OSU-111-V,Inorganic Chemistry-I (elective),LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,PHU-109-V,Geometric Optics and Oscillations (elective),LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,OSU-107-V,Fundamentals of Programming Lab,LAB,MATH LAB,,2,1,,,,,,,,,,,,,,,,,,2
+MATH,AEC-101-V,Writing Skills and Art of Rhetoric,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,
+MATH,MTU-107-V,Calculation Skills with Vedic Mathematics,LECTURE HALL,,,1,3,,,,,,,,,,,,,,,,,,
+MATH,VAC-201-V,Environmental Studies-I,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,
+MATH,MTU-201-V,Group Theory,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MTU-203-V,Advanced Calculus,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MTU-205-V,Advanced Calculus (LAB),LAB,MATH LAB,,2,1,,,,,,,,,,,,,,,,,,2
+MATH,CHU-241-V,Organic Chemistry-I (elective),LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,PHU-209-V,Nanomaterials and Nanostructures (elective),LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,OSU-201-V,Computer Networks and Internet Technology,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,
+MATH,OSU-207-V,Computer Networks and Internet Technology (Lab),LAB,MATH LAB,,2,1,,,,,,,,,,,,,,,,,,2
+MATH,AEC-103-V,Effective Corporate Communication,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,
+MATH,MTU-207-V,Latex,LECTURE HALL,,,1,3,,,,,,,,,,,,,,,,,,
+MATH,VAC-202-V,Environmental Studies-II,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,
+MATH,MTU-301-V,Numerical Methods,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MTU-303-V,Numerical Methods (Lab),LAB,MATH LAB,,2,1,,,,,,,,,,,,,,,,,,2
+MATH,MTU-313-V,Probability & Statistics,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MTU-309-V,Special Functions and Integral Transforms,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MTU-305-V,Statics,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-701,Real Analysis,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-702,Abstract Algebra,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-703,Ordinary Differential Equations,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-704,Complex Analysis,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-705,Programming in C,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-706,Programming in C Lab,LAB,MATH LAB,,2,2,,,,,,,,,,,,,,,,,,2
+MATH,VAC-001,Human Values and Professional Ethics,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,
+MATH,MATH21-801,Topology,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-802,Mechanics and Calculus of Variations,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-803,Partial Differential Equations,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-804,Operations Research,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,MATH21-806,MATLAB,LAB,MATH LAB,,2,2,,,,,,,,,,,,,,,,,,2
+MATH,MATH21-805B,Analytical Number Theory,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,OES301B,Environmental Science and Waste Management,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,
+MATH,ELU-101V,Basic Electrical Technology,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,CHU-141V,Chemistry,LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,
+MATH,ENG-101V,English,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,
+MATH,ELU-103V,Basic Electrical Technology Lab,LAB,BET Lab,BET Lab,2,1,,,,,,,,,,,,,,,,,,2
+MATH,CHU-142V,Chemistry Lab,LAB,Chemistry Lab,SB905,3,1,,,,,,,,,,,,,,,,,,2
+MATH,ENG-103V,English Lab,LECTURE HALL,,,1,2,,,,,,,,,,,,,,,,,,2
+MATH,ESC104,Workshop-I,LAB,Workshop,Workshop,1,4,,,,,,,,,,,,,,,,,,4
+MATH,MTU-145V,Mathematics-I (Calculus and Linear Algebra),LECTURE HALL,,,1,4,,,,,,,,,,,,,,,,,,

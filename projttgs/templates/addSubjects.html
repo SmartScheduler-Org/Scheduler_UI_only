@@ -119,16 +119,6 @@
 }
 </style>
 
-<!-- ================= MESSAGES ================= -->
-
-{% if messages %}
-<div class="message-container">
-    {% for message in messages %}
-        <div class="alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-</div>
-{% endif %}
-
 <!-- ================= PAGE HEADER ================= -->
 
 <div class="page-header subjects-header">
@@ -139,6 +129,7 @@
 
     <div class="right-block">
         <div class="nav-action-group">
+            {% include 'bulk_delete_button.html' with delete_url_name='delete_all_subjects' confirm_message='This will delete all subjects for your account and remove their section mappings. Continue?' %}
             <a href="{% url 'editsubject' %}" class="edit-btn icon-only-btn" aria-label="View or edit subjects" title="View or edit subjects">
                 <i class="fa-solid fa-book-open" aria-hidden="true"></i>
             </a>

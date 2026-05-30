@@ -151,18 +151,6 @@
 }
 </style>
 
-<!-- ================= MESSAGES ================= -->
-
-{% if messages %}
-<div class="message-container">
-    {% for message in messages %}
-        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
-            {{ message }}
-        </div>
-    {% endfor %}
-</div>
-{% endif %}
-
 <div class="page-header mapping-header">
     <div class="page-header-left">
         <h2>Map Teachers to Subjects</h2>
@@ -171,6 +159,7 @@
 
     <div class="right-block">
         <div class="nav-action-group">
+            {% include 'bulk_delete_button.html' with delete_url_name='delete_all_teacher_subject_mappings' confirm_message='This will delete all teacher-subject mappings for your account. Continue?' %}
             <button class="submit-btn icon-only-btn" type="button" onclick="toggleMappings()" id="toggleBtn" aria-label="View current mappings" title="View current mappings">
                 <i class="fa-solid fa-book-open" aria-hidden="true"></i>
             </button>

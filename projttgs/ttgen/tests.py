@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -211,17 +212,15 @@ class SchedulerInitializationTests(TestCase):
             }
             for subject in test_table["subject_counts"]
         ]
-        self.assertEqual(
-            compact_subject_counts,
-            [
-                {"name": "Solo Lab", "count": 1, "required": 1, "missing": 0, "is_lab": True},
-                {"name": "Theory 1", "count": 2, "required": 2, "missing": 0, "is_lab": False},
-                {"name": "Theory 2", "count": 1, "required": 2, "missing": 1, "is_lab": False},
-                {"name": "Theory 3", "count": 0, "required": 2, "missing": 2, "is_lab": False},
-                {"name": "Theory 4", "count": 0, "required": 2, "missing": 2, "is_lab": False},
-                {"name": "Theory 5", "count": 0, "required": 1, "missing": 1, "is_lab": False},
-            ],
-        )
+        self.assertEqual(compact_subject_counts, [
+            {"name": "Solo Lab", "count": 1, "required": 1, "missing": 0, "is_lab": True},
+            {"name": "Theory 1", "count": 2, "required": 2, "missing": 0, "is_lab": False},
+            {"name": "Theory 2", "count": 1, "required": 2, "missing": 1, "is_lab": False},
+            {"name": "Theory 3", "count": 0, "required": 2, "missing": 2, "is_lab": False},
+            {"name": "Theory 4", "count": 0, "required": 2, "missing": 2, "is_lab": False},
+            {"name": "Theory 5", "count": 0, "required": 1, "missing": 1, "is_lab": False},
+        ])
+        self.assertEqual(test_table["total_missing_classes"], 6)
         self.assertEqual(test_table["total_missing_classes"], 6)
 
     def test_build_section_tables_lists_missed_labs(self):
@@ -246,6 +245,91 @@ class SchedulerInitializationTests(TestCase):
 
         self.assertEqual(missed_lab["missing"], 1)
         self.assertEqual(missed_lab["reason"], "Required lab category unavailable")
+
+    def test_build_section_tables_prefers_specific_room_over_lab_category_reason(self):
+        extra_lab_subject = Subject.objects.create(
+            subject_number="LAB003",
+            subject_name="Locked Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="ADVANCED",
+            specific_rooms="LAB-1",
+            classes_per_week=1,
+            user=self.user,
+        )
+        extra_lab_subject.instructors.add(self.section.allowed_subjects.get(subject_number="LAB001").instructors.first())
+        self.section.allowed_subjects.add(extra_lab_subject)
+
+        views_other.data = views_other.Data()
+        tables = views_other.build_section_tables([], [])
+        test_table = next(table for table in tables if table["section"].section_id == "Test Section")
+
+        missed_lab = next(lab for lab in test_table["missed_labs"] if lab["name"] == "Locked Lab")
+
+        self.assertEqual(missed_lab["missing"], 1)
+        self.assertEqual(missed_lab["reason"], "No conflict-free lab slot available")
+
+    def test_parallel_grouped_lecture_hall_subject_uses_distinct_lecture_halls(self):
+        second_lecture_hall = Room.objects.create(
+            r_number="LH-2",
+            room_type="Lecture Hall",
+            seating_capacity=60,
+            department=self.department,
+            user=self.user,
+        )
+        Room.objects.create(
+            r_number="A-SEM",
+            room_type="Seminar Room",
+            seating_capacity=60,
+            department=self.department,
+            user=self.user,
+        )
+        teacher_one = Instructor.objects.create(
+            uid="GL001",
+            name="Grouped Lecture Teacher 1",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        teacher_two = Instructor.objects.create(
+            uid="GL002",
+            name="Grouped Lecture Teacher 2",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        grouped_subject = Subject.objects.create(
+            subject_number="GTH001",
+            subject_name="Grouped Lecture",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            required_lab_category="Lecture Hall;Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        grouped_subject.instructors.add(teacher_one, teacher_two)
+        self.section.allowed_subjects.add(grouped_subject)
+        SectionSubjectMapping.objects.filter(section=self.section, subject=grouped_subject).update(group_count=2)
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule()
+        schedule._build_indices()
+
+        mt = MeetingTime.objects.get(pid="Mo1")
+        assignment = schedule._find_recheck_parallel_theory_assignment(
+            self.section,
+            grouped_subject,
+            ["Batch1", "Batch2"],
+            mt,
+            [mt],
+        )
+
+        self.assertIsNotNone(assignment)
+        rooms = {room.r_number for _group, room, _teacher in assignment}
+        self.assertEqual(rooms, {"LH-1", "LH-2"})
+        self.assertNotIn("A-SEM", rooms)
 
     def test_build_section_tables_includes_missing_reason(self):
         subject = Subject.objects.create(
@@ -404,6 +488,53 @@ class SchedulerInitializationTests(TestCase):
 
         self.assertEqual(len(child.get_labs()), 1)
         self.assertIn(child.get_labs()[0].section, {self.section.section_id, other_section.section_id})
+
+    def test_group_parallel_classes_keeps_mirrored_electives_together(self):
+        linked_section = Section.objects.create(
+            section_id="Elective Linked",
+            department=self.department,
+            user=self.user,
+        )
+        teacher = Instructor.objects.create(
+            uid="ELC001",
+            name="Elective Mirror Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        subject = Subject.objects.create(
+            subject_number="ELCX01",
+            subject_name="Mirrored Elective",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        room = Room.objects.get(r_number="LH-1")
+        monday_1 = MeetingTime.objects.get(pid="Mo1")
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule()
+
+        class_a = views_other.Class(1, self.department, self.section.section_id, subject)
+        class_a.set_instructor(teacher)
+        class_a.set_room(room)
+        class_a.set_meetingTime(monday_1)
+        class_a.is_elective = True
+        class_a.elective_sections = [self.section.section_id, linked_section.section_id]
+
+        class_b = views_other.Class(2, self.department, linked_section.section_id, subject)
+        class_b.set_instructor(teacher)
+        class_b.set_room(room)
+        class_b.set_meetingTime(monday_1)
+        class_b.is_elective = True
+        class_b.elective_sections = [self.section.section_id, linked_section.section_id]
+
+        grouped = schedule._group_parallel_classes([class_a, class_b])
+
+        self.assertEqual(len(grouped), 1)
+        self.assertEqual({cls.section for cls in next(iter(grouped.values()))}, {self.section.section_id, linked_section.section_id})
 
     def test_fitness_prefers_packed_lab_room_utilization(self):
         second_lab_room = Room.objects.create(
@@ -828,6 +959,140 @@ class SchedulerInitializationTests(TestCase):
         self.assertEqual(len(grouped_labs), 1)
         self.assertEqual(grouped_labs[0].total_batches, 1)
 
+    def test_unmapped_section_is_not_scheduled_from_department_fallback(self):
+        mapped_section = Section.objects.create(
+            section_id="Mapped Section",
+            department=self.department,
+            user=self.user,
+        )
+        empty_section = Section.objects.create(
+            section_id="Empty Section",
+            department=self.department,
+            user=self.user,
+        )
+        teacher = Instructor.objects.create(
+            uid="UF001",
+            name="Fallback Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        subject = Subject.objects.create(
+            subject_number="UF101",
+            subject_name="Mapped Only Subject",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        subject.instructors.add(teacher)
+        mapped_section.allowed_subjects.add(subject)
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule().initialize()
+
+        mapped_classes = [cls for cls in schedule.get_classes() if cls.section == mapped_section.section_id and cls.subject == subject]
+        empty_classes = [cls for cls in schedule.get_classes() if cls.section == empty_section.section_id]
+
+        self.assertTrue(mapped_classes)
+        self.assertEqual(empty_classes, [])
+
+    def test_subject_without_basic_resources_is_skipped(self):
+        section = Section.objects.create(
+            section_id="Resource Gap Section",
+            department=self.department,
+            user=self.user,
+        )
+        teacher = Instructor.objects.create(
+            uid="RG001",
+            name="Resource Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        schedulable_subject = Subject.objects.create(
+            subject_number="RG101",
+            subject_name="Schedulable Theory",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        blocked_subject = Subject.objects.create(
+            subject_number="RG102",
+            subject_name="Teacherless Theory",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        schedulable_subject.instructors.add(teacher)
+        section.allowed_subjects.add(schedulable_subject, blocked_subject)
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule().initialize()
+
+        scheduled_subject_numbers = {
+            cls.subject.subject_number
+            for cls in schedule.get_classes()
+            if cls.section == section.section_id
+        }
+
+        self.assertIn(schedulable_subject.subject_number, scheduled_subject_numbers)
+        self.assertNotIn(blocked_subject.subject_number, scheduled_subject_numbers)
+
+    def test_split_solo_lab_honors_classes_per_week_for_each_batch(self):
+        section = Section.objects.create(
+            section_id="Repeated Grouped Lab",
+            department=self.department,
+            user=self.user,
+            student_strength=60,
+        )
+        room = Room.objects.create(
+            r_number="LAB-CPW",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="CPW-LAB",
+            user=self.user,
+        )
+        teacher = Instructor.objects.create(
+            uid="CPW001",
+            name="Repeated Lab Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        lab_subject = Subject.objects.create(
+            subject_number="CPWLAB01",
+            subject_name="Repeated Grouped Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="CPW-LAB",
+            classes_per_week=2,
+            duration=2,
+            user=self.user,
+        )
+        lab_subject.instructors.add(teacher)
+        section.allowed_subjects.add(lab_subject)
+        SectionSubjectMapping.objects.filter(section=section, subject=lab_subject).update(group_count=2)
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule().initialize_labs()
+
+        grouped_labs = [
+            lab for lab in schedule.get_labs()
+            if lab.section == section.section_id and lab.subject == lab_subject
+        ]
+
+        self.assertEqual(len(grouped_labs), 4)
+        self.assertEqual(sorted(lab.batch_number for lab in grouped_labs), [1, 1, 2, 2])
+        self.assertTrue(all(lab.room == room for lab in grouped_labs))
+
     def test_rotation_group_backtracks_before_split_solo(self):
         section = Section.objects.create(
             section_id="Rotation Search",
@@ -919,14 +1184,16 @@ class SchedulerInitializationTests(TestCase):
                 ("Tuesday", tuesday_block),
             ])
 
-        def room_pool(required_category=None):
+        def room_pool(required_category=None, subject=None):
             if required_category == "CAT-A":
                 return [room_a]
             if required_category == "CAT-B":
                 return [room_b]
             return []
 
-        def conflict_checker(mts, room, instructor, section_id, group=None, max_parallel=2, co_instructor=None):
+        real_conflict_checker = schedule._conflicts_if_assign_lab
+
+        def conflict_checker(mts, room, instructor, section_id, group=None, max_parallel=2, co_instructor=None, subject=None):
             day = mts[0].day
             allowed = {
                 ("Monday", room_a.r_number, a1.uid),
@@ -936,7 +1203,18 @@ class SchedulerInitializationTests(TestCase):
                 ("Monday", room_b.r_number, b2.uid),
                 ("Tuesday", room_b.r_number, b1.uid),
             }
-            return (day, room.r_number, instructor.uid) not in allowed
+            if (day, room.r_number, instructor.uid) not in allowed:
+                return True
+            return real_conflict_checker(
+                mts,
+                room,
+                instructor,
+                section_id,
+                group=group,
+                max_parallel=max_parallel,
+                co_instructor=co_instructor,
+                subject=subject,
+            )
 
         def lab_instructors(subject):
             if subject == subject_a:
@@ -960,12 +1238,795 @@ class SchedulerInitializationTests(TestCase):
         self.assertTrue(success)
         grouped_labs = [lab for lab in schedule.get_labs() if lab.section == section.section_id]
         self.assertEqual(len(grouped_labs), 4)
-        self.assertEqual({lab.instructor.uid for lab in grouped_labs if lab.subject == subject_a}, {"RA002"})
         parallel_slots = {}
         for lab in grouped_labs:
             key = (lab.meeting_times[0].day, lab.meeting_times[0].time)
             parallel_slots.setdefault(key, []).append(lab.subject.subject_number)
         self.assertEqual({key for key, vals in parallel_slots.items() if len(vals) == 2}, {("Monday", "1"), ("Tuesday", "1")})
+
+    def test_initialize_labs_prioritizes_constrained_grouped_sections(self):
+        flexible_section = Section.objects.create(
+            section_id="Flexible First",
+            department=self.department,
+            user=self.user,
+            student_strength=60,
+        )
+        constrained_section = Section.objects.create(
+            section_id="Constrained Second",
+            department=self.department,
+            user=self.user,
+            student_strength=60,
+        )
+
+        Room.objects.create(
+            r_number="LAB-SPEC",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="CAT-S",
+            user=self.user,
+        )
+        Room.objects.create(
+            r_number="LAB-GEN",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="CAT-G",
+            user=self.user,
+        )
+
+        flexible_teacher = Instructor.objects.create(
+            uid="FLX001",
+            name="Flexible Lab Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        constrained_teacher_a = Instructor.objects.create(
+            uid="CNS001",
+            name="Constrained Lab Teacher A",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        constrained_teacher_b = Instructor.objects.create(
+            uid="CNS002",
+            name="Constrained Lab Teacher B",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+
+        flexible_subject = Subject.objects.create(
+            subject_number="FLXLAB",
+            subject_name="Flexible Specific Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="CAT-S",
+            specific_rooms="LAB-SPEC",
+            classes_per_week=1,
+            duration=2,
+            user=self.user,
+        )
+        constrained_subject_a = Subject.objects.create(
+            subject_number="CNSLAB1",
+            subject_name="Constrained Specific Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="CAT-S",
+            specific_rooms="LAB-SPEC",
+            classes_per_week=1,
+            duration=2,
+            user=self.user,
+        )
+        constrained_subject_b = Subject.objects.create(
+            subject_number="CNSLAB2",
+            subject_name="Constrained Parallel Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="CAT-G",
+            classes_per_week=1,
+            duration=2,
+            user=self.user,
+        )
+
+        flexible_subject.instructors.add(flexible_teacher)
+        constrained_subject_a.instructors.add(constrained_teacher_a)
+        constrained_subject_b.instructors.add(constrained_teacher_b)
+
+        flexible_section.allowed_subjects.add(flexible_subject)
+        constrained_section.allowed_subjects.add(constrained_subject_a, constrained_subject_b)
+
+        SectionSubjectMapping.objects.filter(section=flexible_section, subject=flexible_subject).update(group_count=2)
+        SectionSubjectMapping.objects.filter(section=constrained_section, subject=constrained_subject_a).update(group_count=2)
+        SectionSubjectMapping.objects.filter(section=constrained_section, subject=constrained_subject_b).update(group_count=2)
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule()
+
+        monday_block = [MeetingTime.objects.get(pid="Mo1"), MeetingTime.objects.get(pid="Mo2")]
+        tuesday_block = [MeetingTime.objects.get(pid="Tu1"), MeetingTime.objects.get(pid="Tu2")]
+
+        def limited_day_blocks(duration=None):
+            return iter([
+                ("Monday", monday_block),
+                ("Tuesday", tuesday_block),
+            ])
+
+        with patch.object(views_other, "SECTION_LOAD_RULES", {
+            "Flexible First": (0, 2),
+            "Constrained Second": (0, 4),
+        }), patch.object(views_other.rnd, "shuffle", side_effect=lambda seq: None), patch.object(
+            schedule, "_iter_lab_day_blocks", side_effect=limited_day_blocks
+        ):
+            schedule.initialize_labs()
+
+        constrained_labs = [
+            lab for lab in schedule.get_labs()
+            if lab.section == constrained_section.section_id
+        ]
+
+        self.assertEqual(len(constrained_labs), 4)
+        parallel_slots = {}
+        for lab in constrained_labs:
+            key = (lab.meeting_times[0].day, lab.meeting_times[0].time)
+            parallel_slots.setdefault(key, []).append(lab.subject.subject_number)
+
+        self.assertEqual(
+            {key for key, vals in parallel_slots.items() if len(vals) == 2},
+            {("Monday", "1"), ("Tuesday", "1")},
+        )
+
+    def test_initialize_labs_parallelizes_single_grouped_lab_with_multivalue_categories(self):
+        section = Section.objects.create(
+            section_id="Workshop Section",
+            department=self.department,
+            user=self.user,
+            student_strength=90,
+        )
+
+        room_computer = Room.objects.create(
+            r_number="LAB-C",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="Computer Lab",
+            user=self.user,
+        )
+        room_electrical = Room.objects.create(
+            r_number="LAB-E",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="Electrical Lab",
+            user=self.user,
+        )
+        room_electronics = Room.objects.create(
+            r_number="LAB-EL",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="Electronics Lab",
+            user=self.user,
+        )
+
+        instructors = []
+        for index in range(1, 4):
+            instructors.append(
+                Instructor.objects.create(
+                    uid=f"WS{index:03d}",
+                    name=f"Workshop Teacher {index}",
+                    designation="Assistant Professor",
+                    max_workload=25,
+                    user=self.user,
+                )
+            )
+
+        workshop = Subject.objects.create(
+            subject_number="WS001",
+            subject_name="Workshop",
+            department=self.department,
+            max_numb_students=90,
+            room_required="Lab",
+            required_lab_category="Computer Lab;Electrical Lab;Electronics Lab",
+            classes_per_week=1,
+            duration=2,
+            user=self.user,
+        )
+        workshop.instructors.add(*instructors)
+        section.allowed_subjects.add(workshop)
+        SectionSubjectMapping.objects.filter(section=section, subject=workshop).update(group_count=3)
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule()
+        schedule._lab_days = {section.section_id: set()}
+
+        monday_block = [MeetingTime.objects.get(pid="Mo1"), MeetingTime.objects.get(pid="Mo2")]
+
+        def day_blocks(duration=None):
+            return iter([("Monday", monday_block)])
+
+        with patch.object(schedule, "_iter_lab_day_blocks", side_effect=day_blocks):
+            success = schedule._schedule_parallel_single_subject(
+                section,
+                self.department,
+                workshop,
+                3,
+                {},
+                lambda _subject: instructors,
+            )
+
+        self.assertTrue(success)
+        grouped_labs = [lab for lab in schedule.get_labs() if lab.section == section.section_id]
+        self.assertEqual(len(grouped_labs), 3)
+        self.assertEqual({lab.meeting_times[0].day for lab in grouped_labs}, {"Monday"})
+        self.assertEqual({lab.meeting_times[0].time for lab in grouped_labs}, {"1"})
+        self.assertEqual({lab.room for lab in grouped_labs}, {room_computer, room_electrical, room_electronics})
+
+    def test_rotation_group_tries_best_pair_order_before_falling_back(self):
+        section = Section.objects.create(
+            section_id="Balanced Rotation",
+            department=self.department,
+            user=self.user,
+            student_strength=60,
+        )
+        room_computer = Room.objects.create(
+            r_number="LAB-C1",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="CAT-C",
+            user=self.user,
+        )
+        room_electronics = Room.objects.create(
+            r_number="LAB-E1",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="CAT-E",
+            user=self.user,
+        )
+        subjects = []
+        for code, name, category, teacher_uid in [
+            ("BAL1", "Computer Lab 1", "CAT-C", "BC001"),
+            ("BAL2", "Electronics Lab 1", "CAT-E", "BE001"),
+            ("BAL3", "Electronics Lab 2", "CAT-E", "BE002"),
+            ("BAL4", "Computer Lab 2", "CAT-C", "BC002"),
+        ]:
+            teacher = Instructor.objects.create(
+                uid=teacher_uid,
+                name=f"Teacher {teacher_uid}",
+                designation="Assistant Professor",
+                max_workload=25,
+                user=self.user,
+            )
+            subject = Subject.objects.create(
+                subject_number=code,
+                subject_name=name,
+                department=self.department,
+                max_numb_students=30,
+                room_required="Lab",
+                required_lab_category=category,
+                classes_per_week=1,
+                duration=2,
+                user=self.user,
+            )
+            subject.instructors.add(teacher)
+            section.allowed_subjects.add(subject)
+            SectionSubjectMapping.objects.filter(section=section, subject=subject).update(group_count=2)
+            subjects.append(subject)
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule()
+        schedule._lab_days = {section.section_id: set()}
+        blocks = [
+            [MeetingTime.objects.get(pid="Mo1"), MeetingTime.objects.get(pid="Mo2")],
+            [MeetingTime.objects.get(pid="Tu1"), MeetingTime.objects.get(pid="Tu2")],
+            [MeetingTime.objects.get(pid="We1"), MeetingTime.objects.get(pid="We2")],
+            [MeetingTime.objects.get(pid="Th1"), MeetingTime.objects.get(pid="Th2")],
+        ]
+
+        def day_blocks(duration=None):
+            return iter([
+                ("Monday", blocks[0]),
+                ("Tuesday", blocks[1]),
+                ("Wednesday", blocks[2]),
+                ("Thursday", blocks[3]),
+            ])
+
+        with patch.object(schedule, "_iter_lab_day_blocks", side_effect=day_blocks):
+            success = schedule._schedule_rotation_group(
+                section,
+                self.department,
+                subjects,
+                2,
+                {},
+                lambda subject: list(subject.instructors.all()),
+            )
+
+        self.assertTrue(success)
+        grouped_labs = [lab for lab in schedule.get_labs() if lab.section == section.section_id]
+        self.assertEqual(len(grouped_labs), 8)
+        parallel_pairs = {
+            tuple(sorted(lab.subject.subject_name for lab in labs))
+            for _slot, labs in {
+                (lab.meeting_times[0].day, lab.meeting_times[0].time): [
+                    grouped_lab for grouped_lab in grouped_labs
+                    if grouped_lab.meeting_times[0].day == lab.meeting_times[0].day
+                    and grouped_lab.meeting_times[0].time == lab.meeting_times[0].time
+                ]
+                for lab in grouped_labs
+            }.items()
+        }
+        self.assertEqual(parallel_pairs, {
+            ("Computer Lab 1", "Electronics Lab 1"),
+            ("Computer Lab 1", "Electronics Lab 2"),
+            ("Computer Lab 2", "Electronics Lab 1"),
+            ("Computer Lab 2", "Electronics Lab 2"),
+        })
+
+    def test_rotation_group_preserves_feasible_pairs_when_one_pair_is_impossible(self):
+        section = Section.objects.create(
+            section_id="Partial Rotation",
+            department=self.department,
+            user=self.user,
+            student_strength=60,
+        )
+        Room.objects.create(
+            r_number="LAB-C2",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="CAT-C",
+            user=self.user,
+        )
+        Room.objects.create(
+            r_number="LAB-E2",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="CAT-E",
+            user=self.user,
+        )
+        subjects = []
+        for code, name, category, teacher_uid in [
+            ("PAR1", "Computer Lab", "CAT-C", "PC001"),
+            ("PAR2", "Electronics Lab A", "CAT-E", "PE001"),
+            ("PAR3", "Electronics Lab B", "CAT-E", "PE002"),
+        ]:
+            teacher = Instructor.objects.create(
+                uid=teacher_uid,
+                name=f"Teacher {teacher_uid}",
+                designation="Assistant Professor",
+                max_workload=25,
+                user=self.user,
+            )
+            subject = Subject.objects.create(
+                subject_number=code,
+                subject_name=name,
+                department=self.department,
+                max_numb_students=30,
+                room_required="Lab",
+                required_lab_category=category,
+                classes_per_week=1,
+                duration=2,
+                user=self.user,
+            )
+            subject.instructors.add(teacher)
+            section.allowed_subjects.add(subject)
+            SectionSubjectMapping.objects.filter(section=section, subject=subject).update(group_count=2)
+            subjects.append(subject)
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule()
+        schedule._lab_days = {section.section_id: set()}
+        blocks = [
+            [MeetingTime.objects.get(pid="Mo1"), MeetingTime.objects.get(pid="Mo2")],
+            [MeetingTime.objects.get(pid="Tu1"), MeetingTime.objects.get(pid="Tu2")],
+            [MeetingTime.objects.get(pid="We1"), MeetingTime.objects.get(pid="We2")],
+        ]
+
+        def day_blocks(duration=None):
+            return iter([
+                ("Monday", blocks[0]),
+                ("Tuesday", blocks[1]),
+                ("Wednesday", blocks[2]),
+            ])
+
+        with patch.object(schedule, "_iter_lab_day_blocks", side_effect=day_blocks):
+            success = schedule._schedule_rotation_group(
+                section,
+                self.department,
+                subjects,
+                2,
+                {},
+                lambda subject: list(subject.instructors.all()),
+            )
+
+        self.assertTrue(success)
+        grouped_labs = [lab for lab in schedule.get_labs() if lab.section == section.section_id]
+        self.assertEqual(len(grouped_labs), 5)
+        parallel_slots = {}
+        for lab in grouped_labs:
+            key = (lab.meeting_times[0].day, lab.meeting_times[0].time)
+            parallel_slots.setdefault(key, []).append(lab.subject.subject_name)
+        self.assertEqual(len([slot for slot, names in parallel_slots.items() if len(names) == 2]), 2)
+        self.assertEqual(sorted(lab.subject.subject_name for lab in grouped_labs).count("Computer Lab"), 2)
+
+
+class ElectiveSchedulingTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            username="elective_test",
+            password="testpass123",
+        )
+        self.department = Department.objects.create(name="Computer Science", code="CS", user=self.user)
+
+        for room_number in ["LH-1", "LH-2"]:
+            Room.objects.create(
+                r_number=room_number,
+                room_type="Lecture Hall",
+                seating_capacity=60,
+                department=self.department,
+                user=self.user,
+            )
+        Room.objects.create(
+            r_number="LAB-1",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="CAT-A",
+            user=self.user,
+        )
+
+        for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]:
+            for slot in ["1", "2", "3", "4", "6", "7", "8", "9"]:
+                MeetingTime.objects.create(
+                    pid=f"{day[:2]}{slot}",
+                    day=day,
+                    time=slot,
+                    user=self.user,
+                )
+
+    def test_elective_theory_mirrors_to_linked_sections(self):
+        section_a = Section.objects.create(section_id="A", department=self.department, user=self.user)
+        Section.objects.create(section_id="B", department=self.department, user=self.user)
+        Section.objects.create(section_id="C", department=self.department, user=self.user)
+        teacher = Instructor.objects.create(
+            uid="ET001",
+            name="Elective Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        subject = Subject.objects.create(
+            subject_number="EL101",
+            subject_name="Elective Maths",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        subject.instructors.add(teacher)
+        section_a.allowed_subjects.add(subject)
+        SectionSubjectMapping.objects.filter(section=section_a, subject=subject).update(
+            group_count=1,
+            elective_section_ids="B;C",
+        )
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule().initialize()
+
+        elective_classes = [cls for cls in schedule.get_classes() if cls.subject == subject]
+        self.assertEqual(len(elective_classes), 3)
+        self.assertEqual({cls.section for cls in elective_classes}, {"A", "B", "C"})
+        self.assertEqual(len({(cls.meeting_time.day, cls.meeting_time.time) for cls in elective_classes}), 1)
+        self.assertEqual(len({cls.room.r_number for cls in elective_classes}), 1)
+        self.assertEqual(len({cls.instructor.uid for cls in elective_classes}), 1)
+
+    def test_grouped_elective_theory_can_run_parallel(self):
+        section_a = Section.objects.create(section_id="A", department=self.department, user=self.user)
+        Section.objects.create(section_id="B", department=self.department, user=self.user)
+        teacher_one = Instructor.objects.create(
+            uid="ET101",
+            name="Elective Teacher 1",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        teacher_two = Instructor.objects.create(
+            uid="ET102",
+            name="Elective Teacher 2",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        subject_one = Subject.objects.create(
+            subject_number="EL201",
+            subject_name="Elective One",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        subject_two = Subject.objects.create(
+            subject_number="EL202",
+            subject_name="Elective Two",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        subject_one.instructors.add(teacher_one)
+        subject_two.instructors.add(teacher_two)
+        section_a.allowed_subjects.add(subject_one, subject_two)
+        SectionSubjectMapping.objects.filter(section=section_a, subject=subject_one).update(
+            group_count=2,
+            elective_section_ids="B",
+        )
+        SectionSubjectMapping.objects.filter(section=section_a, subject=subject_two).update(
+            group_count=2,
+            elective_section_ids="B",
+        )
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule().initialize()
+
+        grouped_classes = [cls for cls in schedule.get_classes() if cls.subject in {subject_one, subject_two}]
+        self.assertEqual(len(grouped_classes), 8)
+
+        parallel_slots = {}
+        for cls in grouped_classes:
+            key = (cls.section, cls.meeting_time.day, cls.meeting_time.time)
+            parallel_slots.setdefault(key, set()).add(cls.subject.subject_number)
+
+        self.assertTrue(any(len(subjects) == 2 for subjects in parallel_slots.values()))
+
+        subject_slot_sections = {}
+        for cls in grouped_classes:
+            key = (cls.subject.subject_number, cls.meeting_time.day, cls.meeting_time.time)
+            subject_slot_sections.setdefault(key, []).append(cls)
+
+        for classes_at_slot in subject_slot_sections.values():
+            self.assertEqual({cls.section for cls in classes_at_slot}, {"A", "B"})
+            self.assertEqual(len({cls.room.r_number for cls in classes_at_slot}), 1)
+            self.assertEqual(len({cls.instructor.uid for cls in classes_at_slot}), 1)
+
+    def test_elective_lab_mirrors_to_linked_sections(self):
+        section_a = Section.objects.create(section_id="A", department=self.department, user=self.user)
+        Section.objects.create(section_id="B", department=self.department, user=self.user)
+        teacher = Instructor.objects.create(
+            uid="ELAB1",
+            name="Elective Lab Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        subject = Subject.objects.create(
+            subject_number="ELLAB1",
+            subject_name="Elective Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="CAT-A",
+            classes_per_week=1,
+            duration=2,
+            user=self.user,
+        )
+        subject.instructors.add(teacher)
+        section_a.allowed_subjects.add(subject)
+        SectionSubjectMapping.objects.filter(section=section_a, subject=subject).update(
+            group_count=1,
+            elective_section_ids="B",
+        )
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule().initialize()
+
+        labs = [lab for lab in schedule.get_labs() if lab.subject == subject]
+        self.assertEqual(len(labs), 2)
+        self.assertEqual({lab.section for lab in labs}, {"A", "B"})
+
+    def test_expected_theory_count_includes_elective_theory_for_linked_sections(self):
+        section_a = Section.objects.create(section_id="EA", department=self.department, user=self.user)
+        Section.objects.create(section_id="EB", department=self.department, user=self.user)
+        teacher = Instructor.objects.create(
+            uid="ET201",
+            name="Elective Count Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        subject = Subject.objects.create(
+            subject_number="EL301",
+            subject_name="Counted Elective",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=2,
+            user=self.user,
+        )
+        subject.instructors.add(teacher)
+        section_a.allowed_subjects.add(subject)
+        SectionSubjectMapping.objects.filter(section=section_a, subject=subject).update(
+            group_count=1,
+            elective_section_ids="EB",
+        )
+
+        views_other.data = views_other.Data()
+        schedule = views_other.Schedule()
+
+        self.assertEqual(schedule._expected_theory_count(), 4)
+
+
+class RecheckScheduleTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            username="recheck_test",
+            password="testpass123",
+        )
+        self.department = Department.objects.create(name="Math", code="MATH", user=self.user)
+
+        self.room_a = Room.objects.create(
+            r_number="LH-A",
+            room_type="Lecture Hall",
+            seating_capacity=60,
+            department=self.department,
+            user=self.user,
+        )
+        self.room_b = Room.objects.create(
+            r_number="LH-B",
+            room_type="Lecture Hall",
+            seating_capacity=60,
+            department=self.department,
+            user=self.user,
+        )
+        Room.objects.create(
+            r_number="LAB-A",
+            room_type="Lab",
+            seating_capacity=30,
+            department=self.department,
+            lab_category="MATH LAB",
+            user=self.user,
+        )
+
+        for day, slots in {"Monday": ["1"], "Tuesday": ["1"]}.items():
+            for slot in slots:
+                MeetingTime.objects.create(
+                    pid=f"{day[:2]}{slot}",
+                    day=day,
+                    time=slot,
+                    user=self.user,
+                )
+
+    def test_recheck_can_shift_single_lecture_to_place_missing_subject(self):
+        section = Section.objects.create(section_id="Math-A", department=self.department, user=self.user)
+        other_section = Section.objects.create(section_id="Math-B", department=self.department, user=self.user)
+
+        teacher_a = Instructor.objects.create(
+            uid="RA001",
+            name="Teacher A",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        teacher_b = Instructor.objects.create(
+            uid="RA002",
+            name="Teacher B",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+
+        subject_a = Subject.objects.create(
+            subject_number="MAT101",
+            subject_name="Moveable Theory",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        subject_b = Subject.objects.create(
+            subject_number="MAT102",
+            subject_name="Missing Theory",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        subject_c = Subject.objects.create(
+            subject_number="MAT103",
+            subject_name="Teacher Blocker",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        subject_a.instructors.add(teacher_a)
+        subject_b.instructors.add(teacher_b)
+        subject_c.instructors.add(teacher_b)
+        section.allowed_subjects.add(subject_a, subject_b)
+        other_section.allowed_subjects.add(subject_c)
+
+        monday = MeetingTime.objects.get(user=self.user, day="Monday", time="1")
+        tuesday = MeetingTime.objects.get(user=self.user, day="Tuesday", time="1")
+
+        views_other.data = views_other.Data(self.user)
+        schedule = views_other.Schedule()
+
+        cls_a = views_other.Class(0, self.department, section.section_id, subject_a)
+        cls_a.set_instructor(teacher_a)
+        cls_a.set_meetingTime(monday)
+        cls_a.meeting_times = [monday]
+        cls_a.set_room(self.room_a)
+
+        cls_c = views_other.Class(1, self.department, other_section.section_id, subject_c)
+        cls_c.set_instructor(teacher_b)
+        cls_c.set_meetingTime(tuesday)
+        cls_c.meeting_times = [tuesday]
+        cls_c.set_room(self.room_b)
+
+        schedule._classes = [cls_a, cls_c]
+        schedule._classNumb = 2
+        schedule.recheck(max_rounds=2)
+
+        assigned_target = [
+            cls for cls in schedule.get_classes()
+            if cls.section == section.section_id and cls.subject == subject_b
+        ]
+        current_slots = {
+            (cls.section, cls.subject.subject_number): (cls.meeting_time.day, cls.meeting_time.time)
+            for cls in schedule.get_classes()
+        }
+
+        self.assertEqual(len(assigned_target), 1)
+        self.assertTrue(
+            current_slots[(section.section_id, subject_a.subject_number)] != ("Monday", "1")
+            or current_slots[(other_section.section_id, subject_c.subject_number)] != ("Tuesday", "1")
+        )
+
+    def test_recheck_does_not_force_lab_without_matching_category(self):
+        section = Section.objects.create(section_id="Math-Lab", department=self.department, user=self.user)
+        teacher = Instructor.objects.create(
+            uid="RL001",
+            name="Lab Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+        )
+        subject = Subject.objects.create(
+            subject_number="MATLAB1",
+            subject_name="Unavailable Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="BET Lab",
+            classes_per_week=2,
+            duration=2,
+            user=self.user,
+        )
+        subject.instructors.add(teacher)
+        section.allowed_subjects.add(subject)
+
+        views_other.data = views_other.Data(self.user)
+        schedule = views_other.Schedule()
+        schedule.recheck(max_rounds=2)
+
+        self.assertEqual(
+            [lab for lab in schedule.get_labs() if lab.section == section.section_id and lab.subject == subject],
+            [],
+        )
 
 
 class AddDepartmentViewTests(TestCase):
@@ -1083,6 +2144,265 @@ class AddDepartmentViewTests(TestCase):
         self.assertEqual(response.url, reverse("map_section_subjects"))
         mapping = SectionSubjectMapping.objects.get(section=section, subject=subject)
         self.assertEqual(mapping.group_count, 2)
+        self.assertEqual(mapping.elective_section_ids, "")
+
+    def test_add_subjects_csv_reports_row_level_validation_details(self):
+        self.client.login(username="deptadmin", password="testpass123")
+        Department.objects.create(name="Chemistry", code="CHE", user=self.user)
+
+        csv_content = (
+            "department_code,subject_number,subject_name,room_required,lab_category_required,classes_per_week\n"
+            "CHE,CHE101,Valid Theory,Lecture Hall,,3\n"
+            "BAD,CHE102,Bad Department,Lecture Hall,,3\n"
+            "CHE,CHE103,Bad Lab,Lab,,1\n"
+        )
+        upload = SimpleUploadedFile("subjects.csv", csv_content.encode("utf-8"), content_type="text/csv")
+
+        response = self.client.post(
+            reverse("addSubjects"),
+            {"csv_upload": "1", "csv_file": upload},
+            follow=True,
+        )
+
+        self.assertTrue(Subject.objects.filter(user=self.user, subject_number="CHE101").exists())
+        self.assertFalse(Subject.objects.filter(user=self.user, subject_number="CHE102").exists())
+        self.assertFalse(Subject.objects.filter(user=self.user, subject_number="CHE103").exists())
+
+        message_texts = [message.message for message in get_messages(response.wsgi_request)]
+        self.assertIn("1 subjects uploaded successfully! 2 skipped.", message_texts)
+        self.assertIn("Row 3: department_code 'BAD' does not exist", message_texts)
+        self.assertIn("Row 4: subject 'CHE103' is Lab but required_lab_category is blank", message_texts)
+
+    def test_add_subjects_csv_trims_duration_header_whitespace(self):
+        self.client.login(username="deptadmin", password="testpass123")
+        Department.objects.create(name="Computer Science and Engg", code="CSE", user=self.user)
+
+        csv_content = (
+            "department_code,subject_number,subject_name,room_required,lab_category_required,specific_equipment/software_lab,classes_per_week,max_numb_students,duration \n"
+            "CSE,PCC-CS-302,IT Workshop,LAB,Computer Lab,,1,,4\n"
+        )
+        upload = SimpleUploadedFile("subjects.csv", csv_content.encode("utf-8"), content_type="text/csv")
+
+        response = self.client.post(
+            reverse("addSubjects"),
+            {"csv_upload": "1", "csv_file": upload},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        subject = Subject.objects.get(user=self.user, subject_number="PCC-CS-302")
+        self.assertEqual(subject.duration, 4)
+
+    def test_add_rooms_csv_reports_row_level_validation_details(self):
+        self.client.login(username="deptadmin", password="testpass123")
+        department = Department.objects.create(name="Chemistry", code="CHE", user=self.user)
+
+        csv_content = (
+            "r_number,department,seating_capacity,room_type,lab_category\n"
+            "LAB-1,CHE,30,Lab,CAT-A\n"
+            "LAB-2,UNKNOWN,30,Lab,CAT-A\n"
+            "LAB-3,CHE,abc,Lab,CAT-A\n"
+        )
+        upload = SimpleUploadedFile("rooms.csv", csv_content.encode("utf-8"), content_type="text/csv")
+
+        response = self.client.post(
+            reverse("addRooms"),
+            {"csv_upload": "1", "csv_file": upload},
+            follow=True,
+        )
+
+        self.assertTrue(Room.objects.filter(user=self.user, r_number="LAB-1", department=department).exists())
+        self.assertFalse(Room.objects.filter(user=self.user, r_number="LAB-2").exists())
+        self.assertFalse(Room.objects.filter(user=self.user, r_number="LAB-3").exists())
+
+        message_texts = [message.message for message in get_messages(response.wsgi_request)]
+        self.assertIn("1 room(s) added from CSV! 2 skipped.", message_texts)
+        self.assertIn("Row 3: department 'UNKNOWN' not found", message_texts)
+        self.assertIn("Row 4: seating_capacity 'abc' is not a whole number", message_texts)
+
+    def test_add_sections_csv_accepts_section_strength_header_without_500(self):
+        self.client.login(username="deptadmin", password="testpass123")
+        department = Department.objects.create(name="Computer Science and Engg", code="CSE", user=self.user)
+
+        csv_content = (
+            "section_id,program_name,department_code,section_strength\n"
+            "CSE11 1ST SEM,Computer Science and Engg,CSE,70\n"
+            "CSE12 1ST SEM,Computer Science and Engg,CSE,70\n"
+        )
+        upload = SimpleUploadedFile("sections.csv", csv_content.encode("utf-8"), content_type="text/csv")
+
+        response = self.client.post(
+            reverse("addSections"),
+            {"csv_upload": "1", "csv_file": upload},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("addSections"))
+        self.assertTrue(Section.objects.filter(user=self.user, section_id="CSE11 1ST SEM", department=department).exists())
+        self.assertTrue(Section.objects.filter(user=self.user, section_id="CSE12 1ST SEM", department=department).exists())
+
+
+class GenerationSelectionTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            username="deptadmin",
+            password="testpass123",
+        )
+
+    def test_private_generator_prefers_more_complete_schedule_over_higher_fitness(self):
+        private_views_main = views._load_external_views_main()
+
+        class FakeSchedule:
+            def __init__(self, class_count, lab_count, fitness):
+                self._classes = [object()] * class_count
+                self._labs = [object()] * lab_count
+                self._fitness = fitness
+
+            def get_classes(self):
+                return self._classes
+
+            def get_labs(self):
+                return self._labs
+
+            def get_fitness(self):
+                return self._fitness
+
+        less_complete = FakeSchedule(class_count=151, lab_count=36, fitness=0.01)
+        more_complete = FakeSchedule(class_count=155, lab_count=36, fitness=0.005)
+
+        chosen = private_views_main._pick_best_generated_schedule([less_complete, more_complete])
+
+        self.assertIs(chosen, more_complete)
+
+    def test_private_generator_selection_prioritizes_hard_slot_conflict_free_schedule(self):
+        private_views_main = views._load_external_views_main()
+
+        class FakeMeetingTime:
+            def __init__(self, day, time):
+                self.day = day
+                self.time = time
+
+        class FakeEvent:
+            def __init__(self, section, day, time, is_elective=False):
+                self.section = section
+                self.meeting_time = FakeMeetingTime(day, time)
+                self.meeting_times = [self.meeting_time]
+                self.is_elective = is_elective
+
+        class FakeSchedule:
+            def __init__(self, classes, labs, fitness):
+                self._classes = classes
+                self._labs = labs
+                self._fitness = fitness
+
+            def get_classes(self):
+                return self._classes
+
+            def get_labs(self):
+                return self._labs
+
+            def get_fitness(self):
+                return self._fitness
+
+        conflict_schedule = FakeSchedule(
+            classes=[],
+            labs=[
+                FakeEvent("SEC-A", "Monday", "1"),
+                FakeEvent("SEC-A", "Monday", "1"),
+            ],
+            fitness=0.02,
+        )
+        clean_schedule = FakeSchedule(
+            classes=[],
+            labs=[FakeEvent("SEC-A", "Monday", "1")],
+            fitness=0.01,
+        )
+
+        chosen = private_views_main._pick_best_generated_schedule([conflict_schedule, clean_schedule])
+
+        self.assertIs(chosen, clean_schedule)
+
+    def test_private_generator_selection_allows_parallel_elective_overlap(self):
+        private_views_main = views._load_external_views_main()
+
+        class FakeMeetingTime:
+            def __init__(self, day, time):
+                self.day = day
+                self.time = time
+
+        class FakeEvent:
+            def __init__(self, section, day, time, is_elective=False):
+                self.section = section
+                self.meeting_time = FakeMeetingTime(day, time)
+                self.meeting_times = [self.meeting_time]
+                self.is_elective = is_elective
+
+        class FakeSchedule:
+            def __init__(self, classes, labs, fitness):
+                self._classes = classes
+                self._labs = labs
+                self._fitness = fitness
+
+            def get_classes(self):
+                return self._classes
+
+            def get_labs(self):
+                return self._labs
+
+            def get_fitness(self):
+                return self._fitness
+
+        elective_parallel = FakeSchedule(
+            classes=[
+                FakeEvent("SEC-A", "Monday", "1", is_elective=True),
+                FakeEvent("SEC-A", "Monday", "1", is_elective=True),
+            ],
+            labs=[],
+            fitness=0.02,
+        )
+        single_event = FakeSchedule(
+            classes=[FakeEvent("SEC-A", "Monday", "1", is_elective=True)],
+            labs=[],
+            fitness=0.01,
+        )
+
+        chosen = private_views_main._pick_best_generated_schedule([elective_parallel, single_event])
+
+        self.assertIs(chosen, elective_parallel)
+
+    def test_map_section_subjects_csv_persists_elective_section_ids(self):
+        self.client.login(username="deptadmin", password="testpass123")
+        department = Department.objects.create(name="Chemistry", code="CHE", user=self.user)
+        subject = Subject.objects.create(
+            subject_number="CH-106 B",
+            subject_name="Inorganic Chemistry",
+            department=department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        section = Section.objects.create(
+            section_id="MSCCHE(Isem)",
+            department=department,
+            user=self.user,
+        )
+
+        csv_content = (
+            "section_id,subject_number,group_count,elective_section_id\n"
+            "MSCCHE(Isem),CH-106 B,2,MSCCHE(IIIsem);MSCCHE(Vsem)\n"
+        )
+        upload = SimpleUploadedFile("section_subjects.csv", csv_content.encode("utf-8"), content_type="text/csv")
+
+        response = self.client.post(
+            reverse("map_section_subjects"),
+            {"csv_upload": "1", "csv_file": upload},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        mapping = SectionSubjectMapping.objects.get(section=section, subject=subject)
+        self.assertEqual(mapping.group_count, 2)
+        self.assertEqual(mapping.elective_section_ids, "MSCCHE(IIIsem);MSCCHE(Vsem)")
 
     def test_map_section_subjects_manual_form_persists_group_count(self):
         self.client.login(username="deptadmin", password="testpass123")

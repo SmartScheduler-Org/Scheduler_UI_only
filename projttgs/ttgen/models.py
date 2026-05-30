@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+import re
 
 
 # ==============================
@@ -21,6 +22,7 @@ DAYS_OF_WEEK = (
 )
 
 LAB_CATEGORY_CHOICES = (
+    ("Lecture Hall", "Lecture Hall"),
     ("General", "General"),
     ("Electronics Lab", "Electronics Lab"),
     ("Electrical Lab", "Electrical Lab"),
@@ -31,6 +33,52 @@ LAB_CATEGORY_CHOICES = (
     ("Physics Lab", "Physics Lab"),
     ("Animation Lab", "Animation Lab"),
 )
+
+
+def _normalize_single_lab_category(raw_value):
+    value = (raw_value or "").strip().lower()
+    aliases = {
+        "lecture": "Lecture Hall",
+        "lecture hall": "Lecture Hall",
+        "computer": "Computer Lab",
+        "computer lab": "Computer Lab",
+        "electronics": "Electronics Lab",
+        "electronics lab": "Electronics Lab",
+        "electrical": "Electrical Lab",
+        "electrical lab": "Electrical Lab",
+        "mechanical": "Mechanical Workshop",
+        "mechanical workshop": "Mechanical Workshop",
+        "electrical workshop": "Electrical Workshop",
+        "english": "English Lab",
+        "english lab": "English Lab",
+        "chemistry": "Chemistry Lab",
+        "chemistry lab": "Chemistry Lab",
+        "physics": "Physics Lab",
+        "physics lab": "Physics Lab",
+        "animation": "Animation Lab",
+        "animation lab": "Animation Lab",
+        "general": "General",
+    }
+    if not value:
+        return ""
+    return aliases.get(value, (raw_value or "").strip())
+
+
+def _parse_lab_categories(raw_value):
+    if not raw_value:
+        return []
+    categories = []
+    seen = set()
+    for token in re.split(r"[;\n]+", str(raw_value)):
+        normalized = _normalize_single_lab_category(token)
+        if not normalized:
+            continue
+        key = normalized.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        categories.append(normalized)
+    return categories
 
 
 # ==============================
@@ -265,6 +313,7 @@ class SectionSubjectMapping(models.Model):
         related_name="section_mappings",
     )
     group_count = models.PositiveIntegerField(default=1)
+    elective_section_ids = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         db_table = "ttgen_section_allowed_courses"
@@ -272,7 +321,8 @@ class SectionSubjectMapping(models.Model):
         unique_together = ("section", "subject")
 
     def __str__(self):
-        return f"{self.section.section_id} → {self.subject.subject_number} (groups={self.group_count})"
+        elective = f", elective={self.elective_section_ids}" if self.elective_section_ids else ""
+        return f"{self.section.section_id} → {self.subject.subject_number} (groups={self.group_count}{elective})"
 
 
 class TeacherSection(models.Model):
@@ -425,14 +475,15 @@ class ScheduledSlot(models.Model):
             if self.subject.room_required != "Lab":
                 raise ValidationError({"subject": "Only lab subjects can be scheduled as labs."})
 
-            required_category = (self.subject.required_lab_category or "").strip()
-            room_category = (self.room.lab_category or "").strip()
-            if required_category and required_category != room_category:
+            required_categories = _parse_lab_categories(self.subject.required_lab_category)
+            room_category = _normalize_single_lab_category(self.room.lab_category)
+            if required_categories and room_category not in required_categories:
+                required_label = ", ".join(required_categories)
                 raise ValidationError(
                     {
                         "room": (
                             f"{self.room.r_number} is '{room_category or 'Unspecified'}', "
-                            f"but {self.subject.subject_name} requires '{required_category}'."
+                            f"but {self.subject.subject_name} requires one of '{required_label}'."
                         )
                     }
                 )

@@ -127,19 +127,6 @@
 }
 </style>
 
-{% if messages %}
-<div class="message-container">
-    {% for message in messages %}
-        <div class="alert 
-            {% if message.tags == 'success' %} alert-success 
-            {% elif message.tags == 'error' %} alert-error 
-            {% endif %}">
-            {{ message }}
-        </div>
-    {% endfor %}
-</div>
-{% endif %}
-
 <!-- PAGE HEADER WITH NEXT + STEP -->
 <div class="page-header">
 
@@ -151,6 +138,7 @@
 
     <div class="right-block">
         <div class="nav-action-group">
+            {% include 'bulk_delete_button.html' with delete_url_name='delete_all_meeting_times' confirm_message='This will delete all timing slots for your account. Continue?' %}
             <a href="{% url 'editmeetingtime' %}" class="edit-btn icon-only-btn" aria-label="View or edit timings" title="View or edit timings">
                 <i class="fa-solid fa-book-open" aria-hidden="true"></i>
             </a>

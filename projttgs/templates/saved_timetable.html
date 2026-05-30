@@ -183,6 +183,13 @@ h1 {
   padding: 8px;
 }
 
+.lab-box.is-elective,
+.class-box.is-elective,
+.room-slot-card.is-elective {
+  border: 3px solid #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18), 0 8px 18px rgba(37, 99, 235, 0.18) !important;
+}
+
 .lunch-cell {
   background: #ffffff;
   font-weight: 700;
@@ -1253,7 +1260,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
@@ -1289,7 +1296,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
           {% elif cell.type == "class" %}
             <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               {% for cls in cell.classes %}
-                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   {{ cls.instructor.name }}<br>
                   {{ cls.room.r_number }}
@@ -1395,7 +1402,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
 
           {% elif cell.type == "lab" %}
             <td colspan="{{ cell.colspan }}">
-              <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor %}room-slot-card--lab-shared{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+              <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor %}room-slot-card--lab-shared{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cell.labs.0.is_elective %}is-elective{% endif %}">
               {% for lab in cell.labs %}
                 <strong>{{ lab.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ lab.section }} ({{ lab.group }})</div>
@@ -1409,7 +1416,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
 
           {% elif cell.type == "class" %}
             <td colspan="{{ cell.colspan }}">
-              <div class="room-slot-card room-slot-card--class {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+              <div class="room-slot-card room-slot-card--class {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cell.classes.0.is_elective %}is-elective{% endif %}">
               {% for cls in cell.classes %}
                 <strong>{{ cls.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ cls.section }}</div>

@@ -36,29 +36,35 @@ urlpatterns = [
     path('teachers_list/', views.inst_list_view , name='editinstructor'),
     path('dashboard_teachers_list/', views.dashboard_inst_list_view, name='dashboard_editinstructor'),
     path('delete_teacher/<int:pk>/', views.delete_instructor, name='deleteinstructor'), 
+    path('delete_all_teachers/', views.delete_all_instructors, name='delete_all_instructors'),
     path('saved_teacher_timetables/<int:tid>/', views.saved_teacher_timetable, name='saved_teacher_timetable'),
 
     path('add_rooms', views.addRooms, name='addRooms'),
     path('rooms_list/', views.room_list, name='editrooms'),
     path('delete_room/<int:pk>/', views.delete_room, name='deleteroom'),
+    path('delete_all_rooms/', views.delete_all_rooms, name='delete_all_rooms'),
 
     path('add_timings', views.addTimings, name='addTimings'),
     path('timings_list/', views.meeting_list_view, name='editmeetingtime'),
     path('delete_meetingtime/<str:pk>/', views.delete_meeting_time, name='deletemeetingtime'),
+    path('delete_all_timings/', views.delete_all_meeting_times, name='delete_all_meeting_times'),
 
     path('add_subjects', views.addSubjects, name='addSubjects'),
     path('subjects_list/', views.subject_list_view, name='editsubject'),
     path('delete_subject/<str:pk>/', views.delete_subject, name='deletesubject'),
+    path('delete_all_subjects/', views.delete_all_subjects, name='delete_all_subjects'),
 
     path('add_departments', views.addDepts, name='addDepts'),
     path('departments_list/', views.department_list, name='editdepartment'),
     path('dashboard_departments_list/', views.dashboard_department_list, name='dashboard_editdepartment'),
     path('delete_department/<int:pk>/', views.delete_department, name='deletedepartment'),
+    path('delete_all_departments/', views.delete_all_departments, name='delete_all_departments'),
 
     path('add_sections', views.addSections, name='addSections'),
     path('sections_list/', views.section_list, name='editsection'),
     path('dashboard_sections_list/', views.dashboard_section_list, name='dashboard_editsection'),
     path('delete_section/<str:pk>/', views.delete_section, name='deletesection'),
+    path('delete_all_sections/', views.delete_all_sections, name='delete_all_sections'),
     path("map-teacher-subjects/",views.map_teacher_subjects,name="map_teacher_subjects"),
     path(
     "delete-teacher-subject/<str:subject_number>/<int:instructor_id>/",
@@ -68,8 +74,10 @@ urlpatterns = [
     "delete-sci-mapping/<int:mapping_id>/",
     views.delete_sci_mapping,
     name="delete_sci_mapping"),
+    path('delete_all_teacher_subject_mappings/', views.delete_all_teacher_subject_mappings, name='delete_all_teacher_subject_mappings'),
     path("map-section-subjects/",views.map_section_subjects,name="map_section_subjects"),
     path("view-section-subjects/", views.view_section_subjects, name="view_section_subjects"),
+    path('delete_all_section_subject_mappings/', views.delete_all_section_subject_mappings, name='delete_all_section_subject_mappings'),
 
 
 

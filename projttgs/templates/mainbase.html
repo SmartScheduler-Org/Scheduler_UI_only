@@ -32,6 +32,32 @@
 
 <body class="site-layout">
     {% include 'navbarmain.html' %} 
+    {% if messages %}
+    <div class="message-modal" id="globalMessageModal" role="dialog" aria-modal="true" aria-labelledby="globalMessageModalTitle">
+      <div class="message-modal__backdrop" data-message-close></div>
+      <div class="message-modal__panel">
+        <div class="message-modal__accent"></div>
+        <div class="message-modal__header">
+          <div>
+            <p class="message-modal__eyebrow">Import Report</p>
+            <h2 class="message-modal__title" id="globalMessageModalTitle">Upload Feedback</h2>
+          </div>
+          <button type="button" class="message-modal__close" data-message-close aria-label="Close popup">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <p class="message-modal__subtitle">Each result is listed below so you can spot skipped rows and validation problems quickly.</p>
+        <div class="message-modal__list" role="list">
+          {% for message in messages %}
+          <div class="message-modal__item message-modal__item--{{ message.tags|default:'info' }}" role="listitem">
+            <div class="message-modal__badge">{{ message.tags|default:"info"|upper }}</div>
+            <div class="message-modal__text">{{ message }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
     <div id="pageLoadIndicator" class="page-load-indicator" aria-hidden="true">
       <div class="page-load-pill">
         <div class="page-load-spinner">
@@ -67,6 +93,193 @@
      {% include 'mainfotter.html' %}
     <script src="{% static 'chatbot.js' %}"></script>
     <style>
+      .message-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000001;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .message-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at top left, rgba(34, 211, 238, 0.2), transparent 38%),
+          radial-gradient(circle at bottom right, rgba(244, 114, 182, 0.2), transparent 34%),
+          rgba(3, 7, 18, 0.76);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .message-modal__panel {
+        position: relative;
+        width: min(920px, 100%);
+        max-height: min(78vh, 760px);
+        overflow: hidden;
+        border-radius: 28px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(8, 15, 30, 0.98));
+        box-shadow: 0 30px 100px rgba(2, 6, 23, 0.5);
+      }
+
+      .message-modal__accent {
+        height: 6px;
+        background: linear-gradient(90deg, #22c55e, #38bdf8 45%, #f59e0b 75%, #f472b6);
+      }
+
+      .message-modal__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 28px 30px 8px;
+      }
+
+      .message-modal__eyebrow {
+        margin: 0 0 8px;
+        color: #38bdf8;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .message-modal__title {
+        margin: 0;
+        color: #f8fafc;
+        font-size: clamp(24px, 3vw, 34px);
+        line-height: 1.05;
+      }
+
+      .message-modal__subtitle {
+        margin: 0;
+        padding: 0 30px 18px;
+        color: rgba(226, 232, 240, 0.78);
+        font-size: 14px;
+      }
+
+      .message-modal__close {
+        border: 0;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(148, 163, 184, 0.12);
+        color: #e2e8f0;
+        font-size: 28px;
+        line-height: 1;
+        cursor: pointer;
+        transition: transform 0.18s ease, background 0.18s ease;
+      }
+
+      .message-modal__close:hover {
+        transform: scale(1.06);
+        background: rgba(148, 163, 184, 0.2);
+      }
+
+      .message-modal__list {
+        display: grid;
+        gap: 12px;
+        padding: 0 22px 24px 30px;
+        margin: 0 8px 10px 0;
+        max-height: calc(min(78vh, 760px) - 140px);
+        overflow: auto;
+      }
+
+      .message-modal__list::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      .message-modal__list::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.28);
+      }
+
+      .message-modal__item {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        background: rgba(15, 23, 42, 0.7);
+      }
+
+      .message-modal__item--success {
+        background: rgba(20, 83, 45, 0.34);
+        border-color: rgba(34, 197, 94, 0.22);
+      }
+
+      .message-modal__item--warning {
+        background: rgba(120, 53, 15, 0.32);
+        border-color: rgba(245, 158, 11, 0.24);
+      }
+
+      .message-modal__item--error {
+        background: rgba(127, 29, 29, 0.34);
+        border-color: rgba(248, 113, 113, 0.24);
+      }
+
+      .message-modal__item--info {
+        background: rgba(30, 41, 59, 0.72);
+        border-color: rgba(56, 189, 248, 0.16);
+      }
+
+      .message-modal__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f8fafc;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+      }
+
+      .message-modal__text {
+        color: #e2e8f0;
+        font-size: 14px;
+        line-height: 1.55;
+        word-break: break-word;
+      }
+
+      body.message-modal-open {
+        overflow: hidden;
+      }
+
+      @media (max-width: 640px) {
+        .message-modal {
+          padding: 14px;
+        }
+
+        .message-modal__panel {
+          max-height: 84vh;
+          border-radius: 22px;
+        }
+
+        .message-modal__header {
+          padding: 22px 20px 8px;
+        }
+
+        .message-modal__subtitle {
+          padding: 0 20px 16px;
+        }
+
+        .message-modal__list {
+          padding: 0 14px 18px 20px;
+        }
+
+        .message-modal__item {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+      }
+
       .page-load-indicator {
         position: fixed;
         top: 16px;
@@ -160,6 +373,25 @@
     </style>
     <script>
       (function () {
+        const messageModal = document.getElementById("globalMessageModal");
+        if (messageModal) {
+          document.body.classList.add("message-modal-open");
+          const closeModal = () => {
+            messageModal.remove();
+            document.body.classList.remove("message-modal-open");
+          };
+
+          messageModal.querySelectorAll("[data-message-close]").forEach((node) => {
+            node.addEventListener("click", closeModal);
+          });
+
+          document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && document.getElementById("globalMessageModal")) {
+              closeModal();
+            }
+          });
+        }
+
         const pageShell = document.querySelector(".page-shell");
         const stickyFooter = document.querySelector(".site-footer-ref, .footer, .footer-new");
         function enforceStickyFooterLayout() {

@@ -1,0 +1,44 @@
+<style>
+.bulk-delete-form {
+    margin: 0;
+}
+
+.bulk-delete-btn {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(220, 53, 69, 0.92);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+    white-space: nowrap;
+}
+
+.bulk-delete-btn:hover {
+    background: #b52a37;
+    transform: translateY(-1px);
+}
+</style>
+
+<form method="post" action="{% url delete_url_name %}" class="bulk-delete-form js-bulk-delete-form" data-confirm-message="{{ confirm_message }}">
+    {% csrf_token %}
+    <button class="bulk-delete-btn" type="submit">Delete All</button>
+</form>
+
+<script>
+(function () {
+    document.querySelectorAll('.js-bulk-delete-form').forEach(function (form) {
+        if (form.dataset.confirmBound === 'true') {
+            return;
+        }
+        form.dataset.confirmBound = 'true';
+        form.addEventListener('submit', function (event) {
+            var message = form.getAttribute('data-confirm-message') || 'Are you sure you want to delete all entries?';
+            if (!window.confirm(message)) {
+                event.preventDefault();
+            }
+        });
+    });
+})();
+</script>

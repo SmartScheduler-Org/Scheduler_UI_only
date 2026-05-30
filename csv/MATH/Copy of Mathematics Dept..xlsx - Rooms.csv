@@ -1,0 +1,9 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+SB401,MATH,65,LECTURE HALL,
+SB402,MATH,65,LECTURE HALL,
+SB403,MATH,65,LECTURE HALL,
+SB405,MATH,65,LECTURE HALL,
+SB703,MATH,65,LECTURE HALL,
+SB701,MATH,35,LAB,MATH LAB,
+SB702,MATH,35,LAB,MATH LAB,
+Workshop,Math,70,Workshop,Workshop,

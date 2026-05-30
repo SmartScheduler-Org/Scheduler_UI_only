@@ -277,6 +277,7 @@ label strong {
 
     <div class="right-block">
         <div class="nav-action-group">
+            {% include 'bulk_delete_button.html' with delete_url_name='delete_all_section_subject_mappings' confirm_message='This will delete all section-subject mappings for your account. Continue?' %}
             <a href="{% url 'map_teacher_subjects' %}" class="next-btn nav-circle-btn" aria-label="Previous">
                 <span class="nav-arrow">←</span>
             </a>
@@ -303,7 +304,7 @@ label strong {
                 <strong>CSV Format</strong><br>
                 section_id,subject_number,group_count[,elective_section_id]<br>
                 CE31 3rd Sem,CS001,1<br>
-                CE31 3rd Sem,CS002,2
+                CE31 3rd Sem,CS002,2,CE32 3rd Sem;IT 3rd Sem
             </div>
         </div>
 
@@ -331,7 +332,9 @@ label strong {
     <span class="info-icon">i</span>
     <div class="info-tooltip">
         <strong>Manual Mapping</strong><br>
-        Select a section and choose the subjects you want to attach.
+        Select a section and choose the subjects you want to attach.<br>
+        Add elective section IDs separated by semicolons when the same subject
+        should mirror to linked sections.
     </div>
 </div>
 
@@ -347,6 +350,16 @@ label strong {
 
 <label><strong>Group count</strong></label>
 <input type="number" name="group_count" class="form-control" min="1" value="1" required>
+
+<br>
+
+<label><strong>Elective section IDs</strong></label>
+<input
+    type="text"
+    name="elective_section_id"
+    class="form-control"
+    placeholder="Optional: CE32 3rd Sem;IT 3rd Sem"
+>
 
 <br>
 

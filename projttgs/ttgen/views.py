@@ -394,6 +394,8 @@ def _redirect_to_subscription(request):
 def _guard_generation_view(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
+        if hasattr(public_core, "ensure_private_generator_loaded"):
+            public_core.ensure_private_generator_loaded()
         if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
         return view_func(request, *args, **kwargs)
@@ -404,6 +406,8 @@ def _guard_generation_view(view_func):
 def _wrap_generate_loading(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
+        if hasattr(public_core, "ensure_private_generator_loaded"):
+            public_core.ensure_private_generator_loaded()
         if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
         return view_func(request, *args, **kwargs)
@@ -414,6 +418,8 @@ def _wrap_generate_loading(view_func):
 def _wrap_generate_timetables(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
+        if hasattr(public_core, "ensure_private_generator_loaded"):
+            public_core.ensure_private_generator_loaded()
         if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
         if not _demo_mode_active(request):
@@ -730,6 +736,8 @@ else:
 
 
 def generate(request):
+    if hasattr(public_core, "ensure_private_generator_loaded"):
+        public_core.ensure_private_generator_loaded()
     _set_subscription_flow_mode(request, "generate")
     _set_demo_mode(request, False)
     _clear_pass_key_access(request)

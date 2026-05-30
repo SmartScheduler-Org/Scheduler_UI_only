@@ -5,7 +5,11 @@
 <link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
 
 <style>
-.mapping-wrapper {
+                            <li>
+                                {{ mapping.subject.subject_number }} - {{ mapping.subject.subject_name }}
+                                {% if mapping.group_count > 1 %}(groups: {{ mapping.group_count }}){% endif %}
+                                {% if mapping.elective_section_ids %}<br><small>elective with: {{ mapping.elective_section_ids }}</small>{% endif %}
+                            </li>
     width: min(1100px, 92%);
     margin: 24px auto;
 }
