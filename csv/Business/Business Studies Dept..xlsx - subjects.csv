@@ -1,0 +1,22 @@
+department_code,subject_number,subject_name,room_required,lab_category_required,specific_equipment/software_lab(null accepted),classes_per_week,duration (in hr)
+BS,COG-101-V,Management Principles and Applications,LECTURE HALL,,,4,1
+BS,COG-103-V,Micro Economics,LECTURE HALL,,,4,1
+BS,COG-105-V,Financial Accounting,LECTURE HALL,,,4,1
+BS,COG-121-V,Finance for Everyone,LECTURE HALL,,,2,1
+BS,COG-131-V,Business Communication,LECTURE HALL,,,3,1
+BS,COG-143-V ( Theory ),Computer Applications in Business,LECTURE HALL,,,2,1
+BS,COG-143-V (Lab ),Computer Applications in Business,LAB,Computer Lab,,2,1
+BS,AEC-110-V,Interactive English-I,LECTURE HALL,,,2,1
+BS,VAC-110-V,Environment and Ecology,LECTURE HALL,,,2,1
+BS,COG-201-V,Financial Management,LECTURE HALL,,,4,1
+BS,COG-203-V,Income-Tax Law and Practice,LECTURE HALL,,,4,1
+BS,COG-205-V,Indian Economics,LECTURE HALL,,,4,1
+BS,COG-213-V,Brand Management,LECTURE HALL,,,4,1
+BS,COG-229-V,Human Resource Management,LECTURE HALL,,,3,1
+BS,COG-243-V (Theory),Advanced Spreadsheet Applications in Business,LECTURE HALL,,,2,1
+BS,COG-243-V (Lab),Advanced Spreadsheet Applications in Business,LAB,Computer Lab,,2,1
+BS,AEC-113-V,Hindi Language-I,LECTURE HALL,,,2,1
+BS,COG-301-V,Cost Accounting,LECTURE HALL,,,4,1
+BS,COG-303-V,International Business,LECTURE HALL,,,4,1
+BS,COG-305-V,Foreign Exchange Management,LECTURE HALL,,,4,1
+BS,COG-315-V,Human Resource Development,LECTURE HALL,,,4,1

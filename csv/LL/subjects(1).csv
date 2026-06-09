@@ -1,0 +1,26 @@
+department_code,subject_number,subject_name,room_required,lab_category_required,specific_equipment/software_lab,classes_per_week,max_numb_students,duration
+LL,ENP-101-V,Poetry from Chaucer to Milton,LECTURE HALL,,,4,,1
+LL,ENP-103-V,Eighteenth Century Literature,LECTURE HALL,,,4,,1
+LL,ENP-105-V,Literary Criticism,LECTURE HALL,,,4,,1
+,,,,,,,,
+LL,ENP-109-V,"Folk Tales, Fantasy and Fables",LECTURE HALL,,,4,,1
+,,,,,,,,
+LL,ENP-113-V,Labs or Minor Project in Graphic Novel Writing,LECTURE HALL,,,4,,1
+LL,ENP-115-V,Seminar,LAB, MINOR AND MAJOR PROJECT,,2,,1
+LL,ENP-201-V,British Fiction,LECTURE HALL,,,4,,1
+LL,ENP-203-V,Twentieth Century Poetry and Drama,LECTURE HALL,,,4,,1
+LL,ENP-205-V,Indian Literature-I,LECTURE HALL,,,4,,1
+LL,ENP-207-V,Labs or Minor Project,LAB, MINOR AND MAJOR PROJECT,,4,,4
+LL,ENP-209-V,Seminar,LAB, MINOR AND MAJOR PROJECT,,2,,1
+LL,ENP-211-V,Modern World Poetry,LECTURE HALL,,,4,,1
+LL,ENP-213-V,Literature and Gender,LECTURE HALL,,,4,,1
+LL,ENP-221-V,Advertising and Public Relations (OEC-A),LECTURE HALL,,,3,,1
+,,,,,,,,
+,,,,,,,,
+LL,BEU-101-V1 ,Medieval to Early Renaissance Literature in Context,LECTURE HALL,,,4,,1
+LL,BEU-103-V1 ,The English Renaissance: Poetry and Prose,LECTURE HALL,,,4,,1
+LL,BEU-105-V1,Literary Feature Writing,LECTURE HALL,,,4,,1
+LL,BEU-107-V1,Transmedia Storytelling and Visual Narratives: Life Skills and SDG Lab- I,LAB, MINOR AND MAJOR PROJECT,,4,,1
+LL,BEU-109-V1,Seminar: Critical Thinking and Cognitive Skills for Content Development ,LAB," MINOR AND MAJOR PROJECT
+",,2,,1
+LL,BEU-111-V1,"Indian Knowledge Systems, Universal Human Values, and Sustainable Development [/SWAYAM-MOOCS]",LECTURE HALL,,,4,,1

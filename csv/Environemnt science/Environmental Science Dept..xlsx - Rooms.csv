@@ -1,0 +1,5 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+SB-202,ES,70,LECTURE HALL,
+SB-203,ES,70,LECTURE HALL,
+SB-102,ES,15,LAB,Environmental Lab -1
+SB-103,ES,15,LAB,Environmental Lab -2

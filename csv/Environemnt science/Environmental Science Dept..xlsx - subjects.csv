@@ -1,0 +1,30 @@
+department_code,subject_number,subject_name,room_required,lab_category_required,specific_equipment/software_lab(null accepted),classes_per_week,duration (in hr)
+ES,ESP-101-V,Ecology and Biodiversity,LECTURE HALL,,,4,1
+ES,ESP-103-V,Environmental Chemistry,LECTURE HALL,,,4,1
+ES,ESP-105-V,Instrumental Techniques for Environmental Analysis,LECTURE HALL,,,4,1
+ES,ESP-107-V,Environmental Geosciences,LECTURE HALL,,,4,1
+ES,ESP-109-V,Statistical methods and Data Analysis,LECTURE HALL,,,4,1
+ES,ESP-111-V,Ecology Lab,LAB,Environmental Lab -1,,2,3
+ES,ESP-113-V,Environmental Chemistry & Analysis Lab,LAB,Environmental Lab -1,,2,3
+ES,VAC-105-V,Universal Human Values,LECTURE HALL,,,2,1
+ES,ESP-201-V,Industrial Water and Wastewater Treatment,LECTURE HALL,,,4,1
+ES,ESP-203-V,Solid and Hazardous Waste Management,LECTURE HALL,,,4,1
+ES,ESP-213-V,Environmental Impact Assessment and Auditing,LECTURE HALL,,,4,1
+ES,ESP-217-V,Natural Resource Management,LECTURE HALL,,,4,1
+ES,ESP-221-V,Entrepreneurship,LECTURE HALL,,,2,1
+ES,ESP-205-V,Seminar,LECTURE HALL,,,1,1
+ES,ESP-207-V,Industrial Pollution Management Lab,LAB,Environmental Lab -2,,2,3
+ES,ESP-209-V,Waste Management Lab,LAB,Environmental Lab -2,,2,3
+ES,AEC-315-V,Personality Development and Soft Skills,LECTURE HALL,,,2,1
+ES,ESU-101-V,Fundamentals of Ecology and Environmental Science,LECTURE HALL,,,3,1
+ES,ESU-103-V,Earth Systems and Environmental Processes,LECTURE HALL,,,2,1
+ES,ESU-105-V,Introduction to Environmental Chemistry,LECTURE HALL,,,3,1
+ES,ESU-107-V,Ecology and Earth Sciences Lab,LAB,Environmental Lab -2,,2,2
+ES,ESU-109-V,Environmental Analytical Lab,LAB,Environmental Lab -1,,2,2
+ES,ESU-111-V,Biosafety and Bioethics,LECTURE HALL,,,4,1
+ES,OSU-110-V,Basics of python,LECTURE HALL,,,2,1
+ES,AEC-101-V,Writing Skills and Art of Rhetoric,LECTURE HALL,,,2,1
+,,,,,,,
+,,,,,,,
+,,,,,,,
+, ,,,,,,

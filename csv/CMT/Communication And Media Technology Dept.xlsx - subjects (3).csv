@@ -1,0 +1,132 @@
+department_code,subject_number,subject_name,room_required,lab_category_required,specific_equipment/software_lab(null accepted),classes_per_week,duration (in hr)
+CMT,JMU-101-V,Introduction to Communication,LECTURE HALL,,,4,1
+CMT,JMU-103-V,Introduction and History of Media,LECTURE HALL,,,4,1
+CMT,JMU-105-V,Introduction to Print Media,LECTURE HALL,,,4,1
+CMT,JMU-107-V,Creative writing Skills,LECTURE HALL,,,2,1
+CMT,VAC-102-V,Cultural Heritage & Nation Building,LECTURE HALL,,,3,1
+CMT,AEC-107- V,Communicative Hindi- I,LECTURE HALL,,,2,1
+CMT,JMU-109-V,Current Affairs& General Studies- 1,LECTURE HALL,,,4,1
+CMT,ESU-201-V-1,Environmental Science - I,LECTURE HALL,,,2,1
+CMT,JMU-201-V,"Radio- Concept, Process and production",LECTURE HALL,,,4,1
+CMT,JMU-203-V,Media Laws & Ethics,LECTURE HALL,,,2,1
+CMT,JMU-205-V,Digital Photography,LECTURE HALL,,,3,1
+CMT,JMU-207-V,Fundamentals of Visual Communication,LECTURE HALL,,,2,1
+CMT,JMU-209-V-1,Startups and Entrepreneurship,LECTURE HALL,,,3,1
+CMT,AEC- 201- V,English II,LECTURE HALL,,,4,1
+CMT,JMU-211-V,Digital Photography Lab,LAB,Audio Video Editing Lab,,4,1
+CMT,BA JMC 501-23,Development Communication,LECTURE HALL,,,2,1
+CMT,BA JMC 502-23,Storyboarding & Scriptwriting,LECTURE HALL,,,3,1
+CMT,BA JMC 503-23,Film Appreciation,LECTURE HALL,,,2,1
+CMT,BA JMC 504-23,Documentary/Short Film Making,LECTURE HALL,,,4,1
+CMT,BA JMC 505-23,Production Portfolio,LAB,Audio Video Editing Lab,,4,1
+CMT,BA JMC 701-23,Multimedia Technologies- Culture & Society,LECTURE HALL,,,4,1
+CMT,BA JMC 702-23,Media Industry & Management,LECTURE HALL,,,2,1
+CMT,BA JMC 703-23,Data journalism Practices,LECTURE HALL,,,3,1
+CMT,BA JMC 704-23,Social networking & Webcasting,LECTURE HALL,,,2,1
+CMT,BA JMC 705-23,Event management,LAB,Audio Video Editing Lab,,4,2
+CMT,BA JMC 706-23,Mobile Journalism ,LAB,Audio Video Editing Lab,,4,2
+CMT,"MA JMC 26-
+ 101",Communication Theories & Models,LECTURE HALL,,,4,1
+CMT,"MA JMC 26-
+ 103",Evolution and Emergence of Media,LECTURE HALL,,,4,1
+CMT,"MA JMC 26-
+ 105",Platform Regulation and Media Governance,LECTURE HALL,,,2,1
+CMT,"MA JMC 26-
+ 107",Media Content Writing and Production,LAB,Print Media Lab,,3,1
+CMT,"MA JMC 26-
+ 109",Smart Newsrooms: AI & Automation in Media,LECTURE HALL,,,2,1
+CMT,DSE,DISCIPILNE SPECIFIC EELECTIVE,LECTURE HALL,,,4,1
+CMT,JMC-301- 21,Multimedia Technologies: Culture and Society,LECTURE HALL,,,4,1
+CMT,JMC-302- 21,Advertising: Concepts and Management,LECTURE HALL,,,4,1
+CMT,JMC-303- 21,Development Communication,LECTURE HALL,,,2,1
+CMT,JMC-304- 21,Film Appreciation,LECTURE HALL,,,3,1
+CMT,JMC-305- 21,Film Appreciation Lab,LAB,Audio Video Editing Lab,,2,1
+CMT,JMC-306- 21,Digital Media Production Portfolio,LAB,Audio Video Editing Lab,,4,1
+CMT,JMC-307-21,Current Affairs & General Studio,LECTURE HALL,,,4,1
+CMT,OEC,OPEN ELECTIVE,LECTURE HALL,,,4,1
+CMT,"MAJMC 26-
+ 201",Media and Entertainment Management,LECTURE HALL,,,2,1
+CMT,"MAJMC 26-
+ 203",Production Portfolio,LAB,Print Media Lab,,3,1
+CMT,"MAJMC 26-
+ 205",Communication Research Methodology,LECTURE HALL,,,2,1
+CMT,MA JMC 26- 207A/B/C/D,DISCIPILNE SPECIFIC EELECTIVE,LECTURE HALL,,,4,1
+CMT,MA JMC 26- 209A/B/C/D,DISCIPILNE SPECIFIC EELECTIVE,LECTURE HALL,,,4,1
+CMT,MA JMC 26- 211A/B/C/D,DISCIPILNE SPECIFIC EELECTIVE,LAB,Print Media Lab,,4,1
+CMT,MA JMC 26- 213A/B/C/D,DISCIPILNE SPECIFIC EELECTIVE,LAB,Print Media Lab,,2,1
+CMT,VCU-101-V,Communication Skills,LECTURE HALL,,,3,1
+CMT,VCU 103-V,Fundamentals of Multimedia,LECTURE HALL,,,2,1
+CMT,VCU-105-V,Introduction to Drawing,LAB,Visual Communication Lab,,4,1
+CMT,VCU-107-V,Writing For Media,LECTURE HALL,,,4,1
+CMT,JMU-209-V,Start-ups and Entrepreneurship,LECTURE HALL,,,3,1
+CMT,VCU-109-V,Drawing Studio,LAB,Visual Communication Lab,,3,1
+CMT,ESU-201-V-2,"Environmental
+ Science I",LECTURE HALL,,,3,1
+CMT,VCU-201-V,Animation Techniques,LAB,Visual Communication Lab,,4,1
+CMT,VCU-203-V,Film Appreciation Technique,LECTURE HALL,,,4,1
+CMT,VCU-205-V,Design & Graphics,LAB,Visual Communication Lab,,4,1
+CMT,VCU-207-V,Art Design & Aesthetics,LAB,Visual Communication Lab,,2,1
+CMT,JMU-108-V,Soft Skills,LECTURE HALL,,,3,1
+CMT,AEC- 103- V,Effective Corporate Communication (ECC),LECTURE HALL,,,2,1
+CMT,VCU-211-V,Adobe Suite Studio Advanced,LAB,Animation and Graphic Studio,,4,1
+CMT,"B.Sc. VCMT
+ 501-23",2 D Character Design for Animation,LAB,Animation and Graphic Studio,,4,1
+CMT,"B.Sc. VCMT
+ 502-23",Audio Production,LAB,Animation and Graphic Studio,,4,1
+CMT,B.Sc. VCMT 503-23,Web Design and Development,LAB,Animation and Graphic Studio,,2,1
+CMT,"B.Sc. VCMT
+ 504-23",Artificial Intelligence & Multimedia,LAB,Animation and Graphic Studio,,3,1
+CMT,"B.Sc. VCMT
+ 505-23","Project Work &
+  Viva",LAB,Animation and Graphic Studio,,2,1
+CMT,"B.Sc. VCMT
+ 701-23","Rigging, Skinning & Animation",LAB,Animation and Graphic Studio,,4,1
+CMT,"B.Sc. VCMT
+ 702-23",Advance 2 D Animation Studio,LAB,Animation and Graphic Studio,,4,1
+CMT,"B.Sc.
+ VCMT 703-23",3D Animation – Studio,LAB,Animation and Graphic Studio,,4,1
+CMT,B.Sc. VCMT 704-23,AI & Visual Communication,LAB,Animation and Graphic Studio,,2,1
+CMT,"B.Sc.
+ VCMT 705-23",Portfolio & Showreel Development,LAB,Animation and Graphic Studio,,3,1
+CMT,"B.Sc. VCMT
+ 706-23",Professional & Industry Skills,LECTURE HALL,,,2,1
+CMT,SWU-101-V,Foundations of Social Work,LECTURE HALL,,,4,1
+CMT,SWU-103-V,Social Science Concepts and Social Work,LECTURE HALL,,,4,1
+CMT,SWU-105-V,Introduction to Field Work Practice,LECTURE HALL,,,2,1
+CMT,SWU-107-V,Development Communication,LECTURE HALL,,,3,1
+CMT,BCG-101-V,Fundamentals of Computer,LECTURE HALL,,,2,1
+CMT,AEC-105-V-1,English-I,LECTURE HALL,,,2,1
+CMT,SWU-109-V,Concurrent Field Work Practice – 1,LAB,Outside,,4,1
+CMT,ESU-201-V-3,Environment Science - I,LECTURE HALL,,,2,1
+CMT,SWU-201-V,Social Case Work,LECTURE HALL,,,2,1
+CMT,SWU-203-V,Social Group Work,LECTURE HALL,,,3,1
+CMT,SWU-205-V,Community Organization and Social Action,LECTURE HALL,,,2,1
+CMT,SWU-207-V,Child Protection and child rights,LECTURE HALL,,,4,1
+CMT,OSP-201-V,Waste Management in Daily life,LECTURE HALL,,,4,1
+CMT,AEC-107-V,Communicative Hindi -I,LECTURE HALL,,,4,1
+CMT,SWU-209-V,Concurrent Field Work Practice – 3,LAB,Outside,,2,1
+CMT,BSW-501-23,Social Work Research,LECTURE HALL,,,3,1
+CMT,BSW-502-23,Areas of Social Work Practice – I,LECTURE HALL,,,2,1
+CMT,BSW-503-23,Corporate Social Responsibility,LECTURE HALL,,,4,1
+CMT,BSW-504-23,Disaster Management,LECTURE HALL,,,4,1
+CMT,BSW-505-23,Rural Educational Camp,LAB,Outside,,4,1
+CMT,BSW-701-23,Social Work with Communities,LECTURE HALL,,,2,1
+CMT,BSW-702-23,Management of Development and Welfare Services in India,LECTURE HALL,,,3,1
+CMT,BSW-703-23,Programme Competencies and Skill Development,LECTURE HALL,,,2,1
+CMT,BSW-704-23,NGO Management,LECTURE HALL,,,4,1
+CMT,BSW-705-23,Organizational Behaviour,LECTURE HALL,,,4,1
+CMT,BSW-706-23,Social Entrepreneurship,LECTURE HALL,,,4,1
+CMT,SWP-101-V,History & Philosophy of Social Work,LECTURE HALL,,,2,1
+CMT,SWP-103-V,Social Science Concepts for Social Workers,LECTURE HALL,,,3,1
+CMT,SWP-105-V,Human Growth & Development,LECTURE HALL,,,2,1
+CMT,SWP-107-V,Society and Social Problems,LECTURE HALL,,,4,1
+CMT,SWP-109-V,Concurrent Field Work Practice-I,LAB,Outside,,3,4
+CMT,SWP-111-V,Skill development lab,LECTURE HALL,,,2,2
+CMT,SWP-201-V,Social Work Research and Statistics,LECTURE HALL,,,4,1
+CMT,SWP-203-V,Social Welfare Administration,LECTURE HALL,,,4,1
+CMT,SWP-205-V,Social Action and Social Movements,LECTURE HALL,,,4,1
+CMT,SWP-207-V,HRM-Human Resource Management and Industrial Relation,LECTURE HALL,,,4,1
+CMT,SWP-211-V,Concurrent Field Work Practice-III,LAB,Outside,,3,4
+CMT,SWP-213-V,Dissertation,LAB,Outside,,3,4
+CMT,AEC-105-V-2,English-I,LECTURE HALL,,,2,1
+CMT,AEC-105-V-3,English-I,LECTURE HALL,,,2,1

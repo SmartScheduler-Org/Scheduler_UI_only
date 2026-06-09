@@ -1,0 +1,51 @@
+department_code,subject_number,subject_name,room_required,lab_category_required,specific_equipment/software_lab,classes_per_week,max_numb_students,duration
+PHY,PHU-101-V,Mechanics,LECTURE HALL,,,4,,1
+PHY,PHU-105-V,Waves and Optics,LECTURE HALL,,,4,,1
+PHY,PHU-107-V/103-V,Waves and Optics Lab/Mechanics Lab,LAB,BSC LAB-II;BSC LAB-I,,1,,2
+PHY,PHU-109-V,Geometric Optics and Oscillations,LECTURE HALL,,,4,,1
+PHY,PHU-111-V,Computational Skills with C++,LECTURE HALL,,,2,,1
+PHY,PHU-113-V,Computational Skills with C++ Lab,LAB,COMPUTER LAB,,1,,2
+PHY,ESU-201-V,Environmental Science-I,LECTURE HALL,,,2,,1
+PHY,AEC-101-V,Writing Skills and the Art of Rhetoric (WSAAR),LECTURE HALL,,,2,,1
+PHY,OSU-109-V,Basic Calculus,LECTURE HALL,,,3,,1
+PHY,PHU-201-V,Thermal Physics,LECTURE HALL,,,4,,1
+PHY,PHU-203-V,Thermal Physics Lab,LAB,BSC LAB-II,,2,,2
+PHY,PHU-205-V,Analog Systems and Applications,LECTURE HALL,,,4,,1
+PHY,PHU-207-V,Analog Systems and Applications Lab,LAB,BSC LAB-II,,2,,2
+PHY,PHU-209-V,Nanomaterials and Nanostructures,LECTURE HALL,,,4,,1
+PHY,PHU-215-V,Experimental Techniques and Skills,LECTURE HALL,,,2,,1
+PHY,PHU-217-V,Experimental Techniques and Skills Lab,LAB,BSC LAB-I,,1,,2
+PHY,OSU-213-V,Differential Equations,LECTURE HALL,,,3,,1
+PHY,OSU-201-V,Computer Networks and Internet Technology,LECTURE HALL,,,2,,1
+PHY,OSU-207-V,Computer Networks and Internet Technology Lab,LAB,Computer LAB,,1,,2
+PHY,AEC-103-V,Effective Corporate Communication (ECC),LECTURE HALL,,,2,,1
+PHY,ESU-202-V,Environmental Science-II,LECTURE HALL,,,2,,1
+PHY,PHU-301-V,Quantum Mechanics-I,LECTURE HALL,,,3,,1
+PHY,PHU-303-V,Quantum Mechanics-I Lab,LAB,COMPUTER LAB,,1,,2
+PHY,PHU-305-V,Solid State Physics,LECTURE HALL,,,3,,1
+PHY,PHU-307-V,Solid State Physics Lab,LAB,BSC LAB-I,,1,,2
+PHY,PHU-309-V,Physics of Devices,LECTURE HALL,,,3,,1
+PHY,PHU-311-V,Physics of Devices Lab,LAB,BSC LAB-II,,1,,2
+PHY,PHU-313-V,Atomic & Molecular Physics,LECTURE HALL,,,3,,1
+PHY,PHU-315-V,Atomic & Molecular Physics Lab,LAB,BSC LAB-I,,1,,2
+PHY,PHU-317-V,Error Analysis and Research Ethics,LECTURE HALL,,,3,,1
+PHY,PHU-319-V,Error Analysis and Research Ethics Lab,LAB,COMPUTER LAB,,1,,2
+PHY,PHP-101-V,Mathematical Physics,LECTURE HALL,,,4,,1
+PHY,PHP-103-V,Classical Mechanics,LECTURE HALL,,,4,,1
+PHY,PHP-105-V,Quantum Mechanics-I,LECTURE HALL,,,4,,1
+PHY,PHP-107-V,Electronic Devices,LECTURE HALL,,,4,,1
+PHY,PHP-109/111-V-1,Physics Laboratory IA & IB-1,LAB,MSC LAB,,1,,4
+PHY,PHP-109/111-V-2,Physics Laboratory IA & IB-2,LAB,MSC LAB,,1,,4
+PHY,PHP-109/111-V-3,Physics Laboratory IA & IB-3,LAB,MSC LAB,,1,,4
+PHY,PHP-109/111-V-4,Physics Laboratory IA & IB-4,LAB,MSC LAB,,1,,4
+PHY,PHP-113-V,Seminar-I,LAB,MSC LAB,,1,,2
+PHY,PHP-201-V,Atomic and Molecular Physics,LECTURE HALL,,,4,,1
+PHY,PHP-203-V,Statistical Mechanics,LECTURE HALL,,,4,,1
+PHY,PHP-205-V,Seminar-III,LAB,MSC LAB,,1,,2
+PHY,PHP-221/231-V,Specialization I,LECTURE HALL,LECTURE HALL;LECTURE HALL,,4,,1
+PHY,PHP-223/233-V,Specialization II,LECTURE HALL,LECTURE HALL;LECTURE HALL,,4,,1
+PHY,PHP-235/225-V-1,Materials Science/Electronics Spec Lab-1,LAB,MS LAB;MSCLAB,,1,,4
+PHY,PHP-235/225-V-2,Materials Science/Electronics Spec Lab-2,LAB,MS LAB;MSCLAB,,1,,4
+PHY,PHP-235/225-V-3,Materials Science/Electronics Spec Lab-3,LAB,MS LAB;MSCLAB,,1,,4
+PHY,PHP-235/225-V-4,Materials Science/Electronics Spec Lab-4,LAB,MS LAB;MSCLAB,,1,,4
+PHY,OSP-201-V,Waste Management in our Daily Life,LECTURE HALL,,,3,,1

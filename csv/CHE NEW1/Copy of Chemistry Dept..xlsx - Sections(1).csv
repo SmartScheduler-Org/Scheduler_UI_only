@@ -1,0 +1,6 @@
+section_id,program_name,department_code,section_strength
+MSCCHE(Isem)/BSCCHE(VIIsem),MSc,CHE,70
+MSCCHE(IIIsem),MSc,CHE,65
+BSCCHE(Isem),BSc,CHE,67
+BSCCHE(IIIsem),BSc,CHE,66
+BSCCHE(Vsem),BSc,CHE,53

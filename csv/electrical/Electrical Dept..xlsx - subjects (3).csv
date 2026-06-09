@@ -1,0 +1,58 @@
+department_code,subject_number,subject_name,room_required,lab_category_required,specific_equipment/software_lab(null accepted),classes_per_week,duration 
+EL,PHU-153-V,Physics,LECTURE HALL,,,3,1
+EL,MTU-143-V,Mathematics-I,LECTURE HALL,,,3,1
+,MTU-143-V (T),Mathematics-I,LECTURE HALL,,,2,1
+EL,MEU-103-V,Engineering Graphics and 2D Modeling,LAB,ED HALL,,1,4
+EL,CSU-101-V,Programming for Problem Solving,LECTURE HALL,,,3,1
+EL,MEU-101-V,Workshop- I,LAB,Workshop,,1,4
+EL,PHU-155-V,Physics lab,LAB,Physics Lab,,2,2
+EL,CSU-103-V,Programming for Problem-Solving Lab,LAB,Computer Lab,,2,2
+EL,BIOEL1,Biology,LECTURE HALL,,,2,1
+EL,DSC-EL,Electrical Appliances Testing and Maintenance,LAB,GEW,,1,4
+EL,ELU-201-V,Electrical Circuit Analysis,LECTURE HALL,,,3,1
+EL,ELU-201-V (T),Electrical Circuit Analysis,LECTURE HALL,,,2,1
+EL,ELU-203-V,Analog Electronics Circuits,LECTURE HALL,,,3,1
+EL,ELU-205-V,Electrical Machines-1,LECTURE HALL,,,3,1
+EL,ELU-207-V,Electromagnetic Fields,LECTURE HALL,,,3,1
+EL,ELU-207-V (T),Electromagnetic Fields,LECTURE HALL,,,2,1
+EL,OEU-201-V,Engineering Mechanics,LECTURE HALL,,,3,1
+EL,OEU-201-V (T),Engineering Mechanics,LECTURE HALL,,,2,1
+EL,MTU-217-V,Mathematics-III (Probability and Statistics),LECTURE HALL,,,4,1
+EL,MTU-217-V (T),Mathematics-III (Probability and Statistics),LECTURE HALL,,,2,1
+EL,VAC-112-V,Constitution of India,LECTURE HALL,,,2,1
+EL,ELU-209-V,Analog Electronics Circuit Lab,LAB,Power Electronics Lab,,4,2
+EL,ELU-211-V,Electrical Machines Lab -1,LAB,Electrical Machine Lab,,4,2
+EL,ELU-213-V,Electrical Workshop-III,LAB,GEW,,2,4
+EL,ELU-301-V,Power Systems – I (Apparatus and Modelling),LECTURE HALL,,,3,1
+EL,ELU-303-V,Control Systems,LECTURE HALL,,,3,1
+EL,ELU-305-V,Microprocessors,LECTURE HALL,,,3,1
+EL,LSU-241-V,Biology,LECTURE HALL,,,3,1
+EL,ELU-317-V,LCPWM,LECTURE HALL,,,3,1
+EL,OEU-264-V,Programming in PYTHON,LECTURE HALL,,,3,1
+EL,ELU-307-V,Power Systems Lab-1,LAB,Power System Lab,,4,2
+EL,ELU-309-V,Control Systems Lab,LAB,Research Lab,,4,2
+EL,ELU-311-V,Microprocessors Lab,LAB,Power Electronics Lab,,4,2
+EL,ELU-313-V,Electrical Workshop-V,LAB,GEW,,2,4
+EL,ELU-407-V,HVDC Transmission,SMART CLASS ROOM,,,3,1
+EL,ELU-411-V,High Voltage Engineering,SMART CLASS ROOM,,,3,1
+EL,OEU-260-V,Power Plant Engineering,SMART CLASS ROOM,,,3,1
+EL,OEU-220-V,CL&S,SMART CLASS ROOM,,,3,1
+EL,OEU-224-V,DSA,SMART CLASS ROOM,,,3,1
+EL,ELOE-104,CN,LECTURE HALL,,,3,1
+EL,ELU-403-V,Electrical Workshop-VII,LAB,GEW,,2,4
+EL,OEU-206-V,Organizational Behaviour,SMART CLASS ROOM,,,3,1
+EL,MPED101,Electric Drives System,LAB,Research Lab,,3,1
+EL,MPED102,"Modeling and Analysis of 
+ Electrical Machines",LAB,Research Lab,,3,1
+EL,RM101,Research Methodology and IPR,LAB,Research Lab,,3,1
+EL,MPED151,Electrical Drives Laboratory,LAB,Power Electronics Lab,,1,4
+EL,MPED152,Electrical Machines Lab,LAB,Electrical Machine Lab,,1,4
+EL,AUD01,Constitution of India,LAB,Research Lab,,2,1
+EL,MPED103,Advanced Power ElectronicCircuits,LAB,Research Lab,,3,1
+EL,MPS112A,Static VAR Controllers and Harmonic Filtering,LAB,Research Lab,,3,1
+EL,MPS302A,FACTS,LAB,Research Lab,,3,1
+EL,MOEL06,Industrial Safety,LAB,Research Lab,,3,1
+EL,MD-EV-502,Energy Storage Systems for EV,LECTURE HALL,,,3,1
+EL,MD-EV-501,Fundamentals and Architecture of EV,LECTURE HALL,,,3,1
+EL,MD-EV-551,Fundamentals of Electric Vehicles Lab,LAB,EV Lab,,1,2
+EL,MD-EV-701,Plug-in EV in Smart Grid Minor degree 3rd Sem,LECTURE HALL,,,3,1

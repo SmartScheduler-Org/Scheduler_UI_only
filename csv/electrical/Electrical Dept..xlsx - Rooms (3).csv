@@ -1,0 +1,15 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+401,EL,70,LECTURE HALL,
+402,EL,70,LECTURE HALL,
+403,EL,70,LECTURE HALL,
+G7,EL,70,SMART CLASS ROOM,
+F6,EL,70,LECTURE HALL,
+S7,EL,70,LECTURE HALL,
+EM Lab,EL,20,LAB,Electrical Machine Lab
+PE Lab,EL,20,LAB,Power Electronics Lab
+PS Lab,EL,20,LAB,Power System Lab
+BET Lab,EL,20,LAB,BET Lab
+Research Lab,EL,20,LAB,Research Lab
+GEW,EL,30,LAB,GEW
+EV LAB,EL,30,LAB,EV Lab
+DRAWING HALL,MECH,70,LAB,ED HALL

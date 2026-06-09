@@ -1,0 +1,686 @@
+Internal Server Error: /timetable/1/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views.py", line 404, in wrapped
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/ttgen-private/views_main.py", line 833, in show_timetable
+    return render(
+        request,
+    ...<16 lines>...
+        },
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 56, in render
+    result = self.nodelist.render(context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 333, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'substitute_lab_teacher' with arguments '('MSCCHE(Isem)/BSCCHE(VIIsem)', 'Monday', 1)' not found. 1 pattern(s) tried: ['substitute_lab/(?P<section>[^/]+)/(?P<day>[^/]+)/(?P<slot>[0-9]+)/\\Z']
+Internal Server Error: /timetable/1/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views.py", line 404, in wrapped
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/ttgen-private/views_main.py", line 833, in show_timetable
+    return render(
+        request,
+    ...<16 lines>...
+        },
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 56, in render
+    result = self.nodelist.render(context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 333, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'substitute_lab_teacher' with arguments '('MSCCHE(Isem)/BSCCHE(VIIsem)', 'Monday', 1)' not found. 1 pattern(s) tried: ['substitute_lab/(?P<section>[^/]+)/(?P<day>[^/]+)/(?P<slot>[0-9]+)/\\Z']
+Internal Server Error: /timetable/1/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views.py", line 404, in wrapped
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/ttgen-private/views_main.py", line 833, in show_timetable
+    return render(
+        request,
+    ...<16 lines>...
+        },
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 56, in render
+    result = self.nodelist.render(context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 333, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'substitute_lab_teacher' with arguments '('MSCCHE(Isem)/BSCCHE(VIIsem)', 'Monday', 1)' not found. 1 pattern(s) tried: ['substitute_lab/(?P<section>[^/]+)/(?P<day>[^/]+)/(?P<slot>[0-9]+)/\\Z']
+Internal Server Error: /timetable/1/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views.py", line 404, in wrapped
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/ttgen-private/views_main.py", line 833, in show_timetable
+    return render(
+        request,
+    ...<16 lines>...
+        },
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 56, in render
+    result = self.nodelist.render(context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 333, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'substitute_teacher' with arguments '('MSCCHE(Isem)/BSCCHE(VIIsem)', 'Monday', 6)' not found. 1 pattern(s) tried: ['substitute_teacher/(?P<section>[^/]+)/(?P<day>[^/]+)/(?P<slot>[0-9]+)/\\Z']
+Internal Server Error: /sections_list/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views_other.py", line 3867, in section_list
+    return render(request, 'seclist.html', {'sections': Section.objects.filter(user=request.user)})
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 160, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 66, in render
+    result = block.nodelist.render(context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'deletesection' with arguments '('CE11/CE12 1st Sem',)' not found. 1 pattern(s) tried: ['delete_section/(?P<pk>[^/]+)/\\Z']
+Internal Server Error: /sections_list/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views_other.py", line 3867, in section_list
+    return render(request, 'seclist.html', {'sections': Section.objects.filter(user=request.user)})
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 160, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 66, in render
+    result = block.nodelist.render(context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'deletesection' with arguments '('CE11/CE12 1st Sem',)' not found. 1 pattern(s) tried: ['delete_section/(?P<pk>[^/]+)/\\Z']
+Internal Server Error: /sections_list/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views_other.py", line 3867, in section_list
+    return render(request, 'seclist.html', {'sections': Section.objects.filter(user=request.user)})
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 160, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 66, in render
+    result = block.nodelist.render(context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'deletesection' with arguments '('CE11/CE12 1st Sem',)' not found. 1 pattern(s) tried: ['delete_section/(?P<pk>[^/]+)/\\Z']
+Internal Server Error: /sections_list/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views_other.py", line 3867, in section_list
+    return render(request, 'seclist.html', {'sections': Section.objects.filter(user=request.user)})
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 160, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 66, in render
+    result = block.nodelist.render(context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'deletesection' with arguments '('CE11/CE12 1st Sem',)' not found. 1 pattern(s) tried: ['delete_section/(?P<pk>[^/]+)/\\Z']
+Internal Server Error: /saved_timetables/1/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views_other.py", line 1894, in saved_timetable
+    return render(request, "saved_timetable.html", context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 333, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'saved_add_slot' with arguments '(1, 'MSCCHE(Isem)/BSCCHE(VIIsem)')' not found. 1 pattern(s) tried: ['saved/(?P<tid>[0-9]+)/add/(?P<section>[^/]+)/\\Z']
+Internal Server Error: /saved_timetables/2/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/views_other.py", line 1894, in saved_timetable
+    return render(request, "saved_timetable.html", context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 174, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 166, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 249, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 333, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1091, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/base.py", line 1052, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 511, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 842, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'saved_add_slot' with arguments '(2, 'MSCCHE(Isem)/BSCCHE(VIIsem)')' not found. 1 pattern(s) tried: ['saved/(?P<tid>[0-9]+)/add/(?P<section>[^/]+)/\\Z']
+Internal Server Error: /generate_timetable/
+Internal Server Error: /generate_timetable/
+Internal Server Error: /generate_timetable/
+Internal Server Error: /generate_timetable/
+Internal Server Error: /generate_timetable/
+Internal Server Error: /generate_timetable/
+Internal Server Error: /generate_timetable/
+Internal Server Error: /generate_timetable/

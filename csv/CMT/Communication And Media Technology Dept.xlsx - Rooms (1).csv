@@ -1,0 +1,14 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+SB 201,CMT,54,LECTURE HALL,
+SB 205A,CMT,24,LECTURE HALL,
+SB 205B,CMT,24,LECTURE HALL,
+SB 206A,CMT,24,LECTURE HALL,
+SB 206B,CMT,24,LECTURE HALL,
+SB 306A,CMT,24,LECTURE HALL,
+SB 306B,CMT,24,LECTURE HALL,
+MA JMC Room,CMT,20,LECTURE HALL,
+Media Lab I,CMT,20,LAB,Print Media Lab
+Media Lab II,CMT,20,LAB,Audio Video Editing Lab
+Iot Lab,CMT,30,LAB,Visual Communication Lab
+Animation Studio,CMT,30,LAB,Animation and Graphic Studio
+Ground,CMT,70,LAB,Outside

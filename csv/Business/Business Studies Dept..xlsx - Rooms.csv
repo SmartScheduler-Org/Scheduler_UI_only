@@ -1,0 +1,7 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+BS 301,BS,70,Lecture hall,
+BS 302,BS,70,Lecture hall,
+BS 303,BS,35,LAB,Computer Lab
+BS 401,BS,70,Lecture hall,
+BS 402,BS,70,Lecture hall,
+BS 403,BS,70,Lecture hall,

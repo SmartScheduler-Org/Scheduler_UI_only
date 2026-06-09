@@ -1,0 +1,8 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+201,MS,70,LECTURE HALL,
+202,MS,70,LECTURE HALL,
+203,MS,70,LECTURE HALL,
+205,MS,70,LECTURE HALL,
+206,MS,70,LECTURE HALL,
+D-101,MS,70,SMART CLASS ROOM,
+D-102,MS,70,SMART CLASS ROOM,

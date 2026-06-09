@@ -1,0 +1,4 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+TF-LL-01,LL,30,LECTURE HALL,
+TF-LL-02,LL,30,LECTURE HALL,
+SF-LL-03,LL,30,LAB, MINOR AND MAJOR PROJECT

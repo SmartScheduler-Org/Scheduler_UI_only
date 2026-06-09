@@ -1,0 +1,45 @@
+department_code,subject_code,subject_name,room_type_required,lab_category_required,specific_equipment/software_lab(null accepted),duration (in hr),classes_per_week
+MS,BBG-101-V,Fundamentals of Management,LECTURE HALL,,,55 mins,4
+MS,BBG-103-V,Financial Accounting,LECTURE HALL,,,55 mins,4
+MS,BBG-105-V,Business Environment,LECTURE HALL,,,55 mins,4
+MS,BBG-107-V,Microeconomics,LECTURE HALL,,,55 mins,2
+MS,BBG-109-V,Managerail skill Development,LECTURE HALL,,,55 mins,2
+MS,MTU-115-V,Business Mathematics,LECTURE HALL,,,55 mins,3
+MS,AEC-105-V,English-1,LECTURE HALL,,,55 mins,2
+MS,ESU-201-V,Environmental Science-1,LECTURE HALL,,,55 mins,2
+MS,BBG-201-V,Marketing Management,LECTURE HALL,,,55 mins,4
+MS,BBG-203-V,Human Resource Management,LECTURE HALL,,,55 mins,4
+MS,BBG-205-V,Financial Management,LECTURE HALL,,,55 mins,4
+MS,BBG-209-V,Business Ethics and Corporate Governance,LECTURE HALL,,,55 mins,4
+MS,BBG-211-V,Advanced Excel,SMART CLASS ROOM,,,55 mins,3
+MS,BBG-213-V,E-Business,LECTURE HALL,,,55 mins,3
+MS,AEC-102-V,"Communication, Mediation and Resolution",LECTURE HALL,,,55 mins,2
+MS,BBA2PDC,Personality Development Classes,LECTURE HALL,,,55 mins,2
+MS,BBG-301-V,Corporate Laws,LECTURE HALL,,,55 mins,4
+MS,BBG-303-V,Entrepreneurship,LECTURE HALL,,,55 mins,3
+MS,BBG-305-V,Introduction to Analytics,LECTURE HALL,,,55 mins,4
+MS,BBG-307-V,Event Management,LECTURE HALL,,,55 mins,4
+MS,BBA3PDC,Personality Development Classes,LECTURE HALL,,,55 mins,2
+MS,MBA-101-V,Managment Principles and Organisational Behavior,LECTURE HALL,,,55 mins,4
+MS,MBA-103-V,Accounting for Decision Making,LECTURE HALL,,,55 mins,4
+MS,MBA-105-V,Managerial Economics,LECTURE HALL,,,55 mins,4
+MS,MBA-107-V,Legal Aspects of Business,LECTURE HALL,,,55 mins,4
+MS,MBA-109-V,Business Environment,LECTURE HALL,,,55 mins,4
+MS,MBA-111-V,Business Statistics and Analytics for deicision making,LECTURE HALL,,,55 mins,4
+MS,MBA-113-V,Business Communication,LECTURE HALL,,,55 mins,4
+MS,MBA-115-V,Moral Values,LECTURE HALL,,,55 mins,2
+MS,MBA1PDC,Personality Development Classes,LECTURE HALL,,,55 mins,2
+MS,MBA-213-V,Services Marketing,LECTURE HALL,,,55 mins,3
+MS,MBA-214-V,Consumer Behavior,LECTURE HALL,,,55 mins,3
+MS,MBA-216-V,Product and Brand Management,LECTURE HALL,,,55 mins,3
+MS,MBA-219-V,Marketing Analytics,LECTURE HALL,,,55 mins,3
+MS,MBA-222-V,Performance Management Systems,LECTURE HALL,,,55 mins,3
+MS,MBA-223-V,Training and Development,LECTURE HALL,,,55 mins,3
+MS,MBA-225-V,Industrial Relations and its Legal Aspects,LECTURE HALL,,,55 mins,3
+MS,MBA-227-V,Strategic Human Resource Manageent,LECTURE HALL,,,55 mins,3
+MS,MBA-232-V,Managing Banks and Financial Institutions,LECTURE HALL,,,55 mins,3
+MS,MBA-234-V,Working Capital Management,LECTURE HALL,,,55 mins,3
+MS,MBA-237-V,Risk Management and Insurance,LECTURE HALL,,,55 mins,3
+MS,MBA-238-V,Investment Analysis and Portfolio Management,LECTURE HALL,,,55 mins,3
+MS,MBA-201-V,Mangerial Skills Development,LECTURE HALL,,,55 mins,2
+MS,MBA3PDC,Personality Development Classes,LECTURE HALL,,,55 mins,2

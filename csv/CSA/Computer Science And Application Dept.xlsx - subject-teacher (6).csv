@@ -1,0 +1,107 @@
+section_id,subject_code,Teacher_id,is_shared_lab,second_teacher_id,
+BCA 1st,CC101,CSA22,no,,Mathematics Foundations to Computer Science - I
+BCA 1st,SEC101,CSA22,no,,Problem Solving Techniques
+BCA 1st,SECLAB101,CSA02,no,,Problem Solving Techniques-Lab
+BCA 1st,CC102,CSA10,no,,Computer Architecture
+BCA 1st,CCLAB102,CSA19,no,,Computer Architecture-Lab
+BCA 1st,MDE101,CSE47,no,,Indian Knowledge System
+BCA 1st,AEC101,CSA08,no,,General English - I
+BCA 1st,VAC101,ES10,no,,Environmental Science and sustainability
+BCA 1st,AEC102,CSA28,no,,German-1
+BCA-DS-1st,CC101,CSA22,no,,Mathematics Foundations to Computer Science - I
+BCA-DS-1st,SEC101,CSA22,no,,Problem Solving Techniques
+BCA-DS-1st,SECLAB101,CSA21,no,,Problem Solving Techniques-Lab
+BCA-DS-1st,CC102,CSA10,no,,Computer Architecture
+BCA-DS-1st,CCLAB102,CSA10,no,,Computer Architecture-Lab
+BCA-DS-1st,MDE101,CSE47,no,,Indian Knowledge System
+BCA-DS-1st,AEC101,CSA08,no,,General English - I
+BCA-DS-1st,VAC101,ES10,no,,Environmental Science and sustainability
+BCA-DS-1st,AEC102,CSA28,no,,German-1
+BCA 3rd,CC201,MATH15,no,,Probability and Statistics
+BCA 3rd,CC202,CSA10,no,,Data Base Management System
+BCA 3rd,SEC201,CSA04,no,,Python Programming
+BCA 3rd,CC203,CSA09,no,,Software Engineering
+BCA 3rd,CCLAB202,CSA20,yes,CSA24,Data Base Management System -Lab
+BCA 3rd,SECLAB201,CSA04,no,,Python Programming-Lab
+BCA 3rd,DSE201,CSA09,no,,Professional-Elective-I(Feature Engineering)
+BCA 3rd,DSELAB201,CSA09,no,,Professional-Elective-I(Lab)(Feature Engineering)
+BCA 3rd,VAC201,CCSD22,no,,"Yoga/ Sports, NCC/ NSS/ Disaster Management"
+BCA 5th,BCG-301-V,CSA05,no,,JAVA Programming
+BCA 5th,BCG-303-V,CSA06,no,,Software Engineering
+BCA 5th,BCG-305-V,CSA07,no,,Analysis of Design and Algorithms
+BCA 5th,BCG-321-V,CSA02,no,,Elective -I(Machine Learning-1)
+BCA 5th,BCG-307-V,EE25,no,,Speech and Audio Processing
+BCA 5th,BCG-309-V,CSA21,no,,Java Lab
+BCA 5th,BCG-311-V,CSA07,no,,Analysis of Design and Algorithms Lab
+BCA 7th,BCG-401-V,CSE09,no,,Research Methodology
+BCA 7th,BCG-403-V,CSA23,no,,BIG DATA II
+BCA 7th,BCG-405-V,CSA04,no,,Cloud Computing
+BCA 7th,BCG-407-V,CSA23,no,,Information Security and Cyber Law
+BCA 7th,BCG-425-V,CSA12,no,,Elective -III(Virtual Reality and Augmented Reality)
+BCA 7th,BCG-409-V,CSA24,no,,IOT & Embedded System
+BCA 7th,BCG-411-V,CSA19,yes,CSA04,BIG DATA II Lab
+BCA 7th,BCA-23-415,CSA12,no,,Lab Based on Elective-III(Virtual Reality and Augmented Reality)
+MCA 1st,DSC101,CSA01,no,,Data Structure
+MCA 1st,DSC102,CSA06,no,,Computer Networks
+MCA 1st,DSC103,CSA20,no,,Data Base MAnagement System
+MCA 1st,DSE104,CSA05,no,,Elective–I(JAVA Programming)
+MCA 1st,DSE105,CSA04,no,,Elective–II(Cloud Computing)
+MCA 1st,DSC106,CSA01,no,,Data Structure-Lab
+MCA 1st,DSC107,CSA23,no,,Data Base Management System-Lab
+MCA 1st,DSC108,CSA05,no,,JAVA Programming -Lab
+MCA 3rd,MCA-201-V,CSA07,no,,Big Data
+MCA 3rd,MCA-203-V,CSA06,no,,.Net Technology
+MCA 3rd,MCA-205-V,CSA03,no,,Soft Computing
+MCA 3rd,MCA-224-V,CSA03,no,,Data Warehousing & Data Mining
+MCA 3rd,MCA-232-V,CSA24,no,,Network Security
+MCA 3rd,MCA-207-V,CSA07,no,,Hadoop LAB
+MCA 3rd,MCA-209-V,CSA06,no,,Dot Net programming using C# and / or VB. Net LAb
+MCA 3rd,MCA-211-V,CSA03,no,,Soft Computing LAB
+MCA 3rd,MCA-215-V,CSA05,no,,Seminar
+BSC AM 1ST SEM,AMU-101-V,CSA14,no,,Visual Arts
+BSC AM 1ST SEM,AMU-103-V,CSA16,no,,Introduction to Film Making
+BSC AM 1ST SEM,AMU-105-V,CSA25,no,,Fundamentals of Information and Web Technology
+BSC AM 1ST SEM,OSU-123-V,MATH15,no,,Mathematics
+BSC AM 1ST SEM,AEC-101-V,CSA08,no,,Writing Skills and the Art of Rhetoric (WSAAR)
+BSC AM 1ST SEM,VAC-101-V,ES10,no,,Environment Studies-I
+BSC AM 1ST SEM,AMU-107-V,CSA12,no,,Graphics Design-I
+BSC AM 1ST SEM,AMU-109-V,CSA14,no,,Visual Art Lab
+BSC AM 1ST SEM,AMU-111-V,CSA25,no,,Fundamentals of Information and Web Technology Lab
+BSC AM 3rd SEM,AMU-201-V,CSA14,no,,Concept Designing
+BSC AM 3rd SEM,AMU-203-V,CSA25,no,,Java Programming
+BSC AM 3rd SEM,AMU-205-V,CSA16,no,,Psychology for Animation
+BSC AM 3rd SEM,AEC-102-V,CSA08,no,,"Communication, Mediation and Resolution (CMR)"
+BSC AM 3rd SEM,VAC-201-V,ES08,no,,Environmental Studies-II
+BSC AM 3rd SEM,AMU-207-V,CSA27,no,,Traditional Animation –II Lab
+BSC AM 3rd SEM,AMU-209-V,CSA14,no,,3D Concept Designing Lab
+BSC AM 3rd SEM,AMU-213-V,CSA25,no,,Java Programming Lab
+BSC AM 3rd SEM,AMU-211-V,CSA16,no,,Digital Audio & Video Editing Lab
+BSC AM 5th SEM,AMU-301-V,CSA11,no,,Fundamentals of Visual Effects
+BSC AM 5th SEM,AMU-303-V,CSA16,no,,UI/UX Design
+BSC AM 5th SEM,AMU-305-V,CSA25,no,,Python Programming
+BSC AM 5th SEM,AMU-307-V,CSA13,no,,Interior & Exterior Design
+BSC AM 5th SEM,AMU-309-V,CSA11,no,,Motion Graphics
+BSC AM 5th SEM,AMU-311-V,CSA16,no,,UI/UX Design Lab
+BSC AM 5th SEM,AMU-313-V,CSA11,no,,Fundamentals of Visual Effects Lab
+BSC AM 5th SEM,AMU-315-V,CSA25,no,,Python Programming Lab
+BSC AM 7th SEM,AMU-401-V,CSA16,no,,Game Design-II (Game Development)
+BSC AM 7th SEM,AMU-403-V,CSA11,no,,3D Visual Effects (Fluids Effects)
+BSC AM 7th SEM,BGC-425-V,CSA12,no,,Virtual Reality & Augmented Reality
+BSC AM 7th SEM,AMU-405-V,CSA15,no,,Innovation and Star-ups
+BSC AM 7th SEM,AMU-407-V,CSA27,no,,Advance Digital Compositing
+BSC AM 7th SEM,AMU-409-V,CSA26,no,,Advance 3D Animation
+BSC AM 7th SEM,AMU-411-V,CSA16,no,,Game Design-II (Game Development Lab)
+BSC AM 7th SEM,AMU-413-V,CSA11,no,,3D Visual Effects (Fluids Effects Lab
+BSC AM 7th SEM,BGC-435-V,CSA12,no,,Virtual Reality & Augmented Reality Lab
+MSC AM 1ST SEM,MSC-AM-26-101,CSA14,no,,Animation & Storytelling
+MSC AM 1ST SEM,MSC-AM-26-102,CSA12,no,,Virtual Reality & Augmented Reality
+MSC AM 1ST SEM,MSC-AM-26-103,CSA15,no,,Audio-Video Production Techniques
+MSC AM 1ST SEM,MSC-AM-26-106-A,CSA27,no,,Elective–I (2D Character Design)
+MSC AM 1ST SEM,MSC-AM-10-108-A,CSA26,no,,Lab Based Elective–I (2D Character Design Lab)
+MSC AM 1ST SEM,MSC-AM-26-107-D,CSA15,no,,Elective–II (Digital Graphics)
+MSC AM 1ST SEM,MSC-AM-26-109-D,CSA14,no,,Elective–II Lab (Digital Graphics Lab)
+MSC AM 1ST SEM,MSC-AM-26-104,CSA12,no,,Virtual Reality & Augmented Reality Lab
+MSC AM 1ST SEM,MSC-AM-26-105,CSA15,no,,Audio-Video Production Techniques Lab
+MSC AM 3rd SEM,AMP-213-V,CSA13,no,,3D ANIMATION
+MSC AM 3rd SEM,AMP-223-V,CSA13,no,,3D ANIMATION LAB
+MSC AM 3rd SEM,AEC-315-V,CSA08,no,,OPEN ELECTIVe (Personality Development and Soft Skills)

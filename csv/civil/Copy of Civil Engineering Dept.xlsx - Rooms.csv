@@ -1,0 +1,13 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+CV501,CE,80,LECTURE HALL,
+CV502,CE,80,LECTURE HALL,
+CV508,CE,80,LECTURE HALL,
+CV506,CE,80,ED HALL,
+CADD Lab,CE,25,LAB,CADD Lab
+Materials Testing,CE,25,LAB,Materials Testing Lab
+Geotechnical Engg. ,CE,25,LAB,Geotechnical Engg. Lab
+Water Lab,CE,25,LAB,Water Lab
+F11,LS,100,LAB,BIO LAB
+CC09,CSE,50,LAB,Computer lab
+CC10,CSE,50,LAB,Computer lab
+SB-00001,PHY,40,LAB,BTECH PHY LAB
