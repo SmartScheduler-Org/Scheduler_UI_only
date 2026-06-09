@@ -43,6 +43,9 @@ _GENERATOR_VIEW_NAMES = (
     "timetable",
     "update_slot",
     "move_slot_dragdrop",
+    "generated_park_slot",
+    "generated_create_parking_slot",
+    "generated_restore_parked_slot",
     "delete_slot",
     "add_slot",
     "save_timetable",
@@ -760,7 +763,7 @@ for _view_name in _GENERATOR_VIEW_NAMES:
         globals()[_view_name] = _wrap_edit_delete(_view)
     elif _view_name in {"substitute_teacher", "substitute_lab_teacher"}:
         globals()[_view_name] = _wrap_substitute(_view)
-    elif _view_name == "move_slot_dragdrop":
-        globals()[_view_name] = _wrap_drag_drop(_view)
+    elif _view_name in {"move_slot_dragdrop", "generated_park_slot", "generated_create_parking_slot", "generated_restore_parked_slot"}:
+        globals()[_view_name] = _view
     else:
         globals()[_view_name] = _guard_generation_view(_view)

@@ -130,6 +130,26 @@ STORAGES = {
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
+# TEMP DEBUG: capture unhandled request exception tracebacks to a file.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "request_error_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": str(BASE_DIR / "request_errors.log"),
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["request_error_file"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+    },
+}
+
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "admindash"
 LOGOUT_URL = "logout"

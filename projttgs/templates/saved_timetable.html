@@ -310,6 +310,199 @@ h1 {
     margin-bottom: 30px;
 }
 
+  .section-editor-shell {
+    width: min(1440px, calc(100% - 32px));
+    margin: 0 auto 26px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .section-editor-main {
+    min-width: 0;
+  }
+
+  .parking-panel {
+    position: sticky;
+    top: 88px;
+    z-index: 3;
+    border-radius: 26px;
+    padding: 18px;
+    background:
+      radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 32%),
+      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(240,249,255,0.94));
+    border: 1px solid rgba(125, 211, 252, 0.6);
+    box-shadow: 0 22px 50px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(12px);
+  }
+
+  .parking-panel__head {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .parking-panel__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #0369a1;
+  }
+
+  .parking-panel__eyebrow::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0284c7, #14b8a6);
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+  }
+
+  .parking-panel h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f3d56;
+  }
+
+  .parking-panel p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #47667a;
+  }
+
+  .drag-toggle-btn--section {
+    width: 100%;
+    box-shadow: 0 14px 26px rgba(14, 116, 144, 0.18);
+  }
+
+  .parking-dropzone {
+    position: relative;
+    min-height: 260px;
+    border-radius: 22px;
+    padding: 16px;
+    border: 1px dashed rgba(14, 116, 144, 0.28);
+    background: rgba(248, 250, 252, 0.92);
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .parking-dropzone__hint {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(20, 184, 166, 0.08));
+    color: #0f5a71;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .parking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .parking-item {
+    border-radius: 18px;
+    padding: 14px 14px 12px;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    border: 1px solid rgba(249, 115, 22, 0.22);
+    box-shadow: 0 14px 30px rgba(249, 115, 22, 0.12);
+    text-align: left;
+  }
+
+  .parking-item__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.74);
+    color: #9a3412;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .parking-item__subject {
+    color: #7c2d12;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.45;
+  }
+
+  .parking-item__teacher {
+    margin-top: 6px;
+    color: #9a3412;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .parking-item__meta {
+    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #c2410c;
+  }
+
+  .parking-empty-state {
+    min-height: 148px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    border-radius: 18px;
+    border: 1px dashed rgba(148, 163, 184, 0.5);
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    background: rgba(255,255,255,0.85);
+  }
+
+  .reserved-room-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: rgba(15, 118, 110, 0.08);
+    border: 1px solid rgba(20, 184, 166, 0.22);
+    color: #0f766e;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+  }
+
+  .reserved-room-chip::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #14b8a6;
+    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
+  }
+
+  .empty-slot-note {
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: #64748b;
+  }
+
 .drag-toggle-btn {
     position: relative;
     overflow: hidden;
@@ -371,6 +564,17 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
     transform: scale(1.012);
 }
 
+body.drag-drop-active .parking-dropzone {
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.12);
+}
+
+body.drag-drop-active .parking-dropzone.drag-over {
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.92), rgba(236, 253, 245, 0.96));
+  border-color: rgba(14, 165, 233, 0.48);
+  box-shadow: 0 18px 34px rgba(14, 165, 233, 0.16), inset 0 0 0 2px rgba(20, 184, 166, 0.18);
+  transform: translateY(-1px);
+}
+
 body.drag-drop-active .export-surface {
     position: relative;
 }
@@ -416,6 +620,11 @@ body.drag-drop-active .draggable-slot-item::after {
     letter-spacing: 0.04em;
 }
 
+body.drag-drop-active .parking-item::after {
+  background: rgba(124, 45, 18, 0.1);
+  color: #9a3412;
+}
+
 body.drag-drop-active .draggable-slot-item {
     transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
@@ -458,7 +667,302 @@ body.drag-drop-active .draggable-slot-item.is-dragging {
     box-shadow: 0 0 12px rgba(99,102,241,0.35);
 }
 
+@media (max-width: 1180px) {
+  .section-editor-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .parking-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .section-editor-shell {
+    width: calc(100% - 16px);
+  }
+
+  .parking-panel {
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .parking-dropzone {
+    min-height: 220px;
+  }
+}
+
+.section-editor-shell {
+  grid-template-columns: 1fr !important;
+}
+
+.parking-panel {
+  display: none !important;
+}
+
 body.drag-drop-active .drag-mode-badge { display: inline-flex; }
+
+.section-editor-shell {
+  width: min(1380px, calc(100% - 32px));
+  margin: 0 auto 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+.section-editor-shell .export-surface {
+  margin: 0;
+}
+
+.section-card-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.section-drag-toggle {
+  padding: 8px 16px;
+  font-size: 12px;
+  box-shadow: 0 10px 20px rgba(15,118,110,0.18);
+}
+
+.parking-panel {
+  position: sticky;
+  top: 82px;
+  border-radius: 24px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.18), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #f4fbfa 100%);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.10);
+}
+
+.parking-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.parking-panel__eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #0f766e;
+  text-transform: uppercase;
+}
+
+.parking-panel__title {
+  margin: 3px 0 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #123c42;
+}
+
+.parking-panel__subtitle {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4b696f;
+}
+
+.parking-count-badge {
+  flex: 0 0 auto;
+  min-width: 42px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  text-align: center;
+  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 12px 24px rgba(20,184,166,0.22);
+}
+
+.parking-dropzone {
+  position: relative;
+  min-height: 132px;
+  margin-bottom: 14px;
+  border-radius: 20px;
+  border: 2px dashed rgba(15, 118, 110, 0.22);
+  background: linear-gradient(180deg, rgba(236, 253, 245, 0.92) 0%, rgba(240, 249, 255, 0.92) 100%);
+  padding: 16px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.parking-dropzone__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.86);
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.parking-dropzone__label::before {
+  content: "P";
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  color: #ffffff;
+  font-size: 10px;
+}
+
+.parking-dropzone__hint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #48656b;
+}
+
+.parking-dropzone.drag-over {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.38);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18), 0 18px 34px rgba(37, 99, 235, 0.14);
+}
+
+.parking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.parking-empty-state {
+  padding: 16px 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.76);
+  border: 1px dashed rgba(148, 163, 184, 0.42);
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.parking-item {
+  position: relative;
+  border-radius: 18px;
+  padding: 14px 14px 12px;
+  background: linear-gradient(135deg, #0f172a 0%, #123b52 100%);
+  color: #eff6ff;
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.18);
+}
+
+.parking-item__badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.parking-item__badge,
+.parking-item__ghost-room,
+.slot-room-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.parking-item__badge {
+  background: rgba(255,255,255,0.14);
+  color: #dbeafe;
+}
+
+.parking-item__ghost-room,
+.slot-room-pill {
+  background: rgba(20, 184, 166, 0.12);
+  color: #0f766e;
+}
+
+.parking-item__title {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+.parking-item__teacher {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5f5;
+}
+
+.parking-item__meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.parking-item__meta span {
+  padding: 5px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  font-size: 11px;
+  color: #dbeafe;
+}
+
+.parking-slot-hint {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.slot-room-pill {
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  color: #0f766e;
+}
+
+body.drag-drop-active .parking-item {
+  cursor: grab;
+}
+
+body.drag-drop-active .parking-item.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.97);
+  cursor: grabbing;
+}
+
+body.drag-drop-active .parking-dropzone::after {
+  content: "Drop any filled slot here";
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  color: rgba(15, 118, 110, 0.58);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 1180px) {
+  .section-editor-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .parking-panel {
+    position: static;
+  }
+}
 
 /* Drag activation overlay */
 .drag-activation-overlay {
@@ -838,30 +1342,37 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
     }
 
     function initDragAndDrop() {
-        const toggleBtn = document.getElementById("dragDropToggle");
-        if (!toggleBtn) return;
+      const toggleButtons = Array.from(document.querySelectorAll("[data-drag-toggle]"));
+      if (!toggleButtons.length) return;
 
         let dragEnabled = false;
         let currentDrag = null;
-        const dragItems = Array.from(document.querySelectorAll(".draggable-slot-item"));
+      const dragItems = Array.from(document.querySelectorAll(".draggable-slot-item, .parking-item"));
         const dropTargets = Array.from(document.querySelectorAll(".slot-cell.drop-target"));
+      const parkingTargets = Array.from(document.querySelectorAll(".parking-dropzone"));
+
+      function setToggleButtonState(button) {
+        button.classList.toggle("is-active", dragEnabled);
+        button.textContent = dragEnabled ? "Disable Drag & Drop" : "Activate Drag & Drop";
+      }
 
         function syncDragState() {
             document.body.classList.toggle("drag-drop-active", dragEnabled);
-            toggleBtn.classList.toggle("is-active", dragEnabled);
-            toggleBtn.textContent = dragEnabled ? "Disable Drag & Drop" : "Activate Drag & Drop";
+        toggleButtons.forEach(setToggleButtonState);
             dragItems.forEach(item => { item.setAttribute("draggable", dragEnabled ? "true" : "false"); });
         }
 
-        toggleBtn.addEventListener("click", function() {
-            if (!window.planPermissions.canDragDrop) {
-                showPlanUpgradeMessage("Drag & Drop Locked", "Please upgrade your plan to access drag-and-drop scheduling.");
-                return;
-            }
-            dragEnabled = !dragEnabled;
-            currentDrag = null;
-            syncDragState();
-            if (dragEnabled) { showDragActivationOverlay(); }
+      toggleButtons.forEach(button => {
+        button.addEventListener("click", function() {
+          if (!window.planPermissions.canDragDrop) {
+            showPlanUpgradeMessage("Drag & Drop Locked", "Please upgrade your plan to access drag-and-drop scheduling.");
+            return;
+          }
+          dragEnabled = !dragEnabled;
+          currentDrag = null;
+          syncDragState();
+          if (dragEnabled) { showDragActivationOverlay(); }
+        });
         });
 
         dragItems.forEach(item => {
@@ -870,10 +1381,12 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             item.addEventListener("dragstart", function(event) {
                 if (!dragEnabled) { event.preventDefault(); return; }
                 currentDrag = {
+            sourceKind: item.dataset.dragSource,
                     sectionId: item.dataset.sectionId,
                     day: item.dataset.day,
                     slot: item.dataset.slot,
                     moveType: item.dataset.moveType,
+            parkingId: item.dataset.parkingId || null,
                 };
                 item.classList.add("is-dragging");
                 event.dataTransfer.effectAllowed = "move";
@@ -883,12 +1396,60 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             item.addEventListener("dragend", function() {
                 item.classList.remove("is-dragging");
                 dropTargets.forEach(target => target.classList.remove("drag-over"));
+          parkingTargets.forEach(target => target.classList.remove("drag-over"));
             });
         });
+
+      parkingTargets.forEach(target => {
+        target.addEventListener("dragover", function(event) {
+          if (!dragEnabled || !currentDrag || currentDrag.sourceKind !== "slot") return;
+          if (currentDrag.sectionId !== target.dataset.sectionId) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "move";
+          target.classList.add("drag-over");
+        });
+
+        target.addEventListener("dragleave", function() {
+          target.classList.remove("drag-over");
+        });
+
+        target.addEventListener("drop", async function(event) {
+          target.classList.remove("drag-over");
+          if (!dragEnabled || !currentDrag || currentDrag.sourceKind !== "slot") return;
+          if (currentDrag.sectionId !== target.dataset.sectionId) return;
+          event.preventDefault();
+
+          try {
+            const response = await fetch(
+              `/saved/{{ saved.id }}/park/${encodeURIComponent(currentDrag.sectionId)}/${encodeURIComponent(currentDrag.day)}/${encodeURIComponent(currentDrag.slot)}/`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCsrfToken(),
+                  "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({ move_type: currentDrag.moveType })
+              }
+            );
+            const result = await response.json();
+            if (!response.ok || !result.ok) {
+              Swal.fire({ icon: "error", title: "Parking Blocked", text: result.message || "Could not park this slot.", confirmButtonColor: "#4e73df" });
+              return;
+            }
+            Swal.fire({ icon: "success", title: "Parked", text: result.message || "Slot moved to parking.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
+          } catch (error) {
+            Swal.fire({ icon: "error", title: "Request Failed", text: "Could not park this slot right now.", confirmButtonColor: "#4e73df" });
+          } finally {
+            currentDrag = null;
+          }
+        });
+      });
 
         dropTargets.forEach(target => {
             target.addEventListener("dragover", function(event) {
                 if (!dragEnabled || !currentDrag) return;
+          if (currentDrag.sourceKind === "parking" && currentDrag.sectionId !== target.dataset.sectionId) return;
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
                 target.classList.add("drag-over");
@@ -905,25 +1466,33 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
                 const targetDay = target.dataset.day;
                 const targetSlot = target.dataset.slot;
 
-                if (currentDrag.sectionId === targetSection && currentDrag.day === targetDay && currentDrag.slot === targetSlot) return;
+                if (currentDrag.sourceKind === "slot" && currentDrag.sectionId === targetSection && currentDrag.day === targetDay && currentDrag.slot === targetSlot) return;
 
                 try {
-                    const response = await fetch(
-                        `/saved/{{ saved.id }}/move/${encodeURIComponent(currentDrag.sectionId)}/${encodeURIComponent(currentDrag.day)}/${encodeURIComponent(currentDrag.slot)}/`,
-                        {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRFToken": getCsrfToken(),
-                                "X-Requested-With": "XMLHttpRequest"
-                            },
-                            body: JSON.stringify({
-                                target_day: targetDay,
-                                target_slot: targetSlot,
-                                move_type: currentDrag.moveType
-                            })
-                        }
-                    );
+                  const requestUrl = currentDrag.sourceKind === "parking"
+                    ? `/saved/{{ saved.id }}/parking/${encodeURIComponent(currentDrag.parkingId)}/restore/`
+                    : `/saved/{{ saved.id }}/move/${encodeURIComponent(currentDrag.sectionId)}/${encodeURIComponent(currentDrag.day)}/${encodeURIComponent(currentDrag.slot)}/`;
+                  const requestBody = currentDrag.sourceKind === "parking"
+                    ? {
+                      target_section: targetSection,
+                      target_day: targetDay,
+                      target_slot: targetSlot
+                    }
+                    : {
+                      target_day: targetDay,
+                      target_slot: targetSlot,
+                      move_type: currentDrag.moveType
+                    };
+
+                  const response = await fetch(requestUrl, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-CSRFToken": getCsrfToken(),
+                      "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify(requestBody)
+                  });
                     const result = await response.json();
                     if (!response.ok || !result.ok) {
                         Swal.fire({ icon: "error", title: "Move Blocked", text: result.message || "Conflict detected. Move cancelled.", confirmButtonColor: "#4e73df" });
@@ -1103,7 +1672,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
 
 {% if not is_readonly %}
 <div class="top-actions">
-    <button id="dragDropToggle" type="button" class="drag-toggle-btn">
+  <button id="dragDropToggle" type="button" class="drag-toggle-btn" data-drag-toggle>
         Activate Drag & Drop
     </button>
     <div class="drag-mode-badge">
@@ -1151,19 +1720,21 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
   </button>
 </div>
 {% for table in tables %}
+  <div class="section-editor-shell">
+  <div class="section-editor-main">
   <div id="section-tt-{{ forloop.counter }}" class="export-surface">
-  <div class="export-watermark">
-    <div class="export-watermark__grid">
-      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
-      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
-      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
-      <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+    <div class="export-watermark">
+      <div class="export-watermark__grid">
+        <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+        <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+        <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+        <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
+      </div>
     </div>
-  </div>
-  <div style="position:relative; z-index:1;">
-  <h2 class="secHead">
-    {{ table.section.section_id }} ({{ table.section.department.dept_name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
-  </h2>
+    <div style="position:relative; z-index:1;">
+    <h2 class="secHead">
+      {{ table.section.section_id }} ({{ table.section.department.dept_name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
+    </h2>
 
   {% if table.missed_labs %}
     <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
@@ -1213,12 +1784,15 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
     </div>
   {% endif %}
 
-  <div style="text-align:center; margin-bottom: 15px;">
+  <div class="section-card-actions">
       {% if not is_readonly %}
       <a href="{% url 'saved_add_slot' saved.id table.section.section_id %}" class="action-button btn-add"
          style="padding:6px 14px; font-size:13px;">
          + Add Slot
       </a>
+      <button type="button" class="drag-toggle-btn drag-toggle-btn--section section-drag-toggle" data-drag-toggle>
+        Activate Drag & Drop
+      </button>
       {% endif %}
       <button class="btn-save-tt" onclick="saveAsImage('section-tt-{{ forloop.counter }}', 'Section_{{ table.section.section_id }}')">
         Save as Image
@@ -1257,10 +1831,10 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             <td class="special-cell">SPECIAL CLASS</td>
 
           {% elif cell.type == "lab" %}
-            <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+            <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" data-has-room-context="false">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
@@ -1294,9 +1868,9 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             </td>
 
           {% elif cell.type == "class" %}
-            <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+            <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" data-has-room-context="false">
               {% for cls in cell.classes %}
-                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   {{ cls.instructor.name }}<br>
                   {{ cls.room.r_number }}
@@ -1316,12 +1890,16 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
             </td>
 
           {% else %}
-            <td class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+            <td class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" data-has-room-context="{{ cell.has_room_context|yesno:'true,false' }}">
               {% if not is_readonly %}
               <div class="action-buttons">
                 <a href="{% url 'saved_add_slot' saved.id table.section.section_id %}"
                    class="action-button btn-add">Add</a>
               </div>
+              {% endif %}
+              {% if cell.reserved_room %}
+              <div class="reserved-room-chip">Room Reserved: {{ cell.reserved_room.r_number }}</div>
+              <div class="empty-slot-note">Drop a parked item here to reuse this slot's room.</div>
               {% endif %}
             </td>
           {% endif %}
@@ -1331,7 +1909,45 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
     {% endfor %}
     </tbody>
   </table>
+    </div>
   </div>
+  </div>
+
+  {% if not is_readonly %}
+  <aside class="parking-panel">
+    <div class="parking-panel__head">
+      <div>
+        <span class="parking-panel__eyebrow">Section Parking</span>
+        <h3>Right-side bucket</h3>
+        <p>Drag any filled slot here. The emptied timetable cell keeps its room, so restoring another parked item back there only needs teacher validation.</p>
+      </div>
+    </div>
+    <div class="parking-dropzone" data-section-id="{{ table.section.section_id }}">
+      <div class="parking-dropzone__hint">
+        Drop a filled class or lab block here for {{ table.section.section_id }}.
+      </div>
+      {% if table.parking_items %}
+      <div class="parking-list">
+        {% for parked in table.parking_items %}
+        <div class="parking-item draggable-slot-item" data-drag-source="parking" data-parking-id="{{ parked.id }}" data-section-id="{{ table.section.section_id }}" data-move-type="{% if parked.is_lab %}lab{% else %}class{% endif %}">
+          <div class="parking-item__tag">{% if parked.is_lab %}Parked Lab{% else %}Parked Class{% endif %}</div>
+          <div class="parking-item__subject">{{ parked.subject.subject_name }}{% if parked.is_lab %} Lab{% endif %}</div>
+          <div class="parking-item__teacher">
+            {{ parked.instructor.name }}{% if parked.second_instructor %} + {{ parked.second_instructor.name }}{% endif %}
+          </div>
+          <div class="parking-item__meta">
+            {% if parked.original_room %}Saved from room {{ parked.original_room.r_number }}{% endif %}
+            {% if parked.slot_span > 1 %} · {{ parked.slot_span }} slots{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="parking-empty-state">No parked slots yet for {{ table.section.section_id }}.</div>
+      {% endif %}
+    </div>
+  </aside>
+  {% endif %}
   </div>
 
 {% endfor %}
@@ -1366,7 +1982,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
         <h3 class="room-card__title">Room {{ rt.room.r_number }} ({{ rt.room.room_type }})</h3>
         <div class="room-card__meta">
           <div class="room-optimization">
-            <span>Optimization</span>
+            <span>Utilization</span>
             <strong>{{ rt.optimization_percentage }}%</strong>
           </div>
           <button class="btn-save-tt room-save-btn" onclick="saveAsImage('room-tt-{{ forloop.counter }}', 'Room_{{ rt.room.r_number }}')">
@@ -1455,7 +2071,8 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
     <tr>
       <th>Teacher</th>
       <th>Lectures</th>
-      <th>Lab Slots</th>
+      <th>Lab Workload</th>
+      <th>Shared Lab Workload</th>
       <th>Total Load</th>
     </tr>
   </thead>
@@ -1471,6 +2088,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
           </td>
           <td>{{ data.lectures }}</td>
           <td>{{ data.labs }}</td>
+          <td>{{ data.shared_labs|default:0|floatformat:"-1" }}</td>
           <td>
             {% if data.total >= 8 %}
               <span style="color:#c62828; font-weight:700;">{{ data.total }} &#9888;</span>
@@ -1484,7 +2102,7 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
       {% endfor %}
     {% else %}
       <tr>
-        <td colspan="4" style="text-align:center; font-weight:600;">
+        <td colspan="5" style="text-align:center; font-weight:600;">
           No workload data available
         </td>
       </tr>
@@ -1516,6 +2134,9 @@ body.drag-drop-active .drag-mode-badge { display: inline-flex; }
   <div style="position:relative; z-index:1;">
   <h2 class="secHead">
     {{ ttable.teacher.name }} ({{ ttable.teacher.uid }})
+    <span style="display:inline-block; margin-left:10px; padding:4px 8px; border:1px solid #b7d7ee; border-radius:6px; background:#eef7ff; color:#1b4f72; font-size:12px; vertical-align:middle;">
+      Load: {{ ttable.workload.total|default:0|floatformat:"-1" }}
+    </span>
     <button class="btn-save-tt" style="margin-left: 12px; vertical-align: middle;" onclick="saveAsImage('teacher-tt-{{ forloop.counter }}', 'Teacher_{{ ttable.teacher.name }}')">
       Save as Image
     </button>

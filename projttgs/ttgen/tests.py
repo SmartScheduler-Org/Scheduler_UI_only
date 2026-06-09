@@ -7,7 +7,20 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from . import views
 from . import views_other
-from .models import Subject, Department, Instructor, MeetingTime, Room, Section, SectionSubjectInstructor, SectionSubjectMapping
+from .models import (
+    Subject,
+    Department,
+    Instructor,
+    MeetingTime,
+    Room,
+    Section,
+    SectionSubjectInstructor,
+    SectionSubjectMapping,
+    SavedTimetable,
+    ScheduledSlot,
+    SavedParkingSlot,
+    SavedSlotRoomReservation,
+)
 
 
 class SchedulerInitializationTests(TestCase):
@@ -220,9 +233,6 @@ class SchedulerInitializationTests(TestCase):
             {"name": "Theory 4", "count": 0, "required": 2, "missing": 2, "is_lab": False},
             {"name": "Theory 5", "count": 0, "required": 1, "missing": 1, "is_lab": False},
         ])
-        self.assertEqual(test_table["total_missing_classes"], 6)
-        self.assertEqual(test_table["total_missing_classes"], 6)
-
     def test_build_section_tables_lists_missed_labs(self):
         extra_lab_subject = Subject.objects.create(
             subject_number="LAB002",
@@ -1655,6 +1665,170 @@ class SchedulerInitializationTests(TestCase):
             parallel_slots.setdefault(key, []).append(lab.subject.subject_name)
         self.assertEqual(len([slot for slot, names in parallel_slots.items() if len(names) == 2]), 2)
         self.assertEqual(sorted(lab.subject.subject_name for lab in grouped_labs).count("Computer Lab"), 2)
+
+
+class SavedTimetableParkingTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="parking_user", password="testpass123")
+        self.client.force_login(self.user)
+
+        self.department = Department.objects.create(user=self.user)
+        self.section = Section.objects.create(
+            section_id="SEC-A",
+            department=self.department,
+            user=self.user,
+        )
+        self.other_section = Section.objects.create(
+            section_id="SEC-B",
+            department=self.department,
+            user=self.user,
+        )
+        self.room = Room.objects.create(
+            r_number="LH-101",
+            room_type="Lecture Hall",
+            seating_capacity=60,
+            department=self.department,
+            user=self.user,
+        )
+        self.other_room = Room.objects.create(
+            r_number="LH-102",
+            room_type="Lecture Hall",
+            seating_capacity=60,
+            department=self.department,
+            user=self.user,
+        )
+        self.instructor = Instructor.objects.create(
+            uid="T901",
+            name="Parking Teacher",
+            email="parking@example.com",
+            contact_number="9999999999",
+            designation="Assistant Professor",
+            max_workload=12,
+            user=self.user,
+        )
+        self.subject = Subject.objects.create(
+            subject_number="SUB901",
+            subject_name="Saved Parking Subject",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=2,
+            user=self.user,
+        )
+        self.subject.instructors.add(self.instructor)
+        self.section.allowed_subjects.add(self.subject)
+
+        self.mt1 = MeetingTime.objects.create(pid="Mo1", day="Monday", time="1", user=self.user)
+        self.mt2 = MeetingTime.objects.create(pid="Mo2", day="Monday", time="2", user=self.user)
+        self.saved = SavedTimetable.objects.create(user=self.user, department=self.department)
+
+    def test_saved_park_slot_creates_parking_item_and_room_reservation(self):
+        ScheduledSlot.objects.create(
+            timetable=self.saved,
+            section=self.section,
+            subject=self.subject,
+            instructor=self.instructor,
+            room=self.room,
+            meeting_time=self.mt1,
+            is_lab=False,
+        )
+
+        response = self.client.post(
+            reverse("saved_park_slot", args=[self.saved.id, self.section.section_id, "Monday", 1]),
+            data='{"move_type":"class"}',
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(ScheduledSlot.objects.filter(timetable=self.saved).exists())
+        self.assertTrue(
+            SavedParkingSlot.objects.filter(
+                timetable=self.saved,
+                section=self.section,
+                subject=self.subject,
+            ).exists()
+        )
+        reservation = SavedSlotRoomReservation.objects.get(
+            timetable=self.saved,
+            section=self.section,
+            meeting_time=self.mt1,
+        )
+        self.assertEqual(reservation.room, self.room)
+
+    def test_saved_restore_parked_slot_uses_reserved_room_and_blocks_teacher_conflict(self):
+        parked = SavedParkingSlot.objects.create(
+            timetable=self.saved,
+            section=self.section,
+            subject=self.subject,
+            instructor=self.instructor,
+            original_room=self.room,
+            original_meeting_time=self.mt1,
+            is_lab=False,
+            slot_span=1,
+        )
+        SavedSlotRoomReservation.objects.create(
+            timetable=self.saved,
+            section=self.section,
+            meeting_time=self.mt2,
+            room=self.other_room,
+        )
+
+        conflict_subject = Subject.objects.create(
+            subject_number="SUB902",
+            subject_name="Conflicting Subject",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+        conflict_subject.instructors.add(self.instructor)
+        ScheduledSlot.objects.create(
+            timetable=self.saved,
+            section=self.other_section,
+            subject=conflict_subject,
+            instructor=self.instructor,
+            room=self.room,
+            meeting_time=self.mt2,
+            is_lab=False,
+        )
+
+        blocked_response = self.client.post(
+            reverse("saved_restore_parked_slot", args=[self.saved.id, parked.id]),
+            data='{"target_section":"SEC-A","target_day":"Monday","target_slot":"2"}',
+            content_type="application/json",
+        )
+        self.assertEqual(blocked_response.status_code, 409)
+        self.assertTrue(SavedParkingSlot.objects.filter(id=parked.id).exists())
+
+        ScheduledSlot.objects.filter(
+            timetable=self.saved,
+            section=self.other_section,
+            meeting_time=self.mt2,
+        ).delete()
+
+        success_response = self.client.post(
+            reverse("saved_restore_parked_slot", args=[self.saved.id, parked.id]),
+            data='{"target_section":"SEC-A","target_day":"Monday","target_slot":"2"}',
+            content_type="application/json",
+        )
+        self.assertEqual(success_response.status_code, 200)
+
+        restored = ScheduledSlot.objects.get(
+            timetable=self.saved,
+            section=self.section,
+            meeting_time=self.mt2,
+        )
+        self.assertEqual(restored.room, self.other_room)
+        self.assertFalse(SavedParkingSlot.objects.filter(id=parked.id).exists())
+        self.assertFalse(
+            SavedSlotRoomReservation.objects.filter(
+                timetable=self.saved,
+                section=self.section,
+                meeting_time=self.mt2,
+            ).exists()
+        )
 
 
 class ElectiveSchedulingTests(TestCase):

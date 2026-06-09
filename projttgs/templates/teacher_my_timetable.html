@@ -49,12 +49,16 @@
         <strong>{{ teacher_workload.lectures }}</strong>
       </div>
       <div class="teacher-data-card">
-        <span>Lab Slots</span>
+        <span>Lab Workload</span>
         <strong>{{ teacher_workload.labs }}</strong>
       </div>
       <div class="teacher-data-card">
+        <span>Shared Lab Workload</span>
+        <strong>{{ teacher_workload.shared_labs|default:0|floatformat:"-1" }}</strong>
+      </div>
+      <div class="teacher-data-card">
         <span>Total Load</span>
-        <strong>{{ teacher_workload.total }}</strong>
+        <strong>{{ teacher_workload.total|floatformat:"-1" }}</strong>
       </div>
     </div>
 

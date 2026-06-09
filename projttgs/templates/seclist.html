@@ -102,7 +102,8 @@
                     <td>{{ sec.department }}</td>
                     <td>{{ sec.num_class_in_week }}</td>
                     <td>
-                        <form action="{% url 'deletesection' sec.section_id %}" method="post">
+                        {% url 'deletesection' sec.section_id as del_url %}
+                        <form action="{{ del_url|default:'#' }}" method="post">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>

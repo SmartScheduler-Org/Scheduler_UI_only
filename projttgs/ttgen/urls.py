@@ -102,6 +102,9 @@ urlpatterns = [
 
     path('update_slot/<str:section>/<str:day>/<int:slot>/', views.update_slot, name='update_slot'),
     path('move_slot/<str:section>/<str:day>/<int:slot>/', views.move_slot_dragdrop, name='move_slot_dragdrop'),
+    path('park_slot/<str:section>/<str:day>/<int:slot>/', views.generated_park_slot, name='generated_park_slot'),
+    path('parking/<str:section>/create/', views.generated_create_parking_slot, name='generated_create_parking_slot'),
+    path('parking/<int:parking_id>/restore/', views.generated_restore_parked_slot, name='generated_restore_parked_slot'),
     path('delete_slot/<str:section>/<str:day>/<int:slot>/', views.delete_slot, name='delete_slot'),
     path('add_slot/<str:section>/', views.add_slot, name='add_slot'),
     
@@ -126,6 +129,8 @@ urlpatterns = [
     path("saved/<int:tid>/substitute/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_teacher, name="saved_substitute_teacher"),
     path("saved/<int:tid>/substitute_lab/<str:section>/<str:day>/<int:slot>/", views.saved_substitute_lab_teacher, name="saved_substitute_lab_teacher"),
     path("saved/<int:tid>/move/<str:section>/<str:day>/<int:slot>/", views.saved_move_slot_dragdrop, name="saved_move_slot_dragdrop"),
+    path("saved/<int:tid>/park/<str:section>/<str:day>/<int:slot>/", views.saved_park_slot, name="saved_park_slot"),
+    path("saved/<int:tid>/parking/<int:parking_id>/restore/", views.saved_restore_parked_slot, name="saved_restore_parked_slot"),
 
     path("substitute_teacher/<str:section>/<str:day>/<int:slot>/",views.substitute_teacher,name="substitute_teacher"),
     path("substitute_lab/<str:section>/<str:day>/<int:slot>/",views.substitute_lab_teacher,name="substitute_lab_teacher"),

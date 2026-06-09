@@ -517,6 +517,57 @@ class ScheduledSlot(models.Model):
             )
 
 
+class SavedSlotRoomReservation(models.Model):
+    timetable = models.ForeignKey(
+        SavedTimetable,
+        on_delete=models.CASCADE,
+        related_name="slot_room_reservations",
+    )
+    section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    meeting_time = models.ForeignKey(MeetingTime, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["timetable", "section", "meeting_time"],
+                name="unique_saved_slot_room_reservation",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.section.section_id} {self.meeting_time.day} {self.meeting_time.time} -> {self.room.r_number}"
+
+
+class SavedParkingSlot(models.Model):
+    timetable = models.ForeignKey(
+        SavedTimetable,
+        on_delete=models.CASCADE,
+        related_name="parked_slots",
+    )
+    section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, db_column="course_id")
+    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
+    second_instructor = models.ForeignKey(
+        Instructor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="parked_shared_lab_slots",
+    )
+    original_room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
+    original_meeting_time = models.ForeignKey(MeetingTime, on_delete=models.SET_NULL, null=True, blank=True)
+    is_lab = models.BooleanField(default=False)
+    slot_span = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["section__section_id", "created_at"]
+
+    def __str__(self):
+        return f"Parked {self.subject.subject_name} ({self.section.section_id})"
+
+
 class Profile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

@@ -20,6 +20,8 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.utils import timezone
+from django.db import transaction
+from django.db.models import Q
 import copy
 import csv
 import math
@@ -27,6 +29,7 @@ import re
 from datetime import date
 from smtplib import SMTPAuthenticationError
 from itertools import combinations
+from collections import defaultdict
 from .models import MeetingTime
 from .models import DAYS_OF_WEEK, TIME_SLOTS
 from .forms import DepartmentForm
@@ -66,8 +69,43 @@ def _get_user_state(user_id):
             "schedules": [],
             "view_mode": None,
             "data": None,
+            "generated_parking_items": [],
+            "generated_slot_room_reservations": {},
+            "generated_parking_next_id": 1,
+            "generated_edit_index": None,
         }
     return _USER_STATE[user_id]
+
+
+def _reset_generated_drag_state(state, current_index=None):
+    state["generated_parking_items"] = []
+    state["generated_slot_room_reservations"] = {}
+    state["generated_parking_next_id"] = 1
+    state["generated_edit_index"] = current_index
+
+
+def _next_generated_parking_id(state):
+    next_id = state.get("generated_parking_next_id", 1)
+    state["generated_parking_next_id"] = next_id + 1
+    return next_id
+
+
+def _decorate_generated_tables_with_parking(tables, state):
+    parking_by_section = defaultdict(list)
+    for item in state.get("generated_parking_items", []):
+        parking_by_section[item["section_id"]].append(item)
+
+    reserved_rooms = state.get("generated_slot_room_reservations", {})
+    for table in tables:
+        section_id = table["section"].section_id
+        table["parking_items"] = parking_by_section.get(section_id, [])
+        for row in table.get("rows", []):
+            for cell in row.get("cells", []):
+                key = (section_id, row["day"], str(cell.get("slot_number")))
+                reservation = reserved_rooms.get(key)
+                cell["reserved_room"] = reservation["room"] if reservation else None
+                cell["has_room_context"] = bool(reservation)
+    return tables
 
 
 # Legacy aliases so private modules loaded via exec() can reference them.
@@ -431,7 +469,7 @@ def _resolve_teacher_dashboard_context(request, profile):
     linked_instructor = profile.linked_instructor
     teacher_subjects = []
     my_teacher_table = None
-    teacher_workload = {"lectures": 0, "labs": 0, "total": 0}
+    teacher_workload = {"lectures": 0, "labs": 0, "shared_labs": 0, "total": 0}
     published_section_count = 0
     published_teacher_count = 0
 
@@ -949,15 +987,15 @@ def _runtime_unavailable_response(request):
 
 if "SLOT_LABELS" not in globals():
     SLOT_LABELS = {
-        "1": "8:30 - 9:30",
-        "2": "9:30 - 10:30",
-        "3": "10:30 - 11:30",
-        "4": "11:30 - 12:30",
-        "5": "12:30 - 1:30",
-        "6": "1:30 - 2:30",
-        "7": "2:30 - 3:30",
-        "8": "3:30 - 4:30",
-        "9": "4:30 - 5:30",
+        "1": "9:00 - 9:55",
+        "2": "9:55 - 10:50",
+        "3": "10:50 - 11:45",
+        "4": "11:45 - 12:40",
+        "5": "12:40 - 1:35",
+        "6": "1:35 - 2:30",
+        "7": "2:30 - 3:25",
+        "8": "3:25 - 4:20",
+        "9": "4:20 - 5:15",
     }
 
 
@@ -1293,6 +1331,31 @@ if "build_section_tables" not in globals():
 if "build_teacher_tables" not in globals():
     def build_teacher_tables(all_classes, all_labs, user=None):
         from collections import OrderedDict
+
+        def _lab_slot_count(lab):
+            return len(lab.meeting_times) if lab.meeting_times else getattr(lab, 'duration', LAB_DURATION)
+
+        def _format_load(value):
+            return int(value) if isinstance(value, float) and value.is_integer() else value
+
+        def _teacher_workload(items):
+            lectures = sum(getattr(cls, 'duration', 1) for cls in items["classes"])
+            labs = 0
+            shared_labs = 0
+            for lab in items["labs"]:
+                slot_count = _lab_slot_count(lab)
+                if getattr(lab, "second_instructor", None):
+                    shared_labs += slot_count / 2
+                else:
+                    labs += slot_count
+            total = lectures + labs + shared_labs
+            return {
+                "lectures": _format_load(lectures),
+                "labs": _format_load(labs),
+                "shared_labs": _format_load(shared_labs),
+                "total": _format_load(total),
+            }
+
         teacher_map = OrderedDict()
         for cls in all_classes:
             t = cls.instructor
@@ -1306,6 +1369,11 @@ if "build_teacher_tables" not in globals():
                 teacher_map[t] = {"classes": [], "labs": []}
             if t:
                 teacher_map[t]["labs"].append(lab)
+            second_teacher = getattr(lab, "second_instructor", None)
+            if second_teacher and second_teacher not in teacher_map:
+                teacher_map[second_teacher] = {"classes": [], "labs": []}
+            if second_teacher:
+                teacher_map[second_teacher]["labs"].append(lab)
 
         tables = []
         for teacher, data in teacher_map.items():
@@ -1358,7 +1426,7 @@ if "build_teacher_tables" not in globals():
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
 
-            tables.append({"teacher": teacher, "rows": rows})
+            tables.append({"teacher": teacher, "rows": rows, "workload": _teacher_workload(data)})
         return tables
 
 
@@ -1643,26 +1711,60 @@ def _rebuild_classes_and_labs_from_saved(saved_t):
 def _compute_teacher_workloads(classes, labs):
     """Compute teacher workload summary from classes and labs."""
     workloads = {}
+
+    def _department_label(item):
+        subject = getattr(item, "subject", None)
+        department = getattr(subject, "department", None)
+        if department is None:
+            department = getattr(item, "dept", None) or getattr(item, "department", None)
+        if department is None:
+            return None
+        code = (getattr(department, "code", "") or "").strip()
+        name = (getattr(department, "name", "") or "").strip()
+        return code or name or str(department)
+
+    def _ensure_teacher(teacher):
+        if teacher not in workloads:
+            workloads[teacher] = {"lectures": 0, "labs": 0, "shared_labs": 0, "total": 0, "departments": set()}
+        return workloads[teacher]
+
+    def _add_department(teacher, item):
+        label = _department_label(item)
+        if label:
+            _ensure_teacher(teacher)["departments"].add(label)
+
     for cls in classes:
         teacher = cls.instructor
         cls_dur = getattr(cls, 'duration', 1)
-        if teacher not in workloads:
-            workloads[teacher] = {"lectures": 0, "labs": 0, "total": 0}
-        workloads[teacher]["lectures"] += cls_dur
-        workloads[teacher]["total"] += cls_dur
+        data = _ensure_teacher(teacher)
+        data["lectures"] += cls_dur
+        data["total"] += cls_dur
+        _add_department(teacher, cls)
     for lab in labs:
         teacher = lab.instructor
-        if teacher not in workloads:
-            workloads[teacher] = {"lectures": 0, "labs": 0, "total": 0}
+        data = _ensure_teacher(teacher)
         lab_slot_count = len(lab.meeting_times) if lab.meeting_times else getattr(lab, 'duration', LAB_DURATION)
-        workloads[teacher]["labs"] += lab_slot_count
-        workloads[teacher]["total"] += lab_slot_count
         second_teacher = getattr(lab, "second_instructor", None)
         if second_teacher:
-            if second_teacher not in workloads:
-                workloads[second_teacher] = {"lectures": 0, "labs": 0, "total": 0}
-            workloads[second_teacher]["labs"] += lab_slot_count
-            workloads[second_teacher]["total"] += lab_slot_count
+            shared_load = lab_slot_count / 2
+            data["shared_labs"] += shared_load
+            data["total"] += shared_load
+            _add_department(teacher, lab)
+            second_data = _ensure_teacher(second_teacher)
+            second_data["shared_labs"] += shared_load
+            second_data["total"] += shared_load
+            _add_department(second_teacher, lab)
+        else:
+            data["labs"] += lab_slot_count
+            data["total"] += lab_slot_count
+            _add_department(teacher, lab)
+
+    for data in workloads.values():
+        data["departments"] = ", ".join(sorted(data["departments"])) or "-"
+        for key in ("lectures", "labs", "shared_labs", "total"):
+            value = data.get(key, 0)
+            if isinstance(value, float) and value.is_integer():
+                data[key] = int(value)
     return workloads
 
 
@@ -1729,6 +1831,66 @@ def _get_plan_permissions(user):
     }
 
 
+def _get_slot_sequence(day, start_slot, span, user):
+    slots = []
+    for offset in range(max(int(span or 1), 1)):
+        meeting_time = get_meeting_time(day, int(start_slot) + offset, user=user)
+        if not meeting_time:
+            return None
+        slots.append(meeting_time)
+    return slots
+
+
+def _build_saved_parking_context(saved_t, tables):
+    reservation_map = defaultdict(dict)
+    reservations = saved_t.slot_room_reservations.select_related("section", "meeting_time", "room")
+    for reservation in reservations:
+        reservation_map[reservation.section.section_id][
+            (reservation.meeting_time.day, reservation.meeting_time.time)
+        ] = reservation
+
+    parking_map = defaultdict(list)
+    parked_slots = saved_t.parked_slots.select_related(
+        "section",
+        "subject",
+        "instructor",
+        "second_instructor",
+        "original_room",
+        "original_meeting_time",
+    )
+    for parked in parked_slots:
+        parking_map[parked.section.section_id].append(parked)
+
+    for table in tables:
+        section_id = table["section"].section_id
+        table["parking_items"] = parking_map.get(section_id, [])
+        for row in table.get("rows", []):
+            for cell in row.get("cells", []):
+                reservation = reservation_map.get(section_id, {}).get((row["day"], str(cell.get("slot_number"))))
+                cell["reserved_room"] = reservation.room if reservation else None
+                cell["has_room_context"] = bool(reservation)
+
+    return tables
+
+
+def _reserve_saved_slot_room(saved_t, section, meeting_times, room):
+    for meeting_time in meeting_times:
+        SavedSlotRoomReservation.objects.update_or_create(
+            timetable=saved_t,
+            section=section,
+            meeting_time=meeting_time,
+            defaults={"room": room},
+        )
+
+
+def _clear_saved_slot_room_reservations(saved_t, section, meeting_times):
+    SavedSlotRoomReservation.objects.filter(
+        timetable=saved_t,
+        section=section,
+        meeting_time__in=meeting_times,
+    ).delete()
+
+
 @login_required
 def saved_timetable_list(request):
     timetables = SavedTimetable.objects.filter(user=request.user)
@@ -1748,6 +1910,7 @@ def saved_timetable(request, tid):
     classes, labs, selected_program = _filter_entities_by_program(classes, labs, request.user, selected_program)
 
     tables = build_section_tables(classes, labs, user=request.user)
+    tables = _build_saved_parking_context(saved_t, tables)
     room_tables = build_room_tables(classes, labs, user=request.user)
     teacher_tables = build_teacher_tables(classes, labs, user=request.user)
     teacher_workloads = _compute_teacher_workloads(classes, labs)
@@ -1971,6 +2134,158 @@ def saved_move_slot_dragdrop(request, tid, section, day, slot):
         scheduled.save(update_fields=["meeting_time"])
 
     return JsonResponse({"ok": True, "message": "Slot moved successfully."})
+
+
+@login_required
+def saved_park_slot(request, tid, section, day, slot):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "message": "POST required."}, status=405)
+
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"ok": False, "message": "Invalid payload."}, status=400)
+
+    move_type = payload.get("move_type", "class")
+    source_mt = get_meeting_time(day, slot, user=request.user)
+    if not source_mt:
+        return JsonResponse({"ok": False, "message": "Invalid time slot."}, status=400)
+
+    try:
+        sec = Section.objects.get(section_id=section, user=request.user)
+    except Section.DoesNotExist:
+        return JsonResponse({"ok": False, "message": "Section not found."}, status=404)
+
+    scheduled = saved_t.slots.filter(
+        section=sec,
+        meeting_time=source_mt,
+        is_lab=(move_type == "lab"),
+    ).select_related("subject", "instructor", "second_instructor", "room", "meeting_time").first()
+    if not scheduled:
+        return JsonResponse({"ok": False, "message": "No slot found at source."}, status=404)
+
+    slot_times = list(scheduled.lab_slots.all().order_by("time")) if scheduled.is_lab else [scheduled.meeting_time]
+    if not slot_times:
+        slot_times = [scheduled.meeting_time]
+
+    with transaction.atomic():
+        _reserve_saved_slot_room(saved_t, sec, slot_times, scheduled.room)
+        SavedParkingSlot.objects.create(
+            timetable=saved_t,
+            section=sec,
+            subject=scheduled.subject,
+            instructor=scheduled.instructor,
+            second_instructor=scheduled.second_instructor,
+            original_room=scheduled.room,
+            original_meeting_time=scheduled.meeting_time,
+            is_lab=scheduled.is_lab,
+            slot_span=len(slot_times),
+        )
+        scheduled.delete()
+
+    return JsonResponse({
+        "ok": True,
+        "message": "Slot moved to parking.",
+    })
+
+
+@login_required
+def saved_restore_parked_slot(request, tid, parking_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "message": "POST required."}, status=405)
+
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"ok": False, "message": "Invalid payload."}, status=400)
+
+    target_day = payload.get("target_day")
+    target_slot = payload.get("target_slot")
+    target_section = payload.get("target_section")
+    if not target_day or not target_slot or not target_section:
+        return JsonResponse({"ok": False, "message": "Missing target section/day/slot."}, status=400)
+
+    parked = saved_t.parked_slots.select_related(
+        "section",
+        "subject",
+        "instructor",
+        "second_instructor",
+    ).filter(id=parking_id).first()
+    if not parked:
+        return JsonResponse({"ok": False, "message": "Parking item not found."}, status=404)
+    if parked.section.section_id != target_section:
+        return JsonResponse({"ok": False, "message": "Parking is locked to its section."}, status=409)
+
+    target_mt = get_meeting_time(target_day, target_slot, user=request.user)
+    if not target_mt:
+        return JsonResponse({"ok": False, "message": "Invalid target time slot."}, status=400)
+
+    try:
+        sec = Section.objects.get(section_id=target_section, user=request.user)
+    except Section.DoesNotExist:
+        return JsonResponse({"ok": False, "message": "Section not found."}, status=404)
+
+    target_times = _get_slot_sequence(target_day, target_slot, parked.slot_span, request.user)
+    if not target_times:
+        return JsonResponse({"ok": False, "message": "Target span does not fit in the timetable."}, status=400)
+
+    reservations = list(
+        SavedSlotRoomReservation.objects.filter(
+            timetable=saved_t,
+            section=sec,
+            meeting_time__in=target_times,
+        ).select_related("room", "meeting_time")
+    )
+    reservation_map = {reservation.meeting_time_id: reservation for reservation in reservations}
+    if len(reservation_map) != len(target_times):
+        return JsonResponse({"ok": False, "message": "Target slot has no parked-room context yet."}, status=409)
+
+    room = reservation_map[target_times[0].id].room
+    if any(reservation.room_id != room.id for reservation in reservations):
+        return JsonResponse({"ok": False, "message": "Target parking room context is inconsistent."}, status=409)
+
+    for meeting_time in target_times:
+        section_conflict = saved_t.slots.filter(section=sec, meeting_time=meeting_time).exists()
+        if section_conflict:
+            return JsonResponse({"ok": False, "message": f"Section already has a slot at {target_day} slot {meeting_time.time}."}, status=409)
+
+        teacher_conflict = saved_t.slots.filter(
+            Q(instructor=parked.instructor) | Q(second_instructor=parked.instructor),
+            meeting_time=meeting_time,
+        ).exists()
+        if teacher_conflict:
+            return JsonResponse({"ok": False, "message": f"Teacher already has a slot at {target_day} slot {meeting_time.time}."}, status=409)
+
+        if parked.second_instructor:
+            second_conflict = saved_t.slots.filter(
+                Q(instructor=parked.second_instructor) | Q(second_instructor=parked.second_instructor),
+                meeting_time=meeting_time,
+            ).exists()
+            if second_conflict:
+                return JsonResponse({"ok": False, "message": f"Second teacher already has a slot at {target_day} slot {meeting_time.time}."}, status=409)
+
+    with transaction.atomic():
+        scheduled = ScheduledSlot.objects.create(
+            timetable=saved_t,
+            section=sec,
+            subject=parked.subject,
+            instructor=parked.instructor,
+            second_instructor=parked.second_instructor,
+            room=room,
+            meeting_time=target_times[0],
+            is_lab=parked.is_lab,
+        )
+        if parked.is_lab:
+            scheduled.lab_slots.set(target_times)
+
+        _clear_saved_slot_room_reservations(saved_t, sec, target_times)
+        parked.delete()
+
+    return JsonResponse({"ok": True, "message": "Parking item restored successfully."})
 
 
 # ================================================================
@@ -2814,16 +3129,10 @@ def map_teacher_subjects(request):
 
             instructor = primary_group_instructors[0]
 
-            # Resolve second instructor if shared lab
+            # Resolve second instructor when shared_lab flag is enabled
             second_instructor = None
             second_group_instructors = [None] * inferred_group_count
             if shared_lab_flag:
-                if subj.room_required != "Lab":
-                    skipped += 1
-                    validation_errors.append(
-                        f"Row {row_number}: shared_lab=true allowed only for Lab subjects ({subject_number})"
-                    )
-                    continue
                 if not second_instructor_uid:
                     skipped += 1
                     validation_errors.append(
@@ -3933,7 +4242,7 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
         ws["A1"] = "Teacher Workload Summary"
         ws["A1"].font = Font(bold=True, size=12)
 
-        headers = ["Teacher Name", "Classes", "Labs", "Total Hours"]
+        headers = ["Teacher Name", "Lectures", "Lab Workload", "Shared Lab Workload", "Total Hours"]
         for col, h in enumerate(headers, start=1):
             ws.cell(row=2, column=col, value=h)
 
@@ -3941,12 +4250,14 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
         for teacher, workload in teacher_workloads.items():
             lectures = workload.get("lectures", workload.get("classes", 0))
             labs_count = workload.get("labs", 0)
-            total_hours = workload.get("total", lectures + labs_count)
+            shared_labs = workload.get("shared_labs", 0)
+            total_hours = workload.get("total", lectures + labs_count + shared_labs)
 
             ws.cell(row=row, column=1, value=_safe_get(teacher, "name", "uid"))
             ws.cell(row=row, column=2, value=lectures)
             ws.cell(row=row, column=3, value=labs_count)
-            ws.cell(row=row, column=4, value=total_hours)
+            ws.cell(row=row, column=4, value=shared_labs)
+            ws.cell(row=row, column=5, value=total_hours)
 
             row += 1
 

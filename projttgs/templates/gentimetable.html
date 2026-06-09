@@ -597,6 +597,208 @@ body.drag-drop-active .drag-mode-badge {
     display: inline-flex;
 }
 
+.section-parking-wrap {
+  display: none !important; /* Temporarily hidden after generation; remove this and uncomment panel markup to restore. */
+  max-width: 1100px;
+  margin: 0 auto 14px;
+}
+
+.section-parking-panel {
+  border-radius: 18px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,249,255,0.96) 100%);
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.section-parking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.section-parking-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.section-parking-title span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.section-parking-title strong {
+  font-size: 15px;
+  color: #0f3d56;
+}
+
+.section-parking-title small {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.section-create-slot-btn {
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+}
+
+.section-create-slot-btn:hover {
+  transform: translateY(-1px);
+}
+
+.section-parking-dropzone {
+  position: relative;
+  min-height: 88px;
+  border-radius: 16px;
+  border: 1px dashed rgba(37, 99, 235, 0.32);
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95) 0%, rgba(236, 253, 245, 0.9) 100%);
+  padding: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.section-parking-dropzone.drag-over {
+  border-color: rgba(37, 99, 235, 0.6);
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.14), 0 12px 24px rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
+}
+
+.section-parking-hint {
+  margin-bottom: 10px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.section-parking-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.section-parking-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.72);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lunch-drop-target {
+  position: relative;
+}
+
+body.drag-drop-active .lunch-drop-target.drop-target {
+  background: linear-gradient(180deg, #fff7ed, #ffedd5);
+  border-color: rgba(249, 115, 22, 0.28);
+}
+
+body.drag-drop-active .lunch-drop-target.drop-target.drag-over {
+  background: linear-gradient(180deg, #ffedd5, #fed7aa);
+}
+
+.lunch-drop-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9a3412;
+}
+
+.parking-item {
+  min-width: 220px;
+  max-width: 320px;
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  box-shadow: 0 10px 18px rgba(59, 130, 246, 0.10);
+}
+
+.parking-item__tag {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.parking-item__title {
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.parking-item__teacher {
+  margin-top: 6px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.parking-item__meta {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.reserved-room-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(20, 184, 166, 0.12);
+  border: 1px solid rgba(45, 212, 191, 0.32);
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.reserved-room-chip::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #14b8a6;
+}
+
+.empty-slot-note {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .drag-activation-overlay {
     position: fixed;
     inset: 0;
@@ -1751,8 +1953,9 @@ function initDragAndDrop() {
 
         let dragEnabled = false;
         let currentDrag = null;
-        const dragItems = Array.from(document.querySelectorAll(".draggable-slot-item"));
+  const dragItems = Array.from(document.querySelectorAll(".draggable-slot-item, .parking-item"));
         const dropTargets = Array.from(document.querySelectorAll(".slot-cell.drop-target"));
+  const parkingTargets = Array.from(document.querySelectorAll(".section-parking-dropzone"));
 
         function syncDragState() {
             document.body.classList.toggle("drag-drop-active", dragEnabled);
@@ -1786,10 +1989,12 @@ function initDragAndDrop() {
                 }
 
                 currentDrag = {
+                  sourceKind: item.dataset.dragSource || "slot",
                     sectionId: item.dataset.sectionId,
                     day: item.dataset.day,
                     slot: item.dataset.slot,
                     moveType: item.dataset.moveType,
+                  parkingId: item.dataset.parkingId || null,
                 };
 
                 item.classList.add("is-dragging");
@@ -1800,12 +2005,63 @@ function initDragAndDrop() {
             item.addEventListener("dragend", function() {
                 item.classList.remove("is-dragging");
                 dropTargets.forEach(target => target.classList.remove("drag-over"));
+              parkingTargets.forEach(target => target.classList.remove("drag-over"));
             });
         });
+
+          parkingTargets.forEach(target => {
+            target.addEventListener("dragover", function(event) {
+              if (!dragEnabled || !currentDrag || currentDrag.sourceKind !== "slot") return;
+              if (currentDrag.sectionId !== target.dataset.sectionId) return;
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "move";
+              target.classList.add("drag-over");
+            });
+
+            target.addEventListener("dragleave", function() {
+              target.classList.remove("drag-over");
+            });
+
+            target.addEventListener("drop", async function(event) {
+              target.classList.remove("drag-over");
+              if (!dragEnabled || !currentDrag || currentDrag.sourceKind !== "slot") return;
+              if (currentDrag.sectionId !== target.dataset.sectionId) return;
+              event.preventDefault();
+
+              try {
+                const response = await fetch(
+                  `/park_slot/${encodeURIComponent(currentDrag.sectionId)}/${encodeURIComponent(currentDrag.day)}/${encodeURIComponent(currentDrag.slot)}/`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-CSRFToken": getCsrfToken(),
+                      "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify({ move_type: currentDrag.moveType })
+                  }
+                );
+
+                const result = await response.json();
+                if (!response.ok || !result.ok) {
+                  Swal.fire({ icon: "error", title: "Bucket Blocked", text: result.message || "Could not move this slot to bucket.", confirmButtonColor: "#4e73df" });
+                  return;
+                }
+
+                Swal.fire({ icon: "success", title: "Bucket Updated", text: result.message || "Slot moved to bucket.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
+              } catch (error) {
+                Swal.fire({ icon: "error", title: "Request Failed", text: "Could not move this block right now.", confirmButtonColor: "#4e73df" });
+              } finally {
+                currentDrag = null;
+              }
+            });
+          });
 
         dropTargets.forEach(target => {
             target.addEventListener("dragover", function(event) {
                 if (!dragEnabled || !currentDrag) return;
+              if (target.dataset.acceptParkingOnly === "true" && currentDrag.sourceKind !== "parking") return;
+              if (currentDrag.sourceKind === "parking" && currentDrag.sectionId !== target.dataset.sectionId) return;
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
                 target.classList.add("drag-over");
@@ -1818,6 +2074,7 @@ function initDragAndDrop() {
             target.addEventListener("drop", async function(event) {
                 target.classList.remove("drag-over");
                 if (!dragEnabled || !currentDrag) return;
+              if (target.dataset.acceptParkingOnly === "true" && currentDrag.sourceKind !== "parking") return;
                 event.preventDefault();
 
                 const targetSection = target.dataset.sectionId;
@@ -1825,6 +2082,7 @@ function initDragAndDrop() {
                 const targetSlot = target.dataset.slot;
 
                 if (
+                  currentDrag.sourceKind === "slot" &&
                     currentDrag.sectionId === targetSection &&
                     currentDrag.day === targetDay &&
                     currentDrag.slot === targetSlot
@@ -1833,22 +2091,30 @@ function initDragAndDrop() {
                 }
 
                 try {
-                    const response = await fetch(
-                        `/move_slot/${encodeURIComponent(currentDrag.sectionId)}/${encodeURIComponent(currentDrag.day)}/${encodeURIComponent(currentDrag.slot)}/`,
-                        {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRFToken": getCsrfToken(),
-                                "X-Requested-With": "XMLHttpRequest"
-                            },
-                            body: JSON.stringify({
-                                target_day: targetDay,
-                                target_slot: targetSlot,
-                                move_type: currentDrag.moveType
-                            })
-                        }
-                    );
+                  const requestUrl = currentDrag.sourceKind === "parking"
+                    ? `/parking/${encodeURIComponent(currentDrag.parkingId)}/restore/`
+                    : `/move_slot/${encodeURIComponent(currentDrag.sectionId)}/${encodeURIComponent(currentDrag.day)}/${encodeURIComponent(currentDrag.slot)}/`;
+                  const requestBody = currentDrag.sourceKind === "parking"
+                    ? {
+                      target_section: targetSection,
+                      target_day: targetDay,
+                      target_slot: targetSlot,
+                    }
+                    : {
+                      target_day: targetDay,
+                      target_slot: targetSlot,
+                      move_type: currentDrag.moveType
+                    };
+
+                  const response = await fetch(requestUrl, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-CSRFToken": getCsrfToken(),
+                      "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify(requestBody)
+                  });
 
                     const result = await response.json();
                     if (!response.ok || !result.ok) {
@@ -1883,6 +2149,73 @@ function initDragAndDrop() {
                     currentDrag = null;
                 }
             });
+        });
+
+        document.querySelectorAll(".section-create-slot-btn").forEach(button => {
+          button.addEventListener("click", async function() {
+            const sectionId = button.dataset.sectionId;
+            const subjectOptions = JSON.parse(document.getElementById(button.dataset.subjectSource).textContent);
+            const teacherOptions = JSON.parse(document.getElementById(button.dataset.teacherSource).textContent);
+            const roomOptions = JSON.parse(document.getElementById(button.dataset.roomSource).textContent);
+
+            if (!subjectOptions.length || !teacherOptions.length || !roomOptions.length) {
+              Swal.fire({ icon: "error", title: "Create Slot Unavailable", text: "This section is missing subjects, teachers, or rooms.", confirmButtonColor: "#4e73df" });
+              return;
+            }
+
+            const buildOptions = options => options.map(option => `<option value="${option.id}">${option.label}</option>`).join("");
+
+            const result = await Swal.fire({
+              title: `Create Slot for ${sectionId}`,
+              html: `
+                <div style="display:grid; gap:12px; text-align:left;">
+                  <label style="display:grid; gap:6px; font-size:13px; color:#334155;">
+                    <span style="font-weight:700;">Teacher Name</span>
+                    <select id="create-slot-teacher" class="swal2-input" style="margin:0; width:100%;">${buildOptions(teacherOptions)}</select>
+                  </label>
+                  <label style="display:grid; gap:6px; font-size:13px; color:#334155;">
+                    <span style="font-weight:700;">Subject</span>
+                    <select id="create-slot-subject" class="swal2-input" style="margin:0; width:100%;">${buildOptions(subjectOptions)}</select>
+                  </label>
+                  <label style="display:grid; gap:6px; font-size:13px; color:#334155;">
+                    <span style="font-weight:700;">Room Number</span>
+                    <select id="create-slot-room" class="swal2-input" style="margin:0; width:100%;">${buildOptions(roomOptions)}</select>
+                  </label>
+                </div>
+              `,
+              focusConfirm: false,
+              showCancelButton: true,
+              confirmButtonText: "Create In Bucket",
+              confirmButtonColor: "#2563eb",
+              preConfirm: () => ({
+                teacher_id: document.getElementById("create-slot-teacher").value,
+                subject_id: document.getElementById("create-slot-subject").value,
+                room_id: document.getElementById("create-slot-room").value,
+              })
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+              const response = await fetch(`/parking/${encodeURIComponent(sectionId)}/create/`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCsrfToken(),
+                  "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify(result.value)
+              });
+              const payload = await response.json();
+              if (!response.ok || !payload.ok) {
+                Swal.fire({ icon: "error", title: "Create Slot Failed", text: payload.message || "Could not create slot.", confirmButtonColor: "#4e73df" });
+                return;
+              }
+              Swal.fire({ icon: "success", title: "Slot Created", text: payload.message || "Slot saved to bucket.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
+            } catch (error) {
+              Swal.fire({ icon: "error", title: "Network Error", text: "Could not create slot right now.", confirmButtonColor: "#4e73df" });
+            }
+          });
         });
 
         syncDragState();
@@ -2180,7 +2513,7 @@ function initDragAndDrop() {
   </button>
 </div>
 {% for table in tables %}
-  <div id="section-tt-{{ forloop.counter }}" class="export-surface demo-preview-card {% if demo_mode and table.demo_locked %}is-locked{% endif %}" data-dept-code="{{ table.section.department.code }}">
+  <div id="section-tt-{{ forloop.counter }}" class="export-surface demo-preview-card {% if demo_mode and table.demo_locked %}is-locked{% endif %}" data-dept-code="{{ table.section_department_code }}">
   <div class="export-watermark">
     <div class="export-watermark__grid">
       <span>SmartScheduler</span>
@@ -2199,9 +2532,42 @@ function initDragAndDrop() {
   </div>
   <div style="position:relative; z-index:1;">
   <h2 class="secHead">
-    {{ table.section.section_id }} ({{ table.section.department.name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
+    {{ table.section.section_id }} ({{ table.section_department_name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
   </h2>
 
+  {% comment "Temporarily hidden section bucket/create-slot panel; uncomment when this UI is needed again." %}
+  <div class="section-parking-wrap">
+    <div class="section-parking-panel">
+      <div class="section-parking-header">
+        <div class="section-parking-title">
+          <span>Section Bucket</span>
+          <strong>Parking for {{ table.section.section_id }}</strong>
+          <small>Filled slots can be dragged here. Created bucket slots can also be dropped into lunch after generation.</small>
+        </div>
+        <button type="button" class="section-create-slot-btn" data-section-id="{{ table.section.section_id }}" data-subject-source="{{ table.create_slot_subjects_id }}" data-teacher-source="{{ table.create_slot_teachers_id }}" data-room-source="{{ table.create_slot_rooms_id }}">Create Slot</button>
+      </div>
+      <div class="section-parking-dropzone" data-section-id="{{ table.section.section_id }}">
+        <div class="section-parking-hint">Drag a filled slot here to park it above this section.</div>
+        {% if table.parking_items %}
+        <div class="section-parking-list">
+          {% for parked in table.parking_items %}
+          <div class="parking-item draggable-slot-item" data-drag-source="parking" data-parking-id="{{ parked.id }}" data-section-id="{{ table.section.section_id }}" data-move-type="{{ parked.move_type }}">
+            <span class="parking-item__tag">{% if parked.manual_entry %}Created Slot{% elif parked.move_type == 'lab' %}Parked Lab{% else %}Parked Class{% endif %}</span>
+            <div class="parking-item__title">{{ parked.subject_name }}{% if parked.move_type == 'lab' %} Lab{% endif %}</div>
+            <div class="parking-item__teacher">{{ parked.teacher_name }}{% if parked.second_teacher_name %} + {{ parked.second_teacher_name }}{% endif %}</div>
+            <div class="parking-item__meta">{% if parked.batch_label %}{{ parked.batch_label }} · {% endif %}{% if parked.original_room %}Room {{ parked.original_room.r_number }}{% endif %}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="section-parking-empty">Bucket empty for this section.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endcomment %}
+
+  {% comment "Temporarily hidden generated section summary panels (Missed Labs + Subjects Scheduled); uncomment when needed again." %}
   {% if table.missed_labs %}
     <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
       <div style="font-weight: 700; color: #9a3412; margin-bottom: 8px;">Missed Labs</div>
@@ -2257,6 +2623,7 @@ function initDragAndDrop() {
       </div>
     </div>
   {% endif %}
+  {% endcomment %}
 
   <div style="text-align:center; margin-bottom: 15px;">
       <a href="/add_slot/{{ table.section.section_id }}/" class="action-button btn-add"
@@ -2294,14 +2661,14 @@ function initDragAndDrop() {
         {% for cell in row.cells %}
 
           {% if cell.type == "lunch" %}
-            <td class="lunch-cell">LUNCH</td>
+            <td class="lunch-cell slot-cell drop-target lunch-drop-target" data-accept-parking-only="true" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="5">LUNCH<div class="lunch-drop-hint">Created bucket slots can be dropped here.</div></td>
 
           
           {% elif cell.type == "lab" %}
             <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} draggable-slot-item" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} draggable-slot-item" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
@@ -2324,7 +2691,8 @@ function initDragAndDrop() {
                          class="action-button btn-update">Update</a>
                       <a href="/delete_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}?batch={{ lab.batch }}"
                          class="action-button btn-delete">Delete</a>
-                      <a href="{% url 'substitute_lab_teacher' table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}"
+                      {% url 'substitute_lab_teacher' table.section.section_id row.day cell.slot_number as sub_lab_url %}
+                      <a href="{% if sub_lab_url %}{{ sub_lab_url }}?batch={{ lab.batch }}{% else %}#{% endif %}"
                          class="action-button btn-substitute">
                         Substitute Lab
                       </a>
@@ -2337,7 +2705,7 @@ function initDragAndDrop() {
           {% elif cell.type == "class" %}
             <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               {% for cls in cell.classes %}
-                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} draggable-slot-item" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} draggable-slot-item" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   {{ cls.instructor.name }}<br>
                   {{ cls.room.r_number }}
@@ -2351,7 +2719,8 @@ function initDragAndDrop() {
                    class="action-button btn-delete">Delete</a>
 
                 {# ✅ CLASS SUBSTITUTE BUTTON #}
-                <a href="{% url 'substitute_teacher' table.section.section_id row.day cell.slot_number %}"
+                {% url 'substitute_teacher' table.section.section_id row.day cell.slot_number as sub_url %}
+                <a href="{% if sub_url %}{{ sub_url }}{% else %}#{% endif %}"
                    class="action-button btn-substitute">
                   Substitute
                 </a>
@@ -2364,6 +2733,10 @@ function initDragAndDrop() {
                 <a href="/add_slot/{{ table.section.section_id }}/"
                    class="action-button btn-add">Add</a>
               </div>
+              {% if cell.reserved_room %}
+              <div class="reserved-room-chip">Room Reserved: {{ cell.reserved_room.r_number }}</div>
+              <div class="empty-slot-note">This room is available here. Drop a bucket item to reuse it.</div>
+              {% endif %}
             </td>
           {% endif %}
 
@@ -2382,6 +2755,10 @@ function initDragAndDrop() {
   </div>
   {% endif %}
   </div>
+
+  {{ table.create_slot_subjects|json_script:table.create_slot_subjects_id }}
+  {{ table.create_slot_teachers|json_script:table.create_slot_teachers_id }}
+  {{ table.create_slot_rooms|json_script:table.create_slot_rooms_id }}
 
 {% endfor %}
 
@@ -2427,11 +2804,11 @@ function initDragAndDrop() {
       <div class="room-card__header">
         <h3 class="room-card__title">Room {{ rt.room.r_number }} ({{ rt.room.room_type }})</h3>
         {% if rt.dept_names %}
-        <div style="font-size:12px; color:#28506e; font-weight:700; margin-top:6px;">Departments: {{ rt.dept_names|join:", " }}</div>
+        <div style="font-size:12px; color:#28506e; font-weight:700; margin-top:6px;">Department: {{ rt.dept_names|join:", " }}</div>
         {% endif %}
         <div class="room-card__meta">
           <div class="room-optimization">
-            <span>Optimization</span>
+            <span>Utilization</span>
             <strong>{{ rt.optimization_percentage }}%</strong>
           </div>
           <button class="btn-save-tt room-save-btn" onclick="saveAsImage('room-tt-{{ forloop.counter }}', 'Room_{{ rt.room.r_number }}')">
@@ -2444,15 +2821,15 @@ function initDragAndDrop() {
     <thead>
       <tr>
         <th style="width:120px;">Day</th>
-        <th>8:30 - 9:30</th>
-        <th>9:30 - 10:30</th>
-        <th>10:30 - 11:30</th>
-        <th>11:30 - 12:30</th>
-        <th>12:30 - 1:30</th>
-        <th>1:30 - 2:30</th>
-        <th>2:30 - 3:30</th>
-        <th>3:30 - 4:30</th>
-        <th>4:30 - 5:30</th>
+        <th>9:00 - 9:55</th>
+         <th>9:55 - 10:50</th>
+          <th>10:50 - 11:45</th>
+          <th>11:45 - 12:40</th>
+          <th>12:40 - 1:35</th>
+          <th>1:35 - 2:30</th>
+           <th>2:30 - 3:25</th>
+          <th>3:25 - 4:20</th>
+           <th>4:20 - 5:15</th>
       </tr>
     </thead>
 
@@ -2524,8 +2901,10 @@ function initDragAndDrop() {
   <thead>
     <tr>
       <th>Teacher</th>
+      <th>Department</th>
       <th>Lectures</th>
-      <th>Lab Slots</th>
+      <th>Lab Workload</th>
+      <th>Shared Lab Workload</th>
       <th>Total Load</th>
     </tr>
   </thead>
@@ -2540,9 +2919,13 @@ function initDragAndDrop() {
             <span style="font-size:12px; color:#555;">({{ teacher.uid }})</span>
           </td>
 
+          <td>{{ data.departments|default:"-" }}</td>
+
           <td>{{ data.lectures }}</td>
 
           <td>{{ data.labs }}</td>
+
+          <td>{{ data.shared_labs|default:0|floatformat:"-1" }}</td>
 
           <td>
             {% if data.total >= 8 %}
@@ -2563,7 +2946,7 @@ function initDragAndDrop() {
       {% endfor %}
     {% else %}
       <tr>
-        <td colspan="4" style="text-align:center; font-weight:600;">
+        <td colspan="6" style="text-align:center; font-weight:600;">
           No workload data available
         </td>
       </tr>
@@ -2606,12 +2989,15 @@ function initDragAndDrop() {
   <div style="position:relative; z-index:1;">
   <h2 class="secHead">
     {{ ttable.teacher.name }} ({{ ttable.teacher.uid }})
+    <span style="display:inline-block; margin-left:10px; padding:4px 8px; border:1px solid #b7d7ee; border-radius:6px; background:#eef7ff; color:#1b4f72; font-size:12px; vertical-align:middle;">
+      Load: {{ ttable.workload.total|default:0|floatformat:"-1" }}
+    </span>
     <button class="btn-save-tt" style="margin-left: 12px; vertical-align: middle;" onclick="saveAsImage('teacher-tt-{{ forloop.counter }}', 'Teacher_{{ ttable.teacher.name }}')">
       Save as Image
     </button>
   </h2>
   {% if ttable.dept_names %}
-  <div style="text-align:center; margin:-6px 0 10px; font-size:12px; color:#28506e; font-weight:700;">Departments: {{ ttable.dept_names|join:", " }}</div>
+  <div style="text-align:center; margin:-6px 0 10px; font-size:12px; color:#28506e; font-weight:700;">Department: {{ ttable.dept_names|join:", " }}</div>
   {% endif %}
 
   <table class="table2">
