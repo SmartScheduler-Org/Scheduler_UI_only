@@ -1068,6 +1068,7 @@
     </div>
 
     {{ use_pso|json_script:"use-pso-data" }}
+    {{ use_prefilled_slots|default:False|json_script:"use-prefilled-data" }}
     <script>
         const phases = [
             ["Initializing generation core...", "Preparing section, room, and subject graph."],
@@ -1088,6 +1089,7 @@
         const errDetail  = document.getElementById("errDetail");
         const errTip     = document.getElementById("errTip");
         const usePso = JSON.parse(document.getElementById("use-pso-data").textContent);
+        const usePrefilledSlots = Boolean(JSON.parse(document.getElementById("use-prefilled-data").textContent));
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
 
         function showErrorModal(title, detail, tip) {
@@ -1153,6 +1155,9 @@
             const payload = new URLSearchParams();
             if (usePso) {
                 payload.append("use_pso", "on");
+            }
+            if (usePrefilledSlots) {
+                payload.append("use_prefilled_slots", "1");
             }
 
             try {

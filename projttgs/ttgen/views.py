@@ -17,6 +17,7 @@ import hmac
 from functools import wraps
 
 from django.contrib import messages
+from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth import get_user_model, login
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -43,6 +44,14 @@ _GENERATOR_VIEW_NAMES = (
     "timetable",
     "update_slot",
     "move_slot_dragdrop",
+    "generated_park_slot",
+    "generated_create_parking_slot",
+    "generated_restore_parked_slot",
+    "generated_delete_parking_item",
+    "generated_delete_slot_item",
+    "generated_delete_manual_slot_item",
+    "generated_update_parking_item",
+    "generated_update_manual_slot_item",
     "delete_slot",
     "add_slot",
     "save_timetable",
@@ -391,9 +400,23 @@ def _redirect_to_subscription(request):
     return redirect("subscription_gate")
 
 
+def _redirect_to_login_for_generation(request):
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({"ok": False, "message": "Please login before generating a timetable."}, status=401)
+    messages.info(request, "Please login before generating a timetable.")
+    return redirect_to_login(request.get_full_path(), login_url=django_settings.LOGIN_URL)
+
+
 def _guard_generation_view(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
+        if not getattr(request.user, "is_authenticated", False):
+            return _redirect_to_login_for_generation(request)
+        if hasattr(public_core, "ensure_private_generator_loaded"):
+            public_core.ensure_private_generator_loaded()
+        state = public_core._get_user_state(request.user.id) if getattr(request.user, "is_authenticated", False) else {}
+        if state.get("prefill_mode") and state.get("schedules"):
+            return view_func(request, *args, **kwargs)
         if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
         return view_func(request, *args, **kwargs)
@@ -404,6 +427,8 @@ def _guard_generation_view(view_func):
 def _wrap_generate_loading(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
+        if not getattr(request.user, "is_authenticated", False):
+            return _redirect_to_login_for_generation(request)
         if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
         return view_func(request, *args, **kwargs)
@@ -414,6 +439,8 @@ def _wrap_generate_loading(view_func):
 def _wrap_generate_timetables(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
+        if not getattr(request.user, "is_authenticated", False):
+            return _redirect_to_login_for_generation(request)
         if not _demo_mode_active(request) and not _has_generate_credit(request.user) and not _generation_access_granted(request):
             return _redirect_to_subscription(request)
         if not _demo_mode_active(request):
@@ -752,7 +779,7 @@ for _view_name in _GENERATOR_VIEW_NAMES:
         globals()[_view_name] = _wrap_edit_delete(_view)
     elif _view_name in {"substitute_teacher", "substitute_lab_teacher"}:
         globals()[_view_name] = _wrap_substitute(_view)
-    elif _view_name == "move_slot_dragdrop":
-        globals()[_view_name] = _wrap_drag_drop(_view)
+    elif _view_name in {"move_slot_dragdrop", "generated_park_slot", "generated_create_parking_slot", "generated_restore_parked_slot", "generated_delete_parking_item", "generated_delete_slot_item", "generated_delete_manual_slot_item", "generated_update_parking_item", "generated_update_manual_slot_item"}:
+        globals()[_view_name] = _view
     else:
         globals()[_view_name] = _guard_generation_view(_view)

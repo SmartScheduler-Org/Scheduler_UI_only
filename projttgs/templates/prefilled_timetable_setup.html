@@ -1,0 +1,98 @@
+{% extends "mainbase.html" %}
+{% block title %}Prefilled Timetable{% endblock %}
+{% block content %}
+<style>
+.prefill-shell {
+  max-width: 760px;
+  margin: 64px auto;
+  padding: 0 18px;
+}
+.prefill-panel {
+  background: #ffffff;
+  border: 1px solid #dbe4ee;
+  border-radius: 8px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+  padding: 28px;
+}
+.prefill-panel h1 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 28px;
+  letter-spacing: 0;
+}
+.prefill-panel p {
+  margin: 0 0 22px;
+  color: #475569;
+  line-height: 1.5;
+}
+.prefill-form {
+  display: grid;
+  gap: 16px;
+}
+.prefill-file {
+  display: grid;
+  gap: 8px;
+  color: #334155;
+  font-weight: 700;
+}
+.prefill-file input {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 12px;
+  background: #f8fafc;
+  color: #0f172a;
+}
+.prefill-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.prefill-primary,
+.prefill-secondary {
+  border: 0;
+  border-radius: 6px;
+  padding: 11px 16px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+.prefill-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+.prefill-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.prefill-note {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 13px;
+}
+</style>
+<div class="prefill-shell">
+  <div class="prefill-panel">
+    <h1>Prefilled Table</h1>
+    <p>Upload the same sections CSV format used in the section setup. This opens empty section timetables for manual locked slots before generation.</p>
+    <form method="post" enctype="multipart/form-data" class="prefill-form">
+      {% csrf_token %}
+      <label class="prefill-file">
+        <span>Sections CSV</span>
+        <input type="file" name="csv_file" accept=".csv" required>
+      </label>
+      <div class="prefill-actions">
+        <button type="submit" class="prefill-primary">Generate Section Timetable</button>
+        <a href="{% url 'admindash' %}" class="prefill-secondary">Back</a>
+      </div>
+    </form>
+    <div class="prefill-note">
+      Expected columns include section_id and department or department_code. program_name and student_strength are optional, same as the existing section CSV upload.
+    </div>
+  </div>
+</div>
+{% endblock %}

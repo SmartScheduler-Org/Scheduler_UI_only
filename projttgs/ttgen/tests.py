@@ -156,16 +156,51 @@ class SchedulerInitializationTests(TestCase):
             }
             for subject in test_table["subject_counts"]
         ]
-        self.assertEqual(
-            compact_subject_counts,
-            [
-                {"name": "Solo Lab", "count": 1, "required": 1, "missing": 0, "is_lab": True},
-                {"name": "Theory 1", "count": 2, "required": 2, "missing": 0, "is_lab": False},
-                {"name": "Theory 2", "count": 1, "required": 2, "missing": 1, "is_lab": False},
-                {"name": "Theory 3", "count": 0, "required": 2, "missing": 2, "is_lab": False},
-                {"name": "Theory 4", "count": 0, "required": 2, "missing": 2, "is_lab": False},
-                {"name": "Theory 5", "count": 0, "required": 1, "missing": 1, "is_lab": False},
-            ],
+        self.assertEqual(compact_subject_counts, [
+            {"name": "Solo Lab", "count": 1, "required": 1, "missing": 0, "is_lab": True},
+            {"name": "Theory 1", "count": 2, "required": 2, "missing": 0, "is_lab": False},
+            {"name": "Theory 2", "count": 1, "required": 2, "missing": 1, "is_lab": False},
+            {"name": "Theory 3", "count": 0, "required": 2, "missing": 2, "is_lab": False},
+            {"name": "Theory 4", "count": 0, "required": 2, "missing": 2, "is_lab": False},
+            {"name": "Theory 5", "count": 0, "required": 1, "missing": 1, "is_lab": False},
+        ])
+
+    def test_build_section_tables_excludes_manual_unknown_subject_from_missing_counts(self):
+        teacher = self.section.allowed_subjects.filter(room_required="Lecture Hall").first().instructors.first()
+        room = Room.objects.get(r_number="LH-1")
+        monday_1 = MeetingTime.objects.get(pid="Mo1")
+        manual_subject = views_other.ManualPrefillSubject("Manual Workshop", duration=4)
+
+        manual_class = views_other.Class(99, self.department, self.section.section_id, manual_subject)
+        manual_class.set_instructor(teacher)
+        manual_class.set_room(room)
+        manual_class.set_meetingTime(monday_1)
+        manual_class.meeting_times = [
+            monday_1,
+            MeetingTime.objects.get(pid="Mo2"),
+            MeetingTime.objects.get(pid="Mo3"),
+            MeetingTime.objects.get(pid="Mo4"),
+        ]
+        manual_class.duration = 4
+        manual_class.manual_entry = True
+
+        tables = views_other.build_section_tables([manual_class], [])
+        test_table = next(table for table in tables if table["section"].section_id == "Test Section")
+
+        self.assertNotIn("Manual Workshop", [subject["name"] for subject in test_table["subject_counts"]])
+        self.assertNotIn("Manual Workshop", [lab["name"] for lab in test_table["missed_labs"]])
+        self.assertEqual(test_table["total_missing_classes"], sum(subject["missing"] for subject in test_table["subject_counts"]))
+
+    def test_build_section_tables_lists_missed_labs(self):
+        extra_lab_subject = Subject.objects.create(
+            subject_number="LAB002",
+            subject_name="Missed Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="ADVANCED",
+            classes_per_week=1,
+            user=self.user,
         )
         self.assertEqual(test_table["total_missing_classes"], 6)
 

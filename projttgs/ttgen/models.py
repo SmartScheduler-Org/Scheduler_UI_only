@@ -252,6 +252,28 @@ class Section(models.Model):
         return self.section_id
 
 
+class SectionSubjectMapping(models.Model):
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name="subject_mappings",
+    )
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name="section_mappings",
+    )
+    group_count = models.PositiveIntegerField(default=1)
+    elective_section_ids = models.CharField(max_length=255, blank=True, default="")
+
+    class Meta:
+        db_table = "ttgen_section_allowed_courses"
+        managed = False
+
+    def __str__(self):
+        return f"{self.section.section_id} -> {self.subject.subject_name}"
+
+
 class TeacherSection(models.Model):
     instructor = models.ForeignKey(
         Instructor,
@@ -292,6 +314,8 @@ class SectionSubjectInstructor(models.Model):
         related_name="section_instructors",
         db_column="course_id",
     )
+    group_instructor_ids = models.JSONField(default=list, blank=True)
+    group_second_instructor_ids = models.JSONField(default=list, blank=True)
     instructor = models.ForeignKey(
         Instructor,
         on_delete=models.CASCADE,
@@ -347,6 +371,25 @@ class SavedTimetable(models.Model):
     def __str__(self):
         dept_label = f" [{self.department.name}]" if self.department_id else ""
         return f"Timetable{dept_label} ({self.created_at.strftime('%d %b %Y %H:%M')})"
+
+
+class SavedPrefill(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_prefills",
+    )
+    name = models.CharField(max_length=120, blank=True, default="")
+    snapshot = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        label = self.name or "Saved Prefill"
+        return f"{label} ({self.updated_at.strftime('%d %b %Y %H:%M')})"
 
 
 class ScheduledSlot(models.Model):
