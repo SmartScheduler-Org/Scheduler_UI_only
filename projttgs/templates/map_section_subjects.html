@@ -216,6 +216,318 @@
     display: none;
 }
 
+.prefill-generate-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000002;
+    display: none;
+    place-items: center;
+    padding: 24px;
+}
+
+.prefill-generate-modal.is-open {
+    display: grid;
+}
+
+.prefill-generate-backdrop {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 34% 28%, rgba(139, 92, 246, 0.16), transparent 28%),
+        radial-gradient(circle at 68% 68%, rgba(37, 99, 235, 0.14), transparent 30%),
+        rgba(2, 6, 23, 0.82);
+    backdrop-filter: blur(14px);
+}
+
+.prefill-generate-panel {
+    position: relative;
+    width: min(680px, 100%);
+    max-height: min(82vh, 720px);
+    overflow: auto;
+    border-radius: 14px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background:
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    color: #0f172a;
+    box-shadow: 0 26px 90px rgba(2, 6, 23, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    padding: 0;
+}
+
+.prefill-generate-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(135deg, #ffffff, #f1f5f9);
+}
+
+.prefill-generate-heading {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+}
+
+.prefill-generate-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    box-shadow: 0 12px 24px rgba(79, 70, 229, 0.24);
+}
+
+.prefill-generate-title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 21px;
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1.15;
+}
+
+.prefill-generate-subtitle {
+    margin: 5px 0 0;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.prefill-generate-close {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 0;
+    background: #e8eef6;
+    color: #334155;
+    font-size: 20px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.prefill-generate-close:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
+    transform: rotate(90deg);
+}
+
+.prefill-generate-step {
+    display: none;
+}
+
+.prefill-generate-step.is-active {
+    display: block;
+    padding: 22px 24px 24px;
+}
+
+.prefill-generate-choice-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.prefill-generate-choice {
+    position: relative;
+    min-height: 148px;
+    border: 1px solid #d8e3f0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 18px;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+    overflow: hidden;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.prefill-generate-choice:hover {
+    transform: translateY(-2px);
+    border-color: #7c3aed;
+    background: #fbfdff;
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.13);
+}
+
+.prefill-generate-choice:focus-visible,
+.prefill-modal-btn:focus-visible,
+.prefill-generate-close:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.24);
+    outline-offset: 2px;
+}
+
+.prefill-generate-choice .prefill-generate-choice-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 14px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #8b5cf6, #2563eb);
+}
+
+.prefill-generate-choice .prefill-generate-choice-icon.is-muted {
+    background: linear-gradient(135deg, #334155, #64748b);
+}
+
+.prefill-generate-choice strong {
+    display: block;
+    color: #0f172a;
+    font-size: 15px;
+    margin-bottom: 8px;
+    line-height: 1.25;
+}
+
+.prefill-generate-choice span {
+    display: block;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.prefill-generate-choice .prefill-generate-choice-arrow {
+    position: absolute;
+    right: 16px;
+    bottom: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 900;
+}
+
+.prefill-select-list {
+    display: grid;
+    gap: 10px;
+    max-height: 340px;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.prefill-select-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    border: 1px solid #d8e3f0;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 13px 14px;
+    color: #0f172a;
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.prefill-select-item:hover {
+    border-color: #93c5fd;
+    background: #f8fbff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+}
+
+.prefill-select-item input {
+    width: 18px;
+    height: 18px;
+    accent-color: #2563eb;
+}
+
+.prefill-select-name {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.prefill-select-meta {
+    margin-top: 4px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.prefill-generate-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.prefill-modal-btn {
+    border: 0;
+    border-radius: 8px;
+    min-height: 40px;
+    padding: 10px 16px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.prefill-modal-btn:hover {
+    transform: translateY(-1px);
+}
+
+.prefill-modal-btn-secondary {
+    background: #eef2f7;
+    color: #334155;
+}
+
+.prefill-modal-btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
+}
+
+.prefill-empty-note {
+    border-radius: 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+@media (max-width: 640px) {
+    .prefill-generate-modal {
+        padding: 14px;
+        align-items: end;
+    }
+
+    .prefill-generate-panel {
+        width: 100%;
+        max-height: 88vh;
+        border-radius: 14px;
+    }
+
+    .prefill-generate-header,
+    .prefill-generate-step.is-active {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .prefill-generate-choice-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .prefill-generate-choice {
+        min-height: 128px;
+    }
+}
+
 @media (max-width: 900px) {
     .subjects-header {
         grid-template-columns: 1fr;
@@ -292,6 +604,67 @@ label strong {
     </div>
 </div>
 
+<div class="prefill-generate-modal" id="prefillGenerateModal" aria-hidden="true">
+    <div class="prefill-generate-backdrop" data-prefill-modal-close></div>
+    <div class="prefill-generate-panel" role="dialog" aria-modal="true" aria-labelledby="prefillGenerateTitle">
+        <div class="prefill-generate-header">
+            <div class="prefill-generate-heading">
+                <span class="prefill-generate-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                <span>
+                    <h3 class="prefill-generate-title" id="prefillGenerateTitle">Generate Timetable</h3>
+                    <p class="prefill-generate-subtitle">Choose how generation should start.</p>
+                </span>
+            </div>
+            <button type="button" class="prefill-generate-close" data-prefill-modal-close aria-label="Close">&times;</button>
+        </div>
+
+        <div class="prefill-generate-step is-active" id="prefillChoiceStep">
+            <div class="prefill-generate-choice-grid">
+                <button type="button" class="prefill-generate-choice" id="generateWithPrefillBtn">
+                    <span class="prefill-generate-choice-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
+                    <strong>Generate with prefilled</strong>
+                    <span>Select one or more saved prefills and keep those locked slots during generation.</span>
+                    <span class="prefill-generate-choice-arrow"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </button>
+                <a class="prefill-generate-choice" href="{% url 'generate_without_prefills' %}">
+                    <span class="prefill-generate-choice-icon is-muted"><i class="fa-solid fa-shuffle" aria-hidden="true"></i></span>
+                    <strong>Generate without prefilled</strong>
+                    <span>Start normal generation without loading any saved prefilled slots.</span>
+                    <span class="prefill-generate-choice-arrow"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            </div>
+        </div>
+
+        <div class="prefill-generate-step" id="prefillSelectStep">
+            {% if saved_prefills %}
+            <form method="post" action="{% url 'generate_selected_prefills' %}" id="selectedPrefillGenerateForm">
+                {% csrf_token %}
+                <div class="prefill-select-list">
+                    {% for row in saved_prefills %}
+                    <label class="prefill-select-item">
+                        <input type="checkbox" name="prefill_ids" value="{{ row.item.id }}">
+                        <span>
+                            <span class="prefill-select-name">{{ row.item.name|default:"Saved Prefill" }}</span>
+                            <span class="prefill-select-meta">{{ row.section_count }} section(s) &middot; {{ row.slot_count }} slot(s) &middot; {{ row.item.updated_at|date:"d M Y, h:i A" }}</span>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="prefill-generate-actions">
+                    <button type="button" class="prefill-modal-btn prefill-modal-btn-secondary" id="prefillBackBtn">Back</button>
+                    <button type="submit" class="prefill-modal-btn prefill-modal-btn-primary">OK</button>
+                </div>
+            </form>
+            {% else %}
+            <div class="prefill-empty-note">No saved prefills found. Save a prefilled table first, or generate without prefilled slots.</div>
+            <div class="prefill-generate-actions">
+                <button type="button" class="prefill-modal-btn prefill-modal-btn-secondary" id="prefillBackBtn">Back</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 <!-- ================= CSV UPLOAD ================= -->
 
 <form method="post" enctype="multipart/form-data">
@@ -326,6 +699,7 @@ label strong {
 <div class="form-wrapper">
 <form method="post">
 {% csrf_token %}
+{% if edit_mapping %}<input type="hidden" name="edit_mapping_id" value="{{ edit_mapping.id }}">{% endif %}
 <fieldset style="position:relative;">
 
 <div class="info-icon-container">
@@ -342,14 +716,14 @@ label strong {
 <select name="section_id" class="form-control" required>
     <option value="">Choose a section</option>
     {% for s in sections %}
-        <option value="{{ s.section_id }}">{{ s.section_id }}</option>
+        <option value="{{ s.section_id }}" {% if edit_mapping and edit_mapping.section.id == s.id %}selected{% endif %}>{{ s.section_id }}</option>
     {% endfor %}
 </select>
 
 <br>
 
 <label><strong>Group count</strong></label>
-<input type="number" name="group_count" class="form-control" min="1" value="1" required>
+<input type="number" name="group_count" class="form-control" min="1" value="{% if edit_mapping %}{{ edit_mapping.group_count }}{% else %}1{% endif %}" required>
 
 <br>
 
@@ -359,6 +733,7 @@ label strong {
     name="elective_section_id"
     class="form-control"
     placeholder="Optional: CE32 3rd Sem;IT 3rd Sem"
+    value="{% if edit_mapping %}{{ edit_mapping.elective_section_ids }}{% endif %}"
 >
 
 <br>
@@ -367,7 +742,7 @@ label strong {
 <div class="checkbox-scroll">
     {% for c in subjects %}
         <label style="display:block;">
-            <input type="checkbox" name="subjects" value="{{ c.id }}">
+            <input type="checkbox" name="subjects" value="{{ c.id }}" {% if edit_mapping and edit_mapping.subject.id == c.id %}checked{% endif %}>
             {{ c.subject_number }} — {{ c.subject_name }}
         </label>
     {% endfor %}
@@ -375,12 +750,80 @@ label strong {
 
 <div class="button-row">
     <button type="submit" name="manual_add" class="submit-btn">
-        Save Mapping
+        {% if edit_mapping %}Update Mapping{% else %}Save Mapping{% endif %}
     </button>
+    {% if edit_mapping %}<a href="{% url 'map_section_subjects' %}" class="csv-convert-btn">Cancel Edit</a>{% endif %}
 </div>
 
 </fieldset>
 </form>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("prefillGenerateModal");
+    const generateLink = document.querySelector(".generate-cta");
+    const choiceStep = document.getElementById("prefillChoiceStep");
+    const selectStep = document.getElementById("prefillSelectStep");
+    const withPrefillBtn = document.getElementById("generateWithPrefillBtn");
+    const backBtn = document.getElementById("prefillBackBtn");
+    const selectedForm = document.getElementById("selectedPrefillGenerateForm");
+
+    function openModal() {
+        if (!modal) return;
+        choiceStep.classList.add("is-active");
+        selectStep.classList.remove("is-active");
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal() {
+        if (!modal) return;
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+    }
+
+    if (generateLink) {
+        generateLink.addEventListener("click", function (event) {
+            event.preventDefault();
+            openModal();
+        });
+    }
+
+    if (withPrefillBtn) {
+        withPrefillBtn.addEventListener("click", function () {
+            choiceStep.classList.remove("is-active");
+            selectStep.classList.add("is-active");
+        });
+    }
+
+    if (backBtn) {
+        backBtn.addEventListener("click", function () {
+            selectStep.classList.remove("is-active");
+            choiceStep.classList.add("is-active");
+        });
+    }
+
+    if (selectedForm) {
+        selectedForm.addEventListener("submit", function (event) {
+            const selected = selectedForm.querySelectorAll('input[name="prefill_ids"]:checked');
+            if (!selected.length) {
+                event.preventDefault();
+                alert("Select at least one saved prefill.");
+            }
+        });
+    }
+
+    document.querySelectorAll("[data-prefill-modal-close]").forEach(function (el) {
+        el.addEventListener("click", closeModal);
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeModal();
+        }
+    });
+});
+</script>
 
 {% endblock %}

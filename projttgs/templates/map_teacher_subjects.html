@@ -140,7 +140,10 @@
     background: #dc3545;
     color: #fff;
     border: none;
-    padding: 6px 10px;
+    width: 34px;
+    height: 34px;
+    display: inline-grid;
+    place-items: center;
     border-radius: 6px;
     font-size: 12px;
     cursor: pointer;
@@ -148,6 +151,58 @@
 
 .delete-btn:hover {
     background: #b52a37;
+}
+
+.row-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.update-btn {
+    width: 34px;
+    height: 34px;
+    display: inline-grid;
+    place-items: center;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.update-btn:hover {
+    background: #1d4ed8;
+}
+
+.mapping-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.mapping-edit-grid label {
+    display: block;
+    color: rgba(255,255,255,0.92);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.mapping-edit-grid input,
+.mapping-edit-grid select {
+    width: 100%;
+    color: #000000 !important;
+}
+
+.mapping-edit-grid .full-row {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+    .mapping-edit-grid { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -187,8 +242,66 @@
     </fieldset>
 </form>
 
+<!-- Manual update/add mapping -->
+<div class="form-wrapper">
+<form method="post" style="margin-top: 20px;">
+    {% csrf_token %}
+    {% if edit_mapping %}<input type="hidden" name="edit_mapping_id" value="{{ edit_mapping.id }}">{% endif %}
+    <fieldset style="position: relative;">
+        <div class="info-icon-container">
+            <span class="info-icon">i</span>
+            <div class="info-tooltip">
+                <strong>Teacher Mapping</strong><br>
+                Use teacher UID or exact teacher name. For grouped classes, separate values with semicolons.
+            </div>
+        </div>
+
+        <h3 style="margin-top:0;">{% if edit_mapping %}Update Teacher Mapping{% else %}Add Teacher Mapping{% endif %}</h3>
+        <div class="mapping-edit-grid">
+            <div>
+                <label>Section</label>
+                <select name="section_id" required>
+                    <option value="">Choose section</option>
+                    {% for section in sections %}
+                        <option value="{{ section.id }}" {% if edit_mapping and edit_mapping.section.id == section.id %}selected{% endif %}>{{ section.section_id }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Subject</label>
+                <select name="subject_id" required>
+                    <option value="">Choose subject</option>
+                    {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if edit_mapping and edit_mapping.subject.id == subject.id %}selected{% endif %}>{{ subject.subject_number }} - {{ subject.subject_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Primary Teacher UID(s)</label>
+                <input type="text" name="primary_teacher_uids" value="{{ edit_primary_teacher_uids }}" placeholder="T001 or T001;T002" required>
+            </div>
+            <div>
+                <label>Second Teacher UID(s)</label>
+                <input type="text" name="second_teacher_uids" value="{{ edit_second_teacher_uids }}" placeholder="Optional: T003 or T003;T004">
+            </div>
+            <div class="full-row">
+                <label style="display:flex;align-items:center;gap:8px;margin:0;">
+                    <input type="checkbox" name="shared_lab" value="1" style="width:auto;" {% if edit_mapping and edit_mapping.second_instructor %}checked{% endif %}>
+                    Shared lab / second teacher enabled
+                </label>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button type="submit" name="manual_save_mapping" class="submit-btn">{% if edit_mapping %}Update Mapping{% else %}Save Mapping{% endif %}</button>
+            {% if edit_mapping %}<a href="{% url 'map_teacher_subjects' %}" class="csv-convert-btn">Cancel Edit</a>{% endif %}
+        </div>
+    </fieldset>
+</form>
+</div>
+
 <!-- Mapping Table -->
-<div id="mappingContainer" style="display:none; margin-top:25px;">
+<div id="mappingContainer" style="display:{% if edit_mapping %}block{% else %}none{% endif %}; margin-top:25px;">
 <fieldset>
 
 <h3>Current Section → Subject → Teacher Mappings</h3>
@@ -219,14 +332,19 @@
         <td>{% if m.second_instructor %}Yes{% else %}No{% endif %}</td>
         <td>{% if m.second_instructor %}{{ m.second_instructor.name }} ({{ m.second_instructor.uid }}){% else %}-{% endif %}</td>
         <td>
+                        <div class="row-actions">
+                        <a class="update-btn" href="{% url 'map_teacher_subjects' %}?edit={{ m.id }}" aria-label="Update mapping" title="Update mapping"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
             <form method="post"
                   action="{% url 'delete_sci_mapping' m.id %}">
                 {% csrf_token %}
                 <button class="delete-btn"
+                                    aria-label="Delete mapping"
+                                    title="Delete mapping"
                         onclick="return confirm('Remove mapping?');">
-                    Remove
+                                <i class="fa-solid fa-trash" aria-hidden="true"></i>
                 </button>
             </form>
+            </div>
         </td>
     </tr>
 {% endfor %}

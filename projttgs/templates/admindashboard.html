@@ -20,6 +20,9 @@
         <span class="admin-csv-orb"></span>
         CSV
       </a>
+      <a href="{% url 'prefilled_timetable_setup' %}" class="admin-shortcut admin-shortcut-csv">
+        Prefilled Table
+      </a>
     </div>
   </div>
 </div>
@@ -137,6 +140,22 @@
             </div>
             <h3 style="color:#86efac;">Teacher Forms</h3>
             <p>{{ teacher_onboarding_count }} submitted</p>
+        </a>
+
+        <a href="{% url 'prefilled_timetable_setup' %}" class="dash-card">
+          <div class="dash-icon-wrap">
+            <i class="icon fas fa-table-cells"></i>
+          </div>
+          <h3>Prefilled Table</h3>
+          <p>Manual slots before generation</p>
+        </a>
+
+        <a href="{% url 'saved_prefill_list' %}" class="dash-card">
+          <div class="dash-icon-wrap">
+            <i class="icon fas fa-folder-open"></i>
+          </div>
+          <h3>Saved Prefill</h3>
+          <p>Reuse locked manual slots</p>
         </a>
 
      </div>

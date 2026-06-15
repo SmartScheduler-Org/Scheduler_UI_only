@@ -1,0 +1,82 @@
+department_code,subject_number,subject_name,room_required,lab_category_required,specific_equipment/software_lab(null accepted),classes_per_week,max_numb_students,duration 
+EE,BSC101C,Physics (Waves and Optics),LECTURE HALL,,,3,,1
+EE,BSC103 D,Mathematics-I (Calculus & Linear Algebra),LECTURE HALL,,,4,,1
+EE,ESC102,Engineering Graphics & Design,ED HALL,DRAWING HALL,,1,,4
+EE,ESC103,Programming for Problem solving,LECTURE HALL,,,3,,1
+EE,LSEE241,Biology,LECTURE HALL,,,2,,1
+EE,ESC104,Workshop- I,LAB,WS-1,,1,,4
+EE,BSC104C,Physics (Waves and Optics) Lab,LAB,Btech PHY LAB,,1,,2
+EE,ESC105,Programming for Problem solving Lab,LAB,CSE Lab,,1,,4
+EE,ECP301,Digital Electronics & Computer Organization,LECTURE HALL,,,3,,1
+EE,ECP302,Semiconductor Devices,LECTURE HALL,,,3,,1
+EE,ECP303,Object Oriented Programming using C++ ,LECTURE HALL,,,3,,1
+EE,ECP304,Analog Communication,LECTURE HALL,,,3,,1
+EE,ECP305,Circuit Analysis and Synthesis,LECTURE HALL,,,3,,1
+EE,BS301,Mathematics-III,LECTURE HALL,,,4,,1
+EE,MC01/MC02,Indian Constitution/Essence of Indian Traditional Knowledge,LECTURE HALL,,,2,,1
+EE,ECP351--ECP352--ECP353-1,Oops LAB--DE LAB--A.Comm LAB,LAB,PCI W/S(EE);VLSI Lab(EE);Comm2W/S(EE),,1,,2
+EE,ECP351--ECP352--ECP353-2,Oops LAB--DE LAB--A.Comm LAB,LAB,PCI W/S(EE);VLSI Lab(EE);Comm2W/S(EE),,1,,2
+EE,ECP351--ECP352--ECP353-3,Oops LAB--DE LAB--A.Comm LAB,LAB,PCI W/S(EE);VLSI Lab(EE);Comm2W/S(EE),,1,,2
+EE,EC301,Electronics Devices,LECTURE HALL,,,3,,1
+EE,EC302,Digital System Design,LECTURE HALL,,,3,,1
+EE,EC304,Network Theory,LECTURE HALL,,,3,,1
+EE,ESC01,Engineering Mechanics,LECTURE HALL,,,4,,1
+EE,EC351--EC352--EC353-1,ED LAB--DSD LAB--NT LAB,LAB,MWR Lab(EE);EL2 W/S(EE);Embedded Lab(EE),,1,,2
+EE,EC351--EC352--EC353-2,ED LAB--DSD LAB--NT LAB,LAB,MWR Lab(EE);EL2 W/S(EE);Embedded Lab(EE),,1,,2
+EE,EC351--EC352--EC353-3,ED LAB--DSD LAB--NT LAB,LAB,MWR Lab(EE);EL2 W/S(EE);Embedded Lab(EE),,1,,2
+EE,EEN 301,Digital Electronics,LECTURE HALL,,,3,,1
+EE,ECC01,Signal and Systems,LECTURE HALL,,,3,,1
+EE,EE351--EE52--EE53-1,SD LAB--DE LAB--CAS LAB,LAB,EL1 W/S(EE);EL2 W/S(EE);Embedded Lab(EE),,1,,2
+EE,EE351--EE52--EE53-2,SD LAB--DE LAB--CAS LAB,LAB,EL1 W/S(EE);EL2 W/S(EE);Embedded Lab(EE),,1,,2
+EE,EE351--EE52--EE53-3,SD LAB--DE LAB--CAS LAB,LAB,EL1 W/S(EE);EL2 W/S(EE);Embedded Lab(EE),,1,,2
+EE,ECP501,Embedded System Design,LECTURE HALL,,,3,,1
+EE,CS-501,Database Management System,LECTURE HALL,,,3,,1
+EE,PCC-CS-403,Operating System,LECTURE HALL,,,3,,1
+EE,ECP502,Integrated Circuit Design,LECTURE HALL,,,3,,1
+EE,MC03,Environmental Science,LECTURE HALL,,,2,,1
+EE,OEL502,Electrical Measurement and Instrumentation,LECTURE HALL,,,3,,1
+EE,CS 504--ECP 552-1,DBMS LAB--ICD LAB,LAB,Computer lab(EE);VLSI Lab(EE),,1,,2
+EE,CS 504--ECP 552-2,DBMS LAB--ICD LAB,LAB,Computer lab(EE);VLSI Lab(EE),,1,,2
+EE,ECC02,Electromagnetic Waves,LECTURE HALL,,,3,,1
+EE,EC502,Probability Theory and Stochastic Processes,LECTURE HALL,,,3,,1
+EE,ECC04,Digital Signal Processing,LECTURE HALL,,,3,,1
+EE,ECEL501,CMOS Design,LECTURE HALL,,,3,,1
+EE,OEL503,Intelligent Instrumentation,LECTURE HALL,,,3,,1
+EE,ECC53--EC52-1,DSP LAB--EW LAB ,LAB,Computer lab(EE);MWR Lab(EE),,1,,2
+EE,ECC53--EC52-2,DSP LAB--EW LAB ,LAB,Computer lab(EE);MWR Lab(EE),,1,,2
+EE,EEN501,Feedback Control System,LECTURE HALL,,,3,,1
+EE,EEN502,Microprocessors Interfacing and Applications,LECTURE HALL,,,3,,1
+EE,EC602,Computer Networks,LECTURE HALL,,,3,,1
+EE,EEN-EL1-502,Virtual Instrumentation,LECTURE HALL,,,3,,1
+EE,EEN-OE1-502,Principles of Numerical Methods,LECTURE HALL,,,3,,1
+EE,EEN551--EEN552--EC652--EE-IOT-551-1,FCS--MPI--CN--IOT,LAB,CS Lab(EE);Comm2W/S(EE);Computer lab(EE) ;IOT Lab(EE),,1,,2
+EE,EEN551--EEN552--EC652--EE-IOT-551-2,FCS--MPI--CN--IOT,LAB,CS Lab(EE);Comm2W/S(EE);Computer lab(EE) ;IOT Lab(EE),,1,,2
+EE,EEN551--EEN552--EC652--EE-IOT-551-3,FCS--MPI--CN--IOT,LAB,CS Lab(EE);Comm2W/S(EE);Computer lab(EE) ;IOT Lab(EE),,1,,2
+EE,EEN551--EEN552--EC652--EE-IOT-551-4,FCS--MPI--CN--IOT,LAB,CS Lab(EE);Comm2W/S(EE);Computer lab(EE) ;IOT Lab(EE),,1,,2
+EE,EEN553,Electronics Engineering Workshop-III,LAB,Comm1W/S(EE);Comm2W/S(EE),,1,,7
+EE,EE-IOT-501,Essentials of IoT,LECTURE HALL,,,3,,1
+EE,ECPEL703,Cloud Computing and Security,LECTURE HALL,,,3,,1
+EE,ECPEL707,Digital Image Processing and Analysis,LECTURE HALL,,,3,,1
+EE,ECPEL709,Machine Learning,LECTURE HALL,,,3,,1
+EE,HSMC01,Effective Technical Communication,LECTURE HALL,,,3,,1
+EE,OEC-CS-602(I),Human Resource Management,LECTURE HALL,,,3,,1
+EE,OEL 708,Advanced Digital System Design,LECTURE HALL,,,3,,1
+EE,ECP751,Major Project,LAB,Project Lab(EE),,1,,2
+EE,ESP752,Project Workshop-V,LAB,VLSI Lab(EE),,1,,4
+EE,ECEL701,Antenna and Propagation,LECTURE HALL,,,3,,1
+EE,ECEL704,Fiber Optic Communication,LECTURE HALL,,,3,,1
+EE,ECEL709,Error Correcting Codes,LECTURE HALL,,,3,,1
+EE,OEL710,Introduction to Cloud Computing,LECTURE HALL,,,3,,1
+EE,ECP701,Major Project,LAB,Project Lab(EE),,1,,2
+EE,ES751,Electronics Workshop-V,LAB,Comm1W/S(EE);MPI W/S(EE),,1,,4
+EE,ECP601,Mobile Communication,LECTURE HALL,,,3,,1
+EE,EEN-EL4-701,Hardware Description Language for VLSI,LECTURE HALL,,,3,,1
+EE,EEN-EL5-704,Neural Networks and Fuzzy Logic Control,LECTURE HALL,,,3,,1
+EE,OEL701,Human Resource Management,LECTURE HALL,,,3,,1
+EE,OEL603,Cyber Laws & Security,LECTURE HALL,,,3,,1
+EE,EEN753,Major Project,LAB,Project Lab(EE),,1,,8
+EE,EE-IOT-701,Mobile App Development for IoT,LECTURE HALL,,,3,,1
+EE,EE-IOT-EL-701,Artificial Intelligence and Machine Learning,LECTURE HALL,,,3,,1
+EE,EE-IOT-751--EEN751-1,MAD LAB--NNLC LAB,LAB,VLSI Lab(EE);Computer lab(EE) ,,1,,2
+EE,EE-IOT-751--EEN751-2,MAD LAB--NNLC LAB,LAB,VLSI Lab(EE);Computer lab(EE) ,,1,,2
+EE,EE-IOT-752,Project in IoT,LAB,Project Lab(EE),,1,,4

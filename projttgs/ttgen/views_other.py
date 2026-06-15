@@ -56,6 +56,31 @@ def _delete_all_step_entries(request, queryset, redirect_name, entity_label):
     return redirect(redirect_name)
 
 
+def _get_step_edit_object(request, model, query_param="edit", post_param="edit_id", **filters):
+    raw_id = request.POST.get(post_param) if request.method == "POST" else request.GET.get(query_param)
+    if not raw_id:
+        return None
+    try:
+        object_id = int(raw_id)
+    except (TypeError, ValueError):
+        return None
+    return model.objects.filter(pk=object_id, **filters).first()
+
+
+def _get_required_step_edit_object(request, model, post_param="edit_id", **filters):
+    raw_id = request.POST.get(post_param)
+    if not raw_id:
+        return None
+    try:
+        object_id = int(raw_id)
+    except (TypeError, ValueError):
+        raise Http404("Invalid edit item")
+    obj = model.objects.filter(pk=object_id, **filters).first()
+    if obj is None:
+        raise Http404("Edit item not found")
+    return obj
+
+
 # ---------------- PER-USER STATE ----------------
 _USER_STATE = {}  # {user_id: {"classes": ..., "labs": ..., "schedules": [...], "view_mode": ..., "data": ...}}
 
@@ -72,7 +97,12 @@ def _get_user_state(user_id):
             "generated_parking_items": [],
             "generated_slot_room_reservations": {},
             "generated_parking_next_id": 1,
+            "generated_manual_slot_next_id": 1,
             "generated_edit_index": None,
+            "prefill_mode": False,
+            "prefill_section_ids": [],
+            "prefill_locked_classes": [],
+            "prefill_locked_labs": [],
         }
     return _USER_STATE[user_id]
 
@@ -81,7 +111,32 @@ def _reset_generated_drag_state(state, current_index=None):
     state["generated_parking_items"] = []
     state["generated_slot_room_reservations"] = {}
     state["generated_parking_next_id"] = 1
+    state["generated_manual_slot_next_id"] = 1
     state["generated_edit_index"] = current_index
+
+
+def _ensure_manual_prefill_slot_uid(state, item_obj):
+    uid = str(getattr(item_obj, "manual_slot_uid", "") or "").strip()
+    if uid:
+        return uid
+    next_id = int(state.get("generated_manual_slot_next_id") or 1)
+    uid = f"manual-{next_id}"
+    state["generated_manual_slot_next_id"] = next_id + 1
+    setattr(item_obj, "manual_slot_uid", uid)
+    return uid
+
+
+def ensure_manual_prefill_slot_uids(state):
+    for item_obj in list(state.get("classes") or []):
+        if getattr(item_obj, "manual_entry", False):
+            _ensure_manual_prefill_slot_uid(state, item_obj)
+    for item_obj in list(state.get("labs") or []):
+        if getattr(item_obj, "manual_entry", False):
+            _ensure_manual_prefill_slot_uid(state, item_obj)
+    for parked in list(state.get("generated_parking_items") or []):
+        item_obj = parked.get("item")
+        if item_obj is not None and getattr(item_obj, "manual_entry", False):
+            parked["manual_slot_uid"] = _ensure_manual_prefill_slot_uid(state, item_obj)
 
 
 def _next_generated_parking_id(state):
@@ -108,6 +163,334 @@ def _decorate_generated_tables_with_parking(tables, state):
     return tables
 
 
+class ManualPrefillSubject:
+    def __init__(self, label, duration=1):
+        clean_label = (label or "Manual Subject").strip() or "Manual Subject"
+        self.pk = None
+        self.id = None
+        self.subject_number = clean_label
+        self.subject_name = clean_label
+        self.room_required = "Lecture Hall"
+        self.required_lab_category = ""
+        self.specific_rooms = ""
+        self.classes_per_week = 0
+        self.duration = max(1, min(int(duration or 1), 8))
+
+    def __str__(self):
+        return self.subject_name
+
+
+def _resolve_manual_prefill_subject(section_obj, subject_text, duration):
+    subject_text = (subject_text or "").strip()
+    if not subject_text:
+        return ManualPrefillSubject("Manual Subject", duration=duration)
+    matched = section_obj.allowed_subjects.filter(subject_number__iexact=subject_text).first()
+    if matched is None:
+        matched = section_obj.allowed_subjects.filter(subject_name__iexact=subject_text).first()
+    if matched is not None:
+        return matched
+    return ManualPrefillSubject(subject_text, duration=duration)
+
+
+def _parse_prefill_duration(value):
+    try:
+        duration = int(value)
+    except (TypeError, ValueError):
+        duration = 1
+    return max(1, min(duration, 8))
+
+
+def _prefill_teacher_uid(teacher):
+    if teacher is None:
+        return ""
+    return str(getattr(teacher, "uid", "") or getattr(teacher, "pk", "") or "")
+
+
+def _prefill_room_number(room):
+    if room is None:
+        return ""
+    return str(getattr(room, "r_number", "") or getattr(room, "pk", "") or "")
+
+
+def _prefill_subject_text(subject):
+    if subject is None:
+        return "Manual Subject"
+    return str(getattr(subject, "subject_name", "") or getattr(subject, "subject_number", "") or subject or "Manual Subject")
+
+
+def _serialize_prefill_class(cls):
+    meeting_times = list(getattr(cls, "meeting_times", None) or [])
+    if not meeting_times and getattr(cls, "meeting_time", None):
+        meeting_times = [cls.meeting_time]
+    first_time = meeting_times[0] if meeting_times else None
+    return {
+        "type": "class",
+        "section_id": str(getattr(cls, "section", "") or ""),
+        "subject_text": _prefill_subject_text(getattr(cls, "subject", None)),
+        "teacher_uid": _prefill_teacher_uid(getattr(cls, "instructor", None)),
+        "co_teacher_uids": [_prefill_teacher_uid(teacher) for teacher in list(getattr(cls, "co_instructors", []) or []) if teacher],
+        "room_number": _prefill_room_number(getattr(cls, "room", None)),
+        "day": getattr(first_time, "day", "") if first_time else "",
+        "start_slot": str(getattr(first_time, "time", "") if first_time else ""),
+        "duration": max(1, min(int(getattr(cls, "duration", None) or len(meeting_times) or 1), 8)),
+        "manual_entry": bool(getattr(cls, "manual_entry", False)),
+        "manual_slot_uid": str(getattr(cls, "manual_slot_uid", "") or ""),
+        "prefill_locked": bool(getattr(cls, "prefill_locked", False)),
+    }
+
+
+def _serialize_prefill_lab(lab):
+    meeting_times = list(getattr(lab, "meeting_times", None) or [])
+    first_time = meeting_times[0] if meeting_times else None
+    return {
+        "type": "lab",
+        "section_id": str(getattr(lab, "section", "") or ""),
+        "subject_text": _prefill_subject_text(getattr(lab, "subject", None)),
+        "teacher_uid": _prefill_teacher_uid(getattr(lab, "instructor", None)),
+        "second_teacher_uid": _prefill_teacher_uid(getattr(lab, "second_instructor", None)),
+        "co_teacher_uids": [_prefill_teacher_uid(teacher) for teacher in list(getattr(lab, "co_instructors", []) or []) if teacher],
+        "room_number": _prefill_room_number(getattr(lab, "room", None)),
+        "day": getattr(first_time, "day", "") if first_time else "",
+        "start_slot": str(getattr(first_time, "time", "") if first_time else ""),
+        "duration": max(1, min(int(getattr(lab, "duration", None) or len(meeting_times) or LAB_DURATION), 8)),
+        "manual_entry": bool(getattr(lab, "manual_entry", False)),
+        "manual_slot_uid": str(getattr(lab, "manual_slot_uid", "") or ""),
+        "prefill_locked": bool(getattr(lab, "prefill_locked", False)),
+        "batch": int(getattr(lab, "batch", 1) or 1),
+        "total_batches": int(getattr(lab, "total_batches", 1) or 1),
+    }
+
+
+def save_prefill_session_snapshot(request, state=None):
+    if not request or not getattr(request, "user", None) or not request.user.is_authenticated:
+        return None
+    state = state or _get_user_state(request.user.id)
+    if not state.get("prefill_mode"):
+        return None
+    ensure_manual_prefill_slot_uids(state)
+    snapshot = {
+        "section_ids": list(state.get("prefill_section_ids") or request.session.get("prefill_section_ids") or []),
+        "classes": [_serialize_prefill_class(cls) for cls in list(state.get("classes") or [])],
+        "labs": [_serialize_prefill_lab(lab) for lab in list(state.get("labs") or [])],
+        "parking_items": [],
+    }
+    for parked in list(state.get("generated_parking_items") or []):
+        item_obj = parked.get("item")
+        if item_obj is None:
+            continue
+        entry = _serialize_prefill_lab(item_obj) if parked.get("move_type") == "lab" else _serialize_prefill_class(item_obj)
+        entry.update({
+            "move_type": parked.get("move_type") or entry["type"],
+            "section_id": str(parked.get("section_id") or entry.get("section_id") or ""),
+            "slot_span": max(1, min(int(parked.get("slot_span") or entry.get("duration") or 1), 8)),
+        })
+        snapshot["parking_items"].append(entry)
+    request.session["prefill_saved_slots"] = snapshot
+    request.session.modified = True
+    return snapshot
+
+
+def _activate_prefill_snapshot(request, snapshot):
+    section_ids = [str(section_id) for section_id in list((snapshot or {}).get("section_ids") or []) if str(section_id or "").strip()]
+    if not section_ids:
+        return False
+    state = _get_user_state(request.user.id)
+    state["classes"] = []
+    state["labs"] = []
+    state["schedules"] = [{"classes": [], "labs": [], "stats": {}, "reco_block": {}}]
+    state["prefill_mode"] = True
+    state["prefill_section_ids"] = section_ids
+    state["prefill_locked_classes"] = []
+    state["prefill_locked_labs"] = []
+    _reset_generated_drag_state(state, current_index=1)
+    request.session["current_index"] = 1
+    request.session["prefill_mode"] = True
+    request.session["prefill_section_ids"] = section_ids
+    request.session["prefill_saved_slots"] = snapshot
+    request.session.modified = True
+    restore_prefill_session_snapshot(request, state, section_ids)
+    return True
+
+
+def _clear_active_saved_prefill(request):
+    request.session.pop("active_saved_prefill_id", None)
+    request.session.modified = True
+
+
+def _set_active_saved_prefill(request, prefill):
+    request.session["active_saved_prefill_id"] = prefill.pk
+    request.session.modified = True
+
+
+def _get_active_saved_prefill(request):
+    prefill_id = request.session.get("active_saved_prefill_id")
+    if not prefill_id:
+        return None
+    return SavedPrefill.objects.filter(pk=prefill_id, user=request.user).first()
+
+
+def _combine_prefill_snapshots(prefills):
+    combined = {
+        "section_ids": [],
+        "classes": [],
+        "labs": [],
+        "parking_items": [],
+    }
+    seen_sections = set()
+    for prefill in prefills:
+        snapshot = prefill.snapshot or {}
+        for section_id in list(snapshot.get("section_ids") or []):
+            section_id = str(section_id or "").strip()
+            if not section_id or section_id in seen_sections:
+                continue
+            seen_sections.add(section_id)
+            combined["section_ids"].append(section_id)
+        combined["classes"].extend(list(snapshot.get("classes") or []))
+        combined["labs"].extend(list(snapshot.get("labs") or []))
+        combined["parking_items"].extend(list(snapshot.get("parking_items") or []))
+    return combined
+
+
+def _prefill_restore_teacher(uid, user):
+    uid = str(uid or "").strip()
+    if not uid:
+        return None
+    qs = Instructor.objects.filter(user=user)
+    if uid.isdigit():
+        return qs.filter(Q(uid__iexact=uid) | Q(pk=int(uid))).first()
+    return qs.filter(uid__iexact=uid).first()
+
+
+def _prefill_restore_room(room_number, user):
+    room_number = str(room_number or "").strip()
+    if not room_number:
+        return None
+    qs = Room.objects.filter(user=user)
+    if room_number.isdigit():
+        return qs.filter(Q(r_number__iexact=room_number) | Q(pk=int(room_number))).first()
+    return qs.filter(r_number__iexact=room_number).first()
+
+
+def _prefill_restore_meeting_times(entry, user):
+    day = entry.get("day")
+    try:
+        start_slot = int(entry.get("start_slot"))
+    except (TypeError, ValueError):
+        return []
+    duration = _parse_prefill_duration(entry.get("duration"))
+    times = []
+    for offset in range(duration):
+        meeting_time = get_meeting_time(day, start_slot + offset, user=user)
+        if meeting_time is None:
+            return []
+        times.append(meeting_time)
+    return times
+
+
+def _prefill_restore_class(entry, user):
+    ClassImpl = globals().get("Class")
+    if ClassImpl is None:
+        return None
+    try:
+        section_obj = Section.objects.get(section_id=entry.get("section_id"), user=user)
+    except Section.DoesNotExist:
+        return None
+    teacher = _prefill_restore_teacher(entry.get("teacher_uid"), user)
+    room = _prefill_restore_room(entry.get("room_number"), user)
+    if teacher is None or room is None:
+        return None
+    duration = _parse_prefill_duration(entry.get("duration"))
+    subject = _resolve_manual_prefill_subject(section_obj, entry.get("subject_text"), duration)
+    cls = ClassImpl(_next_in_memory_class_id(), section_obj.department, section_obj.section_id, subject)
+    cls.set_instructor(teacher)
+    co_teachers = [_prefill_restore_teacher(uid, user) for uid in list(entry.get("co_teacher_uids") or [])]
+    if hasattr(cls, "set_co_instructors"):
+        cls.set_co_instructors([teacher_obj for teacher_obj in co_teachers if teacher_obj])
+    cls.set_room(room)
+    times = _prefill_restore_meeting_times(entry, user)
+    if times:
+        cls.set_meetingTime(times[0])
+        cls.meeting_times = times
+    cls.duration = duration
+    cls.manual_entry = bool(entry.get("manual_entry", True))
+    cls.manual_slot_uid = str(entry.get("manual_slot_uid") or "")
+    cls.prefill_locked = bool(entry.get("prefill_locked", bool(times)))
+    return cls
+
+
+def _prefill_restore_lab(entry, user):
+    LabImpl = globals().get("Lab")
+    if LabImpl is None:
+        return None
+    try:
+        section_obj = Section.objects.get(section_id=entry.get("section_id"), user=user)
+    except Section.DoesNotExist:
+        return None
+    teacher = _prefill_restore_teacher(entry.get("teacher_uid"), user)
+    room = _prefill_restore_room(entry.get("room_number"), user)
+    if teacher is None or room is None:
+        return None
+    duration = _parse_prefill_duration(entry.get("duration"))
+    subject = _resolve_manual_prefill_subject(section_obj, entry.get("subject_text"), duration)
+    lab = LabImpl(_next_in_memory_class_id(), section_obj.department, section_obj.section_id, subject, entry.get("batch", 1), entry.get("total_batches", 1))
+    lab.set_instructor(teacher)
+    second_teacher = _prefill_restore_teacher(entry.get("second_teacher_uid"), user)
+    if second_teacher and hasattr(lab, "set_second_instructor"):
+        lab.set_second_instructor(second_teacher)
+    co_teachers = [_prefill_restore_teacher(uid, user) for uid in list(entry.get("co_teacher_uids") or [])]
+    if hasattr(lab, "set_co_instructors"):
+        lab.set_co_instructors([teacher_obj for teacher_obj in co_teachers if teacher_obj])
+    lab.set_room(room)
+    times = _prefill_restore_meeting_times(entry, user)
+    if times:
+        lab.set_meetingTimes(times)
+    lab.duration = duration
+    lab.manual_entry = bool(entry.get("manual_entry", True))
+    lab.manual_slot_uid = str(entry.get("manual_slot_uid") or "")
+    lab.prefill_locked = bool(entry.get("prefill_locked", bool(times)))
+    return lab
+
+
+def restore_prefill_session_snapshot(request, state, section_ids):
+    snapshot = request.session.get("prefill_saved_slots") or {}
+    saved_sections = set(snapshot.get("section_ids") or [])
+    allowed_sections = set(section_ids or [])
+    if saved_sections and saved_sections != allowed_sections:
+        return False
+    if state.get("classes") or state.get("labs") or state.get("generated_parking_items"):
+        return False
+    classes = []
+    labs = []
+    for entry in list(snapshot.get("classes") or []):
+        if entry.get("section_id") not in allowed_sections:
+            continue
+        restored = _prefill_restore_class(entry, request.user)
+        if restored is not None:
+            classes.append(restored)
+    for entry in list(snapshot.get("labs") or []):
+        if entry.get("section_id") not in allowed_sections:
+            continue
+        restored = _prefill_restore_lab(entry, request.user)
+        if restored is not None:
+            labs.append(restored)
+    state["classes"] = classes
+    state["labs"] = labs
+    state["prefill_locked_classes"] = list(classes)
+    state["prefill_locked_labs"] = list(labs)
+    state["generated_parking_items"] = []
+    state["generated_parking_next_id"] = 1
+    build_parking_item = globals().get("_generated_build_parking_item")
+    if build_parking_item:
+        for entry in list(snapshot.get("parking_items") or []):
+            if entry.get("section_id") not in allowed_sections:
+                continue
+            move_type = entry.get("move_type") or entry.get("type") or "class"
+            restored = _prefill_restore_lab(entry, request.user) if move_type == "lab" else _prefill_restore_class(entry, request.user)
+            if restored is not None:
+                state["generated_parking_items"].append(build_parking_item(state, entry.get("section_id"), move_type, restored))
+    return bool(classes or labs or state.get("generated_parking_items"))
+
+
 # Legacy aliases so private modules loaded via exec() can reference them.
 # These are updated by show_timetable / generate to point at the current user's data.
 GLOBAL_CLASSES = None
@@ -128,6 +511,13 @@ LUNCH_SLOT = "5"
 
 def get_valid_start_slots(duration):
     """Return valid start slots for a given duration, avoiding lunch (slot 5)."""
+    if duration > 4:
+        usable_slots = [str(slot) for slot in range(1, 10) if str(slot) != LUNCH_SLOT]
+        return [
+            slot
+            for index, slot in enumerate(usable_slots)
+            if len(usable_slots[index:index + duration]) == duration
+        ]
     pre_lunch = [str(s) for s in range(1, 5) if s + duration - 1 <= 4]
     post_lunch = [str(s) for s in range(6, 10) if s + duration - 1 <= 9]
     return pre_lunch + post_lunch
@@ -1010,6 +1400,7 @@ if "Class" not in globals():
             self.department = dept
             self.subject = subject
             self.instructor = None
+            self.co_instructors = []
             self.meeting_time = None
             self.meeting_times = []
             self.room = None
@@ -1017,6 +1408,7 @@ if "Class" not in globals():
             self.duration = getattr(subject, 'duration', 1)
 
         def set_instructor(self, instructor): self.instructor = instructor
+        def set_co_instructors(self, instructors): self.co_instructors = list(instructors or [])
         def set_meetingTime(self, mt): self.meeting_time = mt
         def set_room(self, room): self.room = room
 
@@ -1029,6 +1421,7 @@ if "Lab" not in globals():
             self.subject = subject
             self.instructor = None
             self.second_instructor = None   # shared lab: optional second teacher
+            self.co_instructors = []
             self.room = None
             self.section = section
             self.duration = getattr(subject, 'duration', LAB_DURATION)
@@ -1037,6 +1430,7 @@ if "Lab" not in globals():
             self.total_batches = total_batches
 
         def set_second_instructor(self, instructor): self.second_instructor = instructor
+        def set_co_instructors(self, instructors): self.co_instructors = list(instructors or [])
         def set_instructor(self, instructor): self.instructor = instructor
         def set_meetingTimes(self, mts): self.meeting_times = mts
         def set_room(self, room): self.room = room
@@ -1358,22 +1752,18 @@ if "build_teacher_tables" not in globals():
 
         teacher_map = OrderedDict()
         for cls in all_classes:
-            t = cls.instructor
-            if t and t not in teacher_map:
-                teacher_map[t] = {"classes": [], "labs": []}
-            if t:
-                teacher_map[t]["classes"].append(cls)
+            for t in [cls.instructor] + list(getattr(cls, "co_instructors", []) or []):
+                if t and t not in teacher_map:
+                    teacher_map[t] = {"classes": [], "labs": []}
+                if t:
+                    teacher_map[t]["classes"].append(cls)
         for lab in all_labs:
-            t = lab.instructor
-            if t and t not in teacher_map:
-                teacher_map[t] = {"classes": [], "labs": []}
-            if t:
-                teacher_map[t]["labs"].append(lab)
-            second_teacher = getattr(lab, "second_instructor", None)
-            if second_teacher and second_teacher not in teacher_map:
-                teacher_map[second_teacher] = {"classes": [], "labs": []}
-            if second_teacher:
-                teacher_map[second_teacher]["labs"].append(lab)
+            teachers = [lab.instructor, getattr(lab, "second_instructor", None)] + list(getattr(lab, "co_instructors", []) or [])
+            for t in teachers:
+                if t and t not in teacher_map:
+                    teacher_map[t] = {"classes": [], "labs": []}
+                if t:
+                    teacher_map[t]["labs"].append(lab)
 
         tables = []
         for teacher, data in teacher_map.items():
@@ -1434,6 +1824,9 @@ if "build_room_tables" not in globals():
     def build_room_tables(all_classes, all_labs, user=None):
         from collections import OrderedDict
         room_map = OrderedDict()
+        room_qs = Room.objects.filter(user=user) if user else Room.objects.all()
+        for room in room_qs.select_related("department").order_by("r_number"):
+            room_map[room] = {"classes": [], "labs": []}
         for cls in all_classes:
             r = cls.room
             if r and r not in room_map:
@@ -1502,7 +1895,17 @@ if "build_room_tables" not in globals():
                         cells.append({"type": "empty", "colspan": 1, "slot_number": s})
                 rows.append({"day": day, "cells": cells})
 
-            tables.append({"room": room, "rows": rows, "optimization": optimization})
+            room_dept = getattr(room, "department", None)
+            room_dept_code = getattr(room_dept, "code", "") or ""
+            room_dept_name = getattr(room_dept, "name", None) or getattr(room_dept, "dept_name", "") or room_dept_code
+            tables.append({
+                "room": room,
+                "rows": rows,
+                "optimization": optimization,
+                "optimization_percentage": optimization,
+                "dept_codes": [room_dept_code] if room_dept_code else [],
+                "dept_names": [room_dept_name] if room_dept_name else [],
+            })
         return tables
 
 
@@ -1712,52 +2115,57 @@ def _compute_teacher_workloads(classes, labs):
     """Compute teacher workload summary from classes and labs."""
     workloads = {}
 
-    def _department_label(item):
-        subject = getattr(item, "subject", None)
-        department = getattr(subject, "department", None)
-        if department is None:
-            department = getattr(item, "dept", None) or getattr(item, "department", None)
-        if department is None:
-            return None
-        code = (getattr(department, "code", "") or "").strip()
-        name = (getattr(department, "name", "") or "").strip()
-        return code or name or str(department)
-
     def _ensure_teacher(teacher):
         if teacher not in workloads:
-            workloads[teacher] = {"lectures": 0, "labs": 0, "shared_labs": 0, "total": 0, "departments": set()}
+            workloads[teacher] = {
+                "lectures": 0,
+                "labs": 0,
+                "shared_labs": 0,
+                "total": 0,
+                "departments": set(),
+            }
         return workloads[teacher]
 
-    def _add_department(teacher, item):
-        label = _department_label(item)
-        if label:
-            _ensure_teacher(teacher)["departments"].add(label)
+    def _add_department(teacher, item_obj):
+        data = _ensure_teacher(teacher)
+        dept = getattr(item_obj, "department", None)
+        dept_name = getattr(dept, "name", "") or getattr(dept, "code", "")
+        if dept_name:
+            data["departments"].add(str(dept_name))
 
     for cls in classes:
         teacher = cls.instructor
         cls_dur = getattr(cls, 'duration', 1)
-        data = _ensure_teacher(teacher)
-        data["lectures"] += cls_dur
-        data["total"] += cls_dur
-        _add_department(teacher, cls)
+        teachers = [teacher] + list(getattr(cls, "co_instructors", []) or [])
+        for assigned_teacher in teachers:
+            if not assigned_teacher:
+                continue
+            data = _ensure_teacher(assigned_teacher)
+            data["lectures"] += cls_dur
+            data["total"] += cls_dur
+            _add_department(assigned_teacher, cls)
     for lab in labs:
         teacher = lab.instructor
-        data = _ensure_teacher(teacher)
         lab_slot_count = len(lab.meeting_times) if lab.meeting_times else getattr(lab, 'duration', LAB_DURATION)
         second_teacher = getattr(lab, "second_instructor", None)
+        co_teachers = list(getattr(lab, "co_instructors", []) or [])
         if second_teacher:
             shared_load = lab_slot_count / 2
-            data["shared_labs"] += shared_load
-            data["total"] += shared_load
-            _add_department(teacher, lab)
-            second_data = _ensure_teacher(second_teacher)
-            second_data["shared_labs"] += shared_load
-            second_data["total"] += shared_load
-            _add_department(second_teacher, lab)
+            for assigned_teacher in [teacher, second_teacher] + co_teachers:
+                if not assigned_teacher:
+                    continue
+                data = _ensure_teacher(assigned_teacher)
+                data["shared_labs"] += shared_load
+                data["total"] += shared_load
+                _add_department(assigned_teacher, lab)
         else:
-            data["labs"] += lab_slot_count
-            data["total"] += lab_slot_count
-            _add_department(teacher, lab)
+            for assigned_teacher in [teacher] + co_teachers:
+                if not assigned_teacher:
+                    continue
+                data = _ensure_teacher(assigned_teacher)
+                data["labs"] += lab_slot_count
+                data["total"] += lab_slot_count
+                _add_department(assigned_teacher, lab)
 
     for data in workloads.values():
         data["departments"] = ", ".join(sorted(data["departments"])) or "-"
@@ -2392,7 +2800,8 @@ from django.db import transaction
 
 @login_required
 def addSubjects(request):
-    form = SubjectForm(request.POST or None, user=request.user)
+    edit_subject = _get_required_step_edit_object(request, Subject, user=request.user) if request.method == "POST" and request.POST.get("edit_id") else _get_step_edit_object(request, Subject, user=request.user)
+    form = SubjectForm(request.POST or None, instance=edit_subject, user=request.user)
 
     # ============================
     # MANUAL ADD SUBJECT
@@ -2421,7 +2830,7 @@ def addSubjects(request):
             form.save_m2m()
 
             reset_global_schedule_cache(request.user.id)
-            messages.success(request, "Subject added successfully!")
+            messages.success(request, "Subject updated successfully!" if edit_subject else "Subject added successfully!")
             return redirect("addSubjects")
 
     # ============================
@@ -2573,7 +2982,7 @@ def addSubjects(request):
 
         return redirect("addSubjects")
 
-    return render(request, "addSubjects.html", {"form": form})
+    return render(request, "addSubjects.html", {"form": form, "edit_subject": edit_subject})
 
 
 
@@ -2603,7 +3012,8 @@ def delete_all_subjects(request):
 
 @login_required
 def addInstructor(request):
-    form = InstructorForm(request.POST or None)
+    edit_instructor = _get_required_step_edit_object(request, Instructor, user=request.user) if request.method == "POST" and request.POST.get("edit_id") else _get_step_edit_object(request, Instructor, user=request.user)
+    form = InstructorForm(request.POST or None, instance=edit_instructor)
 
     # ================================
     # FETCH FROM ERP API
@@ -2656,7 +3066,7 @@ def addInstructor(request):
             instructor.user = request.user
             instructor.save()
             reset_global_schedule_cache(request.user.id)
-            messages.success(request, "Teacher added successfully!")
+            messages.success(request, "Teacher updated successfully!" if edit_instructor else "Teacher added successfully!")
         else:
             messages.error(request, "Invalid input.")
         return redirect("addInstructors")
@@ -2741,6 +3151,7 @@ def addInstructor(request):
     popup_data = request.session.get("api_teachers", [])
     return render(request, "addInstructors.html", {
         "form": form,
+        "edit_instructor": edit_instructor,
         "popup_data": popup_data,
     })
 
@@ -2748,6 +3159,13 @@ def addInstructor(request):
 def map_section_subjects(request):
     sections = Section.objects.filter(user=request.user).order_by("section_id")
     subjects = Subject.objects.filter(user=request.user).order_by("subject_number")
+    edit_mapping = None
+    raw_edit_mapping_id = request.POST.get("edit_mapping_id") if request.method == "POST" else request.GET.get("edit")
+    if raw_edit_mapping_id:
+        try:
+            edit_mapping = SectionSubjectMapping.objects.filter(pk=int(raw_edit_mapping_id), section__user=request.user).select_related("section", "subject").first()
+        except (TypeError, ValueError):
+            edit_mapping = None
 
     def parse_group_count(raw_value):
         value = str(raw_value or "").strip()
@@ -2782,6 +3200,9 @@ def map_section_subjects(request):
         if not section_identifier or not selected_subject_ids:
             messages.error(request, "Please select a section and at least one subject.")
             return redirect("map_section_subjects")
+        if edit_mapping is not None and len(selected_subject_ids) != 1:
+            messages.error(request, "Select exactly one subject while updating a mapping row.")
+            return redirect(f"{reverse('map_section_subjects')}?edit={edit_mapping.id}")
 
         try:
             group_count = parse_group_count(raw_group_count)
@@ -2804,19 +3225,28 @@ def map_section_subjects(request):
 
         created = 0
         updated = 0
-        for subj in valid_subjects:
-            mapping, was_created = SectionSubjectMapping.objects.update_or_create(
-                section=section,
-                subject=subj,
-                defaults={
-                    "group_count": group_count,
-                    "elective_section_ids": elective_section_ids,
-                },
-            )
-            if was_created:
-                created += 1
-            elif mapping.group_count == group_count:
-                updated += 1
+        if edit_mapping is not None:
+            subj = valid_subjects[0]
+            edit_mapping.section = section
+            edit_mapping.subject = subj
+            edit_mapping.group_count = group_count
+            edit_mapping.elective_section_ids = elective_section_ids
+            edit_mapping.save()
+            updated = 1
+        else:
+            for subj in valid_subjects:
+                mapping, was_created = SectionSubjectMapping.objects.update_or_create(
+                    section=section,
+                    subject=subj,
+                    defaults={
+                        "group_count": group_count,
+                        "elective_section_ids": elective_section_ids,
+                    },
+                )
+                if was_created:
+                    created += 1
+                elif mapping.group_count == group_count:
+                    updated += 1
 
         reset_global_schedule_cache(request.user.id)
         messages.success(
@@ -2913,10 +3343,63 @@ def map_section_subjects(request):
         _emit_csv_issues(request, issues)
         return redirect("map_section_subjects")
 
+    saved_prefills = []
+    for prefill in SavedPrefill.objects.filter(user=request.user):
+        snapshot = prefill.snapshot or {}
+        slot_count = len(snapshot.get("classes") or []) + len(snapshot.get("labs") or []) + len(snapshot.get("parking_items") or [])
+        section_ids = list(snapshot.get("section_ids") or [])
+        saved_prefills.append({
+            "item": prefill,
+            "slot_count": slot_count,
+            "section_count": len(section_ids),
+        })
+
     return render(request, "map_section_subjects.html", {
         "sections": sections,
-        "subjects": subjects
+        "subjects": subjects,
+        "saved_prefills": saved_prefills,
+        "edit_mapping": edit_mapping,
     })
+
+
+@login_required
+def generate_selected_prefills(request):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+
+    raw_prefill_ids = request.POST.getlist("prefill_ids")
+    prefill_ids = []
+    for raw_id in raw_prefill_ids:
+        try:
+            prefill_ids.append(int(raw_id))
+        except (TypeError, ValueError):
+            continue
+
+    prefills = list(SavedPrefill.objects.filter(user=request.user, pk__in=prefill_ids))
+    if not prefills:
+        messages.error(request, "Select at least one saved prefill before generating with prefilled slots.")
+        return redirect("map_section_subjects")
+
+    snapshot = _combine_prefill_snapshots(prefills)
+    if not _activate_prefill_snapshot(request, snapshot):
+        messages.error(request, "Selected saved prefills do not contain section data.")
+        return redirect("map_section_subjects")
+
+    _clear_active_saved_prefill(request)
+    messages.success(request, f"Generation will use {len(prefills)} saved prefill(s).")
+    return redirect(f"{reverse('generate_timetable_loading')}?use_pso=1&use_prefilled_slots=1")
+
+
+@login_required
+def generate_without_prefills(request):
+    state = _get_user_state(request)
+    state["prefill_mode"] = False
+    state["prefill_locked_classes"] = []
+    state["prefill_locked_labs"] = []
+    for key in ("prefill_mode", "prefill_section_ids", "prefill_saved_slots", "current_index"):
+        request.session.pop(key, None)
+    _clear_active_saved_prefill(request)
+    return redirect(f"{reverse('generate_timetable_loading')}?use_pso=1")
 
 
 @login_required
@@ -2941,23 +3424,124 @@ def view_section_subjects(request):
 
 @login_required
 def map_teacher_subjects(request):
-    """
-    Step 7: Fixed Teacher–Subject–Section mapping (after Sections are created in Step 6).
+    edit_mapping = None
+    raw_edit_mapping_id = request.POST.get("edit_mapping_id") if request.method == "POST" else request.GET.get("edit")
+    if raw_edit_mapping_id:
+        try:
+            edit_mapping = SectionSubjectInstructor.objects.filter(
+                pk=int(raw_edit_mapping_id),
+                user=request.user,
+            ).select_related("section", "subject", "instructor", "second_instructor").first()
+        except (TypeError, ValueError):
+            edit_mapping = None
 
-    CSV format (3-col legacy):
-        section_id,subject_number,instructor_uid
-        CE-A,CS101,T001
+    def _resolve_mapping_instructor(value):
+        value = (value or "").strip()
+        if not value:
+            return None
+        try:
+            return Instructor.objects.get(uid=value, user=request.user)
+        except Instructor.DoesNotExist:
+            try:
+                return Instructor.objects.get(name=value, user=request.user)
+            except (Instructor.DoesNotExist, Instructor.MultipleObjectsReturned):
+                return None
 
-    CSV format (5-col with shared lab):
-        section_id,subject_number,instructor_uid,shared_lab,second_instructor_uid
-        CE-A,CS101,T001,false,
-        BSc AM 3rd Sem,CA022,T076,true,T080
+    def _split_mapping_teacher_tokens(raw_value):
+        text = str(raw_value or "").strip()
+        if not text:
+            return []
+        return [token.strip() for token in text.split(";")]
 
-    Group-wise CSV format:
-        section_id,subject_number,instructor_uid,shared_lab,second_instructor_uid
-        CE-A,CS101,T001;T002,false,
-        CE-A,CA022,T001;T002,true,T003;T004
-    """
+    def _teacher_uid_string_from_ids(id_values, fallback_teacher=None):
+        ids = [teacher_id for teacher_id in (id_values or []) if teacher_id]
+        teachers = Instructor.objects.filter(id__in=ids, user=request.user)
+        teacher_by_id = {teacher.id: teacher for teacher in teachers}
+        values = [teacher_by_id[teacher_id].uid for teacher_id in ids if teacher_id in teacher_by_id]
+        if values:
+            return ";".join(values)
+        return getattr(fallback_teacher, "uid", "") or ""
+
+    if request.method == "POST" and "manual_save_mapping" in request.POST:
+        section_pk = request.POST.get("section_id")
+        subject_pk = request.POST.get("subject_id")
+        primary_raw = request.POST.get("primary_teacher_uids", "")
+        secondary_raw = request.POST.get("second_teacher_uids", "")
+        shared_lab = bool(request.POST.get("shared_lab"))
+
+        section = Section.objects.filter(pk=section_pk, user=request.user).first()
+        subject = Subject.objects.filter(pk=subject_pk, user=request.user).first()
+        if section is None or subject is None:
+            messages.error(request, "Select a valid section and subject.")
+            return redirect("map_teacher_subjects")
+
+        primary_tokens = _split_mapping_teacher_tokens(primary_raw)
+        secondary_tokens = _split_mapping_teacher_tokens(secondary_raw)
+        if not primary_tokens:
+            messages.error(request, "Enter at least one primary teacher UID.")
+            return redirect("map_teacher_subjects")
+
+        section_subject_mapping = SectionSubjectMapping.objects.filter(section=section, subject=subject).only("group_count").first()
+        group_count = max(
+            1,
+            section_subject_mapping.group_count if section_subject_mapping else 1,
+            len(primary_tokens),
+            len(secondary_tokens),
+        )
+        if len(primary_tokens) == 1 and group_count > 1:
+            primary_tokens = primary_tokens * group_count
+        elif len(primary_tokens) < group_count:
+            primary_tokens = primary_tokens + ([""] * (group_count - len(primary_tokens)))
+
+        if secondary_tokens and len(secondary_tokens) == 1 and group_count > 1:
+            secondary_tokens = secondary_tokens * group_count
+        elif len(secondary_tokens) < group_count:
+            secondary_tokens = secondary_tokens + ([""] * (group_count - len(secondary_tokens)))
+
+        primary_teachers = []
+        for index, token in enumerate(primary_tokens[:group_count], start=1):
+            teacher = _resolve_mapping_instructor(token)
+            if teacher is None:
+                messages.error(request, f"Primary teacher not found for group {index}: {token}")
+                return redirect("map_teacher_subjects")
+            primary_teachers.append(teacher)
+
+        secondary_teachers = []
+        for index, token in enumerate(secondary_tokens[:group_count], start=1):
+            if not token:
+                secondary_teachers.append(None)
+                continue
+            teacher = _resolve_mapping_instructor(token)
+            if teacher is None:
+                messages.error(request, f"Second teacher not found for group {index}: {token}")
+                return redirect("map_teacher_subjects")
+            if teacher.id == primary_teachers[index - 1].id:
+                messages.error(request, f"Primary and second teacher cannot be same for group {index}.")
+                return redirect("map_teacher_subjects")
+            secondary_teachers.append(teacher)
+
+        if secondary_tokens and any(secondary_teachers):
+            shared_lab = True
+
+        saved_mapping, _ = SectionSubjectInstructor.objects.update_or_create(
+            user=request.user,
+            section=section,
+            subject=subject,
+            defaults={
+                "instructor": primary_teachers[0],
+                "second_instructor": next((teacher for teacher in secondary_teachers if teacher is not None), None) if shared_lab else None,
+                "group_instructor_ids": [teacher.id for teacher in primary_teachers],
+                "group_second_instructor_ids": [teacher.id if teacher is not None else None for teacher in secondary_teachers] if shared_lab else [],
+            },
+        )
+        if edit_mapping is not None and edit_mapping.id != saved_mapping.id:
+            edit_mapping.delete()
+        for teacher in primary_teachers + [teacher for teacher in secondary_teachers if teacher is not None]:
+            subject.instructors.add(teacher)
+        reset_global_schedule_cache(request.user.id)
+        messages.success(request, "Teacher-subject mapping updated successfully!" if edit_mapping else "Teacher-subject mapping saved successfully!")
+        return redirect("map_teacher_subjects")
+    # Step 7 CSV supports legacy, shared-lab, and group-wise teacher mappings.
 
     # =========================
     # CSV UPLOAD HANDLER
@@ -3110,12 +3694,19 @@ def map_teacher_subjects(request):
 
             primary_tokens = _split_teacher_tokens(instructor_uid)
             secondary_tokens = _split_teacher_tokens(second_instructor_uid)
-            inferred_group_count = max(
-                section_group_count,
-                len(primary_tokens) if primary_tokens else 0,
-                len(secondary_tokens) if secondary_tokens else 0,
-                1,
-            )
+            if section_group_count > 1:
+                inferred_group_count = max(
+                    section_group_count,
+                    len(primary_tokens) if primary_tokens else 0,
+                    len(secondary_tokens) if secondary_tokens else 0,
+                    1,
+                )
+            else:
+                inferred_group_count = max(
+                    len(primary_tokens) if primary_tokens else 0,
+                    len(secondary_tokens) if secondary_tokens else 0,
+                    1,
+                )
 
             primary_group_instructors = _resolve_group_assignments(
                 instructor_uid,
@@ -3125,6 +3716,9 @@ def map_teacher_subjects(request):
             )
             if primary_group_instructors is None:
                 skipped += 1
+                validation_errors.append(
+                    f"Row {row_number}: primary instructor not found '{instructor_uid}'"
+                )
                 continue
 
             instructor = primary_group_instructors[0]
@@ -3204,7 +3798,15 @@ def map_teacher_subjects(request):
     return render(
         request,
         "map_teacher_subjects.html",
-        {"mappings": mappings},
+        {
+            "mappings": mappings,
+            "sections": Section.objects.filter(user=request.user).order_by("section_id"),
+            "subjects": Subject.objects.filter(user=request.user).order_by("subject_number"),
+            "instructors": Instructor.objects.filter(user=request.user).order_by("uid"),
+            "edit_mapping": edit_mapping,
+            "edit_primary_teacher_uids": _teacher_uid_string_from_ids(getattr(edit_mapping, "group_instructor_ids", []), getattr(edit_mapping, "instructor", None)) if edit_mapping else "",
+            "edit_second_teacher_uids": _teacher_uid_string_from_ids(getattr(edit_mapping, "group_second_instructor_ids", []), getattr(edit_mapping, "second_instructor", None)) if edit_mapping else "",
+        },
     )
 
 
@@ -3294,8 +3896,8 @@ def delete_all_instructors(request):
 
 @login_required
 def addRooms(request):
-    form = RoomForm(request.POST or None, user=request.user)
-    from ttgen.models import Department, Room
+    edit_room = _get_required_step_edit_object(request, Room, user=request.user) if request.method == "POST" and request.POST.get("edit_id") else _get_step_edit_object(request, Room, user=request.user)
+    form = RoomForm(request.POST or None, instance=edit_room, user=request.user)
 
     def resolve_department(dept_identifier):
         dept_identifier = (dept_identifier or "").strip()
@@ -3318,7 +3920,7 @@ def addRooms(request):
             room.save()
 
             reset_global_schedule_cache(request.user.id)
-            messages.success(request, "Room added successfully!")
+            messages.success(request, "Room updated successfully!" if edit_room else "Room added successfully!")
             return redirect("addRooms")
         else:
             messages.error(request, "Please fill out all required fields.")
@@ -3434,7 +4036,7 @@ def addRooms(request):
         _emit_csv_issues(request, issues)
         return redirect("addRooms")
 
-    return render(request, "addRooms.html", {"form": form})
+    return render(request, "addRooms.html", {"form": form, "edit_room": edit_room})
 
 
 @login_required
@@ -3462,7 +4064,8 @@ def delete_all_rooms(request):
 
 @login_required
 def addTimings(request):
-    form = MeetingTimeForm(request.POST or None)
+    edit_meeting_time = _get_required_step_edit_object(request, MeetingTime, user=request.user) if request.method == "POST" and request.POST.get("edit_id") else _get_step_edit_object(request, MeetingTime, user=request.user)
+    form = MeetingTimeForm(request.POST or None, instance=edit_meeting_time)
 
     # -------------------------
     # 1. MANUAL ADD TIMING
@@ -3473,7 +4076,7 @@ def addTimings(request):
             mt.user = request.user
             mt.save()
             reset_global_schedule_cache(request.user.id)
-            messages.success(request, "Timing added successfully!")
+            messages.success(request, "Timing updated successfully!" if edit_meeting_time else "Timing added successfully!")
             return redirect("addTimings")
         else:
             messages.error(request, "Please fill all fields.")
@@ -3587,7 +4190,7 @@ def addTimings(request):
 
 
 
-    return render(request, "addTimings.html", {"form": form})
+    return render(request, "addTimings.html", {"form": form, "edit_meeting_time": edit_meeting_time})
 
 
 @login_required
@@ -3615,7 +4218,8 @@ def delete_all_meeting_times(request):
 
 @login_required
 def addDepts(request):
-    form = DepartmentForm(request.POST or None)
+    edit_department = _get_required_step_edit_object(request, Department, user=request.user) if request.method == "POST" and request.POST.get("edit_id") else _get_step_edit_object(request, Department, user=request.user)
+    form = DepartmentForm(request.POST or None, instance=edit_department)
 
     # ------------------------------------
     # 1) MANUAL ADD DEPARTMENT
@@ -3626,7 +4230,7 @@ def addDepts(request):
             dept.user = request.user
             dept.save()
             reset_global_schedule_cache(request.user.id)
-            messages.success(request, "Department added successfully!")
+            messages.success(request, "Department updated successfully!" if edit_department else "Department added successfully!")
             return redirect("addDepts")
         else:
             messages.error(request, "Please fill all required fields.")
@@ -3739,7 +4343,7 @@ def addDepts(request):
         _emit_csv_issues(request, issues)
         return redirect("addDepts")
 
-    return render(request, 'addDepts.html', {'form': form})
+    return render(request, 'addDepts.html', {'form': form, 'edit_department': edit_department})
 
 
 @login_required
@@ -3772,7 +4376,8 @@ def delete_all_departments(request):
 
 @login_required
 def addSections(request):
-    form = SectionForm(request.POST or None, user=request.user)
+    edit_section = _get_required_step_edit_object(request, Section, user=request.user) if request.method == "POST" and request.POST.get("edit_id") else _get_step_edit_object(request, Section, user=request.user)
+    form = SectionForm(request.POST or None, instance=edit_section, user=request.user)
 
     # -------------------------------------------
     # 1) MANUAL ADDING OF SECTION
@@ -3782,9 +4387,11 @@ def addSections(request):
             section = form.save(commit=False)
             section.user = request.user
             section.save()
-            template_section = clone_section_subjects_from_similar(section)
+            template_section = None if edit_section else clone_section_subjects_from_similar(section)
             reset_global_schedule_cache(request.user.id)
-            if template_section:
+            if edit_section:
+                messages.success(request, "Section updated successfully!")
+            elif template_section:
                 messages.success(
                     request,
                     f"Section added successfully! Subjects copied from {template_section.section_id}.",
@@ -3923,7 +4530,310 @@ def addSections(request):
         _emit_csv_issues(request, issues)
         return redirect("addSections")
 
-    return render(request, "addSections.html", {"form": form})
+    return render(request, "addSections.html", {"form": form, "edit_section": edit_section})
+
+
+@login_required
+def prefilled_timetable_setup(request):
+    if request.method == "POST":
+        csv_file = request.FILES.get("csv_file")
+        if not csv_file:
+            messages.error(request, "Please select a sections CSV file.")
+            return redirect("prefilled_timetable_setup")
+        if not csv_file.name.endswith(".csv"):
+            messages.error(request, "Invalid file type. Upload CSV only.")
+            return redirect("prefilled_timetable_setup")
+
+        decoded = csv_file.read().decode("utf-8-sig").splitlines()
+        reader = csv.reader(decoded)
+        section_ids = []
+        issues = []
+        first = True
+
+        def resolve_department(dept_identifier):
+            dept_identifier = (dept_identifier or "").strip()
+            if not dept_identifier:
+                raise Department.DoesNotExist
+            if dept_identifier.isdigit():
+                return Department.objects.get(pk=int(dept_identifier), user=request.user)
+            try:
+                return Department.objects.get(code=dept_identifier.upper(), user=request.user)
+            except Department.DoesNotExist:
+                return Department.objects.get(name=dept_identifier, user=request.user)
+
+        def row_value(row, index):
+            if index is None or index >= len(row):
+                return ""
+            return row[index].strip()
+
+        section_i = 0
+        program_i = 1
+        dept_i = 2
+        strength_i = 3
+
+        for row_number, row in enumerate(reader, start=1):
+            if not row:
+                continue
+            if first:
+                first = False
+                header = [h.strip().lower() for h in row]
+
+                def index(name, default=None):
+                    try:
+                        return header.index(name)
+                    except ValueError:
+                        return default
+
+                section_i = index("section_id", 0)
+                program_i = index("program_name", index("program", 1))
+                dept_i = index("department", index("department_code", index("department_id", 1)))
+                if dept_i == 1 and program_i == 1:
+                    dept_i = index("department", index("department_code", index("department_id", 2)))
+                strength_i = index("student_strength", index("section_strength", 2 if program_i is None else 3))
+                continue
+
+            section_id = row_value(row, section_i)
+            program_name = row_value(row, program_i)
+            dept_name = row_value(row, dept_i)
+            student_strength = row_value(row, strength_i) or "70"
+
+            if not section_id:
+                _csv_issue(issues, row_number, "section_id is blank")
+                continue
+            if not dept_name:
+                _csv_issue(issues, row_number, f"department is blank for section '{section_id}'")
+                continue
+            if not student_strength.isdigit():
+                _csv_issue(issues, row_number, f"student_strength '{student_strength}' is not a whole number")
+                continue
+
+            try:
+                dept = resolve_department(dept_name)
+            except Department.DoesNotExist:
+                _csv_issue(issues, row_number, f"department '{dept_name}' not found")
+                continue
+
+            section, created = Section.objects.update_or_create(
+                user=request.user,
+                section_id=section_id,
+                defaults={
+                    "program_name": program_name,
+                    "department": dept,
+                    "student_strength": int(student_strength),
+                },
+            )
+            if created:
+                clone_section_subjects_from_similar(section)
+            section_ids.append(section.section_id)
+
+        if not section_ids:
+            messages.error(request, "No valid sections found in the CSV.")
+            _emit_csv_issues(request, issues)
+            return redirect("prefilled_timetable_setup")
+
+        state = _get_user_state(request.user.id)
+        state["classes"] = []
+        state["labs"] = []
+        state["schedules"] = [{"classes": [], "labs": [], "stats": {}, "reco_block": {}}]
+        state["prefill_mode"] = True
+        state["prefill_section_ids"] = section_ids
+        state["prefill_locked_classes"] = []
+        state["prefill_locked_labs"] = []
+        _reset_generated_drag_state(state, current_index=1)
+        request.session["current_index"] = 1
+        request.session["prefill_mode"] = True
+        request.session["prefill_section_ids"] = section_ids
+        request.session.pop("prefill_saved_slots", None)
+        request.session.pop("active_saved_prefill_id", None)
+        request.session.modified = True
+        reset_global_schedule_cache(request.user.id)
+        messages.success(request, f"Empty prefilled timetable created for {len(section_ids)} section(s).")
+        _emit_csv_issues(request, issues)
+        return redirect("prefilled_timetable_view")
+
+    return render(request, "prefilled_timetable_setup.html")
+
+
+@login_required
+def prefilled_timetable_view(request):
+    state = _get_user_state(request.user.id)
+    section_ids = list(state.get("prefill_section_ids") or request.session.get("prefill_section_ids") or [])
+    if not (state.get("prefill_mode") or request.session.get("prefill_mode")) or not section_ids:
+        messages.info(request, "Upload a sections CSV to create an empty prefilled timetable.")
+        return redirect("prefilled_timetable_setup")
+
+    state["prefill_mode"] = True
+    state["prefill_section_ids"] = section_ids
+    if state.get("classes") is None:
+        state["classes"] = []
+    if state.get("labs") is None:
+        state["labs"] = []
+    if not state.get("schedules"):
+        state["schedules"] = [{"classes": [], "labs": [], "stats": {}, "reco_block": {}}]
+    restore_prefill_session_snapshot(request, state, section_ids)
+    ensure_manual_prefill_slot_uids(state)
+    state["view_mode"] = "editing"
+    request.session["current_index"] = 1
+
+    global GLOBAL_CLASSES, GLOBAL_LABS, GLOBAL_GENERATED_SCHEDULES, CURRENT_VIEW_MODE
+    GLOBAL_CLASSES = state["classes"]
+    GLOBAL_LABS = state["labs"]
+    GLOBAL_GENERATED_SCHEDULES = state["schedules"]
+    CURRENT_VIEW_MODE = "editing"
+
+    tables = build_section_tables(GLOBAL_CLASSES, GLOBAL_LABS, user=request.user)
+    allowed_section_ids = set(section_ids)
+    tables = [table for table in tables if table["section"].section_id in allowed_section_ids]
+    tables = _decorate_generated_tables_with_parking(tables, state)
+
+    departments = []
+    seen_depts = set()
+    for table in tables:
+        section = table["section"]
+        dept = section.department
+        table["section_department_code"] = dept.code
+        table["section_department_name"] = dept.name
+        table["subject_counts"] = []
+        table["missed_labs"] = []
+        table["total_missing_classes"] = 0
+        if dept.code not in seen_depts:
+            seen_depts.add(dept.code)
+            departments.append({"code": dept.code, "name": dept.name})
+        section_id = section.section_id
+        table["create_slot_subjects"] = []
+        table["create_slot_teachers"] = []
+        table["create_slot_rooms"] = []
+        table["create_slot_subjects_id"] = f"create-slot-subjects-{section_id}"
+        table["create_slot_teachers_id"] = f"create-slot-teachers-{section_id}"
+        table["create_slot_rooms_id"] = f"create-slot-rooms-{section_id}"
+
+    return render(request, "gentimetable.html", {
+        "tables": tables,
+        "teacher_tables": [],
+        "room_tables": [],
+        "SLOT_LABELS": SLOT_LABELS,
+        "index": 1,
+        "teacher_workloads": {},
+        "demo_mode": False,
+        "active_dept": "",
+        "active_program": "all",
+        "program_options": [],
+        "departments": departments,
+        "prefill_mode": True,
+        "active_saved_prefill": _get_active_saved_prefill(request),
+        "can_edit_delete": True,
+        "can_substitute": True,
+        "can_drag_drop": True,
+    })
+
+
+@login_required
+def save_prefilled_timetable(request):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+
+    state = _get_user_state(request.user.id)
+    snapshot = save_prefill_session_snapshot(request, state) or request.session.get("prefill_saved_slots")
+    if not snapshot or not snapshot.get("section_ids"):
+        messages.error(request, "Create a prefilled table before saving.")
+        return redirect("prefilled_timetable_setup")
+
+    total_slots = len(snapshot.get("classes") or []) + len(snapshot.get("labs") or []) + len(snapshot.get("parking_items") or [])
+    name = (request.POST.get("name") or "").strip()
+    active_prefill = _get_active_saved_prefill(request)
+    explicit_name = bool(name)
+    if not name and active_prefill is None:
+        section_preview = ", ".join(list(snapshot.get("section_ids") or [])[:2])
+        if len(snapshot.get("section_ids") or []) > 2:
+            section_preview += " + more"
+        name = f"Prefill {section_preview}" if section_preview else "Saved Prefill"
+
+    if active_prefill is not None:
+        update_fields = ["snapshot", "updated_at"]
+        if explicit_name:
+            active_prefill.name = name[:120]
+            update_fields.append("name")
+        active_prefill.snapshot = snapshot
+        active_prefill.save(update_fields=update_fields)
+        messages.success(request, f"Saved prefill updated with {total_slots} slot(s).")
+    else:
+        active_prefill = SavedPrefill.objects.create(user=request.user, name=name[:120], snapshot=snapshot)
+        _set_active_saved_prefill(request, active_prefill)
+        messages.success(request, f"Prefilled table saved with {total_slots} slot(s).")
+    return redirect("saved_prefill_list")
+
+
+@login_required
+def saved_prefill_list(request):
+    prefills = []
+    for prefill in SavedPrefill.objects.filter(user=request.user):
+        snapshot = prefill.snapshot or {}
+        section_ids = list(snapshot.get("section_ids") or [])
+        slot_count = len(snapshot.get("classes") or []) + len(snapshot.get("labs") or []) + len(snapshot.get("parking_items") or [])
+        prefills.append({
+            "item": prefill,
+            "section_count": len(section_ids),
+            "sections": ", ".join(section_ids[:4]) + (" + more" if len(section_ids) > 4 else ""),
+            "slot_count": slot_count,
+        })
+    return render(request, "saved_prefill_list.html", {"prefills": prefills})
+
+
+@login_required
+def rename_saved_prefill(request, prefill_id):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+    prefill = SavedPrefill.objects.filter(pk=prefill_id, user=request.user).first()
+    if prefill is None:
+        raise Http404("Saved prefill not found")
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        messages.error(request, "Enter a name before renaming the saved prefill.")
+        return redirect("saved_prefill_list")
+    prefill.name = name[:120]
+    prefill.save(update_fields=["name", "updated_at"])
+    messages.success(request, "Saved prefill renamed.")
+    return redirect("saved_prefill_list")
+
+
+@login_required
+def open_saved_prefill(request, prefill_id):
+    try:
+        prefill = SavedPrefill.objects.get(pk=prefill_id, user=request.user)
+    except SavedPrefill.DoesNotExist:
+        raise Http404("Saved prefill not found")
+    if not _activate_prefill_snapshot(request, prefill.snapshot or {}):
+        messages.error(request, "This saved prefill has no section data.")
+        return redirect("saved_prefill_list")
+    _set_active_saved_prefill(request, prefill)
+    messages.success(request, "Saved prefill loaded for editing.")
+    return redirect("prefilled_timetable_view")
+
+
+@login_required
+def generate_saved_prefill(request, prefill_id):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+    try:
+        prefill = SavedPrefill.objects.get(pk=prefill_id, user=request.user)
+    except SavedPrefill.DoesNotExist:
+        raise Http404("Saved prefill not found")
+    if not _activate_prefill_snapshot(request, prefill.snapshot or {}):
+        messages.error(request, "This saved prefill has no section data.")
+        return redirect("saved_prefill_list")
+    _set_active_saved_prefill(request, prefill)
+    return redirect(f"{reverse('generate_timetable_loading')}?use_pso=1&use_prefilled_slots=1")
+
+
+@login_required
+def delete_saved_prefill(request, prefill_id):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+    SavedPrefill.objects.filter(pk=prefill_id, user=request.user).delete()
+    if str(request.session.get("active_saved_prefill_id") or "") == str(prefill_id):
+        _clear_active_saved_prefill(request)
+    messages.success(request, "Saved prefill deleted.")
+    return redirect("saved_prefill_list")
 
 
 @login_required

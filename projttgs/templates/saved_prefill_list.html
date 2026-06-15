@@ -1,0 +1,149 @@
+{% extends "mainbase.html" %}
+{% block title %}Saved Prefill{% endblock %}
+{% block content %}
+<style>
+.saved-prefill-shell {
+  max-width: 1080px;
+  margin: 54px auto;
+  padding: 0 18px;
+}
+.saved-prefill-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.saved-prefill-head h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+  letter-spacing: 0;
+}
+.saved-prefill-head a {
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 10px 14px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 800;
+}
+.saved-prefill-grid {
+  display: grid;
+  gap: 14px;
+}
+.saved-prefill-card {
+  background: #ffffff;
+  border: 1px solid #dbe4ee;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+.saved-prefill-title {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.saved-prefill-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.saved-prefill-meta span {
+  border-radius: 999px;
+  background: #f1f5f9;
+  padding: 5px 9px;
+}
+.saved-prefill-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.saved-prefill-rename {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+.saved-prefill-rename input {
+  min-width: min(100%, 280px);
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #000000 !important;
+  background: #f8fafc;
+  font-weight: 700;
+}
+.saved-prefill-actions a,
+.saved-prefill-actions button,
+.saved-prefill-rename button {
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+.saved-prefill-open { background: #e2e8f0; color: #0f172a; }
+.saved-prefill-generate { background: #16a34a; color: #ffffff; }
+.saved-prefill-rename-btn { background: #dbeafe; color: #1d4ed8; }
+.saved-prefill-delete { background: #fee2e2; color: #991b1b; }
+.saved-prefill-empty {
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 28px;
+  text-align: center;
+  color: #475569;
+  font-weight: 700;
+}
+</style>
+<div class="saved-prefill-shell">
+  <div class="saved-prefill-head">
+    <h1>Saved Prefill</h1>
+    <a href="{% url 'prefilled_timetable_setup' %}">Create New Prefill</a>
+  </div>
+
+  {% if prefills %}
+  <div class="saved-prefill-grid">
+    {% for row in prefills %}
+    <div class="saved-prefill-card">
+      <div class="saved-prefill-title">{{ row.item.name|default:"Saved Prefill" }}</div>
+      <div class="saved-prefill-meta">
+        <span>{{ row.section_count }} section(s)</span>
+        <span>{{ row.slot_count }} slot(s)</span>
+        <span>{{ row.sections|default:"No sections" }}</span>
+        <span>Saved {{ row.item.updated_at|date:"d M Y, h:i A" }}</span>
+      </div>
+      <form class="saved-prefill-rename" method="post" action="{% url 'rename_saved_prefill' row.item.id %}">
+        {% csrf_token %}
+        <input type="text" name="name" value="{{ row.item.name|default:'Saved Prefill' }}" maxlength="120" aria-label="Saved prefill name" required>
+        <button class="saved-prefill-rename-btn" type="submit">Rename</button>
+      </form>
+      <div class="saved-prefill-actions">
+        <a class="saved-prefill-open" href="{% url 'open_saved_prefill' row.item.id %}">View / Edit</a>
+        <form method="post" action="{% url 'generate_saved_prefill' row.item.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button class="saved-prefill-generate" type="submit">Generate Timetable</button>
+        </form>
+        <form method="post" action="{% url 'delete_saved_prefill' row.item.id %}" style="display:inline;" onsubmit="return confirm('Delete this saved prefill?');">
+          {% csrf_token %}
+          <button class="saved-prefill-delete" type="submit">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="saved-prefill-empty">
+    No saved prefill yet. Create a prefilled table, add slots, then save it here.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

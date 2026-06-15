@@ -1,0 +1,23 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+LT-01,CSE,80,LECTURE HALL,
+LT-02,CSE,80,LECTURE HALL,
+LT-03,CSE,80,LECTURE HALL,
+IT-01,CSE,60,LECTURE HALL,
+IT-02,CSE,60,LECTURE HALL,
+IT-03,CSE,60,LECTURE HALL,
+IT-04,CSE,60,LECTURE HALL,
+IT-07,CSE,80,LECTURE HALL,
+IT-08,CSE,80,LECTURE HALL,
+S-09,CSE,60,LECTURE HALL,
+CC01,CSE,40,LAB,Computer Lab
+CC02,CSE,40,LAB,Computer Lab
+CC05,CSE,40,LAB,Computer Lab
+CC06,CSE,40,LAB,Computer Lab
+CC07,CSE,40,LAB,Computer Lab
+CC08,CSE,40,LAB,Computer Lab
+CC09,CSE,40,LAB,Computer Lab
+Computer Centre 1,CSE,70,LAB,Computer Lab
+Computer Centre 2,CSE,40,LAB,Computer Lab
+Smart Class Room,CSE,30,SMART CLASS ROOM,
+SPCD Lab,CSE,36,LAB,Computer Lab
+CT-04,CSE,80,LECTURE HALL,

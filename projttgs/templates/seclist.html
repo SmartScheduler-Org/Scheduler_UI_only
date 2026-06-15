@@ -58,7 +58,10 @@
 }
 
 .delete-btn {
-    padding: 5px 12px;
+    width: 34px;
+    height: 34px;
+    display: inline-grid;
+    place-items: center;
     background: #ff4d4dcc;
     border: none;
     border-radius: 6px;
@@ -72,6 +75,22 @@
     background: #ff3333;
     transform: scale(1.05);
 }
+
+.row-actions { display: flex; gap: 8px; align-items: center; }
+.update-btn {
+    width: 34px;
+    height: 34px;
+    display: inline-grid;
+    place-items: center;
+    background: #2563ebcc;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.2s;
+}
+.update-btn:hover { background: #1d4ed8; transform: scale(1.05); }
 
 </style>
 
@@ -102,11 +121,14 @@
                     <td>{{ sec.department }}</td>
                     <td>{{ sec.num_class_in_week }}</td>
                     <td>
+                        <div class="row-actions">
+                        <a class="update-btn" href="{% url 'addSections' %}?edit={{ sec.id }}" aria-label="Update section" title="Update section"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                         {% url 'deletesection' sec.section_id as del_url %}
                         <form action="{{ del_url|default:'#' }}" method="post">
                             {% csrf_token %}
-                            <button class="delete-btn">Delete</button>
+                            <button class="delete-btn" aria-label="Delete section" title="Delete section"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
                         </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

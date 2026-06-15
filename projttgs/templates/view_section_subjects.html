@@ -44,6 +44,24 @@
     transform: translateY(-1px);
 }
 
+.mapping-update-link {
+    display: inline-grid;
+    place-items: center;
+    margin-top: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: #fff;
+    background: #2563eb;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.mapping-update-link:hover {
+    background: #1d4ed8;
+}
+
 .section-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -92,7 +110,11 @@
                 {% if section.subjects %}
                     <ul class="subject-list">
                         {% for mapping in section.subjects %}
-                            <li>{{ mapping.subject.subject_number }} - {{ mapping.subject.subject_name }} {% if mapping.group_count > 1 %}(groups: {{ mapping.group_count }}){% endif %}</li>
+                            <li>
+                                {{ mapping.subject.subject_number }} - {{ mapping.subject.subject_name }} {% if mapping.group_count > 1 %}(groups: {{ mapping.group_count }}){% endif %}
+                                {% if mapping.elective_section_ids %}<br><small>elective with: {{ mapping.elective_section_ids }}</small>{% endif %}
+                                <br><a class="mapping-update-link" href="{% url 'map_section_subjects' %}?edit={{ mapping.id }}" aria-label="Update mapping" title="Update mapping"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
+                            </li>
                         {% endfor %}
                     </ul>
                 {% else %}

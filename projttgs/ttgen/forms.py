@@ -140,7 +140,7 @@ class SubjectForm(ModelForm):
             "max_numb_students": "Max Students",
             "room_required": "Required Room Type",
             "required_lab_category": "Required Lab Category",
-            "instructors": "Assigned Teacher",
+            "instructors": "Assigned Teachers",
             "classes_per_week": "Classes Per Week",
             "duration": "Duration (Hours)",
         }
@@ -151,7 +151,7 @@ class SubjectForm(ModelForm):
                 ('Lab', 'Lab'),
             ]),
             "required_lab_category": forms.Select(choices=[("", "---------")] + list(LAB_CATEGORY_CHOICES)),
-            "instructors": forms.Select(),
+            "instructors": forms.CheckboxSelectMultiple(),
             "classes_per_week": forms.NumberInput(attrs={
                 'min': 1,
                 'max': 10,

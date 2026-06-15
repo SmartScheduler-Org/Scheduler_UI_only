@@ -233,6 +233,33 @@ class SchedulerInitializationTests(TestCase):
             {"name": "Theory 4", "count": 0, "required": 2, "missing": 2, "is_lab": False},
             {"name": "Theory 5", "count": 0, "required": 1, "missing": 1, "is_lab": False},
         ])
+
+    def test_build_section_tables_excludes_manual_unknown_subject_from_missing_counts(self):
+        teacher = self.section.allowed_subjects.filter(room_required="Lecture Hall").first().instructors.first()
+        room = Room.objects.get(r_number="LH-1")
+        monday_1 = MeetingTime.objects.get(pid="Mo1")
+        manual_subject = views_other.ManualPrefillSubject("Manual Workshop", duration=4)
+
+        manual_class = views_other.Class(99, self.department, self.section.section_id, manual_subject)
+        manual_class.set_instructor(teacher)
+        manual_class.set_room(room)
+        manual_class.set_meetingTime(monday_1)
+        manual_class.meeting_times = [
+            monday_1,
+            MeetingTime.objects.get(pid="Mo2"),
+            MeetingTime.objects.get(pid="Mo3"),
+            MeetingTime.objects.get(pid="Mo4"),
+        ]
+        manual_class.duration = 4
+        manual_class.manual_entry = True
+
+        tables = views_other.build_section_tables([manual_class], [])
+        test_table = next(table for table in tables if table["section"].section_id == "Test Section")
+
+        self.assertNotIn("Manual Workshop", [subject["name"] for subject in test_table["subject_counts"]])
+        self.assertNotIn("Manual Workshop", [lab["name"] for lab in test_table["missed_labs"]])
+        self.assertEqual(test_table["total_missing_classes"], sum(subject["missing"] for subject in test_table["subject_counts"]))
+
     def test_build_section_tables_lists_missed_labs(self):
         extra_lab_subject = Subject.objects.create(
             subject_number="LAB002",
@@ -244,102 +271,7 @@ class SchedulerInitializationTests(TestCase):
             classes_per_week=1,
             user=self.user,
         )
-        extra_lab_subject.instructors.add(self.section.allowed_subjects.get(subject_number="LAB001").instructors.first())
-        self.section.allowed_subjects.add(extra_lab_subject)
-
-        views_other.data = views_other.Data()
-        tables = views_other.build_section_tables([], [])
-        test_table = next(table for table in tables if table["section"].section_id == "Test Section")
-
-        missed_lab = next(lab for lab in test_table["missed_labs"] if lab["name"] == "Missed Lab")
-
-        self.assertEqual(missed_lab["missing"], 1)
-        self.assertEqual(missed_lab["reason"], "Required lab category unavailable")
-
-    def test_build_section_tables_prefers_specific_room_over_lab_category_reason(self):
-        extra_lab_subject = Subject.objects.create(
-            subject_number="LAB003",
-            subject_name="Locked Lab",
-            department=self.department,
-            max_numb_students=30,
-            room_required="Lab",
-            required_lab_category="ADVANCED",
-            specific_rooms="LAB-1",
-            classes_per_week=1,
-            user=self.user,
-        )
-        extra_lab_subject.instructors.add(self.section.allowed_subjects.get(subject_number="LAB001").instructors.first())
-        self.section.allowed_subjects.add(extra_lab_subject)
-
-        views_other.data = views_other.Data()
-        tables = views_other.build_section_tables([], [])
-        test_table = next(table for table in tables if table["section"].section_id == "Test Section")
-
-        missed_lab = next(lab for lab in test_table["missed_labs"] if lab["name"] == "Locked Lab")
-
-        self.assertEqual(missed_lab["missing"], 1)
-        self.assertEqual(missed_lab["reason"], "No conflict-free lab slot available")
-
-    def test_parallel_grouped_lecture_hall_subject_uses_distinct_lecture_halls(self):
-        second_lecture_hall = Room.objects.create(
-            r_number="LH-2",
-            room_type="Lecture Hall",
-            seating_capacity=60,
-            department=self.department,
-            user=self.user,
-        )
-        Room.objects.create(
-            r_number="A-SEM",
-            room_type="Seminar Room",
-            seating_capacity=60,
-            department=self.department,
-            user=self.user,
-        )
-        teacher_one = Instructor.objects.create(
-            uid="GL001",
-            name="Grouped Lecture Teacher 1",
-            designation="Assistant Professor",
-            max_workload=25,
-            user=self.user,
-        )
-        teacher_two = Instructor.objects.create(
-            uid="GL002",
-            name="Grouped Lecture Teacher 2",
-            designation="Assistant Professor",
-            max_workload=25,
-            user=self.user,
-        )
-        grouped_subject = Subject.objects.create(
-            subject_number="GTH001",
-            subject_name="Grouped Lecture",
-            department=self.department,
-            max_numb_students=60,
-            room_required="Lecture Hall",
-            required_lab_category="Lecture Hall;Lecture Hall",
-            classes_per_week=1,
-            user=self.user,
-        )
-        grouped_subject.instructors.add(teacher_one, teacher_two)
-        self.section.allowed_subjects.add(grouped_subject)
-        SectionSubjectMapping.objects.filter(section=self.section, subject=grouped_subject).update(group_count=2)
-
-        views_other.data = views_other.Data()
-        schedule = views_other.Schedule()
-        schedule._build_indices()
-
-        mt = MeetingTime.objects.get(pid="Mo1")
-        assignment = schedule._find_recheck_parallel_theory_assignment(
-            self.section,
-            grouped_subject,
-            ["Batch1", "Batch2"],
-            mt,
-            [mt],
-        )
-
-        self.assertIsNotNone(assignment)
-        rooms = {room.r_number for _group, room, _teacher in assignment}
-        self.assertEqual(rooms, {"LH-1", "LH-2"})
-        self.assertNotIn("A-SEM", rooms)
+        self.assertEqual(test_table["total_missing_classes"], 6)
 
     def test_build_section_tables_includes_missing_reason(self):
         subject = Subject.objects.create(

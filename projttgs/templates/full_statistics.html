@@ -1,0 +1,540 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartScheduler | Full Statistics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+    --bg-top: #111827;
+    --bg-bottom: #020617;
+    --card: rgba(17, 24, 39, 0.72);
+    --card-border: rgba(148, 163, 184, 0.16);
+    --text: #f8fafc;
+    --muted: rgba(226, 232, 240, 0.70);
+    --cyan: #38bdf8;
+    --purple: #b54bff;
+    --green: #10f2a4;
+    --amber: #ffb400;
+    --red: #fb7185;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    min-height: 100vh;
+    font-family: "Poppins", "Segoe UI", sans-serif;
+    color: var(--text);
+    background: radial-gradient(circle at top, var(--bg-top) 0, var(--bg-bottom) 48%, var(--bg-bottom) 100%);
+    overflow-x: hidden;
+}
+body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: -1;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(circle at center, black 30%, transparent 84%);
+}
+.page-shell {
+    width: min(1180px, calc(100vw - 40px));
+    margin: 0 auto;
+    padding: 30px 0 70px;
+}
+.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 26px;
+}
+.page-back {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 600;
+    padding: 9px 16px; border-radius: 12px;
+    border: 1px solid var(--card-border); background: rgba(255,255,255,0.03);
+    transition: all .2s ease;
+}
+.page-back:hover { color: var(--text); border-color: rgba(148,163,184,0.4); }
+.page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.page-title span { color: var(--purple); }
+.page-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+.section {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 22px;
+    padding: 26px 26px 30px;
+    margin-bottom: 26px;
+    backdrop-filter: blur(8px);
+}
+.section-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.section-head h2 { font-size: 19px; font-weight: 750; }
+.section-head .badge {
+    font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 999px;
+    background: rgba(181,75,255,0.16); color: #d8b4fe; border: 1px solid rgba(181,75,255,0.3);
+}
+.section-head .spacer { flex: 1; }
+
+.kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px; margin-bottom: 24px;
+}
+.kpi {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 16px 18px;
+}
+.kpi .label { font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+.kpi .value { font-size: 28px; font-weight: 820; margin-top: 6px; }
+.kpi .value small { font-size: 14px; font-weight: 600; color: var(--muted); }
+.kpi.util .value { color: var(--green); }
+.kpi.empty .value { color: var(--amber); }
+
+.charts-row {
+    display: grid; grid-template-columns: minmax(220px, 1fr) minmax(320px, 1.6fr);
+    gap: 22px; align-items: center; margin-bottom: 22px;
+}
+@media (max-width: 760px) { .charts-row { grid-template-columns: 1fr; } }
+.chart-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 18px;
+}
+.chart-card h3 { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-align: center; }
+.chart-wrap { position: relative; height: 240px; }
+
+.reasons { display: grid; gap: 10px; margin-bottom: 22px; }
+.reason {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 13px 15px; border-radius: 13px;
+    border: 1px solid var(--card-border); background: rgba(255,255,255,0.025);
+}
+.reason .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; flex: none; background: var(--cyan); }
+.reason.warn .dot { background: var(--amber); }
+.reason .r-title { font-weight: 700; font-size: 14px; }
+.reason .r-detail { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+
+.tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--card-border); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+thead th {
+    text-align: left; padding: 11px 14px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--muted); background: rgba(255,255,255,0.04);
+    position: sticky; top: 0;
+}
+tbody td { padding: 10px 14px; border-top: 1px solid rgba(148,163,184,0.08); }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+.pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.pill.Full { background: rgba(16,242,164,0.15); color: var(--green); }
+.pill.Good { background: rgba(56,189,248,0.15); color: var(--cyan); }
+.pill.Low { background: rgba(255,180,0,0.15); color: var(--amber); }
+.pill.Unused { background: rgba(251,113,133,0.15); color: var(--red); }
+.bar-mini { height: 7px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; min-width: 70px; }
+.bar-mini > span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #7b2ff7, #38bdf8); }
+
+.dept-select {
+    background: rgba(255,255,255,0.05); color: var(--text);
+    border: 1px solid var(--card-border); border-radius: 12px;
+    padding: 9px 14px; font-size: 14px; font-weight: 600; min-width: 220px;
+}
+.dept-select option { color: #111827; }
+
+.upload-form { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.upload-form input[type=file] {
+    color: var(--muted); font-size: 13px;
+    border: 1px dashed var(--card-border); border-radius: 12px; padding: 11px 14px;
+    background: rgba(255,255,255,0.02); max-width: 340px;
+}
+.btn {
+    border: none; cursor: pointer; font-weight: 700; font-size: 14px;
+    padding: 11px 22px; border-radius: 12px; color: #fff;
+    background: linear-gradient(135deg, #7b2ff7, #b54bff);
+}
+.btn:hover { filter: brightness(1.08); }
+.hint { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.alert {
+    padding: 12px 16px; border-radius: 12px; font-size: 13px; margin-bottom: 16px;
+    background: rgba(251,113,133,0.12); border: 1px solid rgba(251,113,133,0.3); color: #fecdd3;
+}
+.empty-note { color: var(--muted); font-size: 13px; padding: 18px; text-align: center; }
+.diff-pos { color: var(--green); font-weight: 700; }
+.diff-neg { color: var(--amber); font-weight: 700; }
+
+/* ---- scan animation ---- */
+.scan-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(2, 6, 23, 0.78); backdrop-filter: blur(6px);
+}
+.scan-overlay.is-active { display: flex; animation: scanFade .25s ease; }
+@keyframes scanFade { from { opacity: 0; } to { opacity: 1; } }
+.scan-box {
+    text-align: center; padding: 34px 40px; border-radius: 22px;
+    background: rgba(17, 24, 39, 0.9); border: 1px solid rgba(181,75,255,0.35);
+    box-shadow: 0 0 50px rgba(123,47,247,0.35);
+}
+.scan-doc {
+    position: relative; width: 130px; height: 168px; margin: 0 auto 22px;
+    border-radius: 12px; padding: 20px 16px;
+    background: linear-gradient(180deg, #1e293b, #0f172a);
+    border: 1px solid rgba(148,163,184,0.25); overflow: hidden;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.02);
+}
+.scan-line-row {
+    height: 9px; border-radius: 4px; margin-bottom: 13px;
+    background: linear-gradient(90deg, rgba(148,163,184,0.4), rgba(148,163,184,0.12));
+}
+.scan-line-row:nth-child(2) { width: 78%; }
+.scan-line-row:nth-child(3) { width: 92%; }
+.scan-line-row:nth-child(4) { width: 64%; }
+.scan-line-row:nth-child(5) { width: 85%; }
+.scan-beam {
+    position: absolute; left: 0; right: 0; height: 38px; top: -38px;
+    background: linear-gradient(180deg, rgba(56,189,248,0) 0%, rgba(56,189,248,0.45) 50%, rgba(16,242,164,0.0) 100%);
+    box-shadow: 0 0 22px 6px rgba(56,189,248,0.45);
+    animation: scanBeam 1.5s ease-in-out infinite;
+}
+@keyframes scanBeam {
+    0% { top: -38px; } 50% { top: 168px; } 100% { top: -38px; }
+}
+.scan-title { font-size: 17px; font-weight: 750; margin-bottom: 6px; }
+.scan-status { font-size: 12.5px; color: var(--muted); min-height: 18px; }
+.btn.is-scanning { opacity: .7; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="page-shell">
+
+    <div class="topbar">
+        <a class="page-back" href="{% url 'show_timetable' index %}">&larr; Back to Timetable</a>
+        <div style="text-align:right;">
+            <div class="page-title">Full <span>Statistics</span></div>
+            <div class="page-sub">Room utilization across all generated departments</div>
+        </div>
+    </div>
+
+    {# ===================== OVERALL ===================== #}
+    <div class="section">
+        <div class="section-head">
+            <h2>📊 Overall Utilization</h2>
+            <span class="badge">All Departments</span>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi"><div class="label">Total Rooms</div><div class="value">{{ overall.total_rooms }}</div></div>
+            <div class="kpi"><div class="label">Rooms Used</div><div class="value">{{ overall.used_rooms }}</div></div>
+            <div class="kpi empty"><div class="label">Rooms Empty</div><div class="value">{{ overall.empty_rooms }}</div></div>
+            <div class="kpi util"><div class="label">Slot Utilization</div><div class="value">{{ overall.overall_util }}<small>%</small></div></div>
+            <div class="kpi"><div class="label">Slots Used</div><div class="value">{{ overall.total_occupied }}<small> / {{ overall.total_capacity }}</small></div></div>
+        </div>
+
+        <div class="charts-row">
+            <div class="chart-card">
+                <h3>Used vs Empty Slots</h3>
+                <div class="chart-wrap"><canvas id="overall-doughnut"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Utilization by Room Type</h3>
+                <div class="chart-wrap"><canvas id="overall-bar"></canvas></div>
+            </div>
+        </div>
+
+        <div class="reasons" id="overall-reasons"></div>
+        <div class="tbl-wrap"><table id="overall-table"></table></div>
+    </div>
+
+    {# ===================== DEPARTMENT-WISE ===================== #}
+    <div class="section">
+        <div class="section-head">
+            <h2>🏫 Department-wise</h2>
+            <div class="spacer"></div>
+            <select id="dept-select" class="dept-select" onchange="renderDept(this.value)"></select>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi"><div class="label">Total Rooms</div><div class="value" id="d-total">0</div></div>
+            <div class="kpi"><div class="label">Rooms Used</div><div class="value" id="d-used">0</div></div>
+            <div class="kpi empty"><div class="label">Rooms Empty</div><div class="value" id="d-empty">0</div></div>
+            <div class="kpi util"><div class="label">Slot Utilization</div><div class="value"><span id="d-util">0</span><small>%</small></div></div>
+            <div class="kpi"><div class="label">Slots Used</div><div class="value"><span id="d-occ">0</span><small id="d-cap"> / 0</small></div></div>
+        </div>
+
+        <div class="charts-row">
+            <div class="chart-card">
+                <h3>Used vs Empty Slots</h3>
+                <div class="chart-wrap"><canvas id="dept-doughnut"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Utilization by Room Type</h3>
+                <div class="chart-wrap"><canvas id="dept-bar"></canvas></div>
+            </div>
+        </div>
+
+        <div class="reasons" id="dept-reasons"></div>
+        <div class="tbl-wrap"><table id="dept-table"></table></div>
+    </div>
+
+    {# ===================== MANUAL COMPARE ===================== #}
+    <div class="section">
+        <div class="section-head">
+            <h2>📐 Manual vs Generated</h2>
+            <span class="badge">Upload &amp; Compare</span>
+        </div>
+
+        <p class="hint" style="margin-bottom:14px;">
+            Upload your existing manual timetable (PDF or Excel). We scan it for your room
+            numbers and compare how many weekly slots each room was used manually versus in the
+            generated schedule. Detection works best when room numbers appear inside the
+            timetable cells.
+        </p>
+
+        {% if manual_error %}<div class="alert">{{ manual_error }}</div>{% endif %}
+
+        <form id="manual-form" class="upload-form" method="post" enctype="multipart/form-data"
+              action="{% url 'full_statistics' index %}">
+            {% csrf_token %}
+            <input type="file" name="manual_file" accept=".pdf,.xlsx,.xls" required>
+            <button type="submit" class="btn" id="scan-btn">Scan &amp; Compare</button>
+        </form>
+
+        <div id="scan-overlay" class="scan-overlay" aria-hidden="true">
+            <div class="scan-box">
+                <div class="scan-doc">
+                    <div class="scan-line-row"></div>
+                    <div class="scan-line-row"></div>
+                    <div class="scan-line-row"></div>
+                    <div class="scan-line-row"></div>
+                    <div class="scan-line-row"></div>
+                    <div class="scan-beam"></div>
+                </div>
+                <div class="scan-title">Scanning timetable…</div>
+                <div class="scan-status" id="scan-status">Reading rooms from your file</div>
+            </div>
+        </div>
+
+        {% if manual %}
+        <div class="kpi-grid">
+            <div class="kpi"><div class="label">Manual Slots</div><div class="value">{{ manual.manual_total }}</div></div>
+            <div class="kpi util"><div class="label">Generated Slots</div><div class="value">{{ manual.generated_total }}</div></div>
+            <div class="kpi"><div class="label">Manual Rooms Used</div><div class="value">{{ manual.manual_rooms_used }}</div></div>
+            <div class="kpi empty"><div class="label">Generated Rooms Used</div><div class="value">{{ manual.generated_rooms_used }}</div></div>
+        </div>
+        <div class="chart-card" style="margin-bottom:20px;">
+            <h3>Manual vs Generated — Slots per Room</h3>
+            <div class="chart-wrap" style="height:300px;"><canvas id="manual-bar"></canvas></div>
+        </div>
+        <div class="tbl-wrap"><table id="manual-table"></table></div>
+        <p class="hint" style="margin-top:12px;">
+            Detection is heuristic — it counts cells in the uploaded file that contain each room
+            number. Rooms not found in the file show 0 manual slots. Use this as a directional
+            comparison, not an exact audit.
+        </p>
+        {% else %}
+        <div class="empty-note">No file scanned yet. Upload a manual timetable above to compare.</div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script id="overall-data" type="application/json">{{ overall_json|safe }}</script>
+<script id="departments-data" type="application/json">{{ departments_json|safe }}</script>
+<script id="manual-data" type="application/json">{{ manual_json|safe }}</script>
+<script>
+const OVERALL = JSON.parse(document.getElementById('overall-data').textContent);
+const DEPARTMENTS = JSON.parse(document.getElementById('departments-data').textContent);
+const MANUAL = JSON.parse(document.getElementById('manual-data').textContent);
+
+const charts = {};
+const TYPE_COLORS = ['#7b2ff7', '#38bdf8', '#10f2a4', '#ffb400', '#fb7185', '#a78bfa', '#34d399'];
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function buildDoughnut(canvasId, used, empty) {
+    destroyChart(canvasId);
+    charts[canvasId] = new Chart(document.getElementById(canvasId), {
+        type: 'doughnut',
+        data: {
+            labels: ['Used', 'Empty'],
+            datasets: [{ data: [used, empty], backgroundColor: ['#10f2a4', 'rgba(148,163,184,0.25)'], borderWidth: 0, hoverOffset: 8 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '68%',
+            plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 12 } }, position: 'bottom' } }
+        }
+    });
+}
+
+function buildTypeBar(canvasId, buckets) {
+    destroyChart(canvasId);
+    charts[canvasId] = new Chart(document.getElementById(canvasId), {
+        type: 'bar',
+        data: {
+            labels: buckets.map(b => b.category),
+            datasets: [{
+                label: 'Utilization %',
+                data: buckets.map(b => b.util_pct),
+                backgroundColor: buckets.map((b, i) => TYPE_COLORS[i % TYPE_COLORS.length]),
+                borderRadius: 6, maxBarThickness: 46,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ' ' + c.parsed.y + '%' } } },
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8', callback: (v) => v + '%' }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                x: { ticks: { color: '#cbd5e1', font: { size: 11 } }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderReasons(targetId, reasons) {
+    const el = document.getElementById(targetId);
+    if (!reasons || !reasons.length) {
+        el.innerHTML = '<div class="reason"><span class="dot"></span><div><div class="r-title">No utilization issues detected</div><div class="r-detail">Every active room is well used and idle rooms are intentional spare capacity.</div></div></div>';
+        return;
+    }
+    el.innerHTML = reasons.map(r =>
+        `<div class="reason ${r.impact === 'warn' ? 'warn' : ''}"><span class="dot"></span>` +
+        `<div><div class="r-title">${escapeHtml(r.title)}</div><div class="r-detail">${escapeHtml(r.detail)}</div></div></div>`
+    ).join('');
+}
+
+function renderRoomTable(targetId, rooms) {
+    const el = document.getElementById(targetId);
+    if (!rooms || !rooms.length) { el.outerHTML = '<table id="' + targetId + '"></table>'; return; }
+    let html = '<thead><tr><th>Room</th><th>Dept</th><th>Type</th><th>Slots</th><th>Utilization</th><th>Status</th></tr></thead><tbody>';
+    rooms.forEach(r => {
+        html += `<tr><td><strong>${escapeHtml(r.r_number)}</strong></td>` +
+            `<td>${escapeHtml(r.dept_code || '—')}</td>` +
+            `<td>${escapeHtml(r.category)}</td>` +
+            `<td>${r.used_slots} / ${r.usable_slots}</td>` +
+            `<td><div style="display:flex;align-items:center;gap:8px;"><div class="bar-mini"><span style="width:${r.util_pct}%"></span></div><span>${r.util_pct}%</span></div></td>` +
+            `<td><span class="pill ${r.status}">${r.status}</span></td></tr>`;
+    });
+    html += '</tbody>';
+    el.innerHTML = html;
+}
+
+function renderScope(scope, prefix, chartIds) {
+    if (prefix === 'd') {
+        document.getElementById('d-total').textContent = scope.total_rooms;
+        document.getElementById('d-used').textContent = scope.used_rooms;
+        document.getElementById('d-empty').textContent = scope.empty_rooms;
+        document.getElementById('d-util').textContent = scope.overall_util;
+        document.getElementById('d-occ').textContent = scope.total_occupied;
+        document.getElementById('d-cap').textContent = ' / ' + scope.total_capacity;
+    }
+    buildDoughnut(chartIds.doughnut, scope.total_occupied, scope.total_empty);
+    buildTypeBar(chartIds.bar, scope.buckets);
+    renderReasons(chartIds.reasons, scope.reasons);
+    renderRoomTable(chartIds.table, scope.rooms);
+}
+
+function renderDept(code) {
+    const dept = DEPARTMENTS.find(d => d.code === code) || DEPARTMENTS[0];
+    if (!dept) return;
+    renderScope(dept, 'd', { doughnut: 'dept-doughnut', bar: 'dept-bar', reasons: 'dept-reasons', table: 'dept-table' });
+}
+
+function renderManual() {
+    if (!MANUAL) return;
+    const rows = MANUAL.rows.filter(r => r.manual_used > 0 || r.generated_used > 0).slice(0, 30);
+    new Chart(document.getElementById('manual-bar'), {
+        type: 'bar',
+        data: {
+            labels: rows.map(r => r.r_number),
+            datasets: [
+                { label: 'Manual', data: rows.map(r => r.manual_used), backgroundColor: '#ffb400', borderRadius: 5, maxBarThickness: 24 },
+                { label: 'Generated', data: rows.map(r => r.generated_used), backgroundColor: '#10f2a4', borderRadius: 5, maxBarThickness: 24 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#cbd5e1' } } },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                x: { ticks: { color: '#cbd5e1', font: { size: 10 } }, grid: { display: false } }
+            }
+        }
+    });
+
+    const el = document.getElementById('manual-table');
+    let html = '<thead><tr><th>Room</th><th>Dept</th><th>Type</th><th>Manual</th><th>Generated</th><th>Difference</th></tr></thead><tbody>';
+    MANUAL.rows.forEach(r => {
+        const diffCls = r.diff > 0 ? 'diff-pos' : (r.diff < 0 ? 'diff-neg' : '');
+        const diffTxt = r.diff > 0 ? '+' + r.diff : r.diff;
+        html += `<tr><td><strong>${escapeHtml(r.r_number)}</strong>${r.detected ? '' : ' <span class="hint">(not found)</span>'}</td>` +
+            `<td>${escapeHtml(r.dept_code || '—')}</td>` +
+            `<td>${escapeHtml(r.category)}</td>` +
+            `<td>${r.manual_used} <span class="hint">(${r.manual_pct}%)</span></td>` +
+            `<td>${r.generated_used} <span class="hint">(${r.generated_pct}%)</span></td>` +
+            `<td class="${diffCls}">${diffTxt}</td></tr>`;
+    });
+    html += '</tbody>';
+    el.innerHTML = html;
+}
+
+function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ---- init ----
+renderScope(OVERALL, 'o', { doughnut: 'overall-doughnut', bar: 'overall-bar', reasons: 'overall-reasons', table: 'overall-table' });
+
+const sel = document.getElementById('dept-select');
+DEPARTMENTS.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.code;
+    opt.textContent = d.name + ' (' + d.total_rooms + ' rooms, ' + d.overall_util + '%)';
+    sel.appendChild(opt);
+});
+if (DEPARTMENTS.length) renderDept(DEPARTMENTS[0].code);
+else document.querySelectorAll('.section')[1].querySelector('.tbl-wrap').innerHTML = '<div class="empty-note">No department data available.</div>';
+
+renderManual();
+
+// ---- scan animation ----
+(function () {
+    const form = document.getElementById('manual-form');
+    const overlay = document.getElementById('scan-overlay');
+    const statusEl = document.getElementById('scan-status');
+    const btn = document.getElementById('scan-btn');
+    if (!form) return;
+
+    const messages = [
+        'Reading rooms from your file…',
+        'Detecting room numbers in each cell…',
+        'Matching against generated rooms…',
+        'Comparing manual vs generated usage…',
+        'Building comparison charts…',
+    ];
+
+    form.addEventListener('submit', function (e) {
+        const fileInput = form.querySelector('input[type=file]');
+        if (!fileInput || !fileInput.files || !fileInput.files.length) return; // let native required kick in
+        e.preventDefault();
+        overlay.classList.add('is-active');
+        overlay.setAttribute('aria-hidden', 'false');
+        btn.classList.add('is-scanning');
+        let i = 0;
+        statusEl.textContent = messages[0];
+        const timer = setInterval(function () {
+            i = (i + 1) % messages.length;
+            statusEl.textContent = messages[i];
+        }, 900);
+        // Give the animation a brief head-start, then submit for real.
+        setTimeout(function () {
+            clearInterval(timer);
+            form.submit();
+        }, 1600);
+    });
+
+    // If the page reloaded with results, scroll to them so the user sees the outcome.
+    {% if manual or manual_error %}
+    const target = document.getElementById('manual-form');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    {% endif %}
+})();
+</script>
+</body>
+</html>
+

@@ -255,6 +255,7 @@
 <form method="post">
 {% csrf_token %}
 <fieldset style="position:relative;">
+{% if edit_section %}<input type="hidden" name="edit_id" value="{{ edit_section.id }}">{% endif %}
 
 <div class="info-icon-container">
     <span class="info-icon">i</span>
@@ -288,8 +289,9 @@
 
 <div class="button-row">
     <button type="submit" name="add_section" class="submit-btn">
-        Add Section
+        {% if edit_section %}Update Section{% else %}Add Section{% endif %}
     </button>
+    {% if edit_section %}<a href="{% url 'addSections' %}" class="csv-convert-btn">Cancel Edit</a>{% endif %}
 </div>
 
 </fieldset>

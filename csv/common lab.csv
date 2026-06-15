@@ -1,0 +1,4 @@
+room_number,department_code,room_seating_capacity,room_type,lab_category
+SB-902,PHY,70,LAB,Btech PHY LAB
+SB-905,CHE,70,LAB,Btech CHE LAB
+CC04,CSE,70,LAB,Computer LAB

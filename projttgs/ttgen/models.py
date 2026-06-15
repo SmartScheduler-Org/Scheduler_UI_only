@@ -318,11 +318,9 @@ class SectionSubjectMapping(models.Model):
     class Meta:
         db_table = "ttgen_section_allowed_courses"
         managed = False
-        unique_together = ("section", "subject")
 
     def __str__(self):
-        elective = f", elective={self.elective_section_ids}" if self.elective_section_ids else ""
-        return f"{self.section.section_id} → {self.subject.subject_number} (groups={self.group_count}{elective})"
+        return f"{self.section.section_id} -> {self.subject.subject_name}"
 
 
 class TeacherSection(models.Model):
@@ -365,6 +363,8 @@ class SectionSubjectInstructor(models.Model):
         related_name="section_instructors",
         db_column="course_id",
     )
+    group_instructor_ids = models.JSONField(default=list, blank=True)
+    group_second_instructor_ids = models.JSONField(default=list, blank=True)
     instructor = models.ForeignKey(
         Instructor,
         on_delete=models.CASCADE,
@@ -422,6 +422,25 @@ class SavedTimetable(models.Model):
     def __str__(self):
         dept_label = f" [{self.department.name}]" if self.department_id else ""
         return f"Timetable{dept_label} ({self.created_at.strftime('%d %b %Y %H:%M')})"
+
+
+class SavedPrefill(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_prefills",
+    )
+    name = models.CharField(max_length=120, blank=True, default="")
+    snapshot = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        label = self.name or "Saved Prefill"
+        return f"{label} ({self.updated_at.strftime('%d %b %Y %H:%M')})"
 
 
 class ScheduledSlot(models.Model):
