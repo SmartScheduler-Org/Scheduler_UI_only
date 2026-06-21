@@ -82,12 +82,18 @@ DATABASES = {
     }
 }
 
+AUTHENTICATION_BACKENDS = [
+    'account.authentication.EmailAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'account.validators.StrongPasswordValidator'},
 ]
 
 # Internationalization
@@ -109,11 +115,19 @@ LOGIN_REDIRECT_URL = 'admindash'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'login'
 
-# Email Config
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Email Config — set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD as environment variables
+EMAIL_BACKEND      = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST         = 'smtp.gmail.com'
+EMAIL_PORT         = 587
+EMAIL_USE_TLS      = True
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL  = (
+    f'SmartScheduler <{EMAIL_HOST_USER}>'
+    if EMAIL_HOST_USER else
+    'SmartScheduler <noreply@smartscheduler.tech>'
+)
+
+# Password reset link expires after 15 minutes
+PASSWORD_RESET_TIMEOUT = 900
 X_FRAME_OPTIONS = "SAMEORIGIN"

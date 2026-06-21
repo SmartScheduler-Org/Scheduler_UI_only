@@ -57,8 +57,20 @@
           <div class="regfield"><label>Username</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" name="username" placeholder="Choose a username" value="{{ user_form.username.value|default_if_none:'' }}" required/></div></div>
           <div class="regfield"><label>First Name</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" name="first_name" placeholder="Enter your first name" value="{{ user_form.first_name.value|default_if_none:'' }}" required/></div></div>
           <div class="regfield"><label>Email</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><input type="email" name="email" placeholder="Your email address" value="{{ user_form.email.value|default_if_none:'' }}" required/></div></div>
-          <div class="regfield"><label>Password</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" name="password" placeholder="Create a password" required/></div></div>
-          <div class="regfield"><label>Confirm Password</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M9 12l2 2 4-4"/><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" name="password2" placeholder="Confirm your password" required/></div></div>
+          <div class="regfield"><label>Password</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" name="password" id="reg-pw" placeholder="Create a password" required/></div></div>
+          <!-- Password strength meter -->
+          <div class="pw-hint" id="pw-hint">
+            <div class="pw-bar-wrap"><div class="pw-bar" id="pw-bar"></div></div>
+            <div class="pw-strength-row"><span class="pw-label" id="pw-label">Start typing to check strength</span></div>
+            <div class="pw-checks">
+              <span class="pw-chk" id="chk-len">✗ 8+ characters</span>
+              <span class="pw-chk" id="chk-upper">✗ Uppercase (A-Z)</span>
+              <span class="pw-chk" id="chk-lower">✗ Lowercase (a-z)</span>
+              <span class="pw-chk" id="chk-digit">✗ Digit (0-9)</span>
+              <span class="pw-chk" id="chk-special">✗ Special (@$!%*?&_-#)</span>
+            </div>
+          </div>
+          <div class="regfield"><label>Confirm Password</label><div class="regiw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M9 12l2 2 4-4"/><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" name="password2" id="reg-pw2" placeholder="Confirm your password" required/></div><div class="pw-match" id="pw-match"></div></div>
           <button type="submit" class="regbtn"><span>Create Account</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </form>
         <div class="regdiv"><span>or</span></div>
@@ -119,6 +131,16 @@
 .reggbtn:hover{background:rgba(255,255,255,.11);transform:translateY(-1px)}
 .reglinks{margin-top:.8rem;font-size:.77rem;text-align:center;color:rgba(148,163,184,.6)}
 @media(max-width:700px){.regsplit{flex-direction:column}.regleft{width:100%;height:190px}.regimg{border-radius:30px 30px 0 0}.reground{padding:1.5rem}.regfeats{display:none}}
+/* Password strength meter */
+.pw-hint{margin:.3rem 0 .65rem;padding:.7rem .85rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+.pw-bar-wrap{height:5px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:.5rem}
+.pw-bar{height:100%;border-radius:4px;width:0%;transition:width .35s cubic-bezier(.4,0,.2,1),background .35s}
+.pw-strength-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.45rem}
+.pw-label{font-size:.7rem;font-weight:600;color:rgba(148,163,184,.55);transition:color .3s}
+.pw-checks{display:flex;flex-wrap:wrap;gap:.28rem .55rem}
+.pw-chk{font-size:.67rem;font-weight:500;color:rgba(148,163,184,.4);transition:color .2s,transform .15s;cursor:default}
+.pw-chk.ok{color:#22c55e;transform:scale(1.05)}
+.pw-match{font-size:.68rem;font-weight:600;margin-top:.3rem;height:.9rem;transition:color .2s}
 </style>
 <script>
 const regcv=document.getElementById('regcv'),regcx=regcv.getContext('2d');
@@ -134,5 +156,65 @@ const rgsc=document.getElementById('regsparks');const rgscl=['#00e5ff','#22c55e'
 for(let i=0;i<20;i++){const el=document.createElement('div');el.className='rsp';const sz=Math.random()*4+1.5;Object.assign(el.style,{width:sz+'px',height:sz+'px',left:Math.random()*100+'%',background:rgscl[Math.floor(Math.random()*rgscl.length)],animationDuration:(Math.random()*7+4)+'s',animationDelay:(Math.random()*8)+'s',boxShadow:`0 0 ${sz*3}px currentColor`});rgsc.appendChild(el);}
 const rgphr=['Smart timetables fast.','Zero clashes guaranteed.','NEP 2020 ready engine.','Powered by AI & GA.','Join SmartScheduler.'];let rgpi=0,rgci=0,rgdel=false;const rgtel=document.getElementById('regtyp');
 function rgtp(){const cur=rgphr[rgpi];const csr="<span class='regtc'></span>";if(!rgdel){rgci++;rgtel.innerHTML=cur.slice(0,rgci)+csr;if(rgci===cur.length)setTimeout(()=>{rgdel=true;},1500);}else{rgci--;rgtel.innerHTML=cur.slice(0,rgci)+csr;if(rgci===0){rgdel=false;rgpi=(rgpi+1)%rgphr.length;}}setTimeout(rgtp,rgdel?40:80);}rgtp();
+
+// ── Password strength meter ──────────────────────────────────────
+(function(){
+  const pwIn  = document.getElementById('reg-pw');
+  const pw2In = document.getElementById('reg-pw2');
+  const bar   = document.getElementById('pw-bar');
+  const lbl   = document.getElementById('pw-label');
+  const match = document.getElementById('pw-match');
+  const chk   = {
+    len:     document.getElementById('chk-len'),
+    upper:   document.getElementById('chk-upper'),
+    lower:   document.getElementById('chk-lower'),
+    digit:   document.getElementById('chk-digit'),
+    special: document.getElementById('chk-special'),
+  };
+  const labels = ['Too Weak','Weak','Fair','Strong','Very Strong'];
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e','#10b981'];
+  const icons  = {
+    len:     ['✗ 8+ characters',     '✓ 8+ characters'],
+    upper:   ['✗ Uppercase (A-Z)',   '✓ Uppercase (A-Z)'],
+    lower:   ['✗ Lowercase (a-z)',   '✓ Lowercase (a-z)'],
+    digit:   ['✗ Digit (0-9)',       '✓ Digit (0-9)'],
+    special: ['✗ Special (@$!%*?&_-#)', '✓ Special (@$!%*?&_-#)'],
+  };
+
+  function evaluate(v) {
+    return {
+      len:     v.length >= 8,
+      upper:   /[A-Z]/.test(v),
+      lower:   /[a-z]/.test(v),
+      digit:   /\d/.test(v),
+      special: /[@$!%*?&_\-#]/.test(v),
+    };
+  }
+
+  pwIn.addEventListener('input', function(){
+    const v = this.value;
+    const res = evaluate(v);
+    let score = Object.values(res).filter(Boolean).length;
+    // update checklist
+    for (const [k, pass] of Object.entries(res)) {
+      chk[k].textContent = icons[k][pass ? 1 : 0];
+      chk[k].classList.toggle('ok', pass);
+    }
+    // update bar
+    bar.style.width   = (v.length === 0 ? 0 : score * 20) + '%';
+    bar.style.background = colors[score - 1] || '#ef4444';
+    lbl.textContent   = v.length === 0 ? 'Start typing to check strength' : (labels[score - 1] || 'Too Weak');
+    lbl.style.color   = v.length === 0 ? 'rgba(148,163,184,.55)' : (colors[score - 1] || '#ef4444');
+    // re-check confirm match if already typed
+    if (pw2In.value.length > 0) checkMatch();
+  });
+
+  function checkMatch(){
+    const ok = pw2In.value === pwIn.value;
+    match.textContent  = pw2In.value.length === 0 ? '' : (ok ? '✓ Passwords match' : '✗ Passwords do not match');
+    match.style.color  = ok ? '#22c55e' : '#ef4444';
+  }
+  pw2In.addEventListener('input', checkMatch);
+})();
 </script>
 {% endblock %}
