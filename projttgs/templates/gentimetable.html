@@ -2949,6 +2949,12 @@ function initDragAndDrop() {
       {% csrf_token %}
       <button class="prefill-save-btn" type="submit">{% if active_saved_prefill %}Update Prefill{% else %}Save Prefill{% endif %}</button>
     </form>
+    <a class="prefill-save-btn" href="{% url 'export_prefill_csv' %}">Download CSV</a>
+    <form class="prefill-save-inline" method="post" action="{% url 'import_prefill_csv' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="file" name="csv_file" accept=".csv" required>
+      <button class="prefill-save-btn" type="submit">Upload CSV</button>
+    </form>
     <form id="prefillGenerateForm" method="post" action="{% url 'generate_timetables' %}" style="display:inline-flex; margin:0;">
       {% csrf_token %}
       <input type="hidden" name="use_prefilled_slots" value="1">

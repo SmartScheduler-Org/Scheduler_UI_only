@@ -290,6 +290,130 @@ def save_prefill_session_snapshot(request, state=None):
     return snapshot
 
 
+_PREFILL_CSV_COLUMNS = [
+    "record_type",
+    "section_id",
+    "move_type",
+    "subject_text",
+    "teacher_uid",
+    "second_teacher_uid",
+    "co_teacher_uids",
+    "room_number",
+    "day",
+    "start_slot",
+    "duration",
+    "manual_entry",
+    "manual_slot_uid",
+    "prefill_locked",
+    "batch",
+    "total_batches",
+    "parking",
+    "slot_span",
+]
+
+
+def _prefill_csv_bool(value):
+    return "true" if bool(value) else "false"
+
+
+def _parse_prefill_csv_bool(value):
+    return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _prefill_csv_row_from_entry(entry, parking=False):
+    move_type = str(entry.get("move_type") or entry.get("type") or "class")
+    return {
+        "record_type": "slot",
+        "section_id": str(entry.get("section_id") or ""),
+        "move_type": move_type,
+        "subject_text": str(entry.get("subject_text") or ""),
+        "teacher_uid": str(entry.get("teacher_uid") or ""),
+        "second_teacher_uid": str(entry.get("second_teacher_uid") or ""),
+        "co_teacher_uids": ";".join([str(uid or "").strip() for uid in list(entry.get("co_teacher_uids") or []) if str(uid or "").strip()]),
+        "room_number": str(entry.get("room_number") or ""),
+        "day": str(entry.get("day") or ""),
+        "start_slot": str(entry.get("start_slot") or ""),
+        "duration": str(entry.get("duration") or ""),
+        "manual_entry": _prefill_csv_bool(entry.get("manual_entry", False)),
+        "manual_slot_uid": str(entry.get("manual_slot_uid") or ""),
+        "prefill_locked": _prefill_csv_bool(entry.get("prefill_locked", False)),
+        "batch": str(entry.get("batch") or ""),
+        "total_batches": str(entry.get("total_batches") or ""),
+        "parking": _prefill_csv_bool(parking),
+        "slot_span": str(entry.get("slot_span") or entry.get("duration") or ""),
+    }
+
+
+def _build_prefill_csv_snapshot(decoded_lines):
+    reader = csv.DictReader(decoded_lines)
+    required_columns = {"record_type", "section_id"}
+    if reader.fieldnames is None or not required_columns.issubset({str(name or "").strip() for name in reader.fieldnames}):
+        raise ValueError("CSV header is invalid. Please use a downloaded prefill CSV file.")
+
+    snapshot = {
+        "section_ids": [],
+        "classes": [],
+        "labs": [],
+        "parking_items": [],
+    }
+    seen_sections = set()
+
+    for row_number, row in enumerate(reader, start=2):
+        record_type = str((row or {}).get("record_type") or "").strip().lower()
+        section_id = str((row or {}).get("section_id") or "").strip()
+        if not record_type and not section_id:
+            continue
+        if not section_id:
+            raise ValueError(f"Row {row_number}: section_id is required.")
+        if section_id not in seen_sections:
+            seen_sections.add(section_id)
+            snapshot["section_ids"].append(section_id)
+
+        if record_type == "section":
+            continue
+        if record_type != "slot":
+            raise ValueError(f"Row {row_number}: unsupported record_type '{record_type}'.")
+
+        move_type = str((row or {}).get("move_type") or "class").strip().lower()
+        if move_type not in {"class", "lab"}:
+            raise ValueError(f"Row {row_number}: move_type must be 'class' or 'lab'.")
+
+        entry = {
+            "type": move_type,
+            "section_id": section_id,
+            "subject_text": str((row or {}).get("subject_text") or "").strip(),
+            "teacher_uid": str((row or {}).get("teacher_uid") or "").strip(),
+            "second_teacher_uid": str((row or {}).get("second_teacher_uid") or "").strip(),
+            "co_teacher_uids": [token.strip() for token in str((row or {}).get("co_teacher_uids") or "").split(";") if token.strip()],
+            "room_number": str((row or {}).get("room_number") or "").strip(),
+            "day": str((row or {}).get("day") or "").strip(),
+            "start_slot": str((row or {}).get("start_slot") or "").strip(),
+            "duration": str((row or {}).get("duration") or "").strip(),
+            "manual_entry": _parse_prefill_csv_bool((row or {}).get("manual_entry")),
+            "manual_slot_uid": str((row or {}).get("manual_slot_uid") or "").strip(),
+            "prefill_locked": _parse_prefill_csv_bool((row or {}).get("prefill_locked")),
+        }
+        if move_type == "lab":
+            entry["batch"] = int(str((row or {}).get("batch") or "1").strip() or 1)
+            entry["total_batches"] = int(str((row or {}).get("total_batches") or "1").strip() or 1)
+
+        if not entry["subject_text"]:
+            raise ValueError(f"Row {row_number}: subject_text is required.")
+        if not entry["teacher_uid"]:
+            raise ValueError(f"Row {row_number}: teacher_uid is required.")
+
+        if _parse_prefill_csv_bool((row or {}).get("parking")):
+            entry["move_type"] = move_type
+            entry["slot_span"] = max(1, min(int(str((row or {}).get("slot_span") or entry.get("duration") or "1").strip() or 1), 8))
+            snapshot["parking_items"].append(entry)
+        elif move_type == "lab":
+            snapshot["labs"].append(entry)
+        else:
+            snapshot["classes"].append(entry)
+
+    return snapshot
+
+
 def _activate_prefill_snapshot(request, snapshot):
     section_ids = [str(section_id) for section_id in list((snapshot or {}).get("section_ids") or []) if str(section_id or "").strip()]
     if not section_ids:
@@ -4662,69 +4786,80 @@ def prefilled_timetable_view(request):
         messages.info(request, "Upload a sections CSV to create an empty prefilled timetable.")
         return redirect("prefilled_timetable_setup")
 
-    state["prefill_mode"] = True
-    state["prefill_section_ids"] = section_ids
-    if state.get("classes") is None:
+    try:
+        state["prefill_mode"] = True
+        state["prefill_section_ids"] = section_ids
+        if state.get("classes") is None:
+            state["classes"] = []
+        if state.get("labs") is None:
+            state["labs"] = []
+        if not state.get("schedules"):
+            state["schedules"] = [{"classes": [], "labs": [], "stats": {}, "reco_block": {}}]
+        restore_prefill_session_snapshot(request, state, section_ids)
+        ensure_manual_prefill_slot_uids(state)
+        state["view_mode"] = "editing"
+        request.session["current_index"] = 1
+
+        global GLOBAL_CLASSES, GLOBAL_LABS, GLOBAL_GENERATED_SCHEDULES, CURRENT_VIEW_MODE
+        GLOBAL_CLASSES = state["classes"]
+        GLOBAL_LABS = state["labs"]
+        GLOBAL_GENERATED_SCHEDULES = state["schedules"]
+        CURRENT_VIEW_MODE = "editing"
+
+        tables = build_section_tables(GLOBAL_CLASSES, GLOBAL_LABS, user=request.user)
+        allowed_section_ids = set(section_ids)
+        tables = [table for table in tables if table["section"].section_id in allowed_section_ids]
+        tables = _decorate_generated_tables_with_parking(tables, state)
+
+        departments = []
+        seen_depts = set()
+        for table in tables:
+            section = table["section"]
+            dept = section.department
+            table["section_department_code"] = dept.code
+            table["section_department_name"] = dept.name
+            table["subject_counts"] = []
+            table["missed_labs"] = []
+            table["total_missing_classes"] = 0
+            if dept.code not in seen_depts:
+                seen_depts.add(dept.code)
+                departments.append({"code": dept.code, "name": dept.name})
+            section_id = section.section_id
+            table["create_slot_subjects"] = []
+            table["create_slot_teachers"] = []
+            table["create_slot_rooms"] = []
+            table["create_slot_subjects_id"] = f"create-slot-subjects-{section_id}"
+            table["create_slot_teachers_id"] = f"create-slot-teachers-{section_id}"
+            table["create_slot_rooms_id"] = f"create-slot-rooms-{section_id}"
+
+        return render(request, "gentimetable.html", {
+            "tables": tables,
+            "teacher_tables": [],
+            "room_tables": [],
+            "SLOT_LABELS": SLOT_LABELS,
+            "index": 1,
+            "teacher_workloads": {},
+            "demo_mode": False,
+            "active_dept": "",
+            "active_program": "all",
+            "program_options": [],
+            "departments": departments,
+            "prefill_mode": True,
+            "active_saved_prefill": _get_active_saved_prefill(request),
+            "can_edit_delete": True,
+            "can_substitute": True,
+            "can_drag_drop": True,
+        })
+    except Exception:
+        logger.exception("Failed to open prefilled timetable for user %s", request.user.id)
         state["classes"] = []
-    if state.get("labs") is None:
         state["labs"] = []
-    if not state.get("schedules"):
-        state["schedules"] = [{"classes": [], "labs": [], "stats": {}, "reco_block": {}}]
-    restore_prefill_session_snapshot(request, state, section_ids)
-    ensure_manual_prefill_slot_uids(state)
-    state["view_mode"] = "editing"
-    request.session["current_index"] = 1
-
-    global GLOBAL_CLASSES, GLOBAL_LABS, GLOBAL_GENERATED_SCHEDULES, CURRENT_VIEW_MODE
-    GLOBAL_CLASSES = state["classes"]
-    GLOBAL_LABS = state["labs"]
-    GLOBAL_GENERATED_SCHEDULES = state["schedules"]
-    CURRENT_VIEW_MODE = "editing"
-
-    tables = build_section_tables(GLOBAL_CLASSES, GLOBAL_LABS, user=request.user)
-    allowed_section_ids = set(section_ids)
-    tables = [table for table in tables if table["section"].section_id in allowed_section_ids]
-    tables = _decorate_generated_tables_with_parking(tables, state)
-
-    departments = []
-    seen_depts = set()
-    for table in tables:
-        section = table["section"]
-        dept = section.department
-        table["section_department_code"] = dept.code
-        table["section_department_name"] = dept.name
-        table["subject_counts"] = []
-        table["missed_labs"] = []
-        table["total_missing_classes"] = 0
-        if dept.code not in seen_depts:
-            seen_depts.add(dept.code)
-            departments.append({"code": dept.code, "name": dept.name})
-        section_id = section.section_id
-        table["create_slot_subjects"] = []
-        table["create_slot_teachers"] = []
-        table["create_slot_rooms"] = []
-        table["create_slot_subjects_id"] = f"create-slot-subjects-{section_id}"
-        table["create_slot_teachers_id"] = f"create-slot-teachers-{section_id}"
-        table["create_slot_rooms_id"] = f"create-slot-rooms-{section_id}"
-
-    return render(request, "gentimetable.html", {
-        "tables": tables,
-        "teacher_tables": [],
-        "room_tables": [],
-        "SLOT_LABELS": SLOT_LABELS,
-        "index": 1,
-        "teacher_workloads": {},
-        "demo_mode": False,
-        "active_dept": "",
-        "active_program": "all",
-        "program_options": [],
-        "departments": departments,
-        "prefill_mode": True,
-        "active_saved_prefill": _get_active_saved_prefill(request),
-        "can_edit_delete": True,
-        "can_substitute": True,
-        "can_drag_drop": True,
-    })
+        state["generated_parking_items"] = []
+        request.session.pop("prefill_saved_slots", None)
+        request.session.pop("current_index", None)
+        request.session.modified = True
+        messages.error(request, "Could not open the prefilled timetable. Please upload the sections CSV again.")
+        return redirect("prefilled_timetable_setup")
 
 
 @login_required
@@ -4761,6 +4896,68 @@ def save_prefilled_timetable(request):
         _set_active_saved_prefill(request, active_prefill)
         messages.success(request, f"Prefilled table saved with {total_slots} slot(s).")
     return redirect("saved_prefill_list")
+
+
+@login_required
+def export_prefill_csv(request):
+    state = _get_user_state(request.user.id)
+    snapshot = save_prefill_session_snapshot(request, state) or request.session.get("prefill_saved_slots") or {}
+    section_ids = list(snapshot.get("section_ids") or [])
+    if not section_ids:
+        messages.error(request, "Create a prefilled timetable before downloading CSV.")
+        return redirect("prefilled_timetable_view")
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="prefill_slots.csv"'
+    writer = csv.DictWriter(response, fieldnames=_PREFILL_CSV_COLUMNS)
+    writer.writeheader()
+
+    for section_id in section_ids:
+        writer.writerow({"record_type": "section", "section_id": section_id})
+    for entry in list(snapshot.get("classes") or []):
+        writer.writerow(_prefill_csv_row_from_entry(entry, parking=False))
+    for entry in list(snapshot.get("labs") or []):
+        writer.writerow(_prefill_csv_row_from_entry(entry, parking=False))
+    for entry in list(snapshot.get("parking_items") or []):
+        writer.writerow(_prefill_csv_row_from_entry(entry, parking=True))
+    return response
+
+
+@login_required
+def import_prefill_csv(request):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+
+    csv_file = request.FILES.get("csv_file")
+    if not csv_file or not str(getattr(csv_file, "name", "")).lower().endswith(".csv"):
+        messages.error(request, "Please upload a valid prefill CSV file.")
+        return redirect("prefilled_timetable_view")
+
+    try:
+        decoded_lines = csv_file.read().decode("utf-8-sig").splitlines()
+        snapshot = _build_prefill_csv_snapshot(decoded_lines)
+    except UnicodeDecodeError:
+        messages.error(request, "CSV file must be UTF-8 encoded.")
+        return redirect("prefilled_timetable_view")
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect("prefilled_timetable_view")
+
+    if not snapshot.get("section_ids"):
+        messages.error(request, "Prefill CSV has no selected sections.")
+        return redirect("prefilled_timetable_view")
+
+    request.session["prefill_saved_slots"] = snapshot
+    request.session["prefill_mode"] = True
+    request.session["prefill_section_ids"] = list(snapshot.get("section_ids") or [])
+    request.session.modified = True
+    _clear_active_saved_prefill(request)
+    if not _activate_prefill_snapshot(request, snapshot):
+        messages.error(request, "Could not restore any slots from the uploaded CSV.")
+    else:
+        total_slots = len(snapshot.get("classes") or []) + len(snapshot.get("labs") or []) + len(snapshot.get("parking_items") or [])
+        messages.success(request, f"Prefill CSV loaded with {total_slots} slot(s).")
+    return redirect("prefilled_timetable_view")
 
 
 @login_required
