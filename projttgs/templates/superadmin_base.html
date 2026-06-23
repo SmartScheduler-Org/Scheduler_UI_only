@@ -40,6 +40,10 @@
     .topleft{display:flex;flex-direction:column;gap:6px;min-width:0}
     .top h1{font-size:19px;font-weight:700}
     .top .sub{font-size:12.5px;color:var(--mut)}
+    .college-bar{display:flex;align-items:center;gap:11px;margin-bottom:2px}
+    .college-bar img{width:34px;height:34px;object-fit:contain;flex-shrink:0;
+      background:#fff;border-radius:7px;padding:2px}
+    .college-bar .cname{font-size:13.5px;font-weight:700;color:#e11d2f;line-height:1.35;letter-spacing:.1px}
     .filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto}
     select,.inp{background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:9px 12px;border-radius:9px;font-size:13px;outline:none}
     select:focus,.inp:focus{border-color:var(--blue)}
@@ -227,6 +231,7 @@
     <div class="navgrp">Manage</div>
     <nav class="nav">
       <a href="{% url 'superadmin_appoint' %}" class="{% if page == 'appoint' %}active{% endif %}"><span class="dot" style="background:var(--green)"></span>Appoint Coordinators</a>
+      <a href="{% url 'superadmin_users' %}" class="{% if page == 'users' %}active{% endif %}"><span class="dot" style="background:var(--violet)"></span>Users</a>
     </nav>
     <div class="navgrp">System</div>
     <nav class="nav">
@@ -241,6 +246,11 @@
         <div class="who">
           <div class="avatar">{{ superadmin_email|slice:":1"|upper }}</div>
           <span>{{ superadmin_email }}</span>
+        </div>
+        <div class="college-bar">
+          <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/J.C._Bose_University_of_Science_and_Technology%2C_YMCA_logo.png"
+               alt="J.C. Bose University" onerror="this.style.display='none'">
+          <span class="cname">J.C. Bose University of Science and Technology, YMCA (Formerly YMCA UST)</span>
         </div>
         <h1>{% block heading %}University Analytics{% endblock %}</h1>
         <div class="sub">{% block subheading %}Live data from {{ totals.departments }} departments · {{ totals.teachers }} teachers · {{ totals.rooms }} rooms{% endblock %}</div>

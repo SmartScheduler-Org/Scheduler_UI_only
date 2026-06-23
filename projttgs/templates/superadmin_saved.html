@@ -26,7 +26,7 @@
 {% block scripts %}
 <script>
   const SAVED_URL = "{% url 'superadmin_saved_list' %}";
-  const OPEN_BASE = "/superadmin/saved-timetables/";   // + <id>/open/
+  const OPEN_BASE = "/superadmin/saved-timetables/";   // + <id>/open/  or  + <id>/delete/
   async function loadSaved(){
     const tb=document.querySelector('#savedTable tbody');
     tb.innerHTML='<tr><td colspan="7" class="empty">Loading…</td></tr>';
@@ -36,7 +36,10 @@
       <td>${it.label}</td><td>${it.owner}</td><td>${it.sections}</td><td>${it.slots}</td>
       <td><span class="pill ${it.published?'ok':'theory'}">${it.published?'Published':'Saved'}</span></td>
       <td>${it.created}</td>
-      <td><a class="vbtn go" href="${OPEN_BASE}${it.id}/open/">Open (full edit) →</a></td>
+      <td style="display:flex;gap:8px;align-items:center">
+        <a class="vbtn go" href="${OPEN_BASE}${it.id}/open/">Open (full edit) →</a>
+        <a href="${OPEN_BASE}${it.id}/delete/" style="font-size:12px;font-weight:600;color:#fca5a5;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.08);padding:6px 11px;border-radius:8px;text-decoration:none">Delete</a>
+      </td>
     </tr>`).join('');
   }
   loadSaved();

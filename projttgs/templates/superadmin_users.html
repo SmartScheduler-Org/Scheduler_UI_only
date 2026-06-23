@@ -1,0 +1,84 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Users{% endblock %}
+{% block heading %}User Management{% endblock %}
+{% block subheading %}{{ user_total }} registered account{{ user_total|pluralize }} · view &amp; remove users and all their data{% endblock %}
+{% block topbar_extra %}<div></div>{% endblock %}
+
+{% block extra_css %}
+  .u-table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .u-table th,.u-table td{text-align:left;padding:11px 14px;font-size:12.5px;border-bottom:1px solid var(--line)}
+  .u-table th{color:var(--mut);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;background:rgba(255,255,255,.02)}
+  .u-table tr:last-child td{border-bottom:none}
+  .u-table td b{color:#e2e8f0;font-size:13px}
+  .u-table td small{color:var(--mut)}
+  .u-counts{display:flex;gap:6px;flex-wrap:wrap}
+  .u-chip{font-size:10.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:#cbd5e1;background:rgba(255,255,255,.02)}
+  .u-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:999px;margin-left:6px}
+  .u-tag.su{color:#fca5a5;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.08)}
+  .u-tag.st{color:#fcd34d;border:1px solid rgba(245,158,11,.4);background:rgba(245,158,11,.08)}
+  .del-btn{display:inline-block;font-size:12px;font-weight:600;color:#fca5a5;border:1px solid rgba(239,68,68,.4);
+    background:rgba(239,68,68,.08);padding:6px 12px;border-radius:9px;text-decoration:none}
+  .del-btn:hover{background:rgba(239,68,68,.18)}
+  .del-na{font-size:11.5px;color:#64748b}
+  .u-empty{padding:16px;color:#64748b;font-size:12.5px;text-align:center}
+{% endblock %}
+
+{% block content %}
+  {% if messages %}
+    {% for m in messages %}
+      <div class="msg {{ m.tags }}" style="padding:11px 14px;border-radius:11px;font-size:13px;margin-bottom:14px;
+        border:1px solid {% if m.tags == 'success' %}rgba(34,197,94,.4){% else %}rgba(239,68,68,.4){% endif %};
+        color:{% if m.tags == 'success' %}#86efac{% else %}#fca5a5{% endif %};
+        background:{% if m.tags == 'success' %}rgba(34,197,94,.08){% else %}rgba(239,68,68,.08){% endif %}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <section class="panel">
+    <div class="ph">
+      <div><h3>All Users</h3><small>Every registered account · {{ user_total }} total</small></div>
+      <form method="get" action="{% url 'superadmin_users' %}" style="margin:0">
+        <input class="inp" name="q" value="{{ user_query }}" placeholder="Search username / email…" style="min-width:240px">
+      </form>
+    </div>
+    <div style="max-height:640px;overflow:auto">
+      <table class="u-table">
+        <thead>
+          <tr>
+            <th>User</th><th>Joined</th><th>Data</th><th>Timetables</th><th style="text-align:right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in user_rows %}
+            <tr>
+              <td>
+                <b>{{ u.username }}</b>
+                {% if u.is_superuser %}<span class="u-tag su">superuser</span>{% elif u.is_staff %}<span class="u-tag st">staff</span>{% endif %}
+                <br><small>{{ u.email }}</small>
+              </td>
+              <td><small>{{ u.joined }}</small></td>
+              <td>
+                <div class="u-counts">
+                  <span class="u-chip">{{ u.departments }} dept</span>
+                  <span class="u-chip">{{ u.teachers }} teachers</span>
+                  <span class="u-chip">{{ u.rooms }} rooms</span>
+                  <span class="u-chip">{{ u.sections }} sections</span>
+                </div>
+              </td>
+              <td><b>{{ u.timetables }}</b></td>
+              <td style="text-align:right">
+                {% if u.is_superuser %}
+                  <span class="del-na">protected</span>
+                {% else %}
+                  <a class="del-btn" href="{% url 'superadmin_user_delete' u.id %}">Remove</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="u-empty">No users found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

@@ -24,6 +24,7 @@ from functools import wraps
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse, Http404
@@ -31,7 +32,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from django.db.models import Max
+from django.db.models import Max, Count, Q
 
 from .models import (
     CoordinatorAppointment,
@@ -210,11 +211,33 @@ def _build_analytics(request):
     owners = _active_owner_ids()
 
     # Master counts (whole institution, independent of current filter).
-    total_departments = _scope_to_owners(Department.objects, owners).count()
-    total_teachers = _scope_to_owners(Instructor.objects, owners).count()
-    total_rooms = _scope_to_owners(Room.objects, owners).count()
-    total_labs = _scope_to_owners(Room.objects.filter(room_type="Lab"), owners).count()
-    total_sections = _scope_to_owners(Section.objects, owners).count()
+    # The same institution can exist under several accounts, so the same
+    # teacher / department / room may be stored many times. Count DISTINCT
+    # real-world entities (by identity, not by DB row) so totals reflect
+    # reality instead of being inflated by duplicate seed data.
+    def _norm(value):
+        return (value or "").strip().lower()
+
+    teacher_rows = _scope_to_owners(Instructor.objects, owners).values_list("uid", "name")
+    total_teachers = len({(_norm(uid), _norm(name)) for uid, name in teacher_rows})
+
+    dept_rows = _scope_to_owners(Department.objects, owners).values_list("name", "code")
+    total_departments = len({(_norm(name), _norm(code)) for name, code in dept_rows})
+
+    room_rows = list(
+        _scope_to_owners(Room.objects, owners).values_list(
+            "r_number", "room_type", "department__name"
+        )
+    )
+    total_rooms = len({(_norm(rn), _norm(dn)) for rn, rt, dn in room_rows})
+    total_labs = len({(_norm(rn), _norm(dn)) for rn, rt, dn in room_rows if rt == "Lab"})
+
+    section_rows = _scope_to_owners(Section.objects, owners).values_list("section_id", flat=True)
+    total_sections = len({_norm(sid) for sid in section_rows})
+
+    # Total registered accounts on the platform.
+    total_users = get_user_model().objects.count()
+
 
     # Filter dropdown sources (dynamic, from real data).
     departments = list(
@@ -405,18 +428,25 @@ def _build_analytics(request):
         # Teachers who teach at least one in-scope section.
         teacher_qs = teacher_qs.filter(id__in=list(teacher_load.keys()) or [0])
     teacher_workload = []
+    seen_teacher = {}
     for instr in teacher_qs:
         load = teacher_load.get(instr.id, 0)
-        teacher_workload.append(
-            {
-                "id": instr.id,
-                "name": instr.name,
-                "designation": instr.designation,
-                "load": load,
-                "max": instr.max_workload,
-                "util": _pct(load, instr.max_workload),
-            }
-        )
+        key = (_norm(instr.uid), _norm(instr.name))
+        entry = {
+            "id": instr.id,
+            "name": instr.name,
+            "designation": instr.designation,
+            "load": load,
+            "max": instr.max_workload,
+            "util": _pct(load, instr.max_workload),
+        }
+        existing = seen_teacher.get(key)
+        if existing is None:
+            seen_teacher[key] = entry
+            teacher_workload.append(entry)
+        elif load > existing["load"]:
+            # Keep the scheduled instance (with real load) for this person.
+            existing.update(entry)
     teacher_workload.sort(key=lambda t: t["load"], reverse=True)
     top_teachers = teacher_workload[:5]
 
@@ -525,14 +555,15 @@ def _build_analytics(request):
     ) if teacher_workload else 0
 
     kpis = {
-        "departments_active": len(dept_scheduled) or total_departments,
-        "teachers_active": len(teacher_scheduled) or total_teachers,
+        "departments_active": len({_norm(dept_meta[d]["name"]) for d in dept_scheduled}) or total_departments,
+        "teachers_active": len({_norm(teacher_name[t]) for t in teacher_scheduled}) or total_teachers,
         "sections_scheduled": len(section_scheduled),
         "rooms_total": total_rooms,
         "labs_total": total_labs,
         "classes_scheduled": len(preview_rows),
         "overall_util": overall_util,
         "conflicts": total_conflicts,
+        "users_total": total_users,
     }
 
     return {
@@ -543,6 +574,7 @@ def _build_analytics(request):
             "rooms": total_rooms,
             "labs": total_labs,
             "sections": total_sections,
+            "users": total_users,
         },
         "departments": departments,
         "semesters": semesters,
@@ -783,6 +815,7 @@ def _appoint_email(*, name, role, dept_name, message, appointer, creds=None, log
 
     text_body = (
         f"Hello {safe_name},\n\n"
+        "J.C. Bose University of Science and Technology, YMCA (Formerly YMCA UST)\n\n"
         f"You have been appointed as {role}"
         + (f" for {dept_name}" if dept_name else "")
         + ".\n\n"
@@ -814,6 +847,19 @@ def _appoint_email(*, name, role, dept_name, message, appointer, creds=None, log
             <td style="padding-left:14px;vertical-align:middle;">
               <div style="color:#ffffff;font-size:19px;font-weight:700;">SmartScheduler</div>
               <div style="color:rgba(255,255,255,.82);font-size:12px;">University Timetable Platform</div>
+            </td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="background:#ffffff;padding:14px 28px;border-bottom:1px solid rgba(148,163,184,.16);">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="vertical-align:middle;">
+              <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/J.C._Bose_University_of_Science_and_Technology%2C_YMCA_logo.png"
+                   width="40" height="40" alt="J.C. Bose University"
+                   style="display:block;width:40px;height:40px;object-fit:contain;">
+            </td>
+            <td style="padding-left:12px;vertical-align:middle;">
+              <div style="color:#e11d2f;font-size:13.5px;font-weight:700;line-height:1.35;">
+                J.C. Bose University of Science and Technology, YMCA (Formerly YMCA UST)</div>
             </td>
           </tr></table>
         </td></tr>
@@ -961,6 +1007,35 @@ def superadmin_appoint(request):
     ctx["appointment_groups"] = grouped
     ctx["appointment_total"] = len(appts)
     return render(request, "superadmin_appoint.html", ctx)
+
+
+@superadmin_required
+def superadmin_appoint_delete(request, aid):
+    """Confirmation page (GET) + remove an appointed coordinator (POST)."""
+    try:
+        appt = CoordinatorAppointment.objects.get(id=aid)
+    except CoordinatorAppointment.DoesNotExist:
+        raise Http404("Appointment not found")
+
+    if request.method == "POST":
+        label = appt.name
+        appt.delete()
+        messages.success(request, f"Removed {label} from the {appt.role} role.")
+        return redirect("superadmin_appoint")
+
+    ctx = _page_ctx(request, "appoint")
+    ctx["target_appointment"] = {
+        "id": appt.id,
+        "name": appt.name,
+        "email": appt.email,
+        "role": appt.role,
+        "department": appt.department or "University-wide",
+        "analytics_access": appt.analytics_access,
+        "created": timezone.localtime(appt.created_at).strftime("%d %b %Y, %H:%M")
+        if appt.created_at
+        else "—",
+    }
+    return render(request, "superadmin_appoint_confirm_delete.html", ctx)
 
 
 @superadmin_required
@@ -1403,6 +1478,139 @@ def superadmin_saved_list(request):
             }
         )
     return JsonResponse({"items": items})
+
+
+# ---------------------------------------------------------------------------
+# User management — list accounts, delete a user (with confirmation) and all
+# of their data. Deleting a user cascades to every owner-scoped table
+# (departments, teachers, rooms, sections, subjects, saved timetables, …)
+# via the FK on_delete=CASCADE already defined on those models. This never
+# touches the scheduling / generation algorithm.
+# ---------------------------------------------------------------------------
+def _user_data_summary(user):
+    """Counts of the records that would be removed with this user."""
+    return {
+        "departments": Department.objects.filter(user=user).count(),
+        "teachers": Instructor.objects.filter(user=user).count(),
+        "rooms": Room.objects.filter(user=user).count(),
+        "sections": Section.objects.filter(user=user).count(),
+        "timetables": SavedTimetable.objects.filter(user=user).count(),
+    }
+
+
+@superadmin_required
+def superadmin_users(request):
+    """List every registered account with a snapshot of their data."""
+    User = get_user_model()
+    q = (request.GET.get("q") or "").strip()
+
+    users_qs = User.objects.all().order_by("-date_joined")
+    if q:
+        users_qs = users_qs.filter(Q(username__icontains=q) | Q(email__icontains=q))
+    users_qs = users_qs.annotate(
+        n_depts=Count("departments", distinct=True),
+        n_teachers=Count("instructors", distinct=True),
+        n_rooms=Count("rooms", distinct=True),
+        n_sections=Count("sections", distinct=True),
+    )
+
+    tt_counts = dict(
+        SavedTimetable.objects.values("user").annotate(c=Count("id")).values_list("user", "c")
+    )
+
+    rows = []
+    for u in users_qs:
+        rows.append(
+            {
+                "id": u.id,
+                "username": u.get_username(),
+                "email": getattr(u, "email", "") or "—",
+                "is_staff": u.is_staff,
+                "is_superuser": u.is_superuser,
+                "joined": timezone.localtime(u.date_joined).strftime("%d %b %Y")
+                if getattr(u, "date_joined", None)
+                else "—",
+                "departments": u.n_depts,
+                "teachers": u.n_teachers,
+                "rooms": u.n_rooms,
+                "sections": u.n_sections,
+                "timetables": tt_counts.get(u.id, 0),
+            }
+        )
+
+    ctx = _page_ctx(request, "users")
+    ctx["user_rows"] = rows
+    ctx["user_total"] = len(rows)
+    ctx["user_query"] = q
+    return render(request, "superadmin_users.html", ctx)
+
+
+@superadmin_required
+def superadmin_user_delete(request, uid):
+    """Confirmation page (GET) + hard delete of a user and all data (POST)."""
+    User = get_user_model()
+    try:
+        target = User.objects.get(id=uid)
+    except User.DoesNotExist:
+        raise Http404("User not found")
+
+    # Never allow deleting a superuser through this panel (safety guard).
+    if target.is_superuser:
+        messages.error(request, "Superuser accounts cannot be deleted from here.")
+        return redirect("superadmin_users")
+
+    if request.method == "POST":
+        label = target.get_username()
+        with transaction.atomic():
+            target.delete()
+        messages.success(request, f"Deleted user “{label}” and all of their data.")
+        return redirect("superadmin_users")
+
+    ctx = _page_ctx(request, "users")
+    ctx["target_user"] = {
+        "id": target.id,
+        "username": target.get_username(),
+        "email": getattr(target, "email", "") or "—",
+        "joined": timezone.localtime(target.date_joined).strftime("%d %b %Y, %H:%M")
+        if getattr(target, "date_joined", None)
+        else "—",
+    }
+    ctx["delete_summary"] = _user_data_summary(target)
+    return render(request, "superadmin_user_confirm_delete.html", ctx)
+
+
+# ---------------------------------------------------------------------------
+# Saved timetable deletion — confirmation page (GET) + hard delete (POST).
+# Removes the SavedTimetable and its scheduled slots only; master data and
+# the generation algorithm are untouched.
+# ---------------------------------------------------------------------------
+@superadmin_required
+def superadmin_saved_delete(request, tid):
+    try:
+        st = SavedTimetable.objects.select_related("department", "user").get(id=tid)
+    except SavedTimetable.DoesNotExist:
+        raise Http404("Timetable not found")
+
+    if request.method == "POST":
+        label = st.department.name if st.department_id else "All Departments"
+        with transaction.atomic():
+            st.delete()
+        messages.success(request, f"Deleted saved timetable ({label}).")
+        return redirect("superadmin_saved_page")
+
+    ctx = _page_ctx(request, "saved")
+    ctx["target_timetable"] = {
+        "id": st.id,
+        "label": st.department.name if st.department_id else "All Departments",
+        "owner": getattr(st.user, "username", "—") if st.user_id else "—",
+        "published": st.is_published,
+        "slots": st.slots.count(),
+        "sections": len({s.section_id for s in st.slots.all()}),
+        "created": timezone.localtime(st.created_at).strftime("%d %b %Y, %H:%M")
+        if st.created_at
+        else "—",
+    }
+    return render(request, "superadmin_saved_confirm_delete.html", ctx)
 
 
 @superadmin_required
