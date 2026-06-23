@@ -1,0 +1,55 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Slot Analytics{% endblock %}
+{% block heading %}Slot Analytics{% endblock %}
+{% block subheading %}Campus-wide room occupancy by day &amp; time slot{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="ph"><div><h3>Time Slot Heatmap</h3><small>Darker = busier · counts are concurrently used rooms</small></div></div>
+    {% if heatmap.rows %}
+    <div class="heathead">
+      <span></span>
+      <div class="hh" style="grid-template-columns:repeat({{ heatmap.times|length }},1fr)">
+        {% for t in heatmap.times %}<span>Slot {{ t }}</span>{% endfor %}
+      </div>
+    </div>
+    <div class="heat">
+      {% for row in heatmap.rows %}
+      <div class="heatrow">
+        <div class="heatlabel">{{ row.day }}</div>
+        <div class="heatcells" style="grid-template-columns:repeat({{ heatmap.times|length }},1fr)">
+          {% for c in row.cells %}
+            <div class="hc" data-heat="{{ c }}" data-max="{{ heatmap.max }}">{{ c }}</div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<div class="empty">No scheduled slots to display.</div>{% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="ph"><div><h3>Busiest Slots</h3><small>Peak load by time slot</small></div></div>
+    <canvas id="slotChart" style="max-height:300px"></canvas>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll('.hc').forEach(c=>{
+    const v=+c.dataset.heat, mx=+c.dataset.max||1, r=v/mx;
+    if(v===0){c.style.background='#16233a';c.style.color='#475569';}
+    else{c.style.background=`rgb(${Math.round(59+196*r)},${Math.round(130-60*r)},${246-Math.round(60+40*r)})`;}
+  });
+  const hm=CD.heatmap;
+  if(hm && hm.times && hm.times.length){
+    const peak=hm.times.map((t,i)=>Math.max(...hm.rows.map(row=>row.cells[i]||0)));
+    new Chart(document.getElementById('slotChart'),{
+      type:'bar',
+      data:{labels:hm.times.map(t=>'Slot '+t),datasets:[{label:'Peak rooms used',data:peak,backgroundColor:'#06b6d4',borderRadius:6}]},
+      options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,precision:0}}}
+    });
+  }
+</script>
+{% endblock %}

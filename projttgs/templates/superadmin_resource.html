@@ -1,0 +1,213 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Resource Utilization{% endblock %}
+{% block heading %}Resource Utilization{% endblock %}
+{% block subheading %}Rooms &amp; labs usage across the university · {{ totals.rooms }} rooms · {{ totals.labs }} labs{% endblock %}
+
+{% block content %}
+  <section class="grid g3">
+    <div class="panel">
+      <div class="ph">
+        <div><h3>Capacity Overview</h3><small>Used vs idle slots</small></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="seg" id="resSeg">
+            <button class="on" data-res="all">All</button>
+            <button data-res="rooms">Rooms</button>
+            <button data-res="labs">Labs</button>
+          </div>
+          <div class="filtwrap">
+            <button class="iconbtn" id="roomFiltBtn" title="Filter rooms by utilization">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+            </button>
+            <div class="filtmenu" id="roomFiltMenu">
+              <button data-bucket="gt70">&gt; 70% <span class="cnt" data-cnt="gt70">0</span></button>
+              <button data-bucket="50-70">50% – 70% <span class="cnt" data-cnt="50-70">0</span></button>
+              <button data-bucket="20-50">20% – 50% <span class="cnt" data-cnt="20-50">0</span></button>
+              <button data-bucket="ideal">Ideal <span class="cnt" data-cnt="ideal">0</span></button>
+              <button data-bucket="all">All Rooms</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <canvas id="resChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h3>Utilization Buckets</h3><small>Rooms grouped by load — click to inspect</small></div></div>
+      <canvas id="bucketChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h3>Top Rooms by Utilization</h3><small>Most used spaces</small></div></div>
+      <canvas id="roomChart"></canvas>
+    </div>
+  </section>
+
+  <section class="grid g2">
+    <div class="panel">
+      <div class="ph"><div><h3>Department-Wise Utilization</h3><small>Room usage per department</small></div></div>
+      <canvas id="deptChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h3>Least Used Rooms</h3><small>Candidates for re-allocation</small></div></div>
+      <canvas id="leastChart"></canvas>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph"><div><h3>Room Utilization</h3><small>{{ idle_rooms_count }} idle room(s) · click filter icon above for category details</small></div></div>
+    <div class="toolbar"><input class="inp" id="roomSearch" placeholder="Search rooms…" oninput="filterTable('roomTable',this.value)" style="flex:1"></div>
+    <div style="max-height:460px;overflow:auto">
+    <table id="roomTable">
+      <thead><tr>
+        <th onclick="sortTable('roomTable',0,false)">Room</th>
+        <th onclick="sortTable('roomTable',1,false)">Type</th>
+        <th onclick="sortTable('roomTable',2,false)">Dept</th>
+        <th onclick="sortTable('roomTable',3,true)">Util %</th>
+        <th>Usage</th>
+      </tr></thead>
+      <tbody>
+        {% for r in room_util %}
+        <tr>
+          <td>{{ r.number }}</td>
+          <td>{% if r.type == 'Lab' %}<span class="pill lab">Lab</span>{% else %}<span class="pill theory">{{ r.type }}</span>{% endif %}</td>
+          <td>{{ r.dept }}</td>
+          <td data-sort="{{ r.util }}">{{ r.util }}%</td>
+          <td><div class="bar"><i style="width:{{ r.util }}%"></i></div></td>
+        </tr>
+        {% empty %}<tr><td colspan="5" class="empty">No rooms.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+{% endblock %}
+
+{% block modals %}
+  <div class="modal" id="roomModal">
+    <div class="sheet">
+      <div class="sh">
+        <div><h2 id="roomModalTitle">Room Analytics</h2><div class="sub" id="roomModalSub"></div></div>
+        <button class="closex" onclick="closeModal('roomModal')">✕</button>
+      </div>
+      <div class="statrow" id="roomStats"></div>
+      <div class="g2 grid" style="margin-bottom:16px">
+        <div class="panel" style="background:var(--bg)"><div class="ph"><div><h3>Utilization by Room</h3><small>Top rooms in this group</small></div></div><canvas id="roomBucketChart" style="max-height:220px"></canvas></div>
+        <div class="panel" style="background:var(--bg)"><div class="ph"><div><h3>Free vs Used</h3><small>Aggregate capacity</small></div></div><canvas id="roomFreeChart" style="max-height:220px"></canvas></div>
+      </div>
+      <div id="roomList"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const ROOM_URL = "{% url 'superadmin_room_analytics' %}";
+
+  let resChart;
+  function drawRes(key){
+    const d=CD.resource[key]||CD.resource.all;
+    const idle=Math.max(d.total-d.used,0);
+    if(resChart)resChart.destroy();
+    resChart=new Chart(document.getElementById('resChart'),{
+      type:'doughnut',
+      data:{labels:['Used ('+d.used+')','Idle ('+idle+')'],
+        datasets:[{data:[d.used,idle],backgroundColor:['#3b82f6','#1e293b'],borderWidth:0}]},
+      options:{cutout:'68%',plugins:{legend:{position:'bottom'}}}
+    });
+  }
+  drawRes('all');
+  document.querySelectorAll('#resSeg button').forEach(b=>{
+    b.onclick=()=>{document.querySelectorAll('#resSeg button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');drawRes(b.dataset.res);};
+  });
+
+  new Chart(document.getElementById('roomChart'),{
+    type:'bar',
+    data:{labels:CD.topRooms.labels,datasets:[{label:'Utilization %',data:CD.topRooms.values,
+      backgroundColor:'#06b6d4',borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}
+  });
+  new Chart(document.getElementById('deptChart'),{
+    type:'bar',
+    data:{labels:CD.deptUtil.labels,datasets:[{label:'Utilization %',data:CD.deptUtil.values,
+      backgroundColor:'#8b5cf6',borderRadius:6}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}
+  });
+  new Chart(document.getElementById('leastChart'),{
+    type:'bar',
+    data:{labels:CD.leastRooms.labels,datasets:[{label:'Utilization %',data:CD.leastRooms.values,
+      backgroundColor:'#f59e0b',borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}
+  });
+
+  let bucketChart;
+  async function loadBucketCounts(){
+    const res=await fetch(`${ROOM_URL}?bucket=all&dept=${encodeURIComponent(CURRENT_DEPT)}`);
+    const j=await res.json();
+    const c=j.bucket_counts||{};
+    document.querySelectorAll('#roomFiltMenu [data-cnt]').forEach(el=>{el.textContent=c[el.dataset.cnt]??0;});
+    if(bucketChart)bucketChart.destroy();
+    bucketChart=new Chart(document.getElementById('bucketChart'),{
+      type:'bar',
+      data:{labels:['>70%','50-70%','20-50%','Ideal'],
+        datasets:[{label:'Rooms',data:[c.gt70||0,c['50-70']||0,c['20-50']||0,c.ideal||0],
+          backgroundColor:['#ef4444','#f59e0b','#3b82f6','#22c55e'],borderRadius:6}]},
+      options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,precision:0}},
+        onClick:(e,els)=>{if(els.length){openRooms(['gt70','50-70','20-50','ideal'][els[0].index]);}}}
+    });
+  }
+  loadBucketCounts();
+
+  const filtBtn=document.getElementById('roomFiltBtn');
+  const filtMenu=document.getElementById('roomFiltMenu');
+  filtBtn.onclick=e=>{e.stopPropagation();filtMenu.classList.toggle('open');loadBucketCounts();};
+  document.addEventListener('click',e=>{if(!filtMenu.contains(e.target)&&e.target!==filtBtn)filtMenu.classList.remove('open');});
+  filtMenu.querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{filtMenu.classList.remove('open');openRooms(b.dataset.bucket);};
+  });
+
+  async function openRooms(bucket){
+    const res=await fetch(`${ROOM_URL}?bucket=${bucket}&dept=${encodeURIComponent(CURRENT_DEPT)}`);
+    const j=await res.json();
+    document.getElementById('roomModalTitle').textContent='Room Analytics — '+j.bucket_label;
+    document.getElementById('roomModalSub').textContent=`${j.summary.rooms} room(s) · ${j.summary.classes} classes · avg ${j.summary.avg_util}% utilization`;
+    document.getElementById('roomStats').innerHTML=`
+      <div class="stat"><div class="l">Rooms</div><div class="v">${j.summary.rooms}</div></div>
+      <div class="stat"><div class="l">Classes</div><div class="v">${j.summary.classes}</div></div>
+      <div class="stat"><div class="l">Avg Utilization</div><div class="v">${j.summary.avg_util}%</div></div>`;
+    const top=j.rooms.slice(0,8);
+    destroyChart('rb');
+    _mc.rb=new Chart(document.getElementById('roomBucketChart'),{type:'bar',
+      data:{labels:top.map(r=>r.number),datasets:[{label:'Util %',data:top.map(r=>r.util),backgroundColor:'#3b82f6',borderRadius:6}]},
+      options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}});
+    const used=j.rooms.reduce((a,r)=>a+r.used,0), tot=j.rooms.reduce((a,r)=>a+r.total,0);
+    destroyChart('rf');
+    _mc.rf=new Chart(document.getElementById('roomFreeChart'),{type:'doughnut',
+      data:{labels:['Used','Free'],datasets:[{data:[used,Math.max(tot-used,0)],backgroundColor:['#3b82f6','#1e293b'],borderWidth:0}]},
+      options:{cutout:'66%',plugins:{legend:{position:'bottom'}}}});
+    const list=document.getElementById('roomList');
+    list.innerHTML=j.rooms.length?j.rooms.map(r=>roomCardHTML(r,j.times)).join(''):'<div class="empty">No rooms in this category.</div>';
+    document.getElementById('roomModal').classList.add('open');
+  }
+  function roomCardHTML(r,times){
+    const grid=r.grid.map(row=>`
+      <div class="mr"><div class="heatlabel">${row.day}</div>
+        <div class="mc" style="grid-template-columns:repeat(${times.length},1fr)">
+          ${row.cells.map(c=>c.free?`<div class="mcell free">·</div>`
+            :`<div class="mcell ${c.is_lab?'lab':'busy'}" title="${c.section} — ${c.subject}">${c.section}</div>`).join('')}
+        </div></div>`).join('');
+    const chips=r.free_slots.slice(0,14).map(f=>`<span class="chip">${f.day.slice(0,3)} ${f.slot}</span>`).join('')
+      +(r.free_slots.length>14?`<span class="chip">+${r.free_slots.length-14} more</span>`:'');
+    return `<div class="roomcard">
+      <div class="rh">
+        <b>${r.number} <span class="pill ${r.type==='Lab'?'lab':'theory'}">${r.type}</span></b>
+        <div style="font-size:12px;color:var(--mut)">Dept: <b style="color:#cbd5e1">${r.department}</b> · Capacity ${r.capacity} · ${r.util}% used · ${r.free_count} free</div>
+      </div>
+      <div class="miniheat">
+        <div class="mr"><div></div><div class="mc" style="grid-template-columns:repeat(${times.length},1fr)">${times.map(t=>`<span style="text-align:center;font-size:10px;color:var(--mut)">${t}</span>`).join('')}</div></div>
+        ${grid}
+      </div>
+      <div style="font-size:11.5px;color:var(--mut);margin-top:10px">Available / free slots:</div>
+      <div class="freechips">${chips||'<span style="color:var(--mut);font-size:12px">Fully booked</span>'}</div>
+    </div>`;
+  }
+</script>
+{% endblock %}

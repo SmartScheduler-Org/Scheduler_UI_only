@@ -1,0 +1,21 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Recent Activity{% endblock %}
+{% block heading %}Recent Activity{% endblock %}
+{% block subheading %}Latest saved &amp; published timetables{% endblock %}
+{% block topbar_extra %}<div></div>{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="ph"><div><h3>Activity Feed</h3><small>Most recent first</small></div></div>
+    <ul class="recent">
+      {% for a in recent %}
+      <li>
+        <span class="rd" style="{% if not a.published %}background:var(--amber){% endif %}"></span>
+        <span>Timetable for <b>{{ a.label }}</b> {% if a.published %}published{% else %}saved{% endif %}</span>
+        <span class="rt">{{ a.when }}</span>
+      </li>
+      {% empty %}<li>No activity yet.</li>{% endfor %}
+    </ul>
+  </section>
+{% endblock %}

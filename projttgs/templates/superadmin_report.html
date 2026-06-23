@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    @page { size: A4; margin: 1.5cm; }
+    body { font-family: Helvetica, Arial, sans-serif; color: #1f2937; font-size: 11px; }
+    h1 { font-size: 20px; color: #2563eb; margin: 0 0 2px; }
+    .sub { color: #6b7280; font-size: 10px; margin-bottom: 14px; }
+    h2 { font-size: 13px; color: #111827; margin: 18px 0 8px; border-bottom: 2px solid #2563eb; padding-bottom: 3px; }
+    .kpis { width: 100%; }
+    .kpi { display: inline-block; width: 23%; background: #f3f4f6; border-radius: 8px; padding: 8px 10px; margin: 0 1% 8px 0; }
+    .kpi .lab { color: #6b7280; font-size: 9px; }
+    .kpi .val { font-size: 17px; font-weight: bold; color: #111827; }
+    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    th { background: #2563eb; color: #fff; text-align: left; padding: 6px 8px; font-size: 10px; }
+    td { padding: 5px 8px; border-bottom: 1px solid #e5e7eb; font-size: 10px; }
+    ul { margin: 4px 0 0 16px; } li { margin-bottom: 4px; }
+    .foot { margin-top: 20px; color: #9ca3af; font-size: 9px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>University Analytics Report</h1>
+  <div class="sub">Generated {{ generated_at }}
+    {% if dept_filter != 'all' %} · Department filtered{% endif %}
+    {% if sem_filter != 'all' %} · {{ sem_filter }}{% endif %}
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="lab">Departments Active</div><div class="val">{{ kpis.departments_active }}</div></div>
+    <div class="kpi"><div class="lab">Teachers Active</div><div class="val">{{ kpis.teachers_active }}</div></div>
+    <div class="kpi"><div class="lab">Sections Scheduled</div><div class="val">{{ kpis.sections_scheduled }}</div></div>
+    <div class="kpi"><div class="lab">Rooms Total</div><div class="val">{{ kpis.rooms_total }}</div></div>
+    <div class="kpi"><div class="lab">Labs Total</div><div class="val">{{ kpis.labs_total }}</div></div>
+    <div class="kpi"><div class="lab">Classes Scheduled</div><div class="val">{{ kpis.classes_scheduled }}</div></div>
+    <div class="kpi"><div class="lab">Overall Utilization</div><div class="val">{{ kpis.overall_util }}%</div></div>
+    <div class="kpi"><div class="lab">Conflicts</div><div class="val">{{ kpis.conflicts }}</div></div>
+  </div>
+
+  <h2>AI Insights</h2>
+  <ul>{% for ins in insights %}<li>{{ ins }}</li>{% endfor %}</ul>
+
+  <h2>Department-Wise Utilization</h2>
+  <table>
+    <thead><tr><th>Department</th><th>Code</th><th>Rooms</th><th>Utilization %</th></tr></thead>
+    <tbody>
+      {% for d in dept_util %}<tr><td>{{ d.name }}</td><td>{{ d.code }}</td><td>{{ d.rooms }}</td><td>{{ d.util }}%</td></tr>{% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Top Teacher Workload</h2>
+  <table>
+    <thead><tr><th>Teacher</th><th>Designation</th><th>Load</th><th>Max</th><th>Util %</th></tr></thead>
+    <tbody>
+      {% for t in top_teachers %}<tr><td>{{ t.name }}</td><td>{{ t.designation }}</td><td>{{ t.load }}</td><td>{{ t.max }}</td><td>{{ t.util }}%</td></tr>{% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Top Room Utilization</h2>
+  <table>
+    <thead><tr><th>Room</th><th>Type</th><th>Department</th><th>Utilization %</th></tr></thead>
+    <tbody>
+      {% for r in top_rooms %}<tr><td>{{ r.number }}</td><td>{{ r.type }}</td><td>{{ r.dept }}</td><td>{{ r.util }}%</td></tr>{% endfor %}
+    </tbody>
+  </table>
+
+  <div class="foot">SmartScheduler · Super Admin Analytics · Confidential</div>
+</body>
+</html>

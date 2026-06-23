@@ -1,0 +1,34 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Timetable Preview{% endblock %}
+{% block heading %}Timetable Preview{% endblock %}
+{% block subheading %}{{ preview|length }} scheduled classes across the active timetables{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="ph"><div><h3>Quick Timetable Preview</h3><small>All scheduled classes</small></div></div>
+    <div class="toolbar"><input class="inp" id="prevSearch" placeholder="Search section / subject / teacher / room…" oninput="filterTable('prevTable',this.value)" style="flex:1"></div>
+    <div style="max-height:640px;overflow:auto">
+    <table id="prevTable">
+      <thead><tr>
+        <th onclick="sortTable('prevTable',0,false)">Section</th>
+        <th onclick="sortTable('prevTable',1,false)">Subject</th>
+        <th onclick="sortTable('prevTable',2,false)">Teacher</th>
+        <th onclick="sortTable('prevTable',3,false)">Room</th>
+        <th onclick="sortTable('prevTable',4,false)">Day</th>
+        <th onclick="sortTable('prevTable',5,true)">Slot</th>
+        <th>Type</th>
+      </tr></thead>
+      <tbody>
+        {% for p in preview %}
+        <tr>
+          <td>{{ p.section }}</td><td>{{ p.subject }}</td><td>{{ p.teacher }}</td>
+          <td>{{ p.room }}</td><td>{{ p.day }}</td><td data-sort="{{ p.slot }}">{{ p.slot }}</td>
+          <td><span class="pill {% if p.type == 'Lab' %}lab{% else %}theory{% endif %}">{{ p.type }}</span></td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="empty">No classes scheduled for the selected filters.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+{% endblock %}

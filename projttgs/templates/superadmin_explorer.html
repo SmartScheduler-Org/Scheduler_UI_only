@@ -1,0 +1,57 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Drill-Down Explorer{% endblock %}
+{% block heading %}Drill-Down Explorer{% endblock %}
+{% block subheading %}University → Department → Section → Teacher → Class{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="ph"><div><h3>Explorer</h3><small>Click a row to drill deeper</small></div></div>
+    <div class="crumbs" id="crumbs"><a data-level="university">University</a></div>
+    <div id="drillBody"><div class="empty">Loading…</div></div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const DRILL_URL = "{% url 'superadmin_drilldown' %}";
+  const crumbStack=[{level:'university',id:'',label:'University'}];
+  function renderCrumbs(){
+    const c=document.getElementById('crumbs');c.innerHTML='';
+    crumbStack.forEach((s,i)=>{
+      const a=document.createElement('a');a.textContent=s.label;
+      a.onclick=()=>{crumbStack.length=i+1;loadDrill(s.level,s.id);};
+      c.appendChild(a);
+      if(i<crumbStack.length-1){const sep=document.createElement('span');sep.textContent='→';c.appendChild(sep);}
+    });
+  }
+  async function loadDrill(level,id){
+    const body=document.getElementById('drillBody');
+    body.innerHTML='<div class="empty">Loading…</div>';
+    renderCrumbs();
+    const res=await fetch(`${DRILL_URL}?level=${level}&id=${encodeURIComponent(id)}`);
+    const json=await res.json();
+    const items=json.items||[];
+    if(!items.length){body.innerHTML='<div class="empty">No records.</div>';return;}
+    let html='<table><thead><tr>';
+    const cols=Object.keys(items[0]).filter(k=>k!=='id');
+    cols.forEach(k=>html+=`<th>${k}</th>`);
+    html+='</tr></thead><tbody>';
+    const nextLevel={university:'department',department:'section'}[level];
+    items.forEach(it=>{
+      html+=`<tr ${nextLevel?'class="drillrow"':''} ${nextLevel?`data-next="${nextLevel}" data-id="${it.id}" data-label="${it.name||it.section||''}"`:''}>`;
+      cols.forEach(k=>html+=`<td>${it[k]}</td>`);
+      html+='</tr>';
+    });
+    html+='</tbody></table>';
+    body.innerHTML=html;
+    body.querySelectorAll('.drillrow').forEach(tr=>{
+      tr.onclick=()=>{
+        crumbStack.push({level:tr.dataset.next,id:tr.dataset.id,label:tr.dataset.label});
+        loadDrill(tr.dataset.next,tr.dataset.id);
+      };
+    });
+  }
+  loadDrill('university','');
+</script>
+{% endblock %}

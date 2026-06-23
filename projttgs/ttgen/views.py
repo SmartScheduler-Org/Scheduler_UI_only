@@ -29,6 +29,30 @@ from django.conf import settings as django_settings
 from . import views_other as public_core
 from .models import UserAccessPlan
 from .views_other import *  # noqa: F401,F403
+from .superadmin_views import (  # noqa: F401
+    superadmin_login,
+    superadmin_logout,
+    superadmin_dashboard,
+    superadmin_resource,
+    superadmin_teachers,
+    superadmin_depts,
+    superadmin_slots,
+    superadmin_explorer,
+    superadmin_saved_page,
+    superadmin_preview,
+    superadmin_activity,
+    superadmin_appoint,
+    superadmin_drilldown,
+    superadmin_export_excel,
+    superadmin_export_pdf,
+    superadmin_room_analytics,
+    superadmin_teacher_detail,
+    superadmin_saved_list,
+    superadmin_saved_detail,
+    superadmin_move_slot,
+    superadmin_open_saved,
+    superadmin_stop_impersonate,
+)
 
 logger = logging.getLogger(__name__)
 

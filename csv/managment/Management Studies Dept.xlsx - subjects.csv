@@ -1,4 +1,4 @@
-department_code,subject_code,subject_name,room_type_required,lab_category_required,specific_equipment/software_lab(null accepted),duration (in hr),classes_per_week
+department_code,subject_number,subject_name,room_type_required,lab_category_required,specific_equipment/software_lab(null accepted),duration (in hr),classes_per_week
 MS,BBG-101-V,Fundamentals of Management,LECTURE HALL,,,55 mins,4
 MS,BBG-103-V,Financial Accounting,LECTURE HALL,,,55 mins,4
 MS,BBG-105-V,Business Environment,LECTURE HALL,,,55 mins,4

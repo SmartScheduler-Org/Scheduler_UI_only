@@ -1,0 +1,44 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Saved Timetables{% endblock %}
+{% block heading %}Saved Timetables{% endblock %}
+{% block subheading %}Open any saved timetable in the full editor — view, edit, drag-drop &amp; export{% endblock %}
+{% block topbar_extra %}<div></div>{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="ph">
+      <div><h3>All Saved Timetables</h3><small>Across every department &amp; user · click Open for full control</small></div>
+      <button class="btn" onclick="loadSaved()">↻ Refresh</button>
+    </div>
+    <div class="toolbar"><input class="inp" id="savedSearch" placeholder="Search scope / owner…" oninput="filterTable('savedTable',this.value)" style="flex:1"></div>
+    <div style="max-height:600px;overflow:auto">
+    <table id="savedTable">
+      <thead><tr>
+        <th>Scope</th><th>Owner</th><th>Sections</th><th>Classes</th><th>Status</th><th>Created</th><th>Actions</th>
+      </tr></thead>
+      <tbody><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+    </table>
+    </div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const SAVED_URL = "{% url 'superadmin_saved_list' %}";
+  const OPEN_BASE = "/superadmin/saved-timetables/";   // + <id>/open/
+  async function loadSaved(){
+    const tb=document.querySelector('#savedTable tbody');
+    tb.innerHTML='<tr><td colspan="7" class="empty">Loading…</td></tr>';
+    const res=await fetch(SAVED_URL);const j=await res.json();
+    if(!j.items.length){tb.innerHTML='<tr><td colspan="7" class="empty">No saved timetables yet.</td></tr>';return;}
+    tb.innerHTML=j.items.map(it=>`<tr class="savedrow">
+      <td>${it.label}</td><td>${it.owner}</td><td>${it.sections}</td><td>${it.slots}</td>
+      <td><span class="pill ${it.published?'ok':'theory'}">${it.published?'Published':'Saved'}</span></td>
+      <td>${it.created}</td>
+      <td><a class="vbtn go" href="${OPEN_BASE}${it.id}/open/">Open (full edit) →</a></td>
+    </tr>`).join('');
+  }
+  loadSaved();
+</script>
+{% endblock %}

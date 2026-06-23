@@ -1,0 +1,95 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block heading %}University Analytics{% endblock %}
+
+{% block content %}
+  <section class="kpis">
+    <a class="kpi k1" href="{% url 'superadmin_depts' %}"><div class="lab">Departments Active</div><div class="val">{{ kpis.departments_active }}</div><span class="go">View departments →</span></a>
+    <a class="kpi k2" href="{% url 'superadmin_teachers' %}"><div class="lab">Teachers Active</div><div class="val">{{ kpis.teachers_active }}</div><span class="go">View teachers →</span></a>
+    <a class="kpi k3" href="{% url 'superadmin_preview' %}"><div class="lab">Sections Scheduled</div><div class="val">{{ kpis.sections_scheduled }}</div><span class="go">View sections →</span></a>
+    <a class="kpi k4" href="{% url 'superadmin_resource' %}"><div class="lab">Rooms Total</div><div class="val">{{ kpis.rooms_total }}</div><span class="go">View rooms →</span></a>
+    <a class="kpi k5" href="{% url 'superadmin_resource' %}"><div class="lab">Labs Total</div><div class="val">{{ kpis.labs_total }}</div><span class="go">View labs →</span></a>
+    <a class="kpi k6" href="{% url 'superadmin_preview' %}"><div class="lab">Classes Scheduled</div><div class="val">{{ kpis.classes_scheduled }}</div><span class="go">View classes →</span></a>
+    <a class="kpi k7" href="{% url 'superadmin_resource' %}"><div class="lab">Overall Utilization</div><div class="val">{{ kpis.overall_util }}%</div><span class="go">View utilization →</span></a>
+    <a class="kpi k8" href="{% url 'superadmin_slots' %}"><div class="lab">Slot Heatmap</div><div class="val">📊</div><span class="go">View heatmap →</span></a>
+  </section>
+
+  <section class="grid g3">
+    <div class="panel">
+      <div class="ph"><div><h3>Resource Utilization</h3><small>Used vs idle capacity</small></div>
+        <a class="vbtn" href="{% url 'superadmin_resource' %}">Open →</a></div>
+      <canvas id="resChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h3>Teacher Workload</h3><small>Distribution by hours</small></div>
+        <a class="vbtn" href="{% url 'superadmin_teachers' %}">Open →</a></div>
+      <canvas id="workChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h3>AI Insights</h3><small>Auto-generated from live data</small></div></div>
+      <ul class="insights">
+        {% for ins in insights %}
+          <li><span class="ai">✦</span><span>{{ ins }}</span></li>
+        {% empty %}
+          <li><span>No data available yet.</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <section class="grid g2">
+    <div class="panel">
+      <div class="ph"><div><h3>Department-Wise Utilization</h3><small>Room usage per department</small></div>
+        <a class="vbtn" href="{% url 'superadmin_depts' %}">Details →</a></div>
+      <canvas id="deptChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h3>Top Rooms by Utilization</h3><small>Most used spaces</small></div></div>
+      <canvas id="roomChart"></canvas>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph"><div><h3>Recent Activity</h3><small>Latest saved timetables</small></div>
+      <a class="vbtn" href="{% url 'superadmin_activity' %}">All →</a></div>
+    <ul class="recent">
+      {% for a in recent %}
+      <li>
+        <span class="rd" style="{% if not a.published %}background:var(--amber){% endif %}"></span>
+        <span>Timetable for <b>{{ a.label }}</b> {% if a.published %}published{% else %}saved{% endif %}</span>
+        <span class="rt">{{ a.when }}</span>
+      </li>
+      {% empty %}<li>No activity yet.</li>{% endfor %}
+    </ul>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  new Chart(document.getElementById('resChart'),{
+    type:'doughnut',
+    data:{labels:['Used ('+CD.resource.all.used+')','Idle ('+Math.max(CD.resource.all.total-CD.resource.all.used,0)+')'],
+      datasets:[{data:[CD.resource.all.used,Math.max(CD.resource.all.total-CD.resource.all.used,0)],backgroundColor:['#3b82f6','#1e293b'],borderWidth:0}]},
+    options:{cutout:'68%',plugins:{legend:{position:'bottom'}}}
+  });
+  new Chart(document.getElementById('workChart'),{
+    type:'doughnut',
+    data:{labels:CD.workload.labels,datasets:[{data:CD.workload.values,
+      backgroundColor:['#22c55e','#3b82f6','#f59e0b','#ef4444'],borderWidth:0}]},
+    options:{cutout:'62%',plugins:{legend:{position:'bottom'}}}
+  });
+  new Chart(document.getElementById('deptChart'),{
+    type:'bar',
+    data:{labels:CD.deptUtil.labels,datasets:[{label:'Utilization %',data:CD.deptUtil.values,
+      backgroundColor:'#8b5cf6',borderRadius:6}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}
+  });
+  new Chart(document.getElementById('roomChart'),{
+    type:'bar',
+    data:{labels:CD.topRooms.labels,datasets:[{label:'Utilization %',data:CD.topRooms.values,
+      backgroundColor:'#06b6d4',borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}
+  });
+</script>
+{% endblock %}

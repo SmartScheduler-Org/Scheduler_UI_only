@@ -660,3 +660,38 @@ class TeacherPreference(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.email})"
+
+
+# ── Coordinator Appointment (Super Admin) ───────────────────────
+class CoordinatorAppointment(models.Model):
+    """
+    Record of a teacher appointed by the Super Admin to a timetable
+    coordination role. Persisted so the appointment can be tracked,
+    listed role-wise, and reused (e.g. analytics access).
+    """
+    ROLE_CHOICES = [
+        ("Timetable Coordinator", "Timetable Coordinator"),
+        ("University Timetable Coordinator", "University Timetable Coordinator"),
+    ]
+
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+    role = models.CharField(max_length=80, choices=ROLE_CHOICES)
+    department = models.CharField(max_length=150, blank=True, default="")
+    message = models.TextField(blank=True, default="")
+    appointed_by = models.CharField(max_length=200, blank=True, default="")
+    analytics_access = models.BooleanField(default=False)
+    email_sent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["role", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["email", "role"],
+                name="unique_appointment_email_role",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} — {self.role}"

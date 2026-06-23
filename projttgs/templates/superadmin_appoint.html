@@ -1,0 +1,241 @@
+{% extends 'superadmin_base.html' %}
+
+{% block page_title %}Appoint{% endblock %}
+{% block heading %}Appoint Coordinators{% endblock %}
+{% block subheading %}Assign a timetable role to a teacher and notify them by email{% endblock %}
+
+{# This page is a form, not analytics — hide the dept/sem filters in the topbar #}
+{% block topbar_extra %}{% endblock %}
+
+{% block extra_css %}
+  .appoint-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:start}
+  @media(max-width:900px){.appoint-grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .field label{font-size:12.5px;color:var(--mut);font-weight:600}
+  .field .inp,.field select,.field textarea{width:100%;background:var(--panel);border:1px solid var(--line);
+    color:var(--txt);padding:11px 13px;border-radius:10px;font-size:13.5px;outline:none;font-family:inherit}
+  .field textarea{resize:vertical;min-height:96px;line-height:1.55}
+  .field .inp:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.row2{grid-template-columns:1fr}}
+  .hint{font-size:11.5px;color:#64748b}
+  .search-box{position:relative}
+  .search-results{position:absolute;left:0;right:0;top:46px;z-index:30;background:var(--panel);
+    border:1px solid var(--line);border-radius:10px;max-height:260px;overflow:auto;display:none;
+    box-shadow:0 18px 50px rgba(0,0,0,.5)}
+  .search-results.open{display:block}
+  .sr-item{padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--line)}
+  .sr-item:last-child{border-bottom:none}
+  .sr-item:hover,.sr-item.hi{background:rgba(59,130,246,.12)}
+  .sr-item b{font-size:13px;color:#e2e8f0}
+  .sr-item small{display:block;color:var(--mut);font-size:11.5px;margin-top:2px}
+  .sr-empty{padding:12px 13px;color:#64748b;font-size:12.5px}
+  .role-pill{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:#bae6fd;
+    background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.32);border-radius:999px;padding:5px 11px}
+  .msg{padding:11px 14px;border-radius:11px;font-size:13px;margin-bottom:14px;border:1px solid var(--line)}
+  .msg.success{color:#86efac;border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08)}
+  .msg.error{color:#fca5a5;border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)}
+  .info-li{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#cbd5e1;margin-bottom:12px;line-height:1.55}
+  .info-li .ic{flex-shrink:0;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(59,130,246,.14);color:#93c5fd;font-size:13px}
+  .appt-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:26px 0 14px}
+  .appt-head h3{margin:0;font-size:16px}
+  .appt-head small{color:var(--mut);font-size:12px}
+  .appt-count{font-size:11.5px;color:#bae6fd;background:rgba(56,189,248,.12);
+    border:1px solid rgba(56,189,248,.32);border-radius:999px;padding:5px 11px;white-space:nowrap}
+  .role-block{margin-bottom:18px}
+  .role-block .rb-head{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .role-block .rb-dot{width:9px;height:9px;border-radius:50%;background:#22c55e}
+  .role-block.uni .rb-dot{background:#38bdf8}
+  .role-block .rb-head b{font-size:13.5px;color:#e2e8f0}
+  .role-block .rb-num{font-size:11.5px;color:var(--mut)}
+  .appt-table{width:100%;border-collapse:collapse;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .appt-table th,.appt-table td{text-align:left;padding:10px 14px;font-size:12.5px;border-bottom:1px solid var(--line)}
+  .appt-table th{color:var(--mut);font-weight:600;background:rgba(255,255,255,.02);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+  .appt-table tr:last-child td{border-bottom:none}
+  .appt-table td b{color:#e2e8f0;font-size:13px}
+  .appt-table td small{color:var(--mut)}
+  .tag{display:inline-block;font-size:10.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
+  .tag.ok{color:#86efac;border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08)}
+  .tag.no{color:#fca5a5;border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)}
+  .tag.an{color:#bae6fd;border-color:rgba(56,189,248,.32);background:rgba(56,189,248,.12)}
+  .appt-empty{padding:14px;color:#64748b;font-size:12.5px;background:var(--panel);
+    border:1px dashed var(--line);border-radius:10px}
+{% endblock %}
+
+{% block content %}
+  {% if messages %}
+    {% for m in messages %}
+      <div class="msg {{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="appoint-grid">
+    <div class="panel">
+      <div class="ph"><div><h3>Appoint a Coordinator</h3><small>Search an existing teacher or enter details manually</small></div></div>
+
+      <form method="post" action="{% url 'superadmin_appoint' %}" id="appointForm">
+        {% csrf_token %}
+
+        <div class="field search-box">
+          <label for="teacherSearch">Search teacher (name, email or UID)</label>
+          <input type="text" id="teacherSearch" class="inp" autocomplete="off"
+                 placeholder="Start typing a name…">
+          <div class="search-results" id="searchResults"></div>
+          <div class="hint">Pick from the list to auto-fill, or just type the name &amp; email below manually.</div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="name">Teacher name *</label>
+            <input type="text" id="name" name="name" class="inp" required placeholder="e.g. Dr. A. Sharma">
+          </div>
+          <div class="field">
+            <label for="email">Teacher email *</label>
+            <input type="email" id="email" name="email" class="inp" required placeholder="name@university.edu">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="role">Role *</label>
+            <select id="role" name="role" required>
+              <option value="" disabled selected>Select a role…</option>
+              {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="department">Related department</label>
+            <select id="department" name="department">
+              <option value="">— None / University-wide —</option>
+              {% for d in departments %}<option value="{{ d.name }}">{{ d.name }} ({{ d.code }})</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="message">Message (optional)</label>
+          <textarea id="message" name="message"
+                    placeholder="Add a short note that will be included in the appointment email…"></textarea>
+        </div>
+
+        <button type="submit" class="btn primary">✉ Appoint &amp; send email</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><div><h3>How it works</h3><small>Appointment workflow</small></div></div>
+      <div class="info-li"><span class="ic">1</span><span>Search a teacher to auto-fill their name and email, or type them in manually.</span></div>
+      <div class="info-li"><span class="ic">2</span><span>Pick a role and (optionally) the related department.</span></div>
+      <div class="info-li"><span class="ic">3</span><span>A branded appointment email is sent to the teacher right away.</span></div>
+      <div class="info-li"><span class="ic">★</span><span>For a <b>University Timetable Coordinator</b>, the email also includes super-admin login details so they can view university-wide statistics.</span></div>
+
+      <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;">
+        <div style="font-size:12px;color:var(--mut);margin-bottom:10px;">Available roles</div>
+        {% for r in roles %}<div style="margin-bottom:8px;"><span class="role-pill">★ {{ r }}</span></div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="appt-head">
+    <div><h3>Appointed Coordinators</h3><small>Everyone appointed so far, grouped by role</small></div>
+    <span class="appt-count">{{ appointment_total }} total</span>
+  </div>
+
+  {% for g in appointment_groups %}
+    <div class="role-block {% if g.role == 'University Timetable Coordinator' %}uni{% endif %}">
+      <div class="rb-head">
+        <span class="rb-dot"></span><b>{{ g.role }}</b>
+        <span class="rb-num">· {{ g.count }} appointed</span>
+      </div>
+      {% if g.members %}
+        <table class="appt-table">
+          <thead>
+            <tr>
+              <th>Name</th><th>Email</th><th>Department</th><th>Appointed by</th><th>Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in g.members %}
+              <tr>
+                <td><b>{{ a.name }}</b>{% if a.analytics_access %} <span class="tag an">analytics</span>{% endif %}</td>
+                <td><small>{{ a.email }}</small></td>
+                <td><small>{{ a.department|default:"University-wide" }}</small></td>
+                <td><small>{{ a.appointed_by|default:"—" }}</small></td>
+                <td>{% if a.email_sent %}<span class="tag ok">sent</span>{% else %}<span class="tag no">failed</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="appt-empty">No one appointed to this role yet.</div>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  {{ appoint_teachers|json_script:"teacherData" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const TEACHERS = JSON.parse(document.getElementById('teacherData').textContent);
+  const box = document.getElementById('teacherSearch');
+  const results = document.getElementById('searchResults');
+  const nameInp = document.getElementById('name');
+  const emailInp = document.getElementById('email');
+  let hi = -1, current = [];
+
+  function render(list){
+    current = list;
+    hi = -1;
+    if(!list.length){
+      results.innerHTML = '<div class="sr-empty">No matching teacher — enter the details manually below.</div>';
+      results.classList.add('open');
+      return;
+    }
+    results.innerHTML = list.map((t,i)=>
+      `<div class="sr-item" data-i="${i}">
+         <b>${esc(t.name)}</b>
+         <small>${esc(t.email||'no email')} · ${esc(t.designation||'')} ${t.uid?('· '+esc(t.uid)):''}</small>
+       </div>`).join('');
+    results.classList.add('open');
+  }
+  function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+  function pick(t){
+    nameInp.value = t.name || '';
+    emailInp.value = t.email || '';
+    box.value = t.name || '';
+    results.classList.remove('open');
+  }
+
+  box.addEventListener('input', ()=>{
+    const q = box.value.trim().toLowerCase();
+    if(!q){ results.classList.remove('open'); return; }
+    const list = TEACHERS.filter(t=>
+      (t.name||'').toLowerCase().includes(q) ||
+      (t.email||'').toLowerCase().includes(q) ||
+      (t.uid||'').toLowerCase().includes(q)
+    ).slice(0,40);
+    render(list);
+  });
+  box.addEventListener('keydown', e=>{
+    if(!results.classList.contains('open')) return;
+    if(e.key==='ArrowDown'){ e.preventDefault(); hi=Math.min(hi+1,current.length-1); paint(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); hi=Math.max(hi-1,0); paint(); }
+    else if(e.key==='Enter' && hi>=0){ e.preventDefault(); pick(current[hi]); }
+    else if(e.key==='Escape'){ results.classList.remove('open'); }
+  });
+  function paint(){
+    results.querySelectorAll('.sr-item').forEach((el,i)=>el.classList.toggle('hi', i===hi));
+  }
+  results.addEventListener('click', e=>{
+    const it = e.target.closest('.sr-item');
+    if(it) pick(current[+it.dataset.i]);
+  });
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('.search-box')) results.classList.remove('open');
+  });
+</script>
+{% endblock %}

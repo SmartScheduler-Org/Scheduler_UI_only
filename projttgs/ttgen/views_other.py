@@ -1303,7 +1303,7 @@ def contact(request):
             msg = EmailMessage(
                 subject=f"[SmartScheduler] {subject} — from {name}",
                 body=body,
-                from_email=settings.EMAIL_HOST_USER,   # Gmail forces this to be your account
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER,
                 to=['smartschedulertech@gmail.com'],
                 reply_to=[f"{name} <{email}>"],         # Reply goes to the visitor
             )
@@ -1348,7 +1348,7 @@ def institute_application(request):
             msg = EmailMessage(
                 subject=f"[SmartScheduler] Institute application - {selected_type or 'New request'}",
                 body=body,
-                from_email=settings.EMAIL_HOST_USER,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER,
                 to=["smartschedulertech@gmail.com"],
                 reply_to=[f"{contact_name} <{official_email}>"] if official_email else None,
             )

@@ -1,0 +1,156 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Teacher Analytics{% endblock %}
+{% block heading %}Teacher Analytics{% endblock %}
+{% block subheading %}Workload, schedules &amp; profiles · {{ totals.teachers }} teachers · avg {{ avg_workload }} hrs/teacher{% endblock %}
+
+{% block content %}
+  <section class="grid g3">
+    <div class="panel">
+      <div class="ph"><div><h3>Workload Distribution</h3><small>Teachers by hours bucket</small></div></div>
+      <canvas id="workChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h3>Top Loaded Teachers</h3><small>Highest teaching hours</small></div></div>
+      <canvas id="topChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h3>Insights</h3><small>Auto-generated</small></div></div>
+      <ul class="insights">
+        {% for ins in insights %}<li><span class="ai">✦</span><span>{{ ins }}</span></li>{% empty %}<li>No data.</li>{% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph">
+      <div><h3>Teacher Workload — All</h3><small>Search, sort &amp; open a full profile</small></div>
+      <div class="filtwrap">
+        <button class="iconbtn" id="wkFiltBtn" title="Filter by workload">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+        </button>
+        <div class="filtmenu" id="wkFiltMenu">
+          <button data-wk="all">All teachers</button>
+          <button data-wk="high">Heavy ( &gt; 75% )</button>
+          <button data-wk="mid">Balanced ( 40–75% )</button>
+          <button data-wk="low">Light ( &lt; 40% )</button>
+          <button data-wk="idle">Unassigned ( 0 )</button>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <input class="inp" id="teachSearch" placeholder="Search teachers…" oninput="filterTable('teachTable',this.value)" style="flex:1">
+      <button class="btn" onclick="sortTable('teachTable',2,true)">Sort by load</button>
+    </div>
+    <div style="max-height:520px;overflow:auto">
+    <table id="teachTable">
+      <thead><tr>
+        <th onclick="sortTable('teachTable',0,false)">Teacher</th>
+        <th onclick="sortTable('teachTable',1,false)">Designation</th>
+        <th onclick="sortTable('teachTable',2,true)">Load</th>
+        <th onclick="sortTable('teachTable',3,true)">Util %</th>
+        <th>Details</th>
+      </tr></thead>
+      <tbody>
+        {% for t in teacher_workload %}
+        <tr data-util="{{ t.util }}" data-load="{{ t.load }}">
+          <td>{{ t.name }}</td>
+          <td>{{ t.designation }}</td>
+          <td data-sort="{{ t.load }}">{{ t.load }} / {{ t.max }}</td>
+          <td data-sort="{{ t.util }}">{% if t.util > 95 %}<span class="pill warn">{{ t.util }}%</span>{% else %}<span class="pill ok">{{ t.util }}%</span>{% endif %}</td>
+          <td><button class="vbtn" onclick="openTeacher('{{ t.id }}')">View Details</button></td>
+        </tr>
+        {% empty %}<tr><td colspan="5" class="empty">No teachers.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+{% endblock %}
+
+{% block modals %}
+  <div class="modal" id="teacherModal">
+    <div class="sheet">
+      <div class="sh">
+        <div><h2 id="tName">Teacher</h2><div class="sub" id="tMeta"></div></div>
+        <button class="closex" onclick="closeModal('teacherModal')">✕</button>
+      </div>
+      <div class="statrow" id="tStats"></div>
+      <div class="g2 grid" style="margin-bottom:16px">
+        <div class="panel" style="background:var(--bg)"><div class="ph"><div><h3>Classes per Day</h3><small>Distribution</small></div></div><canvas id="tDayChart" style="max-height:220px"></canvas></div>
+        <div class="panel" style="background:var(--bg)"><div class="ph"><div><h3>Profile</h3></div></div><div id="tProfile" style="font-size:13px;line-height:2"></div></div>
+      </div>
+      <div class="panel" style="background:var(--bg)">
+        <div class="ph"><div><h3>Weekly Schedule</h3><small>Date/time-wise classes</small></div></div>
+        <div id="tGrid" class="miniheat"></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const TEACHER_URL = "{% url 'superadmin_teacher_detail' %}";
+
+  new Chart(document.getElementById('workChart'),{
+    type:'doughnut',
+    data:{labels:CD.workload.labels,datasets:[{data:CD.workload.values,
+      backgroundColor:['#22c55e','#3b82f6','#f59e0b','#ef4444'],borderWidth:0}]},
+    options:{cutout:'62%',plugins:{legend:{position:'bottom'}}}
+  });
+  new Chart(document.getElementById('topChart'),{
+    type:'bar',
+    data:{labels:CD.topTeachers.labels,datasets:[{label:'Load (hrs)',data:CD.topTeachers.values,
+      backgroundColor:'#8b5cf6',borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}
+  });
+
+  /* workload filter */
+  const wkBtn=document.getElementById('wkFiltBtn'), wkMenu=document.getElementById('wkFiltMenu');
+  wkBtn.onclick=e=>{e.stopPropagation();wkMenu.classList.toggle('open');};
+  document.addEventListener('click',e=>{if(!wkMenu.contains(e.target)&&e.target!==wkBtn)wkMenu.classList.remove('open');});
+  wkMenu.querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{wkMenu.classList.remove('open');applyWk(b.dataset.wk);};
+  });
+  function applyWk(k){
+    document.querySelectorAll('#teachTable tbody tr').forEach(tr=>{
+      const u=+tr.dataset.util, l=+tr.dataset.load;
+      let show=true;
+      if(k==='high')show=u>75; else if(k==='mid')show=u>=40&&u<=75;
+      else if(k==='low')show=u<40&&l>0; else if(k==='idle')show=l===0;
+      tr.style.display=show?'':'none';
+    });
+  }
+
+  async function openTeacher(id){
+    const res=await fetch(`${TEACHER_URL}?id=${encodeURIComponent(id)}`);
+    if(!res.ok){showToast('Could not load teacher.','err');return;}
+    const j=await res.json();const p=j.profile,s=j.stats;
+    document.getElementById('tName').textContent=p.name;
+    document.getElementById('tMeta').textContent=`${p.designation} · ${p.department}`;
+    document.getElementById('tStats').innerHTML=`
+      <div class="stat"><div class="l">Workload</div><div class="v">${s.load}/${s.max}</div></div>
+      <div class="stat"><div class="l">Utilization</div><div class="v">${s.util}%</div></div>
+      <div class="stat"><div class="l">Sections</div><div class="v">${s.sections}</div></div>
+      <div class="stat"><div class="l">Subjects</div><div class="v">${s.subjects}</div></div>
+      <div class="stat"><div class="l">Labs</div><div class="v">${s.labs}</div></div>
+      <div class="stat"><div class="l">Busiest Day</div><div class="v" style="font-size:14px">${s.busiest_day}</div></div>`;
+    document.getElementById('tProfile').innerHTML=`
+      <div><b>UID:</b> ${p.uid}</div>
+      <div><b>Email:</b> ${p.email||'—'}</div>
+      <div><b>Contact:</b> ${p.contact||'—'}</div>
+      <div><b>Department:</b> ${p.department}</div>
+      <div><b>Courses:</b> ${j.subjects.join(', ')||'—'}</div>`;
+    destroyChart('td');
+    _mc.td=new Chart(document.getElementById('tDayChart'),{type:'bar',
+      data:{labels:j.per_day.map(d=>d.day.slice(0,3)),datasets:[{label:'Classes',data:j.per_day.map(d=>d.count),backgroundColor:'#8b5cf6',borderRadius:6}]},
+      options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,precision:0}}}});
+    const tg=document.getElementById('tGrid');
+    tg.innerHTML=`<div class="mr"><div></div><div class="mc" style="grid-template-columns:repeat(${j.times.length},1fr)">${j.times.map(t=>`<span style="text-align:center;font-size:10px;color:var(--mut)">${t}</span>`).join('')}</div></div>`+
+      j.grid.map(row=>`<div class="mr"><div class="heatlabel">${row.day}</div>
+        <div class="mc" style="grid-template-columns:repeat(${j.times.length},1fr)">
+        ${row.cells.map(c=>c?`<div class="mcell ${c.type==='Lab'?'lab':'busy'}" title="${c.subject} · ${c.room}">${c.section}</div>`:`<div class="mcell free">·</div>`).join('')}
+        </div></div>`).join('');
+    document.getElementById('teacherModal').classList.add('open');
+  }
+</script>
+{% endblock %}

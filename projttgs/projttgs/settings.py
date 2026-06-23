@@ -56,6 +56,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "ttgen.superadmin_views.SuperAdminImpersonationMiddleware",
 ]
 
 ROOT_URLCONF = "projttgs.urls"
@@ -186,6 +187,11 @@ EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in {"1", "true", "yes", "on"}
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
+# Sender shown to recipients. With relays like Brevo the SMTP login is NOT a
+# valid "from" address, so set EMAIL_FROM to your verified sender. Falls back to
+# the SMTP login (works for plain Gmail SMTP).
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_FROM", "") or EMAIL_HOST_USER
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False").lower() in {"1", "true", "yes", "on"}
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False").lower() in {"1", "true", "yes", "on"}
@@ -194,3 +200,22 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# --- Super Admin inbuilt credentials (validated from .env, no self-signup) ---
+def _parse_superadmin_users(raw_value):
+    """Parse SUPERADMIN_USERS='email1:pass1,email2:pass2' into {email_lower: password}."""
+    users = {}
+    for pair in (raw_value or "").split(","):
+        pair = pair.strip()
+        if not pair or ":" not in pair:
+            continue
+        email, _, password = pair.partition(":")
+        email = email.strip().lower()
+        password = password.strip()
+        if email and password:
+            users[email] = password
+    return users
+
+
+SUPERADMIN_USERS = _parse_superadmin_users(os.getenv("SUPERADMIN_USERS", ""))
