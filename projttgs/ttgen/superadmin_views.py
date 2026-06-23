@@ -891,11 +891,12 @@ def _superadmin_appoint_send(request):
     sender = getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER
     email_ok = False
     try:
+        from email.utils import formataddr
         msg = EmailMultiAlternatives(
             subject=subject,
             body=text_body,
             from_email=sender,
-            to=[f"{name} <{email}>"],
+            to=[formataddr((name, email))],
             reply_to=[appointer],
         )
         msg.attach_alternative(html_body, "text/html")
