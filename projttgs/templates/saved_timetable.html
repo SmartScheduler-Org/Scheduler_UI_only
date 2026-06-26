@@ -1317,6 +1317,13 @@ body.drag-drop-active .parking-dropzone::after {
         window.location.href = url.toString();
       }
 
+      function filterByDepartmentSelect(sel) {
+        const department = sel.value || "all";
+        const url = new URL(window.location.href);
+        url.searchParams.set("department", department);
+        window.location.href = url.toString();
+      }
+
     function getCsrfToken() {
         const match = document.cookie.match(/csrftoken=([^;]+)/);
         return match ? decodeURIComponent(match[1]) : "";
@@ -1682,8 +1689,20 @@ body.drag-drop-active .parking-dropzone::after {
 </div>
 {% endif %}
 
-{% if program_options|length > 0 %}
-<div style="display:flex; justify-content:center; margin: 4px 0 16px;">
+{% if program_options|length > 0 or department_options|length > 0 %}
+<div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 4px 0 16px;">
+  {% if department_options|length > 0 %}
+  <div style="display:inline-flex; align-items:center; gap:8px; padding:8px 12px; background:#f4f8fb; border:1px solid #d5e3ef; border-radius:10px;">
+    <span style="font-size:12px; font-weight:700; color:#1f4d6b; letter-spacing:0.05em;">DEPARTMENT:</span>
+    <select onchange="filterByDepartmentSelect(this)" style="padding:6px 10px; border-radius:8px; border:1px solid #b7c9d8; background:white; color:#0f2f45; font-size:13px; font-weight:600; min-width:170px;">
+      <option value="all" {% if active_department == 'all' %}selected{% endif %}>All Departments</option>
+      {% for dept in department_options %}
+      <option value="{{ dept.code }}" {% if active_department == dept.code %}selected{% endif %}>{{ dept.name }} ({{ dept.code }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  {% if program_options|length > 0 %}
   <div style="display:inline-flex; align-items:center; gap:8px; padding:8px 12px; background:#f4f8fb; border:1px solid #d5e3ef; border-radius:10px;">
     <span style="font-size:12px; font-weight:700; color:#1f4d6b; letter-spacing:0.05em;">PROGRAM:</span>
     <select onchange="filterByProgramSelect(this)" style="padding:6px 10px; border-radius:8px; border:1px solid #b7c9d8; background:white; color:#0f2f45; font-size:13px; font-weight:600; min-width:170px;">
@@ -1693,6 +1712,7 @@ body.drag-drop-active .parking-dropzone::after {
       {% endfor %}
     </select>
   </div>
+  {% endif %}
 </div>
 {% endif %}
 

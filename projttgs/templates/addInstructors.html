@@ -220,7 +220,7 @@
         </div>
 
         <small style="color:#aaa;">
-            CSV Format: <code>uid,name,designation,max_workload,email,contact_number</code><br>
+            CSV Format: <code>uid,name,designation,max_workload,email,contact_number,department_code</code><br>
             <em>Email &amp; Contact are required. Use quotes for multiple values: <code>"a@x.com, b@x.com"</code></em>
         </small>
     </fieldset>
@@ -254,6 +254,7 @@
         <p>{{ form.contact_number.label_tag }} {{ form.contact_number }}</p>
         <p>{{ form.designation.label_tag }} {{ form.designation }}</p>
         <p>{{ form.max_workload.label_tag }} {{ form.max_workload }}</p>
+        <p>{{ form.department.label_tag }} {{ form.department }}</p>
 
         <div class="button-row">
             <button type="submit" name="add_teacher" class="submit-btn">

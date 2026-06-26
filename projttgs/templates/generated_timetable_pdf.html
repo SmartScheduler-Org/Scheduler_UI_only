@@ -1,0 +1,169 @@
+{% load static %}<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@page {
+    size: A4 landscape;
+    margin: 2.9cm 0.9cm 1.5cm 0.9cm;
+    @frame header_frame {
+        -pdf-frame-content: headerContent;
+        top: 0.3cm; left: 0.9cm; width: 27.9cm; height: 2.2cm;
+    }
+    @frame footer_frame {
+        -pdf-frame-content: footerContent;
+        bottom: 0.3cm; left: 0.9cm; width: 27.9cm; height: 0.8cm;
+    }
+}
+body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
+
+/* ---- Running header (every page) ---- */
+#headerContent { text-align: center; }
+.brand-row { width: 100%; border: none; }
+.brand-row td { border: none; vertical-align: middle; }
+.college-logo { width: 48px; height: 49px; }
+.brand-logo { width: 30px; height: 30px; }
+.college-name { font-size: 13px; font-weight: bold; color: #0b3d91; }
+.smart-name { font-size: 11px; font-weight: bold; }
+.smart-name .a { color: #0060d0; }
+.smart-name .b { color: #0090c8; }
+.sih-badge {
+    font-size: 8px; font-weight: bold; color: #7a5a00;
+    background: #fff3c4; border: 0.5px solid #e6c84a; border-radius: 6px;
+    padding: 1px 5px;
+}
+.view-tag { font-size: 9px; color: #555; }
+.brand-rule { border: 0; border-top: 1.5px solid #0b3d91; margin: 4px 0 0 0; }
+
+/* ---- Footer ---- */
+#footerContent {
+    text-align: center; font-size: 8px; color: #777;
+    border-top: 0.5px solid #ccc; padding-top: 2px;
+}
+
+/* ---- Block heading ---- */
+.block-title { text-align: center; font-size: 15px; font-weight: bold; color: #0b3d91; margin: 6px 0 2px 0; }
+.block-sub { text-align: center; font-size: 11px; color: #444; margin-bottom: 8px; }
+.block { margin-bottom: 14px; }
+
+/* ---- Timetable grid ---- */
+table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.grid th, .grid td {
+    border: 1px solid #000; padding: 4px; text-align: center;
+    vertical-align: middle; word-wrap: break-word; font-size: 9px;
+}
+.grid th { background-color: #dbefff; }
+.grid th:first-child, .grid td:first-child { width: 70px; }
+.lunch { background-color: #f2f2f2; font-weight: bold; }
+.lab { background-color: #cfe8ff; }
+.cls { background-color: #eef6ff; }
+.entry { margin-bottom: 4px; }
+.entry .head { font-weight: bold; }
+
+/* ---- Workload summary ---- */
+table.wl { width: 100%; border-collapse: collapse; }
+.wl th, .wl td { border: 1px solid #000; padding: 6px; font-size: 10px; }
+.wl th { background-color: #dbefff; }
+.wl td.name { text-align: left; }
+</style>
+</head>
+<body>
+
+<div id="headerContent">
+    <table class="brand-row">
+        <tr>
+            <td style="width:120px; text-align:right;">
+                <img class="college-logo" src="{{ college_logo }}" alt="college">
+            </td>
+            <td style="text-align:center;">
+                <div class="college-name">{{ college_name }}</div>
+                <div>
+                    <img class="brand-logo" src="{{ brand_logo }}" alt="ss">
+                    <span class="smart-name"><span class="a">Smart</span><span class="b">Scheduler</span></span>
+                    <span class="sih-badge">SIH WINNER 2025</span>
+                </div>
+                <div class="view-tag">{{ view_label }} Timetable</div>
+            </td>
+            <td style="width:120px;"></td>
+        </tr>
+    </table>
+    <hr class="brand-rule">
+</div>
+
+<div id="footerContent">
+    {{ college_name }} &nbsp;|&nbsp; {{ view_label }} &nbsp;|&nbsp; Page <pdf:pagenumber> of <pdf:pagecount>
+</div>
+
+{% if is_workload %}
+    <div class="block-title">Teacher Workload Summary</div>
+    <table class="wl">
+        <thead>
+            <tr>
+                <th>Teacher</th><th>Department</th><th>Lectures</th>
+                <th>Lab Load</th><th>Shared Lab Load</th><th>Total Load</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for w in workload_rows %}
+            <tr>
+                <td class="name"><strong>{{ w.name }}</strong> ({{ w.uid }})</td>
+                <td>{{ w.departments }}</td>
+                <td>{{ w.lectures }}</td>
+                <td>{{ w.labs }}</td>
+                <td>{{ w.shared_labs }}</td>
+                <td><strong>{{ w.total }}</strong></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    {% for block in blocks %}
+    <div class="block">
+        <div class="block-title">{{ block.title }}</div>
+        {% if block.subtitle %}<div class="block-sub">{{ block.subtitle }}</div>{% endif %}
+        <table class="grid">
+        <thead>
+        <tr>
+            <th width="90">Day</th>
+            <th>8:30–9:30</th><th>9:30–10:30</th><th>10:30–11:30</th><th>11:30–12:30</th>
+            <th>12:30–1:30</th><th>1:30–2:30</th><th>2:30–3:30</th><th>3:30–4:30</th><th>4:30–5:30</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in block.rows %}
+        <tr>
+            <th width="90">{{ row.day }}</th>
+            {% for cell in row.cells %}
+                {% if cell.type == "skip" %}
+                {% elif cell.type == "lunch" %}
+                    <td width="{{ cell.width }}" class="lunch">LUNCH</td>
+                {% elif cell.type == "lab" %}
+                    <td colspan="{{ cell.colspan }}" width="{{ cell.width }}" class="lab">
+                        {% for e in cell.entries %}
+                        <div class="entry">
+                            {% for line in e.lines %}{% if forloop.first %}<span class="head">{{ line }}</span>{% else %}<br>{{ line }}{% endif %}{% endfor %}
+                        </div>
+                        {% endfor %}
+                    </td>
+                {% elif cell.type == "class" %}
+                    <td colspan="{{ cell.colspan }}" width="{{ cell.width }}" class="cls">
+                        {% for e in cell.entries %}
+                        <div class="entry">
+                            {% for line in e.lines %}{% if forloop.first %}<span class="head">{{ line }}</span>{% else %}<br>{{ line }}{% endif %}{% endfor %}
+                        </div>
+                        {% endfor %}
+                    </td>
+                {% else %}
+                    <td width="{{ cell.width }}"></td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+    {% endfor %}
+{% endif %}
+
+</body>
+</html>

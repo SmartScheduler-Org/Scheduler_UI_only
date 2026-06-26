@@ -57,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "ttgen.superadmin_views.SuperAdminImpersonationMiddleware",
+    "ttgen.activity.ActivityTrackingMiddleware",
 ]
 
 ROOT_URLCONF = "projttgs.urls"

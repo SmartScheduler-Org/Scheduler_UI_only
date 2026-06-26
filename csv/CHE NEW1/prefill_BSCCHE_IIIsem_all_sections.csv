@@ -1,0 +1,18 @@
+record_type,section_id,move_type,subject_text,teacher_uid,second_teacher_uid,co_teacher_uids,room_number,day,start_slot,duration,manual_entry,manual_slot_uid,prefill_locked,batch,total_batches,parking,slot_span
+section,MSCCHE(Isem)/BSCCHE(VIIsem),,,,,,,,,,,,,,,,
+section,MSCCHE(IIIsem),,,,,,,,,,,,,,,,
+section,BSCCHE(Isem),,,,,,,,,,,,,,,,
+section,BSCCHE(IIIsem),,,,,,,,,,,,,,,,
+section,BSCCHE(Vsem),,,,,,,,,,,,,,,,
+slot,BSCCHE(IIIsem),lab,CHU-207-V,CHE03,,,SB 806,Monday,4,2,true,manual-1,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-209-V,CHE13,,,SB 801,Monday,4,2,true,manual-2,true,2,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-207-V,CHE12,,,SB 806,Monday,6,2,true,manual-3,true,2,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-209-V,CHE08,,,SB 801,Monday,6,2,true,manual-4,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-207-V,CHE03,,,SB 806,Wednesday,5,2,true,manual-5,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-211-V,CHE17,,,SB 802,Wednesday,5,2,true,manual-6,true,2,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-207-V,CHE12,,,SB 806,Wednesday,7,2,true,manual-7,true,2,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-211-V,CHE11,,,SB 802,Wednesday,7,2,true,manual-8,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-209-V,CHE08,,,SB 801,Thursday,4,2,true,manual-9,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-211-V,CHE11,,,SB 802,Thursday,4,2,true,manual-10,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-209-V,CHE13,,,SB 801,Thursday,6,2,true,manual-11,true,2,2,false,2
+slot,BSCCHE(IIIsem),lab,CHU-211-V,CHE17,,,SB 802,Thursday,6,2,true,manual-12,true,2,2,false,2

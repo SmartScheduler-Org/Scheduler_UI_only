@@ -41,6 +41,131 @@ import random as rnd
 logger = logging.getLogger(__name__)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Live generation log capture
+# Mirrors everything the GA prints to the terminal into a per-user, in-memory
+# ring buffer so the hosted loading screen can show the same logs the developer
+# sees locally. A thread-aware tee on sys.stdout routes prints made by the
+# generation request to that user's buffer while still echoing to the terminal.
+# ──────────────────────────────────────────────────────────────────────────
+import sys as _gen_sys
+import threading as _gen_threading
+import time as _gen_time
+
+_GEN_LOG_LOCK = _gen_threading.Lock()
+_GEN_LOG_BUFFERS = {}          # user_id -> {"lines": [...], "done": bool, "ts": float}
+_GEN_LOG_THREAD_MAP = {}       # thread_id -> user_id
+_GEN_LOG_MAX_LINES = 4000
+_GEN_LOG_TEE_INSTALLED = False
+
+
+class _GenLogTee:
+    """Wraps the real stdout: echoes everything, and additionally appends lines
+    to the buffer of the user whose generation runs on the current thread."""
+
+    def __init__(self, real_stream):
+        self._real = real_stream
+        self._partials = {}  # thread_id -> leftover text without trailing newline
+
+    def write(self, text):
+        try:
+            self._real.write(text)
+        except Exception:
+            pass
+        try:
+            tid = _gen_threading.get_ident()
+            user_id = _GEN_LOG_THREAD_MAP.get(tid)
+            if user_id is None or not text:
+                return
+            buf = self._partials.get(tid, "") + text
+            lines = buf.split("\n")
+            self._partials[tid] = lines.pop()  # last item is incomplete remainder
+            if not lines:
+                return
+            with _GEN_LOG_LOCK:
+                entry = _GEN_LOG_BUFFERS.get(user_id)
+                if entry is None:
+                    return
+                store = entry["lines"]
+                for ln in lines:
+                    store.append(ln)
+                if len(store) > _GEN_LOG_MAX_LINES:
+                    del store[: len(store) - _GEN_LOG_MAX_LINES]
+        except Exception:
+            pass
+
+    def flush(self):
+        try:
+            self._real.flush()
+        except Exception:
+            pass
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+
+def _gen_log_install_tee():
+    global _GEN_LOG_TEE_INSTALLED
+    if _GEN_LOG_TEE_INSTALLED:
+        return
+    try:
+        _gen_sys.stdout = _GenLogTee(_gen_sys.stdout)
+        _GEN_LOG_TEE_INSTALLED = True
+    except Exception:
+        _GEN_LOG_TEE_INSTALLED = False
+
+
+def _gen_log_start(user_id):
+    """Begin capturing stdout for this user's generation on the current thread."""
+    if user_id is None:
+        return
+    _gen_log_install_tee()
+    with _GEN_LOG_LOCK:
+        _GEN_LOG_BUFFERS[user_id] = {
+            "lines": ["[SmartScheduler] Generation engine starting…"],
+            "done": False,
+            "ts": _gen_time.time(),
+        }
+    _GEN_LOG_THREAD_MAP[_gen_threading.get_ident()] = user_id
+
+
+def _gen_log_finish(user_id, message=None):
+    """Stop routing this thread's stdout and mark the buffer complete."""
+    _GEN_LOG_THREAD_MAP.pop(_gen_threading.get_ident(), None)
+    if user_id is None:
+        return
+    with _GEN_LOG_LOCK:
+        entry = _GEN_LOG_BUFFERS.get(user_id)
+        if entry is not None:
+            if message:
+                entry["lines"].append(message)
+            entry["done"] = True
+
+
+@login_required
+def generation_logs(request):
+    """Return new generation log lines for the current user (incremental poll)."""
+    user_id = request.user.id
+    try:
+        since = int(request.GET.get("since", "0"))
+    except (TypeError, ValueError):
+        since = 0
+    with _GEN_LOG_LOCK:
+        entry = _GEN_LOG_BUFFERS.get(user_id)
+        if entry is None:
+            return JsonResponse({"lines": [], "total": 0, "done": False, "active": False})
+        total = len(entry["lines"])
+        if since < 0:
+            since = 0
+        new_lines = entry["lines"][since:] if since < total else []
+        return JsonResponse({
+            "lines": new_lines,
+            "total": total,
+            "done": bool(entry["done"]),
+            "active": True,
+        })
+
+
 def _delete_all_step_entries(request, queryset, redirect_name, entity_label):
     if request.method != "POST":
         return HttpResponseForbidden("Invalid request method.")
@@ -881,7 +1006,44 @@ def dean_role_set(request):
     return redirect('teachertimetable')
 
 
-def teacherlogin(request): return render(request, 'teacherlogin.html')
+def teacherlogin(request):
+    """Teacher login by Name + Teacher Code + Password (all three must match)."""
+    from django.contrib.auth import login as auth_login
+
+    if request.user.is_authenticated:
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        if (profile.role or "").lower() == "teacher" and profile.linked_instructor_id:
+            return redirect("teacher_dashboard")
+
+    if request.method == "POST":
+        name = (request.POST.get("name") or "").strip()
+        code = (request.POST.get("code") or "").strip()
+        password = request.POST.get("password") or ""
+
+        if not name or not code or not password:
+            messages.error(request, "Please enter your name, teacher code and password.")
+            return render(request, "teacherlogin.html", _teacher_nav_context())
+
+        authenticated_user = None
+        instructors = (
+            Instructor.objects.filter(uid__iexact=code, name__iexact=name)
+            .select_related("teacher_account_profile", "teacher_account_profile__user")
+        )
+        for instr in instructors:
+            profile = getattr(instr, "teacher_account_profile", None)
+            if profile and profile.user and profile.user.check_password(password):
+                authenticated_user = profile.user
+                break
+
+        if authenticated_user is None:
+            messages.error(request, "Invalid name, teacher code or password.")
+            return render(request, "teacherlogin.html", _teacher_nav_context())
+
+        auth_login(request, authenticated_user, backend="django.contrib.auth.backends.ModelBackend")
+        return redirect("teacher_dashboard")
+
+    return render(request, "teacherlogin.html", _teacher_nav_context())
+
 def deanlogin(request): return render(request, 'deanlogin.html')
 def teachertimetable(request): return render(request, 'teachertimetable.html')
 
@@ -1070,6 +1232,471 @@ def _resolve_teacher_dashboard_context(request, profile):
     return context
 
 
+# ===========================================================================
+# NEW TEACHER PORTAL — credential based (register / login / dashboard)
+# Teachers register by selecting their department + name (auto-filled teacher
+# code & email), then set their own password. Login matches Name + Teacher
+# Code + Password. This replaces the old Google + onboarding + publish-code
+# flow for teachers.
+# ===========================================================================
+TEACHER_DEFAULT_PASSWORD = None  # teachers set their own password
+
+
+# Hardcoded department list (every department in the DB, kept as-is).
+TEACHER_DEPARTMENT_LIST = [
+    {"name": "Business Studies", "code": "BS"},
+    {"name": "Centre for Energy Studies", "code": "CES"},
+    {"name": "Chemistry", "code": "CHE"},
+    {"name": "Civil Engineering", "code": "CE"},
+    {"name": "Communication and Media Technology", "code": "CMT"},
+    {"name": "Community College of Skill Development", "code": "CCSD"},
+    {"name": "Computer Science", "code": "CL"},
+    {"name": "Computer Science & Applications", "code": "CSA"},
+    {"name": "Computer Science & Engineering", "code": "CSE"},
+    {"name": "Electrical Engineering", "code": "EL"},
+    {"name": "Electronics Engineering", "code": "EE"},
+    {"name": "Environmental Sciences", "code": "ES"},
+    {"name": "Life Sciences", "code": "LS"},
+    {"name": "Literature & Languages", "code": "LL"},
+    {"name": "Management Studies", "code": "MS"},
+    {"name": "Mathematics", "code": "MATH"},
+    {"name": "Mechanical Engineering", "code": "MECH"},
+    {"name": "Physics", "code": "PHY"},
+]
+
+
+def _teacher_department_options():
+    """Hardcoded full department list (all departments in the DB)."""
+    return list(TEACHER_DEPARTMENT_LIST)
+
+
+def _teachers_in_department(dept_name, dept_code, query=""):
+    """Instructors in a department (matched by name+code), optionally filtered
+    by a partial name search. De-duplicated by (name, uid) so seeded
+    duplicates appear once."""
+    qs = Instructor.objects.select_related("department", "teacher_account_profile")
+    filters = Q()
+    if dept_name:
+        filters &= Q(department__name__iexact=dept_name)
+    if dept_code:
+        filters &= Q(department__code__iexact=dept_code)
+    query = (query or "").strip()
+    if query:
+        filters &= Q(name__icontains=query)
+    qs = qs.filter(filters).order_by("name", "uid")
+
+    seen = {}
+    for instr in qs:
+        key = (instr.name.strip().lower(), instr.uid.strip().lower())
+        if key in seen:
+            # Prefer an instructor that already has an account linked so the
+            # "already registered" state is detected correctly.
+            if getattr(instr, "teacher_account_profile", None) and not seen[key]["has_account"]:
+                seen[key] = _teacher_option_payload(instr)
+            continue
+        seen[key] = _teacher_option_payload(instr)
+    return list(seen.values())
+
+
+def _teacher_option_payload(instr):
+    has_account = getattr(instr, "teacher_account_profile", None) is not None
+    dept = instr.department
+    return {
+        "id": instr.id,
+        "name": instr.name,
+        "uid": instr.uid,
+        "email": instr.email or "",
+        "department": dept.name if dept else "",
+        "department_code": dept.code if dept else "",
+        "has_account": has_account,
+    }
+
+
+def _instructor_has_account(instr):
+    return getattr(instr, "teacher_account_profile", None) is not None
+
+
+def _matching_instructor_ids(uid, name):
+    """All instructor ids sharing the same teacher code + name (case-insensitive).
+    Handles institutes seeded under multiple coordinator accounts."""
+    return list(
+        Instructor.objects.filter(uid__iexact=(uid or "").strip(), name__iexact=(name or "").strip())
+        .values_list("id", flat=True)
+    )
+
+
+def _resolve_teacher_timetable(linked_instructor):
+    """Find the best timetable + this teacher's table for the linked instructor.
+
+    Searches across every instructor record that shares the same teacher code
+    and name (duplicates across coordinator accounts). Prefers the most recent
+    *published* timetable, falling back to the most recent saved one.
+    Returns (timetable, my_table, workload, instructor_used) or (None, ...).
+    """
+    empty = (None, None, {"lectures": 0, "labs": 0, "shared_labs": 0, "total": 0}, None)
+    if not linked_instructor:
+        return empty
+
+    candidate_ids = _matching_instructor_ids(linked_instructor.uid, linked_instructor.name)
+    if not candidate_ids:
+        candidate_ids = [linked_instructor.id]
+
+    slot_qs = (
+        ScheduledSlot.objects.filter(
+            Q(instructor_id__in=candidate_ids) | Q(second_instructor_id__in=candidate_ids)
+        )
+        .select_related("timetable")
+        .order_by("-timetable__is_published", "-timetable__created_at")
+    )
+    chosen_timetable = None
+    for slot in slot_qs:
+        if slot.timetable and slot.timetable.is_published:
+            chosen_timetable = slot.timetable
+            break
+    if chosen_timetable is None:
+        first = slot_qs.first()
+        chosen_timetable = first.timetable if first else None
+
+    if chosen_timetable is None:
+        return empty
+
+    classes, labs = _rebuild_classes_and_labs_from_saved(chosen_timetable)
+    teacher_tables = build_teacher_tables(classes, labs, user=chosen_timetable.user)
+    teacher_workloads = _compute_teacher_workloads(classes, labs)
+
+    my_table = next(
+        (t for t in teacher_tables if t["teacher"].id in candidate_ids),
+        None,
+    )
+    instructor_used = my_table["teacher"] if my_table else linked_instructor
+    workload = teacher_workloads.get(instructor_used, empty[2])
+    return chosen_timetable, my_table, workload, instructor_used
+
+
+def _teacher_schedule_rows(my_table):
+    """Flatten a teacher table into a day/time ordered teaching-schedule list."""
+    if not my_table:
+        return []
+    rows = []
+    for row in my_table.get("rows", []):
+        day = row.get("day")
+        for cell in row.get("cells", []):
+            cell_type = cell.get("type")
+            slot_no = cell.get("slot_number")
+            time_label = SLOT_LABELS.get(str(slot_no), "")
+            if cell_type == "class":
+                for cls in cell.get("classes", []):
+                    rows.append({
+                        "day": day,
+                        "slot": slot_no,
+                        "time": time_label,
+                        "subject": getattr(cls.subject, "subject_name", "—"),
+                        "section": cls.section,
+                        "room": getattr(cls.room, "r_number", "—"),
+                        "type": "Lecture",
+                    })
+            elif cell_type == "lab":
+                for lab in cell.get("labs", []):
+                    rows.append({
+                        "day": day,
+                        "slot": slot_no,
+                        "time": time_label,
+                        "subject": f"{getattr(lab.subject, 'subject_name', '—')} (Lab)",
+                        "section": lab.section,
+                        "room": getattr(lab.room, "r_number", "—"),
+                        "type": "Lab",
+                    })
+    rows.sort(key=lambda r: (DAYS.index(r["day"]) if r["day"] in DAYS else 99, int(r["slot"]) if str(r["slot"]).isdigit() else 99))
+    return rows
+
+
+# --- Teacher registration OTP (email identity verification) -----------------
+TEACHER_OTP_TTL_SECONDS = 300          # 5 minutes
+TEACHER_OTP_MAX_ATTEMPTS = 5
+TEACHER_OTP_SESSION_KEY = "teacher_reg_otp"
+
+
+def _generate_teacher_otp():
+    import secrets
+    return f"{secrets.randbelow(10000):04d}"
+
+
+def _store_teacher_otp(request, instructor, code):
+    import time
+    request.session[TEACHER_OTP_SESSION_KEY] = {
+        "instructor_id": instructor.id,
+        "code": code,
+        "expires_at": time.time() + TEACHER_OTP_TTL_SECONDS,
+        "attempts": 0,
+        "verified": False,
+        "email": instructor.email or "",
+    }
+    request.session.modified = True
+
+
+def _get_teacher_otp(request):
+    return request.session.get(TEACHER_OTP_SESSION_KEY)
+
+
+def _save_teacher_otp(request, data):
+    request.session[TEACHER_OTP_SESSION_KEY] = data
+    request.session.modified = True
+
+
+def _clear_teacher_otp(request):
+    request.session.pop(TEACHER_OTP_SESSION_KEY, None)
+    request.session.modified = True
+
+
+def _teacher_otp_verified_for(request, instructor_id):
+    data = _get_teacher_otp(request)
+    return bool(
+        data
+        and data.get("verified")
+        and str(data.get("instructor_id")) == str(instructor_id)
+    )
+
+
+def _mask_email(email):
+    email = (email or "").strip()
+    if "@" not in email:
+        return email
+    local, domain = email.split("@", 1)
+    if len(local) <= 2:
+        masked_local = local[:1] + "*"
+    else:
+        masked_local = local[0] + "*" * (len(local) - 2) + local[-1]
+    return f"{masked_local}@{domain}"
+
+
+def _send_teacher_otp_email(instructor, code):
+    """Send the 4-digit verification code to the teacher's registered email."""
+    from django.core.mail import EmailMultiAlternatives
+
+    name = instructor.name or "Teacher"
+    dept_name = instructor.department.name if instructor.department else "your department"
+    subject = "Verify Your SmartScheduler Account"
+
+    text_body = (
+        f"Dear {name},\n\n"
+        f"We received a request to create your SmartScheduler account "
+        f"using your details from {dept_name}.\n\n"
+        f"Your verification code is: {code}\n\n"
+        f"This code will expire in 5 minutes.\n"
+        f"Please do not share this code with anyone.\n\n"
+        f"If you did not initiate this request, you can safely ignore this email.\n\n"
+        f"Regards,\nSmartScheduler Team"
+    )
+
+    html_body = f"""
+    <div style="margin:0;padding:24px;background:#0b1020;font-family:Segoe UI,Roboto,Arial,sans-serif;">
+      <div style="max-width:520px;margin:0 auto;background:#11162b;border:1px solid #232a45;border-radius:16px;overflow:hidden;">
+        <div style="padding:22px 28px;background:linear-gradient(120deg,#6366f1,#ec4899);">
+          <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">SmartScheduler</h1>
+          <p style="margin:4px 0 0;color:rgba(255,255,255,.85);font-size:13px;">Account Verification</p>
+        </div>
+        <div style="padding:28px;">
+          <p style="color:#e2e8f0;font-size:15px;margin:0 0 14px;">Dear <strong>{name}</strong>,</p>
+          <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 18px;">
+            We received a request to create your SmartScheduler account using your
+            details from <strong style="color:#cbd5e1;">{dept_name}</strong>.
+            Use the verification code below to continue.
+          </p>
+          <div style="text-align:center;margin:24px 0;">
+            <div style="display:inline-block;padding:16px 30px;background:#0b1020;border:1px solid #2b3358;border-radius:14px;">
+              <span style="font-size:34px;letter-spacing:10px;font-weight:800;color:#a5b4fc;">{code}</span>
+            </div>
+          </div>
+          <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 8px;">
+            This code will expire in <strong style="color:#f9a8d4;">5 minutes</strong>.
+          </p>
+          <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 18px;">
+            Please <strong>do not share</strong> this code with anyone. If you did not
+            initiate this request, you can safely ignore this email.
+          </p>
+          <p style="color:#64748b;font-size:13px;margin:18px 0 0;">Regards,<br>SmartScheduler Team</p>
+        </div>
+      </div>
+    </div>
+    """
+
+    sender = getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER
+    msg = EmailMultiAlternatives(subject, text_body, sender, [instructor.email])
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=False)
+
+
+def teacher_register(request):
+    """Self-registration: pick department, search name, verify by email OTP, set password."""
+    from django.contrib.auth import get_user_model, login as auth_login
+
+    if request.user.is_authenticated:
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        if (profile.role or "").lower() == "teacher" and profile.linked_instructor_id:
+            return redirect("teacher_dashboard")
+
+    dept_options = _teacher_department_options()
+
+    if request.method == "POST":
+        instructor_id = (request.POST.get("instructor_id") or "").strip()
+        password = request.POST.get("password") or ""
+        confirm = request.POST.get("confirm_password") or ""
+
+        instructor = Instructor.objects.select_related("department").filter(id=instructor_id).first() if instructor_id.isdigit() else None
+
+        errors = []
+        if instructor is None:
+            errors.append("Please select your name from the department list.")
+        elif not _teacher_otp_verified_for(request, instructor.id):
+            errors.append("Please verify your identity with the email code before creating your account.")
+        if len(password) < 5:
+            errors.append("Password must be at least 5 characters.")
+        if password != confirm:
+            errors.append("Passwords do not match.")
+        if instructor is not None and _instructor_has_account(instructor):
+            errors.append("An account already exists for this teacher. Please log in instead.")
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+        else:
+            User = get_user_model()
+            username = f"teacher_{instructor.id}"
+            base_username = username
+            suffix = 1
+            while User.objects.filter(username=username).exists():
+                suffix += 1
+                username = f"{base_username}_{suffix}"
+
+            new_user = User.objects.create_user(
+                username=username,
+                email=instructor.email or "",
+                password=password,
+            )
+            if instructor.name:
+                new_user.first_name = instructor.name[:30]
+                new_user.save(update_fields=["first_name"])
+
+            profile, _ = Profile.objects.get_or_create(user=new_user)
+            profile.role = "teacher"
+            profile.linked_instructor = instructor
+            profile.save(update_fields=["role", "linked_instructor"])
+
+            _clear_teacher_otp(request)
+            auth_login(request, new_user, backend="django.contrib.auth.backends.ModelBackend")
+            messages.success(request, "Account created. Welcome to your teacher dashboard.")
+            return redirect("teacher_dashboard")
+
+    context = {
+        "dept_options": dept_options,
+    }
+    context.update(_teacher_nav_context())
+    return render(request, "teacher_register.html", context)
+
+
+def teacher_register_teachers(request):
+    """AJAX: teachers in a department (by name+code) matching a search query."""
+    dept_name = (request.GET.get("name") or "").strip()
+    dept_code = (request.GET.get("code") or "").strip()
+    query = (request.GET.get("q") or "").strip()
+    teachers = _teachers_in_department(dept_name, dept_code, query)
+    return JsonResponse({"teachers": teachers})
+
+
+def teacher_register_info(request):
+    """AJAX: teacher code + email for a selected instructor id."""
+    instructor_id = (request.GET.get("id") or "").strip()
+    if not instructor_id.isdigit():
+        return JsonResponse({"ok": False}, status=400)
+    instr = Instructor.objects.select_related("teacher_account_profile", "department").filter(id=instructor_id).first()
+    if instr is None:
+        return JsonResponse({"ok": False}, status=404)
+    return JsonResponse({
+        "ok": True,
+        "uid": instr.uid,
+        "email": instr.email or "",
+        "name": instr.name,
+        "department": instr.department.name if instr.department else "",
+        "has_account": _instructor_has_account(instr),
+    })
+
+
+def teacher_register_send_otp(request):
+    """AJAX (POST): generate a 4-digit OTP and email it to the teacher."""
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Invalid request method."}, status=405)
+
+    instructor_id = (request.POST.get("instructor_id") or "").strip()
+    instr = (
+        Instructor.objects.select_related("department", "teacher_account_profile")
+        .filter(id=instructor_id)
+        .first()
+        if instructor_id.isdigit() else None
+    )
+    if instr is None:
+        return JsonResponse({"ok": False, "error": "Please select your profile first."}, status=404)
+    if _instructor_has_account(instr):
+        return JsonResponse({"ok": False, "error": "An account already exists for this teacher. Please log in instead."}, status=400)
+    if not (instr.email or "").strip():
+        return JsonResponse({"ok": False, "error": "No email is registered for this teacher. Please contact your coordinator."}, status=400)
+
+    code = _generate_teacher_otp()
+    _store_teacher_otp(request, instr, code)
+    try:
+        _send_teacher_otp_email(instr, code)
+    except Exception:
+        logger.exception("Teacher OTP email failed")
+        _clear_teacher_otp(request)
+        return JsonResponse({"ok": False, "error": "We could not send the verification email. Please try again."}, status=502)
+
+    return JsonResponse({
+        "ok": True,
+        "masked_email": _mask_email(instr.email),
+        "expires_in": TEACHER_OTP_TTL_SECONDS,
+    })
+
+
+def teacher_register_verify_otp(request):
+    """AJAX (POST): verify the 4-digit OTP for the selected teacher."""
+    import time
+
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Invalid request method."}, status=405)
+
+    instructor_id = (request.POST.get("instructor_id") or "").strip()
+    otp = (request.POST.get("otp") or "").strip()
+    data = _get_teacher_otp(request)
+
+    if not data or str(data.get("instructor_id")) != str(instructor_id):
+        return JsonResponse({"ok": False, "error": "Please request a verification code first."}, status=400)
+
+    if time.time() > data.get("expires_at", 0):
+        _clear_teacher_otp(request)
+        return JsonResponse({"ok": False, "error": "Your code has expired. Please resend a new code.", "expired": True}, status=400)
+
+    if data.get("attempts", 0) >= TEACHER_OTP_MAX_ATTEMPTS:
+        _clear_teacher_otp(request)
+        return JsonResponse({"ok": False, "error": "Too many incorrect attempts. Please resend a new code.", "locked": True}, status=429)
+
+    if not re.fullmatch(r"\d{4}", otp):
+        data["attempts"] = data.get("attempts", 0) + 1
+        _save_teacher_otp(request, data)
+        return JsonResponse({"ok": False, "error": "Please enter the 4-digit code."}, status=400)
+
+    if otp != data.get("code"):
+        data["attempts"] = data.get("attempts", 0) + 1
+        left = TEACHER_OTP_MAX_ATTEMPTS - data["attempts"]
+        if left <= 0:
+            _clear_teacher_otp(request)
+            return JsonResponse({"ok": False, "error": "Too many incorrect attempts. Please resend a new code.", "locked": True}, status=429)
+        _save_teacher_otp(request, data)
+        return JsonResponse({"ok": False, "error": f"Incorrect code. {left} attempt(s) left.", "attempts_left": left}, status=400)
+
+    data["verified"] = True
+    _save_teacher_otp(request, data)
+    return JsonResponse({"ok": True})
+
+
 @login_required
 def teacher_onboarding(request):
     profile, locked_response = _get_teacher_profile_or_locked_response(request.user)
@@ -1181,12 +1808,49 @@ def teacher_dashboard(request):
 
     _ensure_teacher_role(profile)
 
-    redirect_response = _teacher_onboarding_redirect_response(request)
-    if redirect_response:
-        return redirect_response
+    # New credential flow: a linked instructor is required. If the account is
+    # not linked yet, send the user to the registration page.
+    if not profile.linked_instructor_id:
+        messages.error(request, "Please register your teacher account to continue.")
+        return redirect("teacher_register")
 
-    context = _resolve_teacher_dashboard_context(request, profile)
+    linked_instructor = profile.linked_instructor
+    timetable, my_table, workload, instructor_used = _resolve_teacher_timetable(linked_instructor)
+    schedule_rows = _teacher_schedule_rows(my_table)
+
+    teacher_subjects = list(
+        Subject.objects.filter(
+            user=linked_instructor.user,
+            instructors=linked_instructor,
+        ).order_by("subject_name", "subject_number").distinct()
+    )
+
+    dept = linked_instructor.department
+    rooms_used = sorted({r["room"] for r in schedule_rows if r["room"] and r["room"] != "—"})
+
+    context = {
+        "teacher_profile": profile,
+        "linked_instructor": linked_instructor,
+        "teacher_display_name": linked_instructor.name,
+        "teacher_code": linked_instructor.uid,
+        "teacher_email": linked_instructor.email or (request.user.email or ""),
+        "teacher_designation": linked_instructor.designation or "Teacher",
+        "teacher_department": dept.name if dept else "—",
+        "teacher_department_code": dept.code if dept else "",
+        "active_timetable": timetable,
+        "my_teacher_table": my_table,
+        "teacher_workload": workload,
+        "schedule_rows": schedule_rows,
+        "teacher_subjects": teacher_subjects,
+        "teacher_subject_count": len(teacher_subjects),
+        "rooms_used": rooms_used,
+        "rooms_count": len(rooms_used),
+        "class_count": len(schedule_rows),
+        "slot_labels": SLOT_LABELS,
+    }
+    context.update(_teacher_nav_context())
     return render(request, "teacher_dashboard.html", context)
+
 
 
 @login_required
@@ -1530,6 +2194,8 @@ if "Class" not in globals():
             self.room = None
             self.section = section
             self.duration = getattr(subject, 'duration', 1)
+            self.room_label = ""
+            self.missing_room = False
 
         def set_instructor(self, instructor): self.instructor = instructor
         def set_co_instructors(self, instructors): self.co_instructors = list(instructors or [])
@@ -1552,6 +2218,8 @@ if "Lab" not in globals():
             self.meeting_times = []
             self.batch = batch
             self.total_batches = total_batches
+            self.room_label = ""
+            self.missing_room = False
 
         def set_second_instructor(self, instructor): self.second_instructor = instructor
         def set_co_instructors(self, instructors): self.co_instructors = list(instructors or [])
@@ -2326,6 +2994,121 @@ def _filter_entities_by_program(classes, labs, user, selected_program):
     return filtered_classes, filtered_labs, selected_program
 
 
+def _get_department_filter_options(user):
+    """Return the user's departments as {code, name} dicts for filtering."""
+    options = []
+    for dept in Department.objects.filter(user=user).order_by("code", "name"):
+        code = (dept.code or "").strip()
+        if not code:
+            continue
+        options.append({"code": code, "name": (dept.name or "").strip() or code})
+    return options
+
+
+def _teacher_home_dept_fallback(classes, labs):
+    """Derive a fallback home-department code per teacher from where they teach
+    most. Used only when an Instructor has no stored department."""
+    from collections import defaultdict
+    counts = defaultdict(lambda: defaultdict(int))
+
+    def _add(teacher, dept):
+        if teacher is None or dept is None:
+            return
+        code = (getattr(dept, "code", "") or "").strip()
+        if code:
+            counts[getattr(teacher, "id", None)][code] += 1
+
+    for cls in classes:
+        _add(getattr(cls, "instructor", None), getattr(cls, "department", None))
+    for lab in labs:
+        _add(getattr(lab, "instructor", None), getattr(lab, "department", None))
+        _add(getattr(lab, "second_instructor", None), getattr(lab, "department", None))
+
+    fallback = {}
+    for tid, dept_counts in counts.items():
+        if dept_counts:
+            fallback[tid] = max(dept_counts.items(), key=lambda kv: kv[1])[0]
+    return fallback
+
+
+def _teacher_home_dept_code(teacher, fallback_map):
+    """Home department code of a teacher: stored Instructor.department first,
+    else the workload-derived fallback."""
+    dept = getattr(teacher, "department", None)
+    code = (getattr(dept, "code", "") or "").strip() if dept else ""
+    if not code:
+        code = fallback_map.get(getattr(teacher, "id", None), "") or ""
+    return code
+
+
+def _filter_section_tables_by_department(tables, selected_department):
+    if not selected_department or selected_department.lower() == "all":
+        return tables
+    sel = selected_department.strip().lower()
+    out = []
+    for table in tables:
+        dept = table.get("dept")
+        code = (getattr(dept, "code", "") or "").strip().lower() if dept else ""
+        if code == sel:
+            out.append(table)
+    return out
+
+
+def _filter_room_tables_by_department(room_tables, selected_department):
+    if not selected_department or selected_department.lower() == "all":
+        return room_tables
+    sel = selected_department.strip().lower()
+    out = []
+    for table in room_tables:
+        codes = [str(c).strip().lower() for c in table.get("dept_codes", [])]
+        if sel in codes:
+            out.append(table)
+    return out
+
+
+def _filter_teacher_tables_by_home_department(teacher_tables, selected_department, fallback_map):
+    """Keep only teachers whose HOME department matches the selection. Each
+    teacher's grid is left untouched so it still shows every class they teach
+    (including classes in other departments)."""
+    if not selected_department or selected_department.lower() == "all":
+        return teacher_tables
+    sel = selected_department.strip().lower()
+    out = []
+    for table in teacher_tables:
+        teacher = table.get("teacher")
+        home = _teacher_home_dept_code(teacher, fallback_map)
+        if home and home.lower() == sel:
+            out.append(table)
+    return out
+
+
+def _filter_workloads_by_home_department(workloads, selected_department, fallback_map):
+    if not selected_department or selected_department.lower() == "all":
+        return workloads
+    sel = selected_department.strip().lower()
+    out = {}
+    for teacher, data in workloads.items():
+        home = _teacher_home_dept_code(teacher, fallback_map)
+        if home and home.lower() == sel:
+            out[teacher] = data
+    return out
+
+
+def _normalize_selected_department(user, selected_department):
+    selected_department = (selected_department or "all").strip()
+    if not selected_department or selected_department.lower() == "all":
+        return "all"
+    valid_codes = {
+        (code or "").strip().lower()
+        for code in Department.objects.filter(user=user).values_list("code", flat=True)
+        if (code or "").strip()
+    }
+    if selected_department.lower() in valid_codes:
+        return selected_department
+    return "all"
+
+
+
 def _get_saved_timetable_or_404(tid, user):
     """Fetch a saved timetable ensuring it belongs to the user."""
     try:
@@ -2338,28 +3121,15 @@ def _get_saved_timetable_or_404(tid, user):
 
 
 def _get_plan_permissions(user):
-    """Return plan permission flags for a user."""
-    from django.conf import settings as _settings
-    if getattr(_settings, "BYPASS_ACCESS", False):
-        return {
-            "can_edit_delete": True,
-            "can_substitute": True,
-            "can_drag_drop": True,
-        }
-    try:
-        plan = UserAccessPlan.objects.get(user=user)
-        if plan.is_active:
-            return {
-                "can_edit_delete": plan.can_edit_delete,
-                "can_substitute": plan.can_substitute,
-                "can_drag_drop": plan.can_drag_drop,
-            }
-    except UserAccessPlan.DoesNotExist:
-        pass
+    """Return plan permission flags for a user.
+
+    Feature locks have been removed — edit/delete, substitute and drag-and-drop
+    are available to everyone regardless of subscription plan.
+    """
     return {
-        "can_edit_delete": False,
-        "can_substitute": False,
-        "can_drag_drop": False,
+        "can_edit_delete": True,
+        "can_substitute": True,
+        "can_drag_drop": True,
     }
 
 
@@ -2441,11 +3211,24 @@ def saved_timetable(request, tid):
     selected_program = request.GET.get("program", "all")
     classes, labs, selected_program = _filter_entities_by_program(classes, labs, request.user, selected_program)
 
+    selected_department = _normalize_selected_department(request.user, request.GET.get("department", "all"))
+    # Fallback home-department map (used only for teachers with no stored department).
+    home_dept_fallback = _teacher_home_dept_fallback(classes, labs)
+
+    # Section / room tables are filtered to the selected department directly.
     tables = build_section_tables(classes, labs, user=request.user)
     tables = _build_saved_parking_context(saved_t, tables)
+    tables = _filter_section_tables_by_department(tables, selected_department)
     room_tables = build_room_tables(classes, labs, user=request.user)
+    room_tables = _filter_room_tables_by_department(room_tables, selected_department)
+
+    # Teacher tables / workloads are built from the FULL set so each teacher's
+    # grid stays complete, then the LIST is restricted to teachers whose HOME
+    # department matches the selection.
     teacher_tables = build_teacher_tables(classes, labs, user=request.user)
+    teacher_tables = _filter_teacher_tables_by_home_department(teacher_tables, selected_department, home_dept_fallback)
     teacher_workloads = _compute_teacher_workloads(classes, labs)
+    teacher_workloads = _filter_workloads_by_home_department(teacher_workloads, selected_department, home_dept_fallback)
 
     permissions = _get_plan_permissions(request.user)
 
@@ -2457,6 +3240,8 @@ def saved_timetable(request, tid):
         "teacher_workloads": teacher_workloads,
         "program_options": _get_program_filter_options(request.user),
         "active_program": selected_program,
+        "department_options": _get_department_filter_options(request.user),
+        "active_department": selected_department,
         "SLOT_LABELS": SLOT_LABELS,
         "can_edit_delete": permissions["can_edit_delete"],
         "can_substitute": permissions["can_substitute"],
@@ -3137,7 +3922,7 @@ def delete_all_subjects(request):
 @login_required
 def addInstructor(request):
     edit_instructor = _get_required_step_edit_object(request, Instructor, user=request.user) if request.method == "POST" and request.POST.get("edit_id") else _get_step_edit_object(request, Instructor, user=request.user)
-    form = InstructorForm(request.POST or None, instance=edit_instructor)
+    form = InstructorForm(request.POST or None, instance=edit_instructor, user=request.user)
 
     # ================================
     # FETCH FROM ERP API
@@ -3231,6 +4016,7 @@ def addInstructor(request):
             max_workload = row[3].strip() if len(row) > 3 else ""
             email = row[4].strip() if len(row) > 4 else ""
             contact_number = row[5].strip() if len(row) > 5 else ""
+            department_code = row[6].strip() if len(row) > 6 else ""
             if not uid:
                 skipped += 1
                 _csv_issue(issues, row_number, "uid is blank")
@@ -3256,6 +4042,15 @@ def addInstructor(request):
                 designation,
                 max_workload,
             )
+            department_obj = None
+            if department_code:
+                department_obj = Department.objects.filter(
+                    user=request.user, code__iexact=department_code
+                ).first()
+                if department_obj is None:
+                    department_obj = Department.objects.filter(
+                        user=request.user, name__iexact=department_code
+                    ).first()
             Instructor.objects.create(
                 user=request.user,
                 uid=uid,
@@ -3264,6 +4059,7 @@ def addInstructor(request):
                 contact_number=contact_number,
                 designation=resolved_designation,
                 max_workload=resolved_workload,
+                department=department_obj,
             )
             added += 1
 
@@ -5427,12 +6223,324 @@ def download_generated_timetable_excel(request, index, view_type='section'):
         view_type=view_type,
     )
 
+
+# ============================================================
+# DOWNLOAD CENTER — dept selection + clean PDF export
+# ============================================================
+COLLEGE_NAME = "J.C. Bose University of Science and Technology, YMCA (Formerly YMCA UST)"
+
+
+def _pdf_link_callback(uri, rel):
+    """Resolve static/media URIs to absolute filesystem paths for xhtml2pdf."""
+    import os as _os
+    from django.conf import settings as _settings
+
+    if uri.startswith(("http://", "https://", "data:")):
+        return uri
+
+    static_url = _settings.STATIC_URL or "/static/"
+    media_url = getattr(_settings, "MEDIA_URL", "") or ""
+
+    path = None
+    if media_url and uri.startswith(media_url):
+        path = _os.path.join(getattr(_settings, "MEDIA_ROOT", ""), uri[len(media_url):])
+    elif uri.startswith(static_url):
+        rel_path = uri[len(static_url):]
+        for base in [getattr(_settings, "STATIC_ROOT", None)] + list(getattr(_settings, "STATICFILES_DIRS", [])):
+            if not base:
+                continue
+            candidate = _os.path.join(str(base), rel_path)
+            if _os.path.isfile(candidate):
+                path = candidate
+                break
+    if path and _os.path.isfile(path):
+        return _os.path.abspath(path)
+    return uri
+
+
+def _generated_tables_for_download(request, index, dept_filter=None):
+    """Return (selected_schedule, decorated tables, departments) for a generated index.
+
+    dept_filter: optional set of dept codes to keep. None / empty = all.
+    """
+    idx = int(index)
+    state = _get_user_state(request.user.id)
+    schedules = state.get("schedules") or GLOBAL_GENERATED_SCHEDULES or []
+    if not schedules or idx < 1 or idx > len(schedules):
+        return None, [], []
+
+    selected = schedules[idx - 1]
+    classes = list(selected.get("classes", []))
+    labs = list(selected.get("labs", []))
+    tables = build_section_tables(classes, labs, user=request.user)
+
+    departments = []
+    seen = set()
+    decorated = []
+    for table in tables:
+        section = table.get("section")
+        try:
+            dept = section.department
+            dept_code = getattr(dept, "code", "") or ""
+            dept_name = getattr(dept, "name", "") or dept_code
+        except Exception:
+            continue
+        table["section_department_code"] = dept_code
+        table["section_department_name"] = dept_name
+        if dept_code and dept_code not in seen:
+            seen.add(dept_code)
+            departments.append({"code": dept_code, "name": dept_name})
+        if dept_filter and dept_code not in dept_filter:
+            continue
+        decorated.append(table)
+
+    departments.sort(key=lambda d: d["name"])
+    return selected, decorated, departments
+
+
+def _parse_dept_filter(request):
+    raw = (request.GET.get("depts") or "").strip()
+    if not raw or raw.lower() == "all":
+        return None
+    return {code.strip() for code in raw.split(",") if code.strip()}
+
+
+def _pdf_cell_width(cell):
+    return 85 * cell.get("colspan", 1)
+
+
+def _section_pdf_block(table):
+    """Build a PDF block (grid of cells with text entries) for a section table."""
+    rows = []
+    for row in table["rows"]:
+        cells = []
+        for cell in row["cells"]:
+            ctype = cell.get("type")
+            if ctype == "skip":
+                cells.append({"type": "skip"})
+                continue
+            base = {"type": ctype, "colspan": cell.get("colspan", 1), "width": _pdf_cell_width(cell)}
+            entries = []
+            if ctype == "lab":
+                for lab in cell.get("labs", []):
+                    lines = [f"{lab.subject.subject_name} Lab (Batch {lab.batch}/{lab.total_batches})"]
+                    lines.append(lab.instructor.name if lab.instructor else "")
+                    if getattr(lab, "second_instructor", None):
+                        lines.append(lab.second_instructor.name)
+                    for co in getattr(lab, "co_instructors", []) or []:
+                        lines.append(f"+ {co.name}")
+                    if getattr(lab, "room", None):
+                        lines.append(f"Room: {lab.room.r_number}")
+                    entries.append({"lines": [l for l in lines if l]})
+            elif ctype == "class":
+                for cls in cell.get("classes", []):
+                    lines = [cls.subject.subject_name]
+                    lines.append(cls.instructor.name if cls.instructor else "")
+                    for co in getattr(cls, "co_instructors", []) or []:
+                        lines.append(f"+ {co.name}")
+                    if getattr(cls, "room", None):
+                        lines.append(f"Room: {cls.room.r_number}")
+                    entries.append({"lines": [l for l in lines if l]})
+            base["entries"] = entries
+            cells.append(base)
+        rows.append({"day": row["day"], "cells": cells})
+    subtitle = table.get("section_department_name", "")
+    program = getattr(table.get("section"), "program_name", "")
+    if program:
+        subtitle = f"{subtitle} · {program}" if subtitle else program
+    return {
+        "title": str(table["section"].section_id),
+        "subtitle": subtitle,
+        "rows": rows,
+    }
+
+
+def _room_pdf_block(table):
+    rows = []
+    for row in table["rows"]:
+        cells = []
+        for cell in row["cells"]:
+            ctype = cell.get("type")
+            base = {"type": ctype, "colspan": cell.get("colspan", 1), "width": _pdf_cell_width(cell)}
+            entries = []
+            if ctype == "lab":
+                for lab in cell.get("labs", []):
+                    lines = [f"{lab.subject.subject_name} Lab"]
+                    grp = getattr(lab, "group", "")
+                    lines.append(f"{lab.section} ({grp})" if grp else str(lab.section))
+                    if lab.instructor:
+                        lines.append(lab.instructor.name)
+                    if getattr(lab, "second_instructor", None):
+                        lines.append(lab.second_instructor.name)
+                    entries.append({"lines": [l for l in lines if l]})
+            elif ctype == "class":
+                for cls in cell.get("classes", []):
+                    lines = [cls.subject.subject_name, str(cls.section)]
+                    if cls.instructor:
+                        lines.append(cls.instructor.name)
+                    entries.append({"lines": [l for l in lines if l]})
+            base["entries"] = entries
+            cells.append(base)
+        rows.append({"day": row["day"], "cells": cells})
+    room = table["room"]
+    subtitle = ", ".join(table.get("dept_names", [])) or ""
+    util = table.get("optimization_percentage", "")
+    if util != "":
+        subtitle = f"{subtitle} · Utilization {util}%" if subtitle else f"Utilization {util}%"
+    return {
+        "title": f"Room {room.r_number} ({room.room_type})",
+        "subtitle": subtitle,
+        "rows": rows,
+    }
+
+
+def _teacher_pdf_block(table):
+    rows = []
+    for row in table["rows"]:
+        cells = []
+        for cell in row["cells"]:
+            ctype = cell.get("type")
+            base = {"type": ctype, "colspan": cell.get("colspan", 1), "width": _pdf_cell_width(cell)}
+            entries = []
+            if ctype == "lab":
+                for lab in cell.get("labs", []):
+                    lines = [f"{lab.subject.subject_name} Lab"]
+                    grp = getattr(lab, "group", "")
+                    lines.append(f"{lab.section} ({grp})" if grp else str(lab.section))
+                    if getattr(lab, "room", None):
+                        lines.append(f"Room: {lab.room.r_number}")
+                    entries.append({"lines": [l for l in lines if l]})
+            elif ctype == "class":
+                for cls in cell.get("classes", []):
+                    lines = [cls.subject.subject_name, str(cls.section)]
+                    if getattr(cls, "room", None):
+                        lines.append(f"Room: {cls.room.r_number}")
+                    entries.append({"lines": [l for l in lines if l]})
+            base["entries"] = entries
+            cells.append(base)
+        rows.append({"day": row["day"], "cells": cells})
+    teacher = table["teacher"]
+    wl = table.get("workload", {})
+    subtitle = f"UID: {getattr(teacher, 'uid', '')} · Total Load: {wl.get('total', '')}"
+    return {
+        "title": teacher.name,
+        "subtitle": subtitle,
+        "rows": rows,
+    }
+
+
+@login_required
+def timetable_download_center(request, index):
+    """Standalone page to choose departments and download/print/share."""
+    selected, _tables, departments = _generated_tables_for_download(request, index)
+    if selected is None:
+        messages.info(request, "Session expired. View your saved timetables below.")
+        return redirect("saved_timetable_list")
+
+    return render(request, "download_center.html", {
+        "index": index,
+        "departments": departments,
+        "college_name": COLLEGE_NAME,
+    })
+
+
+@login_required
+def download_generated_timetable_pdf(request, index, view_type='section'):
+    try:
+        from xhtml2pdf import pisa
+    except ImportError:
+        return HttpResponse(
+            "PDF generation dependencies are not installed on this machine yet.",
+            status=503,
+        )
+
+    view_type = (view_type or "section").lower()
+    if view_type not in {"section", "room", "teacher", "workload"}:
+        view_type = "section"
+
+    idx = int(index)
+    state = _get_user_state(request.user.id)
+    schedules = state.get("schedules") or GLOBAL_GENERATED_SCHEDULES or []
+    if not schedules or idx < 1 or idx > len(schedules):
+        raise Http404("Invalid timetable")
+    selected = schedules[idx - 1]
+    classes = list(selected.get("classes", []))
+    labs = list(selected.get("labs", []))
+
+    dept_filter = _parse_dept_filter(request)
+
+    def _dept_code_of(section):
+        try:
+            return getattr(section.department, "code", "") or ""
+        except Exception:
+            return ""
+
+    blocks = []
+    is_workload = False
+    workload_rows = []
+    view_label = "Section"
+
+    if view_type == "section":
+        view_label = "Section"
+        _sel, tables, _depts = _generated_tables_for_download(request, index, dept_filter)
+        blocks = [_section_pdf_block(t) for t in tables]
+    elif view_type == "room":
+        view_label = "Room"
+        room_tables = build_room_tables(classes, labs, user=request.user)
+        if dept_filter:
+            room_tables = [
+                rt for rt in room_tables
+                if any(code in dept_filter for code in rt.get("dept_codes", []))
+            ]
+        blocks = [_room_pdf_block(t) for t in room_tables]
+    elif view_type == "teacher":
+        view_label = "Teacher"
+        teacher_tables = build_teacher_tables(classes, labs, user=request.user)
+        blocks = [_teacher_pdf_block(t) for t in teacher_tables]
+    else:  # workload
+        view_label = "Workload"
+        is_workload = True
+        workloads = _compute_teacher_workloads(classes, labs)
+        for teacher, data in workloads.items():
+            workload_rows.append({
+                "name": teacher.name,
+                "uid": getattr(teacher, "uid", ""),
+                "departments": data.get("departments", "-"),
+                "lectures": data.get("lectures", 0),
+                "labs": data.get("labs", 0),
+                "shared_labs": data.get("shared_labs", 0),
+                "total": data.get("total", 0),
+            })
+        workload_rows.sort(key=lambda w: str(w["name"]).lower())
+
+    html = render_to_string("generated_timetable_pdf.html", {
+        "blocks": blocks,
+        "is_workload": is_workload,
+        "workload_rows": workload_rows,
+        "view_label": view_label,
+        "college_name": COLLEGE_NAME,
+        "college_logo": settings.STATIC_URL + "img/college_logo.png",
+        "brand_logo": settings.STATIC_URL + "img/logo_email.png",
+    })
+
+    response = HttpResponse(content_type='application/pdf')
+    inline = request.GET.get("inline") == "1"
+    disposition = "inline" if inline else "attachment"
+    response['Content-Disposition'] = f'{disposition}; filename="{view_type}_timetable_{idx}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response, link_callback=_pdf_link_callback)
+    if pisa_status.err:
+        return HttpResponse("PDF creation failed.", status=500)
+    return response
+
+
+
 # UNIFIED CSV CONVERTER (PDF/Excel → CSV) — All Entity Types
 # ============================================================
 ENTITY_CONFIGS = {
     "instructors": {
         "label": "Instructors",
-        "columns": ["uid", "name", "designation", "max_workload", "email", "contact_number"],
+        "columns": ["uid", "name", "designation", "max_workload", "email", "contact_number", "department_code"],
         "filename": "instructors.csv",
         "required": ["uid", "name", "email", "contact_number"],
         "keywords": {
@@ -5442,6 +6550,7 @@ ENTITY_CONFIGS = {
             "max_workload": ["max_workload", "workload", "max workload", "load", "hours"],
             "email": ["email", "e-mail", "mail", "email id", "email_id"],
             "contact_number": ["contact_number", "contact", "phone", "mobile", "phone number", "contact no"],
+            "department_code": ["department_code", "department", "dept", "dept_code", "department code"],
         },
     },
     "subjects": {

@@ -246,6 +246,63 @@ h1 {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18), 0 8px 18px rgba(37, 99, 235, 0.18) !important;
 }
 
+/* ── Prevent long names from overflowing / overlapping across cells ── */
+.lab-box,
+.class-box,
+.room-slot-card,
+.parking-item {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.lab-box, .lab-box *,
+.class-box, .class-box *,
+.room-slot-card, .room-slot-card *,
+.parking-item, .parking-item * {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+.table2 td, .room-table tbody td {
+  overflow: hidden;
+}
+.room-slot-card__section,
+.class-box .tt-section,
+.lab-box .tt-section {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* ── Teacher timetable grid polish (matches room view look) ── */
+#teacher-view .table2 {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #d9e5ee;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(27, 79, 114, 0.1);
+}
+#teacher-view .table2 thead th {
+  background: linear-gradient(180deg, #f8fbff, #e8f1f8);
+  color: #29485f;
+  font-weight: 800;
+  border: none;
+  border-right: 1px solid #d8e2ea;
+  border-bottom: 1px solid #d8e2ea;
+  padding: 12px 8px;
+}
+#teacher-view .table2 tbody td {
+  border: none;
+  border-right: 1px solid #e1e8ee;
+  border-bottom: 1px solid #e1e8ee;
+  background: #ffffff;
+}
+#teacher-view .table2 tbody tr:hover td { background: #f6fbff; }
+
+
 .lunch-cell {
   background: #ffffff;
   font-weight: 700;
@@ -1674,6 +1731,59 @@ body.drag-drop-active .lunch-drop-target.drop-target.drag-over {
 }
 .fullpage-excel-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(22, 101, 52, 0.32); }
 
+.eval-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b45309, #f59e0b);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 10px 22px rgba(180, 83, 9, 0.22);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.eval-dl-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(180, 83, 9, 0.32); }
+
+/* ── Teacher Analysis (home vs cross department) ── */
+.ta-toolbar { display:flex; flex-direction:column; align-items:center; gap:12px; margin:6px 0 22px; }
+.ta-btn {
+  display:inline-flex; align-items:center; gap:2px;
+  padding:10px 18px; border:none; border-radius:12px; cursor:pointer;
+  background:linear-gradient(135deg, #1d4ed8, #3b82f6); color:#fff;
+  font-size:14px; font-weight:700; letter-spacing:0.02em;
+  box-shadow:0 10px 22px rgba(29, 78, 216, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ta-btn:hover { transform: translateY(-2px); box-shadow:0 14px 26px rgba(29, 78, 216, 0.32); }
+.ta-btn.is-open { background:linear-gradient(135deg, #475569, #64748b); }
+.ta-panel {
+  width:min(560px, 92%); background:#f8fbff; border:1px solid #cfe0f2;
+  border-radius:14px; padding:16px 18px; box-shadow:0 12px 30px rgba(15, 53, 99, 0.10);
+}
+.ta-panel__row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.ta-panel__row:last-child { margin-bottom:0; }
+.ta-panel__label { font-size:13px; font-weight:700; color:#28506e; min-width:90px; }
+.ta-select {
+  flex:1; min-width:180px; padding:9px 12px; border:1px solid #b7d0e8;
+  border-radius:9px; background:#fff; font-size:13px; color:#1b3a57; font-weight:600;
+}
+.ta-panel__modes { gap:8px; }
+.ta-mode-btn {
+  padding:8px 14px; border:1px solid #b7d0e8; border-radius:9px; cursor:pointer;
+  background:#fff; color:#28506e; font-size:13px; font-weight:700;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.ta-mode-btn:hover { border-color:#3b82f6; }
+.ta-mode-btn.is-active { background:#1d4ed8; color:#fff; border-color:#1d4ed8; }
+.ta-mode-btn--reset { margin-left:auto; }
+.ta-mode-btn--reset.is-active { background:#475569; border-color:#475569; }
+.ta-summary { font-size:12.5px; color:#3a5b78; font-weight:600; min-height:16px; }
+.ta-card.ta-hidden { display:none !important; }
+
 /* ── Command Bar (unified action + filter row) ── */
 .command-bar {
     position: relative;
@@ -1876,6 +1986,10 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
         var btns = el.querySelectorAll('.btn-save-tt');
         btns.forEach(function(b) { b.style.display = 'none'; });
 
+        // Hide UI-only blocks (parking bucket, subjects scheduled, etc.) during capture
+        var excluded = el.querySelectorAll('.export-exclude');
+        excluded.forEach(function(e) { e.dataset._prevDisplay = e.style.display; e.style.display = 'none'; });
+
         // Inject brand bar just above the first table, remove after capture
         var bar = _buildImgBrandBar();
         var tbl = el.querySelector('table');
@@ -1893,6 +2007,7 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
         html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(function(canvas) {
             bar.remove();
             btns.forEach(function(b) { b.style.display = ''; });
+            excluded.forEach(function(e) { e.style.display = e.dataset._prevDisplay || ''; });
             var link = document.createElement('a');
             link.download = filename + '.png';
             link.href = canvas.toDataURL('image/png');
@@ -1901,6 +2016,7 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
         }).catch(function() {
             bar.remove();
             btns.forEach(function(b) { b.style.display = ''; });
+            excluded.forEach(function(e) { e.style.display = e.dataset._prevDisplay || ''; });
             Swal.close();
         });
     }
@@ -1954,6 +2070,8 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
         // Clone each card now (while buttons are hidden) and add brand headers
         var clones = cards.map(function(c) {
           var clone = c.cloneNode(true);
+          // Drop UI-only blocks (parking bucket, subjects scheduled, action buttons, etc.)
+          clone.querySelectorAll('.export-exclude').forEach(function(el) { el.remove(); });
           var tbl = clone.querySelector('table');
           if (tbl) {
             tbl.parentNode.insertBefore(_buildPdfBrandHeader(), tbl);
@@ -1994,6 +2112,79 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
         worker.save()
             .then(function() { _showDownloadDone(); })
             .catch(function(err) { console.error('PDF generation failed:', err); Swal.close(); });
+    }
+
+    // ---- Evaluation download: full capture (parking, subject counts, MTC, everything) behind a pass key ----
+    function downloadForEvaluation(viewName) {
+        function _proceed() { _evaluationDownload(viewName); }
+        if (window.Swal && Swal.fire) {
+            Swal.fire({
+                title: 'Evaluation Download',
+                input: 'password',
+                inputLabel: 'Enter pass key',
+                inputPlaceholder: 'Pass key',
+                showCancelButton: true,
+                confirmButtonText: 'Download',
+                inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
+                inputValidator: function(value) {
+                    if (value !== 'sam7677') { return 'Incorrect pass key'; }
+                }
+            }).then(function(res) {
+                if (res && res.isConfirmed) { _proceed(); }
+            });
+        } else {
+            var key = prompt('Enter pass key for evaluation download:');
+            if (key === null) { return; }
+            if (key !== 'sam7677') { alert('Incorrect pass key'); return; }
+            _proceed();
+        }
+    }
+
+    function _evaluationDownload(viewName) {
+        var viewEl = document.getElementById(viewName + '-view');
+        if (!viewEl) { alert('No timetable view found.'); return; }
+
+        var allCards = Array.from(viewEl.querySelectorAll('.export-surface'));
+        if (!allCards.length) allCards = Array.from(viewEl.querySelectorAll('.room-card'));
+        if (!allCards.length) allCards = [viewEl];
+        var cards = allCards.filter(function(c) {
+            return window.getComputedStyle(c).display !== 'none';
+        });
+        if (!cards.length) { alert('No visible sections to export.'); return; }
+
+        _showDownloadPopup();
+
+        // Hide UI-only action buttons so they don't appear in the export
+        var hiddenBtns = viewEl.querySelectorAll('.btn-save-tt, .room-pdf-btn, .fullpage-pdf-btn, .fullpage-excel-btn, .eval-dl-btn, .action-buttons');
+        hiddenBtns.forEach(function(b) { b.style.display = 'none'; });
+
+        // Clone each card KEEPING everything (parking, subject counts, MTC, etc.) — no college logo / brand header
+        var clones = cards.map(function(c) { return c.cloneNode(true); });
+        hiddenBtns.forEach(function(b) { b.style.display = ''; });
+
+        var labels = { section: 'Section', room: 'Room', workload: 'Workload', teacher: 'Teacher' };
+        var fname = 'SmartScheduler_' + (labels[viewName] || viewName) + '_Evaluation.pdf';
+
+        var opt = {
+            margin: [6, 4, 6, 4],
+            filename: fname,
+            image: { type: 'jpeg', quality: 0.92 },
+            html2canvas: { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', logging: false },
+            jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' },
+            pagebreak: { mode: ['css', 'legacy'] },
+        };
+
+        var worker = html2pdf().set(opt).from(clones[0]).toContainer().toCanvas().toPdf();
+        for (var i = 1; i < clones.length; i++) {
+            (function(card) {
+                worker = worker.get('pdf').then(function(pdf) {
+                    pdf.addPage();
+                }).from(card).toContainer().toCanvas().toPdf();
+            })(clones[i]);
+        }
+        worker.save()
+            .then(function() { _showDownloadDone(); })
+            .catch(function(err) { console.error('Evaluation PDF generation failed:', err); if (window.Swal) Swal.close(); });
     }
 
     function downloadViewExcel(viewName) {
@@ -2482,7 +2673,7 @@ function initDragAndDrop() {
                 return;
               }
 
-              try {
+              async function postUpdateSlot(values) {
                 const response = await fetch(requestUrl, {
                   method: "POST",
                   headers: {
@@ -2490,7 +2681,7 @@ function initDragAndDrop() {
                     "X-CSRFToken": getCsrfToken(),
                     "X-Requested-With": "XMLHttpRequest"
                   },
-                  body: JSON.stringify(result.value)
+                  body: JSON.stringify(values)
                 });
                 const responseText = await response.text();
                 let payload = {};
@@ -2501,6 +2692,27 @@ function initDragAndDrop() {
                   const snippet = plainText ? plainText.slice(0, 180) : "empty response";
                   payload = { message: `Server returned ${response.status} from ${response.url}. ${snippet}` };
                 }
+                return { response, payload };
+              }
+
+              try {
+                let { response, payload } = await postUpdateSlot(result.value);
+
+                if (payload && payload.room_missing) {
+                  const confirmMissing = await Swal.fire({
+                    icon: "warning",
+                    title: "Room not found",
+                    html: `Room <b>"${payload.room_number || result.value.room_number}"</b> does not exist in your Rooms.<br><br>Do you want to proceed with this room name anyway?<br><span style="font-size:13px;color:#64748b;">The teacher's slot will be locked, but no new room will be created and no room will be reserved.</span>`,
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, proceed",
+                    cancelButtonText: "No",
+                    confirmButtonColor: "#d97706",
+                    cancelButtonColor: "#64748b",
+                  });
+                  if (!confirmMissing.isConfirmed) return;
+                  ({ response, payload } = await postUpdateSlot(Object.assign({}, result.value, { allow_missing_room: true })));
+                }
+
                 if (!response.ok || !payload.ok) {
                   Swal.fire({ icon: "error", title: "Edit Failed", text: payload.message || "Could not update slot.", confirmButtonColor: "#4e73df" });
                   return;
@@ -2693,7 +2905,7 @@ function initDragAndDrop() {
 
             if (!result.isConfirmed) return;
 
-            try {
+            async function postCreateSlot(values) {
               const response = await fetch(`/parking/${encodeURIComponent(sectionId)}/create/`, {
                 method: "POST",
                 headers: {
@@ -2701,9 +2913,32 @@ function initDragAndDrop() {
                   "X-CSRFToken": getCsrfToken(),
                   "X-Requested-With": "XMLHttpRequest"
                 },
-                body: JSON.stringify(result.value)
+                body: JSON.stringify(values)
               });
-              const payload = await response.json();
+              const payload = await response.json().catch(() => ({}));
+              return { response, payload };
+            }
+
+            try {
+              let { response, payload } = await postCreateSlot(result.value);
+
+              // Room not found → ask the user whether to proceed with the typed
+              // room name (teacher slot locked, but no room created/reserved).
+              if (payload && payload.room_missing) {
+                const confirmMissing = await Swal.fire({
+                  icon: "warning",
+                  title: "Room not found",
+                  html: `Room <b>"${payload.room_number || result.value.room_number}"</b> does not exist in your Rooms.<br><br>Do you want to proceed with this room name anyway?<br><span style="font-size:13px;color:#64748b;">The teacher's slot will be locked, but no new room will be created and no room will be reserved.</span>`,
+                  showCancelButton: true,
+                  confirmButtonText: "Yes, proceed",
+                  cancelButtonText: "No",
+                  confirmButtonColor: "#d97706",
+                  cancelButtonColor: "#64748b",
+                });
+                if (!confirmMissing.isConfirmed) return;
+                ({ response, payload } = await postCreateSlot(Object.assign({}, result.value, { allow_missing_room: true })));
+              }
+
               if (!response.ok || !payload.ok) {
                 Swal.fire({ icon: "error", title: "Create Slot Failed", text: payload.message || "Could not create slot.", confirmButtonColor: "#4e73df" });
                 return;
@@ -3031,12 +3266,13 @@ function initDragAndDrop() {
 <div id="section-view">
 {% if not prefill_mode %}
 <div class="export-group">
-  <button type="button" class="fullpage-pdf-btn" id="section-pdf-btn" onclick="downloadViewPdf('section')">
+  <a href="{% url 'timetable_download_center' index %}" class="fullpage-pdf-btn" id="section-pdf-btn" style="text-decoration:none;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    <span id="section-pdf-label">Download Section PDF</span>
-  </button>
-  <button type="button" class="fullpage-excel-btn" onclick="downloadViewExcel('section')">
-    Download Section Excel
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('section')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
   </button>
 </div>
 {% endif %}
@@ -3064,12 +3300,12 @@ function initDragAndDrop() {
   </h2>
 
   {% if prefill_mode %}
-  <div class="prefill-delete-dropzone" data-delete-zone="true" data-section-id="{{ table.section.section_id }}">
+  <div class="prefill-delete-dropzone export-exclude" data-delete-zone="true" data-section-id="{{ table.section.section_id }}">
     Drop a created slot here to delete it from this prefill.
   </div>
   {% endif %}
 
-  <div class="section-parking-wrap">
+  <div class="section-parking-wrap export-exclude">
     <div class="section-parking-panel">
       <div class="section-parking-header">
         <div class="section-parking-title">
@@ -3088,7 +3324,7 @@ function initDragAndDrop() {
             <span class="parking-item__tag">{% if parked.manual_entry %}Created Slot{% elif parked.move_type == 'lab' %}Parked Lab{% else %}Parked Class{% endif %}</span>
             <div class="parking-item__title">{{ parked.subject_name }}{% if parked.move_type == 'lab' %} Lab{% endif %}</div>
             <div class="parking-item__teacher">{{ parked.teacher_name }}{% if parked.second_teacher_name %} + {{ parked.second_teacher_name }}{% endif %}</div>
-            <div class="parking-item__meta">{% if parked.batch_label %}{{ parked.batch_label }} · {% endif %}{% if parked.original_room %}Room {{ parked.original_room.r_number }}{% endif %}</div>
+            <div class="parking-item__meta">{% if parked.batch_label %}{{ parked.batch_label }} · {% endif %}{% if parked.original_room %}Room {{ parked.original_room.r_number }}{% elif parked.room_number %}Room {{ parked.room_number }}{% endif %}</div>
             {% if prefill_mode and parked.manual_entry %}
             <button type="button" class="manual-slot-edit-btn">Edit</button>
             {% endif %}
@@ -3103,7 +3339,7 @@ function initDragAndDrop() {
   </div>
 
   {% if table.missed_labs %}
-    <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
+    <div class="export-exclude" style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
       <div style="font-weight: 700; color: #9a3412; margin-bottom: 8px;">Missed Labs</div>
       <div style="display: flex; flex-wrap: wrap; gap: 8px;">
         {% for lab in table.missed_labs %}
@@ -3121,7 +3357,7 @@ function initDragAndDrop() {
   {% endif %}
 
   {% if table.subject_counts %}
-    <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #f7fbff; border: 1px solid #d6e9f8; border-radius: 10px;">
+    <div class="export-exclude" style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #f7fbff; border: 1px solid #d6e9f8; border-radius: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
         <div style="font-weight: 700; color: #0d47a1;">
         Subjects Scheduled
@@ -3159,7 +3395,7 @@ function initDragAndDrop() {
   {% endif %}
 
   {% if not prefill_mode %}
-  <div style="text-align:center; margin-bottom: 15px;">
+  <div class="export-exclude" style="text-align:center; margin-bottom: 15px;">
       <a href="/add_slot/{{ table.section.section_id }}/" class="action-button btn-add"
          style="padding:6px 14px; font-size:13px;">
          + Add Slot
@@ -3207,10 +3443,10 @@ function initDragAndDrop() {
                 </div>
               {% endfor %}
               {% for cls in cell.classes %}
-                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} draggable-slot-item" style="grid-column: {{ cls.display_grid_start|default:1 }} / span {{ cls.display_grid_span|default:1 }};" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cls.display_slot_number|default:cell.slot_number }}" data-manual-entry="{{ cls.manual_entry|yesno:'true,false' }}" data-manual-slot-uid="{{ cls.manual_slot_uid|default:cls.section_id }}" data-update-url="{% url 'generated_update_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-delete-url="{% url 'generated_delete_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-subject-text="{{ cls.subject.subject_name }}" data-teacher-uid="{{ cls.instructor.uid }}" data-secondary-teacher-uid="{% for co_teacher in cls.co_instructors %}{% if forloop.first %}{{ co_teacher.uid }}{% endif %}{% endfor %}" data-room-number="{{ cls.room.r_number }}" data-duration="{{ cls.duration|default:1 }}">
+                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} draggable-slot-item" style="grid-column: {{ cls.display_grid_start|default:1 }} / span {{ cls.display_grid_span|default:1 }};" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cls.display_slot_number|default:cell.slot_number }}" data-manual-entry="{{ cls.manual_entry|yesno:'true,false' }}" data-manual-slot-uid="{{ cls.manual_slot_uid|default:cls.section_id }}" data-update-url="{% url 'generated_update_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-delete-url="{% url 'generated_delete_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-subject-text="{{ cls.subject.subject_name }}" data-teacher-uid="{{ cls.instructor.uid }}" data-secondary-teacher-uid="{% for co_teacher in cls.co_instructors %}{% if forloop.first %}{{ co_teacher.uid }}{% endif %}{% endfor %}" data-room-number="{{ cls.room.r_number|default:cls.room_label }}" data-duration="{{ cls.duration|default:1 }}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   {{ cls.instructor.name }}{% for co_teacher in cls.co_instructors %}<br>+ {{ co_teacher.name }}{% endfor %}<br>
-                  {{ cls.room.r_number }}
+                  {{ cls.room.r_number|default:cls.room_label }}
                   {% if prefill_mode and cls.manual_entry %}<br><button type="button" class="manual-slot-edit-btn">Edit</button>{% endif %}
                 </div>
               {% endfor %}
@@ -3240,10 +3476,10 @@ function initDragAndDrop() {
                   </div>
                 {% endfor %}
                 {% for cls in cell.classes %}
-                  <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} draggable-slot-item" style="grid-column: {{ cls.display_grid_start|default:1 }} / span {{ cls.display_grid_span|default:1 }};" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cls.display_slot_number|default:cell.slot_number }}" data-manual-entry="{{ cls.manual_entry|yesno:'true,false' }}" data-manual-slot-uid="{{ cls.manual_slot_uid|default:cls.section_id }}" data-update-url="{% url 'generated_update_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-delete-url="{% url 'generated_delete_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-subject-text="{{ cls.subject.subject_name }}" data-teacher-uid="{{ cls.instructor.uid }}" data-secondary-teacher-uid="{% for co_teacher in cls.co_instructors %}{% if forloop.first %}{{ co_teacher.uid }}{% endif %}{% endfor %}" data-room-number="{{ cls.room.r_number }}" data-duration="{{ cls.duration|default:1 }}">
+                  <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} draggable-slot-item" style="grid-column: {{ cls.display_grid_start|default:1 }} / span {{ cls.display_grid_span|default:1 }};" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cls.display_slot_number|default:cell.slot_number }}" data-manual-entry="{{ cls.manual_entry|yesno:'true,false' }}" data-manual-slot-uid="{{ cls.manual_slot_uid|default:cls.section_id }}" data-update-url="{% url 'generated_update_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-delete-url="{% url 'generated_delete_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-subject-text="{{ cls.subject.subject_name }}" data-teacher-uid="{{ cls.instructor.uid }}" data-secondary-teacher-uid="{% for co_teacher in cls.co_instructors %}{% if forloop.first %}{{ co_teacher.uid }}{% endif %}{% endfor %}" data-room-number="{{ cls.room.r_number|default:cls.room_label }}" data-duration="{{ cls.duration|default:1 }}">
                     <strong>{{ cls.subject.subject_name }}</strong><br>
                     {{ cls.instructor.name }}{% for co_teacher in cls.co_instructors %}<br>+ {{ co_teacher.name }}{% endfor %}<br>
-                    {{ cls.room.r_number }}
+                    {{ cls.room.r_number|default:cls.room_label }}
                     {% if prefill_mode and cls.manual_entry %}<br><button type="button" class="manual-slot-edit-btn">Edit</button>{% endif %}
                   </div>
                 {% endfor %}
@@ -3313,10 +3549,10 @@ function initDragAndDrop() {
             <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               <div class="{% if cell.use_parallel_grid %}parallel-item-grid{% endif %}" {% if cell.use_parallel_grid %}style="grid-template-columns: repeat({{ cell.display_grid_columns|default:cell.colspan }}, minmax(0, 1fr));"{% endif %}>
               {% for cls in cell.classes %}
-                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} draggable-slot-item" style="{% if cell.use_parallel_grid %}grid-column: {{ cls.display_grid_start|default:1 }} / span {{ cls.display_grid_span|default:1 }};{% else %}width: {{ cls.display_width_percent|default:'100' }}% !important;{% endif %}" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cls.display_slot_number|default:cell.slot_number }}" data-manual-entry="{{ cls.manual_entry|yesno:'true,false' }}" data-manual-slot-uid="{{ cls.manual_slot_uid|default:cls.section_id }}" data-update-url="{% url 'generated_update_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-delete-url="{% url 'generated_delete_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-subject-text="{{ cls.subject.subject_name }}" data-teacher-uid="{{ cls.instructor.uid }}" data-secondary-teacher-uid="{% for co_teacher in cls.co_instructors %}{% if forloop.first %}{{ co_teacher.uid }}{% endif %}{% endfor %}" data-room-number="{{ cls.room.r_number }}" data-duration="{{ cls.duration|default:1 }}">
+                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} draggable-slot-item" style="{% if cell.use_parallel_grid %}grid-column: {{ cls.display_grid_start|default:1 }} / span {{ cls.display_grid_span|default:1 }};{% else %}width: {{ cls.display_width_percent|default:'100' }}% !important;{% endif %}" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cls.display_slot_number|default:cell.slot_number }}" data-manual-entry="{{ cls.manual_entry|yesno:'true,false' }}" data-manual-slot-uid="{{ cls.manual_slot_uid|default:cls.section_id }}" data-update-url="{% url 'generated_update_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-delete-url="{% url 'generated_delete_manual_slot_item' cls.manual_slot_uid|default:cls.section_id %}" data-subject-text="{{ cls.subject.subject_name }}" data-teacher-uid="{{ cls.instructor.uid }}" data-secondary-teacher-uid="{% for co_teacher in cls.co_instructors %}{% if forloop.first %}{{ co_teacher.uid }}{% endif %}{% endfor %}" data-room-number="{{ cls.room.r_number|default:cls.room_label }}" data-duration="{{ cls.duration|default:1 }}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   {{ cls.instructor.name }}{% for co_teacher in cls.co_instructors %}<br>+ {{ co_teacher.name }}{% endfor %}<br>
-                  {{ cls.room.r_number }}
+                  {{ cls.room.r_number|default:cls.room_label }}
                   {% if prefill_mode and cls.manual_entry %}<br><button type="button" class="manual-slot-edit-btn">Edit</button>{% endif %}
                 </div>
               {% endfor %}
@@ -3394,12 +3630,13 @@ function initDragAndDrop() {
     <div class="room-view-toolbar__hint">Clean room-wise layout with export-ready separation</div>
   </div>
   <div class="export-group" style="margin:0;">
-    <button class="fullpage-pdf-btn" type="button" onclick="downloadViewPdf('room')">
+    <a href="{% url 'timetable_download_center' index %}" class="fullpage-pdf-btn" style="text-decoration:none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span id="room-pdf-label">Download Room PDF</span>
-    </button>
-    <button type="button" class="fullpage-excel-btn" onclick="downloadViewExcel('room')">
-      Download Room Excel
+      <span>Proceed to Download</span>
+    </a>
+    <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('room')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>Download for Evaluation</span>
     </button>
   </div>
 </div>
@@ -3515,12 +3752,13 @@ function initDragAndDrop() {
 {# ===================== TEACHER WORKLOAD SUMMARY ===================== #}
 <div id="workload-view" style="display:none;" {% if demo_mode %}class="demo-locked-surface"{% endif %}>
 <div class="export-group">
-  <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('workload')">
+  <a href="{% url 'timetable_download_center' index %}" class="fullpage-pdf-btn" style="text-decoration:none;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download Workload PDF
-  </button>
-  <button type="button" class="fullpage-excel-btn" onclick="downloadViewExcel('workload')">
-    Download Workload Excel
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('workload')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
   </button>
 </div>
 <h1 class="secHead" style="margin-top: 20px;">Teacher Workload Summary</h1>
@@ -3586,18 +3824,43 @@ function initDragAndDrop() {
 {# ===================== TEACHER TIMETABLES ===================== #}
 <div id="teacher-view" style="display:none;" {% if demo_mode %}class="demo-locked-surface"{% endif %}>
 <div class="export-group">
-  <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('teacher')">
+  <a href="{% url 'timetable_download_center' index %}" class="fullpage-pdf-btn" style="text-decoration:none;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    <span id="teacher-pdf-label">Download Teacher PDF</span>
-  </button>
-  <button type="button" class="fullpage-excel-btn" onclick="downloadViewExcel('teacher')">
-    Download Teacher Excel
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('teacher')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
   </button>
 </div>
 <h1 class="secHead" style="margin-top: 20px;">Teacher Timetables</h1>
 
+<div class="ta-toolbar">
+  <button type="button" id="taToggleBtn" class="ta-btn" onclick="toggleTeacherAnalysis()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 4-5"/></svg>
+    <span>Teacher Analysis</span>
+  </button>
+
+  <div id="taPanel" class="ta-panel" style="display:none;">
+    <div class="ta-panel__row">
+      <label class="ta-panel__label" for="taDeptSelect">Department</label>
+      <select id="taDeptSelect" class="ta-select" onchange="applyTeacherAnalysis()">
+        {% for dept in departments %}
+        <option value="{{ dept.code }}">{{ dept.name }} ({{ dept.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="ta-panel__row ta-panel__modes">
+      <button type="button" class="ta-mode-btn is-active" data-ta-mode="home" onclick="setTeacherAnalysisMode('home')">Home department teachers</button>
+      <button type="button" class="ta-mode-btn" data-ta-mode="cross" onclick="setTeacherAnalysisMode('cross')">Cross department teachers</button>
+      <button type="button" class="ta-mode-btn ta-mode-btn--reset" data-ta-mode="all" onclick="setTeacherAnalysisMode('all')">Show all</button>
+    </div>
+    <div id="taSummary" class="ta-summary"></div>
+  </div>
+</div>
+
 {% for ttable in teacher_tables %}
-  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface" data-dept-codes="{{ ttable.dept_codes|join:',' }}">
+  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface ta-card" data-dept-codes="{{ ttable.dept_codes|join:',' }}" data-home-dept="{{ ttable.home_dept_code }}" data-teach-depts="{{ ttable.dept_codes|join:',' }}">
   <div class="export-watermark">
     <div class="export-watermark__grid">
       <span>SmartScheduler</span>
@@ -3626,6 +3889,9 @@ function initDragAndDrop() {
   </h2>
   {% if ttable.dept_names %}
   <div style="text-align:center; margin:-6px 0 10px; font-size:12px; color:#28506e; font-weight:700;">Department: {{ ttable.dept_names|join:", " }}</div>
+  {% endif %}
+  {% if ttable.home_dept_name %}
+  <div class="ta-home-label" style="text-align:center; margin:-4px 0 10px; font-size:11px; color:#7a5b00; font-weight:700;">Home Dept: {{ ttable.home_dept_name }}</div>
   {% endif %}
 
   <table class="table2">
@@ -3699,7 +3965,7 @@ function initDragAndDrop() {
                 <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% endif %}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   Section: {{ cls.section }}<br>
-                  {{ cls.room.r_number }}
+                  {{ cls.room.r_number|default:cls.room_label }}
                 </div>
               {% endfor %}
             </td>
@@ -3718,6 +3984,88 @@ function initDragAndDrop() {
 {% endfor %}
 </div>
 {% endif %}
+
+<script>
+(function () {
+  var taMode = "home";
+
+  function taCards() {
+    return Array.prototype.slice.call(document.querySelectorAll("#teacher-view .ta-card"));
+  }
+  function taSplit(value) {
+    return (value || "")
+      .split(",")
+      .map(function (s) { return s.trim().toLowerCase(); })
+      .filter(Boolean);
+  }
+
+  window.toggleTeacherAnalysis = function () {
+    var panel = document.getElementById("taPanel");
+    var btn = document.getElementById("taToggleBtn");
+    if (!panel) return;
+    var open = panel.style.display === "none" || panel.style.display === "";
+    panel.style.display = open ? "block" : "none";
+    if (btn) btn.classList.toggle("is-open", open);
+    if (open) window.applyTeacherAnalysis();
+    else window.resetTeacherAnalysis();
+  };
+
+  window.setTeacherAnalysisMode = function (mode) {
+    taMode = mode;
+    document.querySelectorAll(".ta-mode-btn").forEach(function (b) {
+      b.classList.toggle("is-active", b.getAttribute("data-ta-mode") === mode);
+    });
+    window.applyTeacherAnalysis();
+  };
+
+  window.resetTeacherAnalysis = function () {
+    taCards().forEach(function (card) { card.classList.remove("ta-hidden"); });
+    var summary = document.getElementById("taSummary");
+    if (summary) summary.textContent = "";
+  };
+
+  window.applyTeacherAnalysis = function () {
+    var select = document.getElementById("taDeptSelect");
+    var summary = document.getElementById("taSummary");
+    var dept = select ? (select.value || "").trim().toLowerCase() : "";
+    var cards = taCards();
+
+    if (taMode === "all") {
+      window.resetTeacherAnalysis();
+      if (summary) summary.textContent = "Showing all " + cards.length + " teacher timetable(s).";
+      return;
+    }
+
+    var shown = 0;
+    cards.forEach(function (card) {
+      var home = (card.getAttribute("data-home-dept") || "").trim().toLowerCase();
+      var taught = taSplit(card.getAttribute("data-teach-depts"));
+      var visible;
+      if (taMode === "home") {
+        // Teachers who belong to the selected department.
+        visible = home === dept;
+      } else {
+        // Cross department: a home-dept teacher who also teaches elsewhere, OR
+        // an outside teacher who comes to teach in the selected department.
+        var homeHereGoneOut = home === dept && taught.some(function (c) { return c !== dept; });
+        var outsiderCameIn = home !== dept && taught.indexOf(dept) !== -1;
+        visible = homeHereGoneOut || outsiderCameIn;
+      }
+      card.classList.toggle("ta-hidden", !visible);
+      if (visible) shown += 1;
+    });
+
+    if (summary) {
+      var deptLabel = select && select.options.length ? select.options[select.selectedIndex].text : dept;
+      if (taMode === "home") {
+        summary.textContent = shown + " teacher(s) belong to " + deptLabel + ".";
+      } else {
+        summary.textContent = shown + " cross-department teacher(s) for " + deptLabel + ".";
+      }
+    }
+  };
+})();
+</script>
 {% endblock %}
 
 <script src="{% static 'chatbot.js' %}"></script>

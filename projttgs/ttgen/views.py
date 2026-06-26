@@ -47,6 +47,7 @@ from .superadmin_views import (  # noqa: F401
     superadmin_export_pdf,
     superadmin_room_analytics,
     superadmin_teacher_detail,
+    superadmin_teacher_workload,
     superadmin_saved_list,
     superadmin_saved_detail,
     superadmin_move_slot,
@@ -358,24 +359,18 @@ def _has_generate_credit(user):
 
 
 def _has_edit_delete_access(user):
-    if _BYPASS_ACCESS_CHECKS:
-        return True
-    access_plan = _get_user_access_plan(user)
-    return bool(access_plan and access_plan.is_active and access_plan.can_edit_delete)
+    # Feature locks removed: edit/delete is available to everyone.
+    return True
 
 
 def _has_substitute_access(user):
-    if _BYPASS_ACCESS_CHECKS:
-        return True
-    access_plan = _get_user_access_plan(user)
-    return bool(access_plan and access_plan.is_active and access_plan.can_substitute)
+    # Feature locks removed: substitute is available to everyone.
+    return True
 
 
 def _has_drag_drop_access(user):
-    if _BYPASS_ACCESS_CHECKS:
-        return True
-    access_plan = _get_user_access_plan(user)
-    return bool(access_plan and access_plan.is_active and access_plan.can_drag_drop)
+    # Feature locks removed: drag-and-drop is available to everyone.
+    return True
 
 
 def _consume_generation_credit(user):
@@ -477,7 +472,12 @@ def _wrap_generate_timetables(view_func):
             if access_source != "pass_key":
                 if not _consume_generation_credit(request.user):
                     return _redirect_to_subscription(request)
-        return view_func(request, *args, **kwargs)
+        user_id = request.user.id
+        public_core._gen_log_start(user_id)
+        try:
+            return view_func(request, *args, **kwargs)
+        finally:
+            public_core._gen_log_finish(user_id, "[SmartScheduler] Generation run finished.")
 
     return wrapped
 

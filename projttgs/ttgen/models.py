@@ -172,6 +172,13 @@ class Instructor(models.Model):
         validators=[MinValueValidator(1)],
         default=12,
     )
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        related_name="instructors",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [
@@ -695,3 +702,98 @@ class CoordinatorAppointment(models.Model):
 
     def __str__(self):
         return f"{self.name} — {self.role}"
+
+
+class UserSession(models.Model):
+    """One login session for a coordinator/HOD account.
+
+    Records when they logged in, when they were last seen active, and when
+    they logged out (if they did), so the Super Admin can see login time and
+    total session duration per user. Never touches the scheduling algorithm.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="login_sessions",
+    )
+    username = models.CharField(max_length=200, blank=True, default="")
+    email = models.CharField(max_length=254, blank=True, default="")
+    session_key = models.CharField(max_length=60, blank=True, default="", db_index=True)
+    ip = models.CharField(max_length=60, blank=True, default="")
+    user_agent = models.CharField(max_length=300, blank=True, default="")
+    login_at = models.DateTimeField(default=timezone.now)
+    last_seen = models.DateTimeField(default=timezone.now)
+    logout_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-login_at"]
+
+    @property
+    def ended_at(self):
+        return self.logout_at or self.last_seen
+
+    @property
+    def is_open(self):
+        return self.logout_at is None
+
+    @property
+    def duration_seconds(self):
+        return max(0, int((self.ended_at - self.login_at).total_seconds()))
+
+    def __str__(self):
+        return f"{self.username or 'user'} @ {self.login_at:%d %b %Y %H:%M}"
+
+
+class ActivityLog(models.Model):
+    """A single auditable action performed by a user.
+
+    Powers the Super Admin "Recent Activity" feed: who did what, when, how
+    many times, including drag-and-drop swaps, deletes, saves and exports.
+    """
+    ACTIONS = [
+        ("login", "Logged in"),
+        ("logout", "Logged out"),
+        ("generate", "Generated timetable"),
+        ("save", "Saved timetable"),
+        ("delete", "Deleted"),
+        ("export", "Exported"),
+        ("move", "Moved slot (drag & drop)"),
+        ("park", "Parked slot"),
+        ("restore", "Restored slot"),
+        ("add", "Added slot"),
+        ("edit", "Edited slot"),
+        ("substitute", "Substituted teacher"),
+        ("publish", "Published"),
+        ("unpublish", "Unpublished"),
+        ("other", "Activity"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="activity_logs",
+    )
+    username = models.CharField(max_length=200, blank=True, default="")
+    email = models.CharField(max_length=254, blank=True, default="")
+    action = models.CharField(max_length=20, choices=ACTIONS, default="other", db_index=True)
+    summary = models.CharField(max_length=300, blank=True, default="")
+    detail = models.TextField(blank=True, default="")
+    path = models.CharField(max_length=300, blank=True, default="")
+    method = models.CharField(max_length=8, blank=True, default="")
+    session_key = models.CharField(max_length=60, blank=True, default="")
+    ip = models.CharField(max_length=60, blank=True, default="")
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["action", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.username or 'user'}: {self.action} @ {self.created_at:%d %b %H:%M}"

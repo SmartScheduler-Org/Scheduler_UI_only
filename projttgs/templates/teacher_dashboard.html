@@ -5,87 +5,257 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'teacher_portal.css' %}">
 
-<div class="teacher-portal-shell">
-  <div class="teacher-portal-orb teacher-portal-orb--one"></div>
-  <div class="teacher-portal-orb teacher-portal-orb--two"></div>
-  <div class="teacher-portal-orb teacher-portal-orb--three"></div>
-  <div class="teacher-portal-grid"></div>
+<div class="tdash">
+  <div class="tdash-orb tdash-orb--1"></div>
+  <div class="tdash-orb tdash-orb--2"></div>
 
-  <section class="teacher-landing-intro">
-    <div class="teacher-landing-badge">SmartScheduler</div>
-    <div class="teacher-landing-greeting">Welcome, {{ teacher_display_name }} 👋</div>
-    <h1 class="teacher-landing-title">Welcome To <span>SmartScheduler</span></h1>
-    <p class="teacher-landing-copy">
-      Choose the page you want to open. Your teacher section is split into three focused pages for profile details, published timetable access, and your own teacher-only timetable.
-    </p>
-  </section>
+  <!-- TOP BAR -->
+  <header class="tdash-topbar">
+    <div class="tdash-topbar__left">
+      <div class="tdash-badge">Teacher Dashboard</div>
+      <h1 class="tdash-hello">Hi, {{ teacher_display_name }} 👋</h1>
+      <p class="tdash-sub">Here is your personal teaching schedule for the week.</p>
+    </div>
+    <div class="tdash-topbar__right">
+      <button type="button" id="tdashNotify" class="tdash-notify" title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span>Notify</span>
+        <span class="tdash-notify__dot"></span>
+      </button>
+    </div>
+  </header>
 
   {% if messages %}
-  <div class="teacher-alert-stack">
+  <div class="tdash-alerts">
     {% for message in messages %}
-    <div class="teacher-alert {% if 'error' in message.tags %}teacher-alert--error{% else %}teacher-alert--success{% endif %}">
-      {{ message }}
-    </div>
+    <div class="tdash-alert {% if 'error' in message.tags %}is-error{% else %}is-ok{% endif %}">{{ message }}</div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <section class="teacher-card-grid">
-    <a href="{% url 'teacher_profile_page' %}" class="teacher-portal-card teacher-portal-card--cyan">
-      <div class="teacher-portal-card__glow"></div>
-      <div class="teacher-portal-card__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
+  <!-- IDENTITY + STATS -->
+  <section class="tdash-overview">
+    <div class="tdash-id-card">
+      <div class="tdash-id-avatar">{{ teacher_display_name|slice:":1"|upper }}</div>
+      <div class="tdash-id-meta">
+        <h2>{{ teacher_display_name }}</h2>
+        <div class="tdash-id-role">{{ teacher_designation }}</div>
+        <ul class="tdash-id-list">
+          <li><span>Teacher Code</span><strong>{{ teacher_code }}</strong></li>
+          <li><span>Department</span><strong>{{ teacher_department }}{% if teacher_department_code %} ({{ teacher_department_code }}){% endif %}</strong></li>
+          <li><span>Email</span><strong>{{ teacher_email|default:"—" }}</strong></li>
+        </ul>
       </div>
-      <div class="teacher-portal-card__content">
-        <h2 class="teacher-portal-card__title">Profile</h2>
-        <div class="teacher-portal-card__status">{{ profile_card_state }}</div>
-        <div class="teacher-portal-card__arrow">&#8594;</div>
-      </div>
-    </a>
+    </div>
 
-    <a href="{% url 'teacher_published_timetable' %}" class="teacher-portal-card teacher-portal-card--pink">
-      <div class="teacher-portal-card__glow"></div>
-      <div class="teacher-portal-card__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19h16"/>
-          <path d="M4 5h16"/>
-          <path d="M4 12h16"/>
-          <path d="M8 5v14"/>
-          <path d="M16 5v14"/>
-        </svg>
+    <div class="tdash-stats">
+      <div class="tdash-stat tdash-stat--cyan">
+        <div class="tdash-stat__num">{{ class_count }}</div>
+        <div class="tdash-stat__label">Classes / Week</div>
       </div>
-      <div class="teacher-portal-card__content">
-        <h2 class="teacher-portal-card__title">Published Timetable</h2>
-        <div class="teacher-portal-card__status">{{ published_card_state }}</div>
-        <div class="teacher-portal-card__arrow">&#8594;</div>
+      <div class="tdash-stat tdash-stat--violet">
+        <div class="tdash-stat__num">{{ teacher_workload.lectures }}</div>
+        <div class="tdash-stat__label">Lectures</div>
       </div>
-    </a>
-
-    <a href="{% url 'teacher_my_timetable' %}" class="teacher-portal-card teacher-portal-card--green">
-      <div class="teacher-portal-card__glow"></div>
-      <div class="teacher-portal-card__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <path d="M16 2v4"/>
-          <path d="M8 2v4"/>
-          <path d="M3 10h18"/>
-          <path d="M8 14h.01"/>
-          <path d="M12 14h.01"/>
-          <path d="M16 14h.01"/>
-          <path d="M8 18h.01"/>
-          <path d="M12 18h.01"/>
-          <path d="M16 18h.01"/>
-        </svg>
+      <div class="tdash-stat tdash-stat--pink">
+        <div class="tdash-stat__num">{{ teacher_workload.labs }}</div>
+        <div class="tdash-stat__label">Labs</div>
       </div>
-      <div class="teacher-portal-card__content">
-        <h2 class="teacher-portal-card__title">My Timetable</h2>
-        <div class="teacher-portal-card__status">{{ timetable_card_state }}</div>
-        <div class="teacher-portal-card__arrow">&#8594;</div>
+      <div class="tdash-stat tdash-stat--green">
+        <div class="tdash-stat__num">{{ teacher_subject_count }}</div>
+        <div class="tdash-stat__label">Subjects</div>
       </div>
-    </a>
+      <div class="tdash-stat tdash-stat--amber">
+        <div class="tdash-stat__num">{{ rooms_count }}</div>
+        <div class="tdash-stat__label">Rooms / Labs</div>
+      </div>
+    </div>
   </section>
+
+  <!-- WEEKLY TIMETABLE -->
+  <section class="tdash-section">
+    <div class="tdash-section__head">
+      <h3>Weekly Timetable</h3>
+      {% if active_timetable %}<span class="tdash-chip">{% if active_timetable.is_published %}Published{% else %}Latest{% endif %}</span>{% endif %}
+    </div>
+
+    {% if my_teacher_table %}
+    <div class="tdash-table-wrap">
+      <table class="teacher-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>{{ slot_labels.1 }}</th>
+            <th>{{ slot_labels.2 }}</th>
+            <th>{{ slot_labels.3 }}</th>
+            <th>{{ slot_labels.4 }}</th>
+            <th>{{ slot_labels.5 }}</th>
+            <th>{{ slot_labels.6 }}</th>
+            <th>{{ slot_labels.7 }}</th>
+            <th>{{ slot_labels.8 }}</th>
+            <th>{{ slot_labels.9 }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in my_teacher_table.rows %}
+          <tr>
+            <th class="teacher-table__day">{{ row.day }}</th>
+            {% for cell in row.cells %}
+              {% if cell.type == "lunch" %}
+              <td class="teacher-table__lunch">Lunch</td>
+              {% elif cell.type == "lab" %}
+              <td colspan="{{ cell.colspan }}" class="teacher-table__lab">
+                {% for lab in cell.labs %}
+                <div class="teacher-table__block">
+                  <strong>{{ lab.subject.subject_name }} Lab</strong>
+                  <span>Section: {{ lab.section }}</span>
+                  <span>Batch {{ lab.batch }}/{{ lab.total_batches }} - {{ lab.room.r_number }}</span>
+                </div>
+                {% endfor %}
+              </td>
+              {% elif cell.type == "class" %}
+              <td class="teacher-table__class">
+                {% for cls in cell.classes %}
+                <div class="teacher-table__block">
+                  <strong>{{ cls.subject.subject_name }}</strong>
+                  <span>Section: {{ cls.section }}</span>
+                  <span>{{ cls.room.r_number }}</span>
+                </div>
+                {% endfor %}
+              </td>
+              {% else %}
+              <td class="teacher-table__empty">Free</td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="tdash-empty">
+      No classes are assigned to you in the latest timetable yet. Once your coordinator publishes a timetable with your classes, it will appear here.
+    </div>
+    {% endif %}
+  </section>
+
+  <div class="tdash-split">
+    <!-- DAY-WISE SCHEDULE -->
+    <section class="tdash-section tdash-section--flex">
+      <div class="tdash-section__head"><h3>Teaching Schedule</h3></div>
+      {% if schedule_rows %}
+      <div class="tdash-schedule">
+        {% for r in schedule_rows %}
+        <div class="tdash-srow {% if r.type == 'Lab' %}is-lab{% endif %}">
+          <div class="tdash-srow__day">{{ r.day|slice:":3" }}</div>
+          <div class="tdash-srow__main">
+            <strong>{{ r.subject }}</strong>
+            <span>Section {{ r.section }} · Room {{ r.room }}</span>
+          </div>
+          <div class="tdash-srow__time">
+            <span class="tdash-srow__slot">{{ r.type }}</span>
+            <span>{{ r.time }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="tdash-empty">No scheduled classes to show.</div>
+      {% endif %}
+    </section>
+
+    <!-- SUBJECTS -->
+    <section class="tdash-section tdash-section--flex">
+      <div class="tdash-section__head"><h3>My Subjects</h3></div>
+      {% if teacher_subjects %}
+      <ul class="tdash-subjects">
+        {% for s in teacher_subjects %}
+        <li>
+          <span class="tdash-subjects__dot"></span>
+          <div>
+            <strong>{{ s.subject_name }}</strong>
+            {% if s.subject_number %}<span>Code: {{ s.subject_number }}</span>{% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="tdash-empty">No subjects linked to your profile yet.</div>
+      {% endif %}
+    </section>
+  </div>
 </div>
+
+<style>
+.tdash{position:relative;max-width:1200px;margin:0 auto;padding:26px 18px 60px;font-family:'Poppins',sans-serif;}
+.tdash-orb{position:fixed;border-radius:50%;filter:blur(110px);z-index:0;pointer-events:none;}
+.tdash-orb--1{width:520px;height:520px;background:radial-gradient(circle,rgba(99,102,241,.28),transparent 70%);top:-160px;left:-120px;}
+.tdash-orb--2{width:560px;height:560px;background:radial-gradient(circle,rgba(236,72,153,.22),transparent 70%);bottom:-180px;right:-120px;}
+.tdash > *:not(.tdash-orb){position:relative;z-index:1;}
+.tdash-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:22px;}
+.tdash-badge{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#a78bfa;margin-bottom:.5rem;}
+.tdash-hello{font-size:1.9rem;font-weight:800;color:#fff;margin:0 0 .25rem;}
+.tdash-sub{color:#94a3b8;font-size:.9rem;margin:0;}
+.tdash-notify{position:relative;display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .15s,box-shadow .25s,background .2s;}
+.tdash-notify svg{width:18px;height:18px;}
+.tdash-notify:hover{transform:translateY(-2px);background:rgba(255,255,255,.1);box-shadow:0 12px 28px rgba(124,58,237,.28);}
+.tdash-notify__dot{position:absolute;top:9px;right:14px;width:8px;height:8px;border-radius:50%;background:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.25);}
+.tdash-alerts{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.tdash-alert{font-size:.85rem;padding:10px 14px;border-radius:10px;}
+.tdash-alert.is-error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fca5a5;}
+.tdash-alert.is-ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4);color:#86efac;}
+.tdash-overview{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:18px;margin-bottom:22px;}
+.tdash-id-card{display:flex;gap:16px;padding:20px;border-radius:20px;background:rgba(10,14,30,.72);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(14px);}
+.tdash-id-avatar{flex:0 0 56px;width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#6366f1,#ec4899);}
+.tdash-id-meta h2{font-size:1.15rem;font-weight:700;color:#fff;margin:0;}
+.tdash-id-role{font-size:.78rem;color:#a78bfa;font-weight:600;margin-bottom:10px;}
+.tdash-id-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.tdash-id-list li{display:flex;justify-content:space-between;gap:12px;font-size:.82rem;}
+.tdash-id-list span{color:#64748b;}
+.tdash-id-list strong{color:#e2e8f0;font-weight:600;text-align:right;}
+.tdash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;}
+.tdash-stat{padding:18px;border-radius:18px;border:1px solid rgba(255,255,255,.08);background:rgba(10,14,30,.72);backdrop-filter:blur(14px);}
+.tdash-stat__num{font-size:1.9rem;font-weight:800;line-height:1;color:#fff;}
+.tdash-stat__label{margin-top:6px;font-size:.74rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.tdash-stat--cyan .tdash-stat__num{color:#67e8f9;}
+.tdash-stat--violet .tdash-stat__num{color:#c4b5fd;}
+.tdash-stat--pink .tdash-stat__num{color:#f9a8d4;}
+.tdash-stat--green .tdash-stat__num{color:#86efac;}
+.tdash-stat--amber .tdash-stat__num{color:#fcd34d;}
+.tdash-section{padding:22px;border-radius:20px;background:rgba(10,14,30,.72);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(14px);margin-bottom:22px;}
+.tdash-section__head{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.tdash-section__head h3{font-size:1.1rem;font-weight:700;color:#fff;margin:0;}
+.tdash-chip{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#86efac;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.3);padding:3px 10px;border-radius:999px;}
+.tdash-table-wrap{overflow-x:auto;}
+.tdash-empty{padding:26px;text-align:center;color:#94a3b8;font-size:.9rem;border:1px dashed rgba(255,255,255,.14);border-radius:14px;}
+.tdash-split{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;align-items:start;}
+.tdash-section--flex{margin-bottom:0;}
+.tdash-schedule{display:flex;flex-direction:column;gap:10px;max-height:460px;overflow-y:auto;}
+.tdash-srow{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-left:3px solid #6366f1;}
+.tdash-srow.is-lab{border-left-color:#ec4899;}
+.tdash-srow__day{flex:0 0 42px;font-weight:700;color:#a5b4fc;font-size:.82rem;text-transform:uppercase;}
+.tdash-srow.is-lab .tdash-srow__day{color:#f9a8d4;}
+.tdash-srow__main{flex:1;min-width:0;}
+.tdash-srow__main strong{display:block;color:#fff;font-size:.9rem;font-weight:600;}
+.tdash-srow__main span{color:#94a3b8;font-size:.78rem;}
+.tdash-srow__time{text-align:right;}
+.tdash-srow__slot{display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;color:#cbd5e1;}
+.tdash-srow__time span:last-child{color:#94a3b8;font-size:.76rem;}
+.tdash-subjects{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;max-height:460px;overflow-y:auto;}
+.tdash-subjects li{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);}
+.tdash-subjects__dot{flex:0 0 10px;width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#ec4899);}
+.tdash-subjects strong{display:block;color:#fff;font-size:.88rem;font-weight:600;}
+.tdash-subjects span{color:#94a3b8;font-size:.76rem;}
+@media(max-width:900px){.tdash-overview{grid-template-columns:1fr;}.tdash-split{grid-template-columns:1fr;}.tdash-section--flex{margin-bottom:22px;}}
+</style>
+
+<script>
+(function(){
+  var btn = document.getElementById('tdashNotify');
+  if(btn){ btn.addEventListener('click', function(){ /* UI only — no action yet */ }); }
+})();
+</script>
 {% endblock %}

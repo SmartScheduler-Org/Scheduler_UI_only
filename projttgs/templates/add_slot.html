@@ -4,12 +4,26 @@
 <head>
 <title>Add Slot</title>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<style>
+  .custom-fields { display: none; }
+  .mode-active .custom-fields { display: block; }
+  .mode-active .db-fields { display: none; }
+  .hint { font-size: 0.85rem; color: #6c757d; }
+  .card-soft { border: 1px solid #e3e3e3; border-radius: 8px; }
+</style>
 </head>
 <body class="p-4">
 
 <h2>Add New Slot</h2>
 
-<form method="POST">
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} py-2">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="POST"
+      {% if saved_id %}action="{% url 'saved_add_slot' tid=saved_id section=section_id %}"{% else %}action="{% url 'add_slot' section=section_id %}"{% endif %}>
   {% csrf_token %}
 
   <label>Day</label>
@@ -34,30 +48,94 @@
     <option value="9">Slot 9</option>
   </select>
 
-  <label class="mt-2">Subject</label>
-  <select name="subject" class="form-control">
-    {% for c in subjects %}
-      <option value="{{ c.pk }}">{{ c.subject_name }}</option>
-    {% endfor %}
-  </select>
+  <div class="custom-toggle-wrap my-3">
+    <div class="custom-control custom-switch">
+      <input type="checkbox" class="custom-control-input" id="allowCustom" name="allow_custom" value="1">
+      <label class="custom-control-label" for="allowCustom">Add non-existing entry (type subject / teacher / room manually)</label>
+    </div>
+    <small class="hint">Off: choose from saved records. On: type any name &mdash; it will be created and saved.</small>
+  </div>
 
-  <label class="mt-2">Teacher</label>
-  <select name="teacher" class="form-control">
-    {% for t in teachers %}
-      <option value="{{ t.pk }}">{{ t.name }}</option>
-    {% endfor %}
-  </select>
+  <div id="modeWrap">
+    <!-- DB dropdown fields -->
+    <div class="db-fields">
+      <label>Subject</label>
+      <select name="subject" class="form-control">
+        {% for c in subjects %}
+          <option value="{{ c.pk }}">{{ c.subject_name }}</option>
+        {% endfor %}
+      </select>
 
-  <label class="mt-2">Room</label>
-  <select name="room" class="form-control">
-    {% for r in rooms %}
-      <option value="{{ r.pk }}">{{ r.r_number }}</option>
-    {% endfor %}
-  </select>
+      <label class="mt-2">Teacher</label>
+      <select name="teacher" class="form-control">
+        {% for t in teachers %}
+          <option value="{{ t.pk }}">{{ t.name }}</option>
+        {% endfor %}
+      </select>
+
+      <label class="mt-2">Room</label>
+      <select name="room" class="form-control">
+        {% for r in rooms %}
+          <option value="{{ r.pk }}">{{ r.r_number }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Free-text (non-existing) fields -->
+    <div class="custom-fields">
+      <label>Subject name</label>
+      <input type="text" name="subject_name" class="form-control" placeholder="e.g. Special Topics">
+
+      <label class="mt-2">Teacher name</label>
+      <input type="text" name="teacher_name" class="form-control" placeholder="e.g. Dr. New Faculty">
+
+      <label class="mt-2">Room number</label>
+      <input type="text" name="room_number" class="form-control" placeholder="e.g. R-101">
+      <small class="hint">Leave a field blank to keep the selected dropdown value for that field.</small>
+    </div>
+  </div>
 
   <button class="btn btn-success mt-3">Add Slot</button>
 </form>
 
+<hr class="my-4">
+
+<!-- Rename an existing teacher (e.g. dummy -> real name) -->
+<div class="card-soft p-3">
+  <h5>Rename a teacher</h5>
+  <p class="hint mb-2">Created a dummy teacher? Rename it here &mdash; the new name updates everywhere.</p>
+  <form method="POST" action="{% url 'rename_instructor' %}" class="form-row align-items-end">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <div class="form-group col-md-5">
+      <label>Teacher</label>
+      <select name="instructor_id" class="form-control">
+        {% for t in teachers %}
+          <option value="{{ t.pk }}">{{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group col-md-5">
+      <label>New name</label>
+      <input type="text" name="new_name" class="form-control" placeholder="Real teacher name">
+    </div>
+    <div class="form-group col-md-2">
+      <button class="btn btn-outline-secondary btn-block">Rename</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function () {
+    var chk = document.getElementById("allowCustom");
+    var wrap = document.getElementById("modeWrap");
+    if (chk && wrap) {
+      chk.addEventListener("change", function () {
+        wrap.classList.toggle("mode-active", chk.checked);
+      });
+    }
+  })();
+</script>
 <script src="{% static 'chatbot.js' %}"></script>
 </body>
 </html>

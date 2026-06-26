@@ -1,0 +1,276 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartScheduler | Download Timetable</title>
+<style>
+:root{
+    --bg-top:#111827; --bg-bottom:#020617;
+    --card:rgba(20,20,32,0.94); --border:rgba(148,163,184,0.16);
+    --text:#f8fafc; --muted:rgba(226,232,240,0.72);
+    --cyan:#7dd3fc; --purple:#8b5cf6; --green:#10b981; --blue:#38bdf8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+    min-height:100vh; font-family:"Poppins","Segoe UI",sans-serif; color:var(--text);
+    background:radial-gradient(circle at top,var(--bg-top) 0,var(--bg-bottom) 48%,var(--bg-bottom) 100%);
+}
+.shell{width:min(960px,calc(100vw - 32px));margin:0 auto;padding:32px 0 64px;}
+.back{display:inline-flex;align-items:center;gap:8px;color:var(--cyan);font-size:13px;
+    font-weight:600;text-decoration:none;margin-bottom:26px;opacity:.78;letter-spacing:.04em;}
+.back:hover{opacity:1;}
+
+/* College header */
+.college-head{
+    display:flex;align-items:center;justify-content:center;gap:18px;text-align:center;
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    border:1px solid var(--border);border-radius:22px;padding:22px 26px;margin-bottom:30px;
+}
+.college-head img{width:64px;height:65px;flex-shrink:0;
+    background:#fff;border-radius:12px;padding:5px;}
+.college-head__name{font-size:clamp(17px,2.4vw,23px);font-weight:800;line-height:1.25;letter-spacing:-.01em;}
+.college-head__sub{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:.06em;text-transform:uppercase;}
+
+.section-label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);
+    font-weight:700;margin:0 0 14px 2px;}
+
+/* View-type picker */
+.view-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.view-pill{
+    display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;border-radius:16px;
+    border:2px solid rgba(125,211,252,.22);background:rgba(125,211,252,.03);color:var(--muted);
+    font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;user-select:none;text-align:center;
+}
+.view-pill input{display:none;}
+.view-pill__ico{font-size:24px;line-height:1;}
+.view-pill:hover{border-color:var(--cyan);color:var(--text);}
+.view-pill.is-checked{background:linear-gradient(135deg,rgba(91,33,237,.42),rgba(56,189,248,.34));
+    border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(56,189,248,.22);}
+
+/* Department picker */
+.dept-grid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+.dept-pill{
+    display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:14px;
+    border:2px solid rgba(125,211,252,.24);background:rgba(125,211,252,.04);
+    color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;user-select:none;
+}
+.dept-pill:hover{border-color:var(--cyan);color:var(--text);}
+.dept-pill input{accent-color:#38bdf8;width:16px;height:16px;cursor:pointer;}
+.dept-pill.is-checked{background:linear-gradient(135deg,rgba(91,33,237,.42),rgba(56,189,248,.34));
+    border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(56,189,248,.22);}
+.dept-pill.all-pill{border-color:rgba(16,185,129,.4);}
+.dept-pill.all-pill.is-checked{background:linear-gradient(135deg,rgba(16,185,129,.5),rgba(56,189,248,.3));}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:24px;
+    padding:28px 26px;box-shadow:0 24px 56px rgba(2,6,23,.5);margin-bottom:24px;}
+
+/* Action buttons */
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.act-btn{
+    display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border-radius:18px;
+    border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);
+    font-size:14px;font-weight:700;cursor:pointer;transition:transform .18s,box-shadow .18s,background .18s;
+    text-decoration:none;text-align:center;
+}
+.act-btn:hover{transform:translateY(-3px);}
+.act-btn .ico{font-size:26px;line-height:1;}
+.act-btn.pdf:hover{background:rgba(239,68,68,.14);box-shadow:0 14px 30px rgba(239,68,68,.2);}
+.act-btn.excel:hover{background:rgba(16,185,129,.14);box-shadow:0 14px 30px rgba(16,185,129,.2);}
+.act-btn.print:hover{background:rgba(56,189,248,.14);box-shadow:0 14px 30px rgba(56,189,248,.2);}
+.act-btn.share:hover{background:rgba(139,92,246,.14);box-shadow:0 14px 30px rgba(139,92,246,.2);}
+.act-btn .lbl-sub{font-size:11px;font-weight:500;color:var(--muted);}
+
+.hint{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.6;text-align:center;}
+@media (max-width:680px){.actions{grid-template-columns:repeat(2,1fr);}.view-grid{grid-template-columns:repeat(2,1fr);}.college-head{flex-direction:column;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+    <a class="back" href="{% url 'show_timetable' index %}">&larr; Back to Timetable</a>
+
+    <div class="college-head">
+        <img src="{% static 'img/college_logo.png' %}" alt="College logo">
+        <div>
+            <div class="college-head__name">{{ college_name }}</div>
+            <div class="college-head__sub">
+                <img src="{% static 'img/logo_email.png' %}" alt="SmartScheduler"
+                     style="width:18px;height:18px;vertical-align:middle;border-radius:4px;background:#fff;">
+                <span style="color:#7dd3fc;">SmartScheduler</span>
+                <span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;letter-spacing:.02em;margin-left:4px;">SIH WINNER 2025</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-label">1 &middot; Choose View</div>
+        <div class="view-grid">
+            <label class="view-pill is-checked">
+                <input type="radio" name="viewtype" value="section" checked>
+                <span class="view-pill__ico">&#128197;</span>
+                <span>Section</span>
+            </label>
+            <label class="view-pill">
+                <input type="radio" name="viewtype" value="room">
+                <span class="view-pill__ico">&#127979;</span>
+                <span>Room</span>
+            </label>
+            <label class="view-pill">
+                <input type="radio" name="viewtype" value="teacher">
+                <span class="view-pill__ico">&#128104;&#8205;&#127979;</span>
+                <span>Teacher</span>
+            </label>
+            <label class="view-pill">
+                <input type="radio" name="viewtype" value="workload">
+                <span class="view-pill__ico">&#128202;</span>
+                <span>Workload</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="card" id="dept-card">
+        <div class="section-label">2 &middot; Choose Departments</div>
+        <div class="dept-grid">
+            <label class="dept-pill all-pill is-checked" id="all-pill">
+                <input type="checkbox" id="all-depts" checked>
+                <span>All Departments</span>
+            </label>
+            {% for d in departments %}
+            <label class="dept-pill dept-item">
+                <input type="checkbox" class="dept-cb" value="{{ d.code }}">
+                <span>{{ d.name }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <p class="hint" id="dept-note">Department filter applies to Section &amp; Room views.</p>
+        {% if not departments %}
+        <p class="hint">No departments found for this timetable.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="section-label">3 &middot; Export</div>
+        <div class="actions">
+            <a class="act-btn pdf" id="btn-pdf">
+                <span class="ico">&#128196;</span>
+                <span>Download PDF</span>
+                <span class="lbl-sub">Print-ready</span>
+            </a>
+            <a class="act-btn excel" id="btn-excel">
+                <span class="ico">&#128202;</span>
+                <span>Download Excel</span>
+                <span class="lbl-sub">.xlsx</span>
+            </a>
+            <button class="act-btn print" id="btn-print" type="button">
+                <span class="ico">&#128424;</span>
+                <span>Print</span>
+                <span class="lbl-sub">Open &amp; print</span>
+            </button>
+            <button class="act-btn share" id="btn-share" type="button">
+                <span class="ico">&#128279;</span>
+                <span>Share</span>
+                <span class="lbl-sub">Send PDF</span>
+            </button>
+        </div>
+        <p class="hint">Every page carries the college logo &amp; name and the SmartScheduler &middot; SIH Winner 2025 brand.</p>
+    </div>
+
+</div>
+
+<script>
+(function(){
+    var index = {{ index }};
+    var allCb = document.getElementById('all-depts');
+    var allPill = document.getElementById('all-pill');
+    var deptCbs = Array.prototype.slice.call(document.querySelectorAll('.dept-cb'));
+    var viewRadios = Array.prototype.slice.call(document.querySelectorAll('input[name="viewtype"]'));
+    var deptCard = document.getElementById('dept-card');
+
+    function currentView(){
+        var r = viewRadios.find(function(x){return x.checked;});
+        return r ? r.value : 'section';
+    }
+    function syncView(){
+        viewRadios.forEach(function(r){
+            r.closest('.view-pill').classList.toggle('is-checked', r.checked);
+        });
+        // Dept filter only relevant for section & room
+        var v = currentView();
+        var dimmed = (v === 'teacher' || v === 'workload');
+        deptCard.style.opacity = dimmed ? '0.45' : '1';
+        deptCard.style.pointerEvents = dimmed ? 'none' : 'auto';
+    }
+    viewRadios.forEach(function(r){ r.addEventListener('change', syncView); });
+
+    function syncPills(){
+        allPill.classList.toggle('is-checked', allCb.checked);
+        deptCbs.forEach(function(cb){
+            cb.closest('.dept-pill').classList.toggle('is-checked', cb.checked);
+        });
+    }
+    allCb.addEventListener('change', function(){
+        if(allCb.checked){ deptCbs.forEach(function(cb){ cb.checked=false; }); }
+        syncPills();
+    });
+    deptCbs.forEach(function(cb){
+        cb.addEventListener('change', function(){
+            if(cb.checked){ allCb.checked=false; }
+            if(!deptCbs.some(function(c){return c.checked;})){ allCb.checked=true; }
+            syncPills();
+        });
+    });
+
+    function selectedDepts(){
+        if(allCb.checked) return 'all';
+        var codes = deptCbs.filter(function(cb){return cb.checked;}).map(function(cb){return cb.value;});
+        return codes.length ? codes.join(',') : 'all';
+    }
+    function pdfUrl(inline){
+        var u = '/download_generated_timetable_pdf/'+index+'/'+currentView()+'/?depts='+encodeURIComponent(selectedDepts());
+        if(inline) u += '&inline=1';
+        return u;
+    }
+    function excelUrl(){
+        return '/download_generated_timetable_excel/'+index+'/'+currentView()+'/';
+    }
+
+    document.getElementById('btn-pdf').addEventListener('click', function(e){
+        e.preventDefault(); window.location.href = pdfUrl(false);
+    });
+    document.getElementById('btn-excel').addEventListener('click', function(e){
+        e.preventDefault(); window.location.href = excelUrl();
+    });
+    document.getElementById('btn-print').addEventListener('click', function(){
+        var w = window.open(pdfUrl(true), '_blank');
+        if(w){ w.addEventListener('load', function(){ try{ w.focus(); w.print(); }catch(_){ } }); }
+    });
+    document.getElementById('btn-share').addEventListener('click', async function(){
+        var url = pdfUrl(false);
+        var absolute = window.location.origin + url;
+        try{
+            if(navigator.canShare){
+                var resp = await fetch(url);
+                var blob = await resp.blob();
+                var file = new File([blob], 'timetable.pdf', {type:'application/pdf'});
+                if(navigator.canShare({files:[file]})){
+                    await navigator.share({files:[file], title:'Timetable', text:'Generated timetable'});
+                    return;
+                }
+            }
+            if(navigator.share){ await navigator.share({title:'Timetable', url:absolute}); return; }
+            await navigator.clipboard.writeText(absolute);
+            alert('Share not supported here — download link copied to clipboard.');
+        }catch(err){
+            try{ await navigator.clipboard.writeText(absolute); alert('Download link copied to clipboard.'); }
+            catch(_){ alert('Could not share. Download link: '+absolute); }
+        }
+    });
+
+    syncPills();
+    syncView();
+})();
+</script>
+</body>
+</html>

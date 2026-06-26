@@ -64,7 +64,7 @@ class RoomForm(ModelForm):
 class InstructorForm(ModelForm):
     class Meta:
         model = Instructor
-        fields = ['uid', 'name', 'email', 'contact_number', 'designation', 'max_workload']
+        fields = ['uid', 'name', 'email', 'contact_number', 'designation', 'max_workload', 'department']
         labels = {
             "uid": "Teacher UID",
             "name": "Full Name",
@@ -72,17 +72,27 @@ class InstructorForm(ModelForm):
             "contact_number": "Contact Number(s)",
             "designation": "Designation",
             "max_workload": "Max Workload",
+            "department": "Department",
         }
         widgets = {
             "email": forms.TextInput(attrs={"placeholder": "e.g. a@college.edu, b@college.edu"}),
             "contact_number": forms.TextInput(attrs={"placeholder": "e.g. 9810001001, 9810001002"}),
             "designation": forms.Select(choices=Instructor.DESIGNATION_CHOICES),
             "max_workload": forms.NumberInput(attrs={"min": 1}),
+            "department": forms.Select(),
         }
         help_texts = {
             "email": "Separate multiple emails with commas",
             "contact_number": "Separate multiple numbers with commas",
         }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        dept_qs = Department.objects.all()
+        if user:
+            dept_qs = dept_qs.filter(user=user)
+        self.fields["department"].queryset = dept_qs.order_by("code", "name")
+        self.fields["department"].required = False
 
 
 # ==================================================

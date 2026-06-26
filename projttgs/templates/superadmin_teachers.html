@@ -58,7 +58,7 @@
           <td>{{ t.designation }}</td>
           <td data-sort="{{ t.load }}">{{ t.load }} / {{ t.max }}</td>
           <td data-sort="{{ t.util }}">{% if t.util > 95 %}<span class="pill warn">{{ t.util }}%</span>{% else %}<span class="pill ok">{{ t.util }}%</span>{% endif %}</td>
-          <td><button class="vbtn" onclick="openTeacher('{{ t.id }}')">View Details</button></td>
+          <td><button class="vbtn" onclick="openTeacher('{{ t.id }}')">View Details</button> <button class="vbtn" style="background:#0e7490" onclick="openWorkload('{{ t.id }}')">Workload Analysis</button></td>
         </tr>
         {% empty %}<tr><td colspan="5" class="empty">No teachers.</td></tr>{% endfor %}
       </tbody>
@@ -85,11 +85,29 @@
       </div>
     </div>
   </div>
+
+  <div class="modal" id="workloadModal">
+    <div class="sheet">
+      <div class="sh">
+        <div><h2 id="wName">Workload Analysis</h2><div class="sub" id="wMeta"></div></div>
+        <button class="closex" onclick="closeModal('workloadModal')">✕</button>
+      </div>
+      <div class="panel" style="background:var(--bg); margin-bottom:16px">
+        <div class="ph"><div><h3>Choose Saved Timetable</h3><small>Kis user ke saved timetable ke according analysis karna hai</small></div></div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:6px 2px">
+          <select id="wTimetable" class="inp" style="flex:1; min-width:260px"></select>
+          <button class="btn" onclick="runWorkload()">Analyze</button>
+        </div>
+      </div>
+      <div id="wResult"></div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
   const TEACHER_URL = "{% url 'superadmin_teacher_detail' %}";
+  const WORKLOAD_URL = "{% url 'superadmin_teacher_workload' %}";
 
   new Chart(document.getElementById('workChart'),{
     type:'doughnut',
@@ -151,6 +169,60 @@
         ${row.cells.map(c=>c?`<div class="mcell ${c.type==='Lab'?'lab':'busy'}" title="${c.subject} · ${c.room}">${c.section}</div>`:`<div class="mcell free">·</div>`).join('')}
         </div></div>`).join('');
     document.getElementById('teacherModal').classList.add('open');
+  }
+
+  let WK_TEACHER_ID = null;
+  async function openWorkload(id){
+    WK_TEACHER_ID = id;
+    const sel = document.getElementById('wTimetable');
+    sel.innerHTML = '<option value="">Loading…</option>';
+    document.getElementById('wResult').innerHTML = '';
+    document.getElementById('workloadModal').classList.add('open');
+    const res = await fetch(`${WORKLOAD_URL}?id=${encodeURIComponent(id)}`);
+    if(!res.ok){showToast('Could not load timetables.','err');return;}
+    const j = await res.json();
+    document.getElementById('wName').textContent = `Workload Analysis — ${j.teacher.name}`;
+    document.getElementById('wMeta').textContent = `${j.teacher.designation} · UID ${j.teacher.uid}`;
+    if(!j.timetables.length){
+      sel.innerHTML = '<option value="">No saved timetables available</option>';
+      document.getElementById('wResult').innerHTML = '<div class="empty" style="padding:20px">No saved timetables to analyze.</div>';
+      return;
+    }
+    sel.innerHTML = '<option value="">— Select a user\'s saved timetable —</option>' +
+      j.timetables.map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+  }
+
+  async function runWorkload(){
+    const tid = document.getElementById('wTimetable').value;
+    if(!tid){showToast('Pehle ek saved timetable chuniye.','err');return;}
+    const wr = document.getElementById('wResult');
+    wr.innerHTML = '<div class="empty" style="padding:20px">Analyzing…</div>';
+    const res = await fetch(`${WORKLOAD_URL}?id=${encodeURIComponent(WK_TEACHER_ID)}&tid=${encodeURIComponent(tid)}`);
+    if(!res.ok){wr.innerHTML='<div class="empty" style="padding:20px">Could not analyze.</div>';return;}
+    const j = await res.json();
+    const a = j.analysis;
+    if(!a || !a.found || !a.departments.length){
+      wr.innerHTML = '<div class="empty" style="padding:20px">Is timetable me is teacher ki koi class nahi mili.</div>';
+      return;
+    }
+    const head = `
+      <div class="statrow" style="margin-bottom:14px">
+        <div class="stat"><div class="l">Home Department</div><div class="v" style="font-size:15px">${a.home_department}</div></div>
+        <div class="stat"><div class="l">Total Workload</div><div class="v">${a.total_hours} / ${a.max_workload}</div></div>
+        <div class="stat"><div class="l">Departments Taught</div><div class="v">${a.departments.length}</div></div>
+      </div>`;
+    const cards = a.departments.map(d=>`
+      <div class="panel" style="background:var(--bg); margin-bottom:12px; ${d.is_home?'border:1px solid #0e7490':''}">
+        <div class="ph"><div>
+          <h3>${d.name} <span style="font-size:11px; color:var(--mut)">(${d.code})</span>
+          ${d.is_home?'<span class="pill ok" style="margin-left:6px">Home Dept</span>':'<span class="pill" style="margin-left:6px;background:#e0f2fe;color:#0369a1">Other Dept</span>'}</h3>
+          <small>${d.hours} hrs/week · ${d.subjects.length} subject(s)</small>
+        </div></div>
+        <div style="padding:6px 4px 10px; font-size:13px; line-height:1.9">
+          ${d.subjects.map(s=>`<span style="display:inline-block; background:var(--card); border:1px solid var(--line,#e5e7eb); border-radius:6px; padding:3px 9px; margin:3px 4px 0 0">${s}</span>`).join('')}
+        </div>
+      </div>`).join('');
+    wr.innerHTML = `<div class="sub" style="margin-bottom:10px">Source: ${a.timetable_label}</div>` + head + cards;
   }
 </script>
 {% endblock %}

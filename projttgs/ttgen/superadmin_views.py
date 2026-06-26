@@ -143,9 +143,17 @@ def _slot_universe():
     return universe
 
 
-def _active_timetable_ids():
-    """Latest saved timetable per (user, department) = current live picture."""
-    rows = SavedTimetable.objects.values("user", "department").annotate(mx=Max("id"))
+def _active_timetable_ids(owners=None):
+    """Latest saved timetable per (user, department) = current live picture.
+
+    When ``owners`` is given, only timetables owned by those accounts are
+    considered, so analytics reflect a single chosen account instead of the
+    whole platform.
+    """
+    qs = SavedTimetable.objects.all()
+    if owners:
+        qs = qs.filter(user_id__in=owners)
+    rows = qs.values("user", "department").annotate(mx=Max("id"))
     return [row["mx"] for row in rows if row["mx"]]
 
 
@@ -165,9 +173,47 @@ def _active_owner_ids():
     )
 
 
+def _owner_accounts(owners):
+    """Selectable account list (id + readable label) for the account filter.
+
+    One row per account that owns scheduled timetables, so the super admin can
+    view analytics for a single coordinator account instead of every account
+    combined (which inflates teacher loads, room counts, etc.).
+    """
+    if not owners:
+        return []
+    users = (
+        get_user_model()
+        .objects.filter(id__in=owners)
+        .order_by("username")
+    )
+    accounts = []
+    for u in users:
+        full_name = (u.get_full_name() or "").strip()
+        label = full_name or u.username or (u.email or "").split("@")[0] or f"Account #{u.id}"
+        accounts.append({"id": u.id, "label": label, "email": u.email or ""})
+    return accounts
+
+
+def _request_owners(request):
+    """Resolve the owner accounts in scope for this request.
+
+    Reads the ``account`` GET param. When it names a valid active owner, scope
+    everything to just that one account; otherwise fall back to every active
+    owner ("All Accounts"). Returns ``(owners_set, account_filter_value)``.
+    """
+    all_owners = _active_owner_ids()
+    account_filter = (request.GET.get("account") or "all").strip()
+    if account_filter != "all" and account_filter.isdigit():
+        chosen = int(account_filter)
+        if chosen in all_owners:
+            return {chosen}, account_filter
+    return all_owners, "all"
+
+
 def _scope_to_owners(qs, owners):
     """Restrict a user-scoped queryset to the active owners (no-op if none)."""
-    return qs.filter(user_id__in=owners) if owners else qs
+    return qs.filter(user_id__in=owners) if owners else qs.all()
 
 
 def _pct(used, total):
@@ -176,8 +222,8 @@ def _pct(used, total):
     return round((used / total) * 100.0, 1)
 
 
-def _active_slots():
-    ids = _active_timetable_ids()
+def _active_slots(owners=None):
+    ids = _active_timetable_ids(owners)
     if not ids:
         return ScheduledSlot.objects.none()
     return (
@@ -206,9 +252,13 @@ def _build_analytics(request):
     universe_count = len(universe) or 1
 
     # Accounts that actually own scheduled timetables. Master data is per-user
-    # and may be duplicated across accounts, so scope everything to these owners
-    # to avoid double-counting departments / teachers / rooms / sections.
-    owners = _active_owner_ids()
+    # and may be duplicated across accounts. By default we scope everything to
+    # every active owner (deduping by identity), but the super admin can pick a
+    # single account via ?account=<id> to see that account's data on its own
+    # instead of every account combined (which inflates loads / counts).
+    all_owners = _active_owner_ids()
+    owners, account_filter = _request_owners(request)
+    accounts = _owner_accounts(all_owners)
 
     # Master counts (whole institution, independent of current filter).
     # The same institution can exist under several accounts, so the same
@@ -256,7 +306,7 @@ def _build_analytics(request):
         key=lambda s: int(re.match(r"(\d+)", s).group(1)),
     )
 
-    slots = _active_slots()
+    slots = _active_slots(owners)
 
     # Accumulators.
     room_cells = defaultdict(set)            # room_id -> {(day,time)}
@@ -534,18 +584,32 @@ def _build_analytics(request):
         )
         insights.append(f"Slot {times[peak_idx]} is the busiest time across the campus.")
 
-    # Recent activity from real saved timetables.
+    # Recent activity — prefer the real per-user audit log, fall back to
+    # saved timetables when no activity has been recorded yet.
+    from .models import ActivityLog
+
     recent = []
-    for st in SavedTimetable.objects.select_related("department").order_by("-created_at")[:8]:
-        recent.append(
-            {
-                "label": st.department.name if st.department_id else "All Departments",
-                "published": st.is_published,
+    _action_labels = dict(ActivityLog.ACTIONS)
+    for ev in ActivityLog.objects.all().order_by("-created_at")[:10]:
+        who = ev.username or ev.email or "Someone"
+        bits = [b for b in [ev.summary or _action_labels.get(ev.action, ""), ev.detail] if b]
+        recent.append({
+            "who": who,
+            "action": ev.action,
+            "text": " · ".join(bits) or _action_labels.get(ev.action, "Activity"),
+            "when": timezone.localtime(ev.created_at).strftime("%d %b %Y, %H:%M")
+            if ev.created_at else "",
+        })
+    if not recent:
+        for st in SavedTimetable.objects.select_related("department").order_by("-created_at")[:8]:
+            recent.append({
+                "who": "",
+                "action": "publish" if st.is_published else "save",
+                "text": ("Timetable for " + (st.department.name if st.department_id else "All Departments")
+                         + (" published" if st.is_published else " saved")),
                 "when": timezone.localtime(st.created_at).strftime("%d %b %Y, %H:%M")
-                if st.created_at
-                else "",
-            }
-        )
+                if st.created_at else "",
+            })
 
     # Quick timetable preview ordering.
     preview_rows.sort(key=lambda r: (r["section"], _DAY_ORDER.get(r["day"], 99), r["slot"]))
@@ -581,6 +645,8 @@ def _build_analytics(request):
         "dept_filter": dept_filter,
         "sem_filter": sem_filter,
         "search": search,
+        "accounts": accounts,
+        "account_filter": account_filter,
         "dept_util": dept_util,
         "room_util": room_util,
         "top_rooms": top_rooms,
@@ -685,7 +751,149 @@ def superadmin_preview(request):
 
 @superadmin_required
 def superadmin_activity(request):
-    return render(request, "superadmin_activity.html", _page_ctx(request, "activity"))
+    from .models import ActivityLog, UserSession
+
+    ctx = _page_ctx(request, "activity")
+
+    user_query = (request.GET.get("user") or "").strip()
+
+    logs = ActivityLog.objects.all()
+    if user_query:
+        logs = logs.filter(
+            Q(username__icontains=user_query) | Q(email__icontains=user_query)
+        )
+
+    action_labels = dict(ActivityLog.ACTIONS)
+
+    def _ukey(email, username):
+        return (email or username or "").lower()
+
+    # ---- Detailed event feed (most recent first) ----
+    feed = []
+    for ev in logs.order_by("-created_at")[:250]:
+        feed.append({
+            "user": ev.username or ev.email or "Unknown",
+            "email": ev.email,
+            "action": ev.action,
+            "action_label": action_labels.get(ev.action, ev.action.title()),
+            "summary": ev.summary or action_labels.get(ev.action, ""),
+            "detail": ev.detail,
+            "method": ev.method,
+            "ip": ev.ip,
+            "when": timezone.localtime(ev.created_at).strftime("%d %b %Y, %H:%M:%S"),
+        })
+
+    # ---- Per-user rollup (counts + sessions + active time) ----
+    counts = (
+        ActivityLog.objects.values("username", "email")
+        .annotate(n=Count("id"), last=Max("created_at"))
+    )
+    cards = {}
+    for row in counts:
+        key = _ukey(row["email"], row["username"])
+        cards.setdefault(key, {
+            "user": row["username"] or row["email"] or "Unknown",
+            "email": row["email"],
+            "total": 0, "by_action": {}, "last_active": None,
+            "sessions": 0, "active_seconds": 0, "last_login": None,
+            "events": [],
+        })
+        cards[key]["user"] = row["username"] or cards[key]["user"]
+        cards[key]["total"] += row["n"]
+        if row["last"] and (cards[key]["last_active"] is None or row["last"] > cards[key]["last_active"]):
+            cards[key]["last_active"] = row["last"]
+
+    # action breakdown per user
+    for row in ActivityLog.objects.values("username", "email", "action").annotate(n=Count("id")):
+        key = _ukey(row["email"], row["username"])
+        if key in cards:
+            cards[key]["by_action"][row["action"]] = (
+                cards[key]["by_action"].get(row["action"], 0) + row["n"]
+            )
+
+    # Per-user recent "main" activities (skip pure heartbeats/other).
+    MAIN_ACTIONS = {
+        "login", "logout", "generate", "save", "delete", "export",
+        "move", "park", "restore", "add", "edit", "substitute",
+        "publish", "unpublish",
+    }
+    for ev in (
+        ActivityLog.objects.filter(action__in=MAIN_ACTIONS)
+        .order_by("-created_at")[:2000]
+    ):
+        key = _ukey(ev.email, ev.username)
+        card = cards.get(key)
+        if card is None or len(card["events"]) >= 15:
+            continue
+        card["events"].append({
+            "action": ev.action,
+            "label": action_labels.get(ev.action, ev.action.title()),
+            "summary": ev.summary or action_labels.get(ev.action, ""),
+            "detail": ev.detail,
+            "when": timezone.localtime(ev.created_at).strftime("%d %b %Y, %H:%M"),
+        })
+
+    # sessions + active time per user
+    for s in UserSession.objects.all():
+        key = _ukey(s.email, s.username)
+        if not key:
+            continue
+        card = cards.setdefault(key, {
+            "user": s.username or s.email or "Unknown",
+            "email": s.email,
+            "total": 0, "by_action": {}, "last_active": None,
+            "sessions": 0, "active_seconds": 0, "last_login": None,
+            "events": [],
+        })
+        card["sessions"] += 1
+        card["active_seconds"] += s.duration_seconds
+        if card["last_login"] is None or s.login_at > card["last_login"]:
+            card["last_login"] = s.login_at
+
+    user_cards = []
+    for idx, c in enumerate(cards.values()):
+        if user_query:
+            hay = f"{c['user']} {c['email']}".lower()
+            if user_query.lower() not in hay:
+                continue
+        user_cards.append({
+            "uid": idx,
+            "user": c["user"],
+            "email": c["email"],
+            "total": c["total"],
+            "sessions": c["sessions"],
+            "active_label": _fmt_duration(c["active_seconds"]),
+            "by_action": [
+                {"action": a, "label": action_labels.get(a, a.title()), "n": n}
+                for a, n in sorted(c["by_action"].items(), key=lambda kv: -kv[1])
+            ],
+            "events": c["events"],
+            "last_active": timezone.localtime(c["last_active"]).strftime("%d %b %Y, %H:%M")
+            if c["last_active"] else "—",
+            "last_login": timezone.localtime(c["last_login"]).strftime("%d %b %Y, %H:%M")
+            if c["last_login"] else "—",
+        })
+    user_cards.sort(key=lambda c: c["total"], reverse=True)
+
+    ctx["feed"] = feed
+    ctx["user_cards"] = user_cards
+    ctx["activity_total"] = ActivityLog.objects.count()
+    ctx["user_query"] = user_query
+    return render(request, "superadmin_activity.html", ctx)
+
+
+def _fmt_duration(seconds):
+    seconds = int(seconds or 0)
+    if seconds < 60:
+        return f"{seconds}s"
+    mins, sec = divmod(seconds, 60)
+    if mins < 60:
+        return f"{mins}m {sec}s"
+    hrs, mins = divmod(mins, 60)
+    if hrs < 24:
+        return f"{hrs}h {mins}m"
+    days, hrs = divmod(hrs, 24)
+    return f"{days}d {hrs}h"
 
 
 # ---------------------------------------------------------------------------
@@ -1043,7 +1251,8 @@ def superadmin_drilldown(request):
     """University -> Department -> Section -> Teacher -> Subject drill-down (JSON)."""
     level = (request.GET.get("level") or "university").strip()
     key = (request.GET.get("id") or "").strip()
-    slots = _active_slots()
+    owners, _account_filter = _request_owners(request)
+    slots = _active_slots(owners)
 
     def _row(slot):
         return {
@@ -1218,10 +1427,10 @@ def _sorted_times(universe):
     return days, times
 
 
-def _room_occupancy():
+def _room_occupancy(owners=None):
     """room_id -> {(day,time): {section, subject, teacher, is_lab}} from active slots."""
     occ = defaultdict(dict)
-    for slot in _active_slots():
+    for slot in _active_slots(owners):
         room = slot.room
         if not room:
             continue
@@ -1268,10 +1477,11 @@ def superadmin_room_analytics(request):
     universe = _slot_universe()
     universe_count = len(universe) or 1
     days, times = _sorted_times(universe)
-    occ = _room_occupancy()
+    owners, _account_filter = _request_owners(request)
+    occ = _room_occupancy(owners)
 
     rooms_qs = _scope_to_owners(
-        Room.objects.select_related("department"), _active_owner_ids()
+        Room.objects.select_related("department"), owners
     ).order_by("r_number")
     if dept_filter != "all":
         rooms_qs = rooms_qs.filter(department_id=dept_filter)
@@ -1370,7 +1580,8 @@ def superadmin_teacher_detail(request):
     theory_count = 0
     per_day = defaultdict(int)
 
-    for slot in _active_slots():
+    owners, _account_filter = _request_owners(request)
+    for slot in _active_slots(owners):
         if slot.instructor_id != instr.id and slot.second_instructor_id != instr.id:
             continue
         sec = slot.section
@@ -1448,6 +1659,154 @@ def superadmin_teacher_detail(request):
             "per_day": [{"day": d, "count": per_day.get(d, 0)} for d in days],
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# Teacher workload analysis — per-department breakdown from a chosen timetable
+# ---------------------------------------------------------------------------
+def _saved_timetable_label(st):
+    if st.user:
+        owner = (st.user.email or st.user.username or f"User {st.user_id}").strip()
+    else:
+        owner = f"User {st.user_id}"
+    dept = st.department.name if st.department else "All Departments"
+    when = st.created_at.strftime("%d %b %Y") if st.created_at else ""
+    label = f"{owner} · {dept}"
+    if when:
+        label += f" · {when}"
+    return owner, label
+
+
+def _norm_identity(value):
+    return re.sub(r"\s+", " ", (value or "").strip().lower())
+
+
+@superadmin_required
+def superadmin_teacher_workload(request):
+    """Per-department workload breakdown for one teacher, computed from a
+    specific saved timetable chosen by the super admin.
+
+    The same physical teacher can exist under multiple accounts, so the teacher
+    is matched by identity (uid / name) within the chosen timetable's owner.
+    """
+    raw_id = (request.GET.get("id") or "").strip()
+    try:
+        clicked = Instructor.objects.get(id=raw_id)
+    except (Instructor.DoesNotExist, ValueError):
+        raise Http404("Teacher not found")
+
+    # Saved timetables (non-empty) the super admin can pick from.
+    timetables = []
+    for st in (
+        SavedTimetable.objects.filter(slots__isnull=False)
+        .select_related("department", "user")
+        .order_by("user_id", "-created_at")
+        .distinct()
+    ):
+        _owner, label = _saved_timetable_label(st)
+        timetables.append({"id": st.id, "label": label})
+
+    target_uid = _norm_identity(clicked.uid)
+    target_name = _norm_identity(clicked.name)
+
+    response = {
+        "teacher": {
+            "id": clicked.id,
+            "name": clicked.name,
+            "uid": clicked.uid,
+            "designation": clicked.designation,
+        },
+        "timetables": timetables,
+        "analysis": None,
+    }
+
+    tid = (request.GET.get("tid") or "").strip()
+    if not tid:
+        return JsonResponse(response)
+
+    try:
+        saved_t = SavedTimetable.objects.select_related("user").get(id=tid)
+    except (SavedTimetable.DoesNotExist, ValueError):
+        raise Http404("Timetable not found")
+
+    # Instructors in this timetable's owner that match the clicked teacher.
+    matched_ids = []
+    matched_instructors = []
+    for instr in Instructor.objects.filter(user_id=saved_t.user_id).select_related("department"):
+        if (_norm_identity(instr.uid) and _norm_identity(instr.uid) == target_uid) or (
+            _norm_identity(instr.name) and _norm_identity(instr.name) == target_name
+        ):
+            matched_ids.append(instr.id)
+            matched_instructors.append(instr)
+
+    slots = (
+        saved_t.slots.select_related(
+            "section", "section__department", "subject", "instructor", "second_instructor"
+        )
+        .prefetch_related("lab_slots")
+        .all()
+    )
+
+    # dept_code -> aggregate
+    dept_map = {}
+    total_hours = 0
+    for slot in slots:
+        if slot.instructor_id not in matched_ids and slot.second_instructor_id not in matched_ids:
+            continue
+        sec = slot.section
+        dept = sec.department if sec else None
+        code = (getattr(dept, "code", "") or "").strip() or "—"
+        name = (getattr(dept, "name", "") or "").strip() or code
+        hours = 1
+        if slot.is_lab:
+            hours += slot.lab_slots.count()
+        bucket = dept_map.setdefault(
+            code, {"code": code, "name": name, "hours": 0, "subjects": set()}
+        )
+        bucket["hours"] += hours
+        subject_name = getattr(slot.subject, "subject_name", "") or "—"
+        bucket["subjects"].add(subject_name)
+        total_hours += hours
+
+    # Home department: stored Instructor.department first, else the department
+    # where this teacher carries the most hours in this timetable.
+    home_code = ""
+    home_name = ""
+    for instr in matched_instructors:
+        if instr.department_id:
+            home_code = (instr.department.code or "").strip()
+            home_name = (instr.department.name or "").strip() or home_code
+            break
+    if not home_code and dept_map:
+        top = max(dept_map.values(), key=lambda d: d["hours"])
+        home_code = top["code"]
+        home_name = top["name"]
+
+    departments = []
+    for bucket in dept_map.values():
+        departments.append(
+            {
+                "code": bucket["code"],
+                "name": bucket["name"],
+                "hours": bucket["hours"],
+                "subjects": sorted(bucket["subjects"]),
+                "is_home": bool(home_code) and bucket["code"].lower() == home_code.lower(),
+            }
+        )
+    # Home department first, then by hours desc.
+    departments.sort(key=lambda d: (not d["is_home"], -d["hours"]))
+
+    _owner, label = _saved_timetable_label(saved_t)
+    response["analysis"] = {
+        "timetable_label": label,
+        "home_department": home_name or "—",
+        "home_code": home_code,
+        "total_hours": total_hours,
+        "max_workload": matched_instructors[0].max_workload if matched_instructors else clicked.max_workload,
+        "departments": departments,
+        "found": bool(matched_ids),
+    }
+    return JsonResponse(response)
 
 
 # ---------------------------------------------------------------------------

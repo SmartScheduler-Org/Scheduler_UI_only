@@ -191,13 +191,107 @@
     .toast.show{display:block}.toast.err{border-color:rgba(239,68,68,.5);color:#fca5a5}
     .toast.ok{border-color:rgba(34,197,94,.5);color:#86efac}
     {% block extra_css %}{% endblock %}
+
+    /* Full-page loading overlay */
+    #saLoader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:20px;
+      background:radial-gradient(1200px 600px at 50% 35%,#10203a 0%,#0b1220 60%,#070d18 100%);
+      transition:opacity .45s ease,visibility .45s ease}
+    #saLoader.hide{opacity:0;visibility:hidden;pointer-events:none}
+    .sa-load-badge{position:relative;width:104px;height:104px;display:grid;place-items:center}
+    .sa-load-badge .ring{position:absolute;inset:0;border-radius:50%;
+      border:3px solid rgba(56,189,248,.16);border-top-color:#38bdf8;border-right-color:#0ea5e9;
+      animation:saSpin 1s linear infinite}
+    .sa-load-badge .ring2{position:absolute;inset:11px;border-radius:50%;
+      border:2px solid rgba(139,92,246,.14);border-bottom-color:#8b5cf6;
+      animation:saSpin 1.5s linear infinite reverse}
+    .sa-load-badge svg{width:46px;height:55px;display:block;filter:drop-shadow(0 4px 14px rgba(56,189,248,.45));
+      animation:saPulse 1.6s ease-in-out infinite}
+    .sa-load-text{text-align:center}
+    .sa-load-text b{display:block;font-size:16px;font-weight:700;letter-spacing:.3px;
+      background:linear-gradient(90deg,#7dd3fc,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .sa-load-text small{display:block;margin-top:5px;font-size:12px;color:#64748b}
+    .sa-load-dots{display:inline-flex;gap:5px;margin-top:13px}
+    .sa-load-dots i{width:7px;height:7px;border-radius:50%;background:#334155;animation:saDot 1.2s ease-in-out infinite}
+    .sa-load-dots i:nth-child(2){animation-delay:.2s}
+    .sa-load-dots i:nth-child(3){animation-delay:.4s}
+    @keyframes saSpin{to{transform:rotate(360deg)}}
+    @keyframes saPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+    @keyframes saDot{0%,100%{background:#334155;transform:translateY(0)}50%{background:#38bdf8;transform:translateY(-5px)}}
+    @media (prefers-reduced-motion:reduce){
+      .sa-load-badge .ring,.sa-load-badge .ring2,.sa-load-badge svg,.sa-load-dots i{animation:none}
+    }
   </style>
 </head>
 <body>
   {% csrf_token %}
   {% if chart_data %}{{ chart_data|json_script:"chartData" }}{% endif %}
 
-  <!-- Sidebar -->
+  <!-- Full-page loading overlay -->
+  <div id="saLoader" role="status" aria-live="polite" aria-label="Loading dashboard">
+    <div class="sa-load-badge">
+      <div class="ring"></div>
+      <div class="ring2"></div>
+      <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="saLoadLg" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#38bdf8"/><stop offset=".5" stop-color="#0ea5e9"/><stop offset="1" stop-color="#0c3557"/>
+          </linearGradient>
+        </defs>
+        <path d="M50 2L8 42l14 50q28 20 56 0l14-50Z" fill="url(#saLoadLg)"/>
+        <path d="M50 36c13 17 13 37 0 52-13-15-13-35 0-52Z" fill="#081424" opacity=".85"/>
+      </svg>
+    </div>
+    <div class="sa-load-text">
+      <b>SmartScheduler</b>
+      <small>Loading University Analytics…</small>
+      <div class="sa-load-dots"><i></i><i></i><i></i></div>
+    </div>
+  </div>
+  <script>
+    (function(){
+      var el=document.getElementById('saLoader');
+      if(!el)return;
+      var removeTimer=null;
+      function hide(){
+        el.classList.add('hide');
+        clearTimeout(removeTimer);
+        removeTimer=setTimeout(function(){if(el){el.style.display='none';}},600);
+      }
+      function show(){
+        el.style.display='flex';
+        clearTimeout(removeTimer);
+        // force reflow so the transition replays
+        void el.offsetWidth;
+        el.classList.remove('hide');
+      }
+      // Hide once this page has finished loading.
+      if(document.readyState==='complete'){setTimeout(hide,350);}
+      else{window.addEventListener('load',function(){setTimeout(hide,350);});}
+      // safety fallback so it never gets stuck on first load
+      setTimeout(hide,6000);
+
+      // Show the loader again while navigating to another internal page,
+      // so the user sees a loading screen during the page transition.
+      function sameOrigin(href){
+        try{var u=new URL(href,location.href);return u.origin===location.origin;}catch(e){return false;}
+      }
+      document.addEventListener('click',function(ev){
+        var a=ev.target.closest&&ev.target.closest('a[href]');
+        if(!a)return;
+        var href=a.getAttribute('href');
+        if(!href||href.charAt(0)==='#'||a.target==='_blank'||a.hasAttribute('download'))return;
+        if(href.indexOf('javascript:')===0||href.indexOf('mailto:')===0)return;
+        if(ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.button===1)return; // open-in-new-tab
+        if(!sameOrigin(a.href))return;
+        show();
+      });
+      // Also show when submitting a form (filters, search, delete, etc.)
+      document.addEventListener('submit',function(){show();});
+      // If the user comes back via the browser Back button, hide the stale loader.
+      window.addEventListener('pageshow',function(e){if(e.persisted){hide();}});
+    })();
+  </script>
   <aside class="side">
     <div class="brand">
       <div class="logo">
@@ -257,6 +351,14 @@
       </div>
       {% block topbar_extra %}
       <form class="filters" method="get" id="filterForm">
+        {% if accounts %}
+        <select name="account" class="{% if account_filter != 'all' %}flt-on{% endif %}" onchange="document.getElementById('filterForm').submit()" title="Show data for one coordinator account">
+          <option value="all" {% if account_filter == 'all' %}selected{% endif %}>All Accounts</option>
+          {% for a in accounts %}
+            <option value="{{ a.id }}" {% if account_filter == a.id|stringformat:'s' %}selected{% endif %}>{{ a.label }}</option>
+          {% endfor %}
+        </select>
+        {% endif %}
         <select name="dept" class="{% if dept_filter != 'all' %}flt-on{% endif %}" onchange="document.getElementById('filterForm').submit()">
           <option value="all" {% if dept_filter == 'all' %}selected{% endif %}>All Departments</option>
           {% for d in departments %}
@@ -269,7 +371,7 @@
             <option value="{{ s }}" {% if sem_filter == s %}selected{% endif %}>{{ s }}</option>
           {% endfor %}
         </select>
-        {% if dept_filter != 'all' or sem_filter != 'all' %}
+        {% if dept_filter != 'all' or sem_filter != 'all' or account_filter != 'all' %}
         <a class="btn clearflt" href="?">✕ Clear</a>
         {% endif %}
         <a class="btn excel" href="{% url 'superadmin_export_excel' %}?{{ request.GET.urlencode }}">⬇ Excel</a>

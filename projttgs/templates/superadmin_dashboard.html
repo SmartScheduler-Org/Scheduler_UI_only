@@ -52,13 +52,13 @@
   </section>
 
   <section class="panel">
-    <div class="ph"><div><h3>Recent Activity</h3><small>Latest saved timetables</small></div>
+    <div class="ph"><div><h3>Recent Activity</h3><small>Live user actions across the campus</small></div>
       <a class="vbtn" href="{% url 'superadmin_activity' %}">All →</a></div>
     <ul class="recent">
       {% for a in recent %}
       <li>
-        <span class="rd" style="{% if not a.published %}background:var(--amber){% endif %}"></span>
-        <span>Timetable for <b>{{ a.label }}</b> {% if a.published %}published{% else %}saved{% endif %}</span>
+        <span class="rd" style="{% if a.action == 'delete' %}background:var(--red){% elif a.action == 'login' %}background:var(--green){% elif a.action == 'move' %}background:var(--amber){% endif %}"></span>
+        <span>{% if a.who %}<b>{{ a.who }}</b> — {% endif %}{{ a.text }}</span>
         <span class="rt">{{ a.when }}</span>
       </li>
       {% empty %}<li>No activity yet.</li>{% endfor %}

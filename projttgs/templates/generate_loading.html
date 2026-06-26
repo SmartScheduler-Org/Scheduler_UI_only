@@ -214,6 +214,183 @@
             animation: pulse 1.4s ease-in-out infinite;
         }
 
+        .topbar-right {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Live log toggle button */
+        .log-btn {
+            position: relative;
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 44px;
+            padding: 0 16px;
+            border-radius: 14px;
+            cursor: pointer;
+            color: #bae6fd;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: rgba(56,189,248,0.10);
+            border: 1px solid rgba(56,189,248,0.34);
+            transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+        }
+        .log-btn svg { width: 19px; height: 19px; }
+        .log-btn:hover {
+            background: rgba(56,189,248,0.9);
+            color: #04121f;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 26px rgba(56,189,248,0.36);
+        }
+        .log-btn:active { transform: scale(0.95); }
+        .log-btn__count {
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            display: inline-grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 700;
+            background: #0ea5e9;
+            color: #04121f;
+        }
+
+        /* Slide-in log panel */
+        .log-panel-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2,8,18,0.55);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 60;
+        }
+        .log-panel-overlay.is-open { opacity: 1; pointer-events: auto; }
+
+        .log-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: min(560px, 94vw);
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, #0a1626, #060d18);
+            border-left: 1px solid rgba(56,189,248,0.28);
+            box-shadow: -24px 0 60px rgba(0,0,0,0.55);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+            z-index: 61;
+        }
+        .log-panel.is-open { transform: translateX(0); }
+
+        .log-panel__head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(56,189,248,0.18);
+        }
+        .log-panel__title {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-right: auto;
+        }
+        .log-panel__title b {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e0f2fe;
+            letter-spacing: 0.02em;
+        }
+        .log-panel__title span {
+            font-size: 11px;
+            color: rgba(148,197,253,0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }
+        .log-panel__btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #bae6fd;
+            background: rgba(56,189,248,0.12);
+            border: 1px solid rgba(56,189,248,0.3);
+            transition: background 0.18s ease, color 0.18s ease;
+        }
+        .log-panel__btn svg { width: 15px; height: 15px; }
+        .log-panel__btn:hover { background: rgba(56,189,248,0.85); color: #04121f; }
+        .log-panel__btn.is-copied { background: #22c55e; color: #04121f; border-color: #22c55e; }
+        .log-panel__close {
+            flex: none;
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #cbd5e1;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .log-panel__close:hover { background: rgba(239,68,68,0.85); color: #fff; }
+        .log-panel__close svg { width: 17px; height: 17px; }
+
+        .log-panel__body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 16px 22px;
+            font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #cde7f5;
+            scroll-behavior: smooth;
+        }
+        .log-panel__body::-webkit-scrollbar { width: 8px; }
+        .log-panel__body::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.3); border-radius: 8px; }
+        .log-row {
+            display: flex;
+            gap: 10px;
+            padding: 1px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            animation: logRowIn 0.18s ease;
+        }
+        .log-row__n {
+            flex: none;
+            width: 38px;
+            text-align: right;
+            color: rgba(94,140,170,0.6);
+            user-select: none;
+        }
+        .log-row__t { flex: 1; }
+        .log-row.is-warn .log-row__t { color: #fcd34d; }
+        .log-row.is-fail .log-row__t { color: #fca5a5; }
+        .log-row.is-ok .log-row__t { color: #86efac; }
+        .log-row.is-sys .log-row__t { color: #7dd3fc; font-weight: 600; }
+        @keyframes logRowIn {
+            from { opacity: 0; transform: translateY(-3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .log-empty {
+            color: rgba(148,197,253,0.55);
+            font-style: italic;
+            padding: 8px 2px;
+        }
+
         .hero {
             display: grid;
             grid-template-columns: minmax(320px, 1fr) minmax(300px, 440px);
@@ -1003,11 +1180,19 @@
                     </div>
                 </div>
             </div>
-            <div class="pipeline">
-                <span class="pipeline-dot"></span>
-                generation pipeline active
+            <div class="topbar-right">
+                <button type="button" class="log-btn" id="logBtn" onclick="openLogPanel()" title="View live generation logs" aria-label="View live generation logs">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6-6-6"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    <span>Logs</span>
+                    <span class="log-btn__count" id="logBtnCount">0</span>
+                </button>
+                <div class="pipeline">
+                    <span class="pipeline-dot"></span>
+                    generation pipeline active
+                </div>
             </div>
         </header>
+
 
         <section class="hero">
             <div>
@@ -1125,6 +1310,27 @@
             </aside>
         </section>
     </main>
+
+    <!-- Live generation log panel -->
+    <div class="log-panel-overlay" id="logOverlay" onclick="closeLogPanel()"></div>
+    <aside class="log-panel" id="logPanel" role="dialog" aria-modal="true" aria-labelledby="logPanelTitle">
+        <div class="log-panel__head">
+            <div class="log-panel__title">
+                <b id="logPanelTitle">Live Generation Logs</b>
+                <span>real-time scheduling feed</span>
+            </div>
+            <button type="button" class="log-panel__btn" id="logCopyBtn" onclick="copyLogs()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span id="logCopyLabel">Copy</span>
+            </button>
+            <button type="button" class="log-panel__close" onclick="closeLogPanel()" aria-label="Close logs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="log-panel__body" id="logPanelBody">
+            <div class="log-empty" id="logEmpty">Waiting for the engine to emit logs…</div>
+        </div>
+    </aside>
 
     <!-- Error popup -->
     <div class="err-overlay" id="errOverlay" role="dialog" aria-modal="true" aria-labelledby="errTitle">
@@ -1369,6 +1575,133 @@
         }
 
         window.setTimeout(startGeneration, 350);
+
+        // ───────────── Live generation logs (real terminal feed) ─────────────
+        const logPanel = document.getElementById("logPanel");
+        const logOverlay = document.getElementById("logOverlay");
+        const logPanelBody = document.getElementById("logPanelBody");
+        const logEmpty = document.getElementById("logEmpty");
+        const logBtnCount = document.getElementById("logBtnCount");
+        const logCopyBtn = document.getElementById("logCopyBtn");
+        const logCopyLabel = document.getElementById("logCopyLabel");
+        const LOG_URL = "{% url 'generation_logs' %}";
+
+        let realLogLines = [];
+        let logSince = 0;
+        let logDone = false;
+        let logPollTimer = null;
+        let logPanelOpen = false;
+
+        function classifyLogLine(text) {
+            const t = text.toLowerCase();
+            if (text.indexOf("[SmartScheduler]") !== -1) return "is-sys";
+            if (t.indexOf("force fail") !== -1 || t.indexOf("failed") !== -1) return "is-fail";
+            if (t.indexOf("[warn]") !== -1 || t.indexOf("warn") !== -1) return "is-warn";
+            if (/\bassigned\b|complete|finished/.test(t)) return "is-ok";
+            return "";
+        }
+
+        function appendLogRows(lines) {
+            if (!lines.length) return;
+            if (logEmpty) logEmpty.style.display = "none";
+            const wasAtBottom = (logPanelBody.scrollHeight - logPanelBody.scrollTop - logPanelBody.clientHeight) < 60;
+            const frag = document.createDocumentFragment();
+            for (const text of lines) {
+                realLogLines.push(text);
+                const row = document.createElement("div");
+                row.className = "log-row " + classifyLogLine(text);
+                const n = document.createElement("span");
+                n.className = "log-row__n";
+                n.textContent = realLogLines.length;
+                const t = document.createElement("span");
+                t.className = "log-row__t";
+                t.textContent = text === "" ? " " : text;
+                row.appendChild(n);
+                row.appendChild(t);
+                frag.appendChild(row);
+            }
+            logPanelBody.appendChild(frag);
+            logBtnCount.textContent = realLogLines.length > 999 ? "999+" : String(realLogLines.length);
+            if (logPanelOpen && wasAtBottom) {
+                logPanelBody.scrollTop = logPanelBody.scrollHeight;
+            }
+        }
+
+        async function pollLogs() {
+            if (stoppedByUser) { stopLogPolling(); return; }
+            try {
+                const resp = await fetch(LOG_URL + "?since=" + logSince, {
+                    credentials: "same-origin",
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (Array.isArray(data.lines) && data.lines.length) {
+                        appendLogRows(data.lines);
+                    }
+                    if (typeof data.total === "number") logSince = data.total;
+                    if (data.done) {
+                        logDone = true;
+                        stopLogPolling();
+                        return;
+                    }
+                }
+            } catch (_) { /* keep polling */ }
+        }
+
+        function startLogPolling() {
+            if (logPollTimer) return;
+            pollLogs();
+            logPollTimer = window.setInterval(pollLogs, 1000);
+        }
+        function stopLogPolling() {
+            if (logPollTimer) { window.clearInterval(logPollTimer); logPollTimer = null; }
+        }
+
+        function openLogPanel() {
+            logPanelOpen = true;
+            logPanel.classList.add("is-open");
+            logOverlay.classList.add("is-open");
+            logPanelBody.scrollTop = logPanelBody.scrollHeight;
+        }
+        function closeLogPanel() {
+            logPanelOpen = false;
+            logPanel.classList.remove("is-open");
+            logOverlay.classList.remove("is-open");
+        }
+        function copyLogs() {
+            const text = realLogLines.join("\n");
+            const done = function () {
+                logCopyBtn.classList.add("is-copied");
+                logCopyLabel.textContent = "Copied!";
+                window.setTimeout(function () {
+                    logCopyBtn.classList.remove("is-copied");
+                    logCopyLabel.textContent = "Copy";
+                }, 1600);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(function () {
+                    fallbackCopy(text); done();
+                });
+            } else {
+                fallbackCopy(text); done();
+            }
+        }
+        function fallbackCopy(text) {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); } catch (_) {}
+            document.body.removeChild(ta);
+        }
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && logPanelOpen) closeLogPanel();
+        });
+
+        startLogPolling();
     </script>
 <script src="{% static 'chatbot.js' %}"></script>
 </body>

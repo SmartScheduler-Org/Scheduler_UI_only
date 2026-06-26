@@ -1,0 +1,46 @@
+record_type,section_id,move_type,subject_text,teacher_uid,second_teacher_uid,co_teacher_uids,room_number,day,start_slot,duration,manual_entry,manual_slot_uid,prefill_locked,batch,total_batches,parking,slot_span
+section,MSCCHE(Isem)/BSCCHE(VIIsem),,,,,,,,,,,,,,,,
+section,MSCCHE(IIIsem),,,,,,,,,,,,,,,,
+section,BSCCHE(Isem),,,,,,,,,,,,,,,,
+section,BSCCHE(IIIsem),,,,,,,,,,,,,,,,
+section,BSCCHE(Vsem),,,,,,,,,,,,,,,,
+slot,BSCCHE(IIIsem),lab,Analytical Lab – I,CHE11,,,SB 802,Friday,6,2,true,manual-1,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,Organic Chemistry Lab – II,CHE12,,,SB 806,Friday,6,2,true,manual-2,true,2,2,false,2
+slot,BSCCHE(IIIsem),lab,Organic Chemistry Lab – II,CHE03,,,SB 806,Thursday,6,2,true,manual-3,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,Physical Chemistry Lab - III,CHE08,,,SB 801,Thursday,6,2,true,manual-4,true,2,2,false,2
+slot,BSCCHE(IIIsem),lab,Physical Chemistry Lab - III,CHE13,,,SB 801,Wednesday,1,2,true,manual-5,true,1,2,false,2
+slot,BSCCHE(IIIsem),lab,Analytical Lab – I,CHE17,,,SB 802,Wednesday,1,2,true,manual-6,true,2,2,false,2
+slot,BSCCHE(Isem),lab,Instrumentation Skills Lab-1,CHE22,,,SB 806,Friday,8,2,true,manual-7,true,1,2,false,2
+slot,BSCCHE(Isem),lab,Instrumentation Skills Lab-1,CHE22,,,SB 806,Thursday,1,2,true,manual-8,true,2,2,false,2
+slot,BSCCHE(Isem),lab,IC G2 -- PC G1,CHE17,,,SB 801,Wednesday,3,2,true,manual-9,true,1,2,false,2
+slot,BSCCHE(Isem),lab,IC G2 -- PC G1,CHE04,CHE18,,SB 802,Wednesday,3,2,true,manual-10,true,2,2,false,2
+slot,BSCCHE(Isem),lab,IC G1 -- PC G2,CHE17,,,SB 801,Wednesday,6,2,true,manual-11,true,1,2,false,2
+slot,BSCCHE(Isem),lab,IC G1 -- PC G2,CHE04,CHE18,,SB 802,Wednesday,6,2,true,manual-12,true,2,2,false,2
+slot,BSCCHE(Vsem),lab,Error Analysis and Research ethics lab/Polymer Chemistry lab,CHE19,,,SB 805,Friday,1,2,true,manual-13,true,2,2,false,2
+slot,BSCCHE(Vsem),lab,Error Analysis and Research ethics lab/Polymer Chemistry lab,PHY18,PHY17,,SB 805,Thursday,6,2,true,manual-14,true,1,2,false,2
+slot,BSCCHE(Vsem),lab,Organic Chemistry Lab – IV/Physical Chemistry Lab - V,CHE12,CHE10,,SB 801,Thursday,8,2,true,manual-15,true,1,2,false,2
+slot,BSCCHE(Vsem),lab,Organic Chemistry Lab – IV/Physical Chemistry Lab - V,CHE05,CHE13,,SB 802,Thursday,8,2,true,manual-16,true,2,2,false,2
+slot,BSCCHE(Vsem),lab,Organic Chemistry Lab – IV/Physical Chemistry Lab - V,CHE12,CHE10,,SB 801,Wednesday,8,2,true,manual-17,true,1,2,false,2
+slot,BSCCHE(Vsem),lab,Organic Chemistry Lab – IV/Physical Chemistry Lab - V,CHE05,CHE13,,SB 802,Wednesday,8,2,true,manual-18,true,2,2,false,2
+slot,MSCCHE(IIIsem),lab,Inorganic Chemistry  Lab Special-I/Physical Chemistry  Lab Special-I/Organic Chemistry  Lab Special-I*,CHE11,,,SB 805,Monday,1,3,true,manual-19,true,1,3,false,3
+slot,MSCCHE(IIIsem),lab,Inorganic Chemistry  Lab Special-I/Physical Chemistry  Lab Special-I/Organic Chemistry  Lab Special-I*,CHE02,,,SB 802,Monday,1,3,true,manual-20,true,2,3,false,3
+slot,MSCCHE(IIIsem),lab,Inorganic Chemistry  Lab Special-I/Physical Chemistry  Lab Special-I/Organic Chemistry  Lab Special-I*,CHE05,,,SB 806,Monday,1,3,true,manual-21,true,3,3,false,3
+slot,MSCCHE(IIIsem),lab,IAL(G2)-IAL(G1),CHE09,,,SB 802,Monday,7,3,true,manual-22,true,1,2,false,3
+slot,MSCCHE(IIIsem),lab,IAL(G2)-IAL(G1),CHE02,,,SB 806,Monday,7,3,true,manual-23,true,2,2,false,3
+slot,MSCCHE(IIIsem),lab,Inorganic Chemistry  Lab Special-I/Physical Chemistry  Lab Special-I/Organic Chemistry  Lab Special-I*,CHE11,,,SB 805,Tuesday,1,3,true,manual-24,true,1,3,false,3
+slot,MSCCHE(IIIsem),lab,Inorganic Chemistry  Lab Special-I/Physical Chemistry  Lab Special-I/Organic Chemistry  Lab Special-I*,CHE02,,,SB 802,Tuesday,1,3,true,manual-25,true,2,3,false,3
+slot,MSCCHE(IIIsem),lab,Inorganic Chemistry  Lab Special-I/Physical Chemistry  Lab Special-I/Organic Chemistry  Lab Special-I*,CHE05,,,SB 806,Tuesday,1,3,true,manual-26,true,3,3,false,3
+slot,MSCCHE(IIIsem),lab,IAL(G1)-IAL(G2),CHE09,,,SB 802,Tuesday,7,3,true,manual-27,true,1,2,false,3
+slot,MSCCHE(IIIsem),lab,IAL(G1)-IAL(G2),CHE02,,,SB 806,Tuesday,7,3,true,manual-28,true,2,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Organic Chemistry Lab-1;Physical Chemistry Lab-I,CHE03,,,SB 806,Friday,1,3,true,manual-29,true,1,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Organic Chemistry Lab-1;Physical Chemistry Lab-I,CHE04,,,SB 802,Friday,1,3,true,manual-30,true,2,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Physical Chemistry Lab-I-Inorganic Chemistry Lab-I,CHE04,CHE08,,SB 802,Monday,4,3,true,manual-31,true,1,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Physical Chemistry Lab-I-Inorganic Chemistry Lab-I,CHE01,CHE16,,SB 805,Monday,4,3,true,manual-32,true,2,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Physical Chemistry Lab-I-Inorganic Chemistry Lab-I,CHE04,CHE08,,SB 802,Thursday,1,3,true,manual-33,true,1,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Physical Chemistry Lab-I-Inorganic Chemistry Lab-I,CHE01,CHE16,,SB 805,Thursday,1,3,true,manual-34,true,2,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Organic Chemistry Lab-1;Physical Chemistry Lab-I,CHE03,,,SB 806,Tuesday,4,3,true,manual-35,true,1,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Organic Chemistry Lab-1;Physical Chemistry Lab-I,CHE04,,,SB 802,Tuesday,4,3,true,manual-36,true,2,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Inorganic Chemistry Lab-I-Organic Chemistry Lab-1,CHE01,,,SB 805,Wednesday,1,3,true,manual-37,true,1,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Inorganic Chemistry Lab-I-Organic Chemistry Lab-1,CHE03,,,SB 806,Wednesday,1,3,true,manual-38,true,2,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Inorganic Chemistry Lab-I-Organic Chemistry Lab-1,CHE01,CHE16,,SB 805,Wednesday,6,3,true,manual-39,true,1,2,false,3
+slot,MSCCHE(Isem)/BSCCHE(VIIsem),lab,Inorganic Chemistry Lab-I-Organic Chemistry Lab-1,CHE03,CHE07,,SB 806,Wednesday,6,3,true,manual-40,true,2,2,false,3

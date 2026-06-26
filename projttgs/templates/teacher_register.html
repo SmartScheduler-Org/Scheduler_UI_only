@@ -1,0 +1,500 @@
+{% extends "base.html" %}
+{% block title %}Teacher Registration | SmartScheduler{% endblock %}
+{% block content %}
+<div class="treg-page">
+  <div class="treg-blob treg-blob-1"></div>
+  <div class="treg-blob treg-blob-2"></div>
+
+  <div class="treg-card">
+    <div class="treg-head">
+      <div class="treg-badge">Teacher Registration</div>
+      <h1>Create your <span>Teacher</span> account</h1>
+      <p>Find your profile, verify your identity by email, then set a password.</p>
+    </div>
+
+    <!-- STEP PROGRESS -->
+    <div class="treg-steps">
+      <div class="treg-step is-active" data-step="1"><span>1</span>Find</div>
+      <div class="treg-step" data-step="2"><span>2</span>Verify</div>
+      <div class="treg-step" data-step="3"><span>3</span>Password</div>
+    </div>
+
+    {% if messages %}
+    <div class="treg-alerts">
+      {% for message in messages %}
+      <div class="treg-alert {% if 'error' in message.tags %}is-error{% else %}is-ok{% endif %}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" id="tregForm" class="treg-form" autocomplete="off">
+      {% csrf_token %}
+      <input type="hidden" name="instructor_id" id="tregInstructorId">
+
+      <!-- ====== STEP 1: FIND PROFILE ====== -->
+      <section class="treg-pane" id="pane1">
+        <label class="treg-label">Choose Your Department</label>
+        <select id="tregDept" class="treg-input" required>
+          <option value="">Select department…</option>
+          {% for d in dept_options %}
+          <option value="{{ forloop.counter0 }}" data-name="{{ d.name }}" data-code="{{ d.code }}">
+            {{ d.name }}{% if d.code %} ({{ d.code }}){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+
+        <label class="treg-label">Teacher Name</label>
+        <div class="treg-search-row">
+          <input type="text" id="tregNameSearch" class="treg-input" placeholder="Start typing your name…" disabled>
+          <button type="button" id="tregSearchBtn" class="treg-btn-search" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            Search Teacher
+          </button>
+        </div>
+
+        <!-- loading -->
+        <div id="tregLoading" class="treg-loading" style="display:none;">
+          <div class="treg-spinner"></div>
+          <span>Gathering your information from the database…</span>
+        </div>
+
+        <!-- result cards -->
+        <div id="tregResults" class="treg-results"></div>
+        <div id="tregNoResults" class="treg-empty" style="display:none;">
+          No matching teacher found in this department. Check the spelling or try a different department.
+        </div>
+
+        <!-- selected profile summary -->
+        <div id="tregSelected" class="treg-selected" style="display:none;">
+          <div class="treg-grid2">
+            <div>
+              <label class="treg-label">Teacher Code</label>
+              <input type="text" id="tregCode" class="treg-input is-readonly" readonly>
+            </div>
+            <div>
+              <label class="treg-label">Email Address</label>
+              <input type="text" id="tregEmail" class="treg-input is-readonly" readonly>
+            </div>
+          </div>
+
+          <div id="tregExists" class="treg-alert is-error" style="display:none;">
+            An account already exists for this teacher. Please <a href="{% url 'teacher/login' %}">log in</a> instead.
+          </div>
+
+          <button type="button" id="tregVerifyBtn" class="treg-btn">Verify Your Identity</button>
+        </div>
+      </section>
+
+      <!-- ====== STEP 2: OTP ====== -->
+      <section class="treg-pane" id="pane2" style="display:none;">
+        <div class="treg-otp-head">
+          <h2>Verify your email</h2>
+          <p>We sent a 4-digit code to <strong id="tregMaskedEmail"></strong>. Enter it below.</p>
+        </div>
+
+        <div class="treg-otp-inputs" id="tregOtpInputs">
+          <input type="text" inputmode="numeric" maxlength="1" class="treg-otp-box">
+          <input type="text" inputmode="numeric" maxlength="1" class="treg-otp-box">
+          <input type="text" inputmode="numeric" maxlength="1" class="treg-otp-box">
+          <input type="text" inputmode="numeric" maxlength="1" class="treg-otp-box">
+        </div>
+
+        <div id="tregOtpError" class="treg-alert is-error" style="display:none;"></div>
+
+        <div class="treg-otp-meta">
+          <span id="tregTimer" class="treg-timer">05:00</span>
+          <button type="button" id="tregResendBtn" class="treg-link-btn" disabled>Resend OTP</button>
+        </div>
+
+        <button type="button" id="tregVerifyOtpBtn" class="treg-btn">Verify Code</button>
+        <button type="button" id="tregBackBtn" class="treg-link-btn treg-back">&larr; Choose a different profile</button>
+      </section>
+
+      <!-- ====== STEP 3: PASSWORD ====== -->
+      <section class="treg-pane" id="pane3" style="display:none;">
+        <div class="treg-verified-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          Identity verified
+        </div>
+
+        <div class="treg-grid2">
+          <div>
+            <label class="treg-label">Password</label>
+            <input type="password" name="password" id="tregPwd" class="treg-input" placeholder="Set a password" required>
+          </div>
+          <div>
+            <label class="treg-label">Confirm Password</label>
+            <input type="password" name="confirm_password" id="tregPwd2" class="treg-input" placeholder="Re-enter password" required>
+          </div>
+        </div>
+        <div id="tregPwdHint" class="treg-hint">Use at least 5 characters.</div>
+
+        <button type="submit" id="tregSubmit" class="treg-btn" disabled>Create Account</button>
+      </section>
+
+      <div class="treg-foot">
+        Already registered? <a href="{% url 'teacher/login' %}">Log in here</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.treg-page{min-height:calc(100vh - 70px);display:flex;align-items:center;justify-content:center;padding:40px 18px;position:relative;overflow:hidden;font-family:'Poppins',sans-serif}
+.treg-blob{position:fixed;border-radius:50%;filter:blur(95px);pointer-events:none;z-index:0}
+.treg-blob-1{width:520px;height:520px;background:radial-gradient(circle,rgba(236,72,153,.32),transparent 70%);top:-120px;left:-110px}
+.treg-blob-2{width:560px;height:560px;background:radial-gradient(circle,rgba(0,180,255,.28),transparent 70%);bottom:-160px;right:-120px}
+.treg-card{position:relative;z-index:2;width:100%;max-width:620px;background:rgba(7,11,28,.82);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:34px 30px;backdrop-filter:blur(20px);box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.treg-badge{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#ec4899;margin-bottom:.7rem}
+.treg-head h1{font-size:1.85rem;font-weight:800;color:#fff;margin:0 0 .5rem;line-height:1.15}
+.treg-head h1 span{background:linear-gradient(120deg,#ec4899,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.treg-head p{font-size:.88rem;color:rgba(148,163,184,.85);margin:0 0 1.2rem;line-height:1.6}
+.treg-steps{display:flex;gap:8px;margin-bottom:18px}
+.treg-step{flex:1;display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:#64748b;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+.treg-step span{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:rgba(255,255,255,.08);color:#94a3b8}
+.treg-step.is-active{color:#fff;border-color:rgba(236,72,153,.5)}
+.treg-step.is-active span{background:linear-gradient(120deg,#ec4899,#a78bfa);color:#fff}
+.treg-step.is-done span{background:#22c55e;color:#06210f}
+.treg-alerts{margin-bottom:14px;display:flex;flex-direction:column;gap:8px}
+.treg-alert{font-size:.84rem;padding:10px 14px;border-radius:10px}
+.treg-alert.is-error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fca5a5}
+.treg-alert.is-ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4);color:#86efac}
+.treg-alert a{color:inherit;font-weight:700}
+.treg-form{display:flex;flex-direction:column;gap:6px}
+.treg-label{font-size:.74rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;margin:10px 0 4px}
+.treg-input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#fff;font-size:.92rem;outline:none;transition:border-color .2s,box-shadow .2s}
+.treg-input:focus{border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.18)}
+.treg-input:disabled{opacity:.55;cursor:not-allowed}
+.treg-input.is-readonly{background:rgba(255,255,255,.02);color:#cbd5e1;cursor:default}
+select.treg-input option{background:#0b1020;color:#fff}
+.treg-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.treg-search-row{display:flex;gap:10px;align-items:stretch}
+.treg-search-row .treg-input{flex:1}
+.treg-btn-search{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;padding:0 16px;border:none;border-radius:12px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.4);color:#c4b5fd;font-weight:600;font-size:.85rem;cursor:pointer;transition:background .2s,opacity .2s}
+.treg-btn-search svg{width:16px;height:16px}
+.treg-btn-search:hover:not(:disabled){background:rgba(167,139,250,.28)}
+.treg-btn-search:disabled{opacity:.45;cursor:not-allowed}
+.treg-loading{display:flex;align-items:center;gap:12px;padding:16px;margin-top:14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.14);color:#cbd5e1;font-size:.86rem}
+.treg-spinner{width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(236,72,153,.25);border-top-color:#ec4899;animation:tregspin .7s linear infinite;flex:0 0 20px}
+@keyframes tregspin{to{transform:rotate(360deg)}}
+.treg-results{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.treg-tcard{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);cursor:pointer;transition:border-color .2s,transform .15s,background .2s}
+.treg-tcard:hover{transform:translateY(-2px);border-color:rgba(167,139,250,.5)}
+.treg-tcard.is-selected{border-color:#ec4899;background:rgba(236,72,153,.1);box-shadow:0 0 0 2px rgba(236,72,153,.25)}
+.treg-tcard__avatar{flex:0 0 44px;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;background:linear-gradient(135deg,#6366f1,#ec4899)}
+.treg-tcard__body{flex:1;min-width:0}
+.treg-tcard__name{color:#fff;font-weight:700;font-size:.95rem}
+.treg-tcard__meta{color:#94a3b8;font-size:.78rem;margin-top:2px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.treg-tcard__meta b{color:#cbd5e1;font-weight:600}
+.treg-tcard__tick{flex:0 0 22px;width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;color:transparent}
+.treg-tcard.is-selected .treg-tcard__tick{background:#ec4899;border-color:#ec4899;color:#fff}
+.treg-tcard__tick svg{width:13px;height:13px}
+.treg-badge-acct{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fcd34d;background:rgba(252,211,77,.12);border:1px solid rgba(252,211,77,.3);padding:2px 8px;border-radius:999px}
+.treg-selected{margin-top:18px}
+.treg-empty{padding:18px;text-align:center;color:#94a3b8;font-size:.85rem;border:1px dashed rgba(255,255,255,.14);border-radius:12px;margin-top:14px}
+.treg-btn{margin-top:18px;padding:13px;border:none;border-radius:12px;background:linear-gradient(120deg,#ec4899,#a78bfa);color:#fff;font-size:.98rem;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .25s,opacity .2s}
+.treg-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 14px 30px rgba(236,72,153,.4)}
+.treg-btn:disabled{opacity:.5;cursor:not-allowed}
+.treg-btn.is-loading{opacity:.7;cursor:wait}
+.treg-otp-head h2{font-size:1.3rem;font-weight:800;color:#fff;margin:0 0 .4rem}
+.treg-otp-head p{font-size:.85rem;color:#94a3b8;margin:0 0 18px;line-height:1.6}
+.treg-otp-inputs{display:flex;gap:12px;justify-content:center;margin:8px 0 14px}
+.treg-otp-box{width:58px;height:64px;text-align:center;font-size:1.7rem;font-weight:800;color:#fff;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);outline:none;transition:border-color .2s,box-shadow .2s}
+.treg-otp-box:focus{border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.2)}
+.treg-otp-meta{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 6px}
+.treg-timer{font-size:.9rem;font-weight:700;color:#a5b4fc;font-variant-numeric:tabular-nums}
+.treg-timer.is-expired{color:#fca5a5}
+.treg-link-btn{background:none;border:none;color:#ec4899;font-weight:600;font-size:.85rem;cursor:pointer;padding:4px}
+.treg-link-btn:disabled{color:#64748b;cursor:not-allowed}
+.treg-back{display:block;margin:14px auto 0;color:#94a3b8}
+.treg-verified-badge{display:inline-flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:#86efac;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);padding:8px 14px;border-radius:999px;margin-bottom:6px}
+.treg-verified-badge svg{width:16px;height:16px}
+.treg-hint{font-size:.76rem;color:#64748b;margin-top:6px}
+.treg-foot{margin-top:18px;text-align:center;font-size:.84rem;color:#94a3b8}
+.treg-foot a{color:#ec4899;font-weight:700;text-decoration:none}
+@media(max-width:560px){.treg-grid2{grid-template-columns:1fr}.treg-search-row{flex-direction:column}.treg-otp-box{width:48px;height:56px;font-size:1.4rem}}
+</style>
+
+<script>
+(function(){
+  const URLS = {
+    teachers: "{% url 'teacher_register_teachers' %}",
+    sendOtp:  "{% url 'teacher_register_send_otp' %}",
+    verifyOtp:"{% url 'teacher_register_verify_otp' %}"
+  };
+  const $ = (id) => document.getElementById(id);
+
+  // ---- CSRF helper ----
+  function getCookie(name){
+    const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+  const CSRF = getCookie('csrftoken');
+  async function postForm(url, data){
+    const body = new URLSearchParams(data);
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'X-CSRFToken':CSRF,'X-Requested-With':'XMLHttpRequest','Content-Type':'application/x-www-form-urlencoded'},
+      body
+    });
+    let json = {};
+    try { json = await res.json(); } catch(e){}
+    return { ok: res.ok, status: res.status, data: json };
+  }
+
+  // ---- Elements ----
+  const deptSel = $('tregDept');
+  const nameSearch = $('tregNameSearch');
+  const searchBtn = $('tregSearchBtn');
+  const loading = $('tregLoading');
+  const results = $('tregResults');
+  const noResults = $('tregNoResults');
+  const selectedBox = $('tregSelected');
+  const instrId = $('tregInstructorId');
+  const codeInp = $('tregCode');
+  const emailInp = $('tregEmail');
+  const existsBox = $('tregExists');
+  const verifyBtn = $('tregVerifyBtn');
+  const pane1 = $('pane1'), pane2 = $('pane2'), pane3 = $('pane3');
+  const maskedEmail = $('tregMaskedEmail');
+  const otpInputs = Array.from(document.querySelectorAll('.treg-otp-box'));
+  const otpError = $('tregOtpError');
+  const timerEl = $('tregTimer');
+  const resendBtn = $('tregResendBtn');
+  const verifyOtpBtn = $('tregVerifyOtpBtn');
+  const backBtn = $('tregBackBtn');
+  const pwd = $('tregPwd'), pwd2 = $('tregPwd2'), submitBtn = $('tregSubmit');
+  const steps = Array.from(document.querySelectorAll('.treg-step'));
+
+  let selected = null;
+  let timerInt = null;
+
+  function setStep(n){
+    steps.forEach(s=>{
+      const sn = parseInt(s.dataset.step,10);
+      s.classList.toggle('is-active', sn===n);
+      s.classList.toggle('is-done', sn<n);
+    });
+  }
+
+  // ---- Step 1: department + search ----
+  deptSel.addEventListener('change', function(){
+    const opt = deptSel.options[deptSel.selectedIndex];
+    const has = opt && opt.value;
+    nameSearch.disabled = !has;
+    searchBtn.disabled = !has || nameSearch.value.trim().length < 1;
+    resetResults();
+  });
+
+  nameSearch.addEventListener('input', function(){
+    searchBtn.disabled = nameSearch.value.trim().length < 1 || !deptSel.value;
+  });
+  nameSearch.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); if(!searchBtn.disabled) doSearch(); }
+  });
+  searchBtn.addEventListener('click', doSearch);
+
+  function resetResults(){
+    results.innerHTML = '';
+    noResults.style.display = 'none';
+    selectedBox.style.display = 'none';
+    selected = null;
+    instrId.value = '';
+  }
+
+  async function doSearch(){
+    const opt = deptSel.options[deptSel.selectedIndex];
+    const name = opt.getAttribute('data-name') || '';
+    const code = opt.getAttribute('data-code') || '';
+    const q = nameSearch.value.trim();
+    resetResults();
+    loading.style.display = 'flex';
+    try{
+      const res = await fetch(`${URLS.teachers}?name=${encodeURIComponent(name)}&code=${encodeURIComponent(code)}&q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      loading.style.display = 'none';
+      const list = data.teachers || [];
+      if(!list.length){ noResults.style.display = 'block'; return; }
+      list.forEach(t => results.appendChild(buildCard(t)));
+    }catch(e){
+      loading.style.display = 'none';
+      noResults.textContent = 'Could not load teachers. Please try again.';
+      noResults.style.display = 'block';
+    }
+  }
+
+  function initials(name){ return (name||'?').trim().charAt(0).toUpperCase(); }
+
+  function buildCard(t){
+    const card = document.createElement('div');
+    card.className = 'treg-tcard';
+    card.innerHTML = `
+      <div class="treg-tcard__avatar">${initials(t.name)}</div>
+      <div class="treg-tcard__body">
+        <div class="treg-tcard__name">${t.name} ${t.has_account ? '<span class="treg-badge-acct">Registered</span>' : ''}</div>
+        <div class="treg-tcard__meta">
+          <span>Code: <b>${t.uid}</b></span>
+          <span>${t.email ? t.email : 'No email'}</span>
+          <span>${t.department || ''}</span>
+        </div>
+      </div>
+      <div class="treg-tcard__tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>`;
+    card.addEventListener('click', () => selectCard(card, t));
+    return card;
+  }
+
+  function selectCard(card, t){
+    document.querySelectorAll('.treg-tcard').forEach(c=>c.classList.remove('is-selected'));
+    card.classList.add('is-selected');
+    selected = t;
+    instrId.value = t.id;
+    codeInp.value = t.uid;
+    emailInp.value = t.email || '—';
+    existsBox.style.display = t.has_account ? 'block' : 'none';
+    existsBox.innerHTML = 'An account already exists for this teacher. Please <a href="{% url 'teacher/login' %}">log in</a> instead.';
+    verifyBtn.style.display = t.has_account ? 'none' : 'block';
+    selectedBox.style.display = 'block';
+    selectedBox.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  // ---- Step 2: send + verify OTP ----
+  verifyBtn.addEventListener('click', async function(){
+    if(!selected) return;
+    verifyBtn.classList.add('is-loading');
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Sending code…';
+    const res = await postForm(URLS.sendOtp, {instructor_id: selected.id});
+    verifyBtn.classList.remove('is-loading');
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = 'Verify Your Identity';
+    if(!res.data.ok){
+      existsBox.style.display = 'block';
+      existsBox.innerHTML = res.data.error || 'Could not send the verification email.';
+      return;
+    }
+    existsBox.style.display = 'none';
+    maskedEmail.textContent = res.data.masked_email || (selected.email || '');
+    goToOtp(res.data.expires_in || 300);
+  });
+
+  function goToOtp(seconds){
+    pane1.style.display = 'none';
+    pane2.style.display = 'block';
+    pane3.style.display = 'none';
+    setStep(2);
+    otpError.style.display = 'none';
+    otpInputs.forEach(b=>b.value='');
+    otpInputs[0].focus();
+    startTimer(seconds);
+  }
+
+  function startTimer(seconds){
+    clearInterval(timerInt);
+    let remaining = seconds;
+    resendBtn.disabled = true;
+    timerEl.classList.remove('is-expired');
+    render();
+    timerInt = setInterval(()=>{
+      remaining--;
+      render();
+      if(remaining <= 0){
+        clearInterval(timerInt);
+        timerEl.classList.add('is-expired');
+        resendBtn.disabled = false;
+      }
+    },1000);
+    function render(){
+      const m = String(Math.floor(remaining/60)).padStart(2,'0');
+      const s = String(remaining%60).padStart(2,'0');
+      timerEl.textContent = `${m}:${s}`;
+    }
+  }
+
+  // OTP box navigation
+  otpInputs.forEach((box, idx)=>{
+    box.addEventListener('input', ()=>{
+      box.value = box.value.replace(/\D/g,'').slice(0,1);
+      if(box.value && idx < otpInputs.length-1) otpInputs[idx+1].focus();
+    });
+    box.addEventListener('keydown', (e)=>{
+      if(e.key==='Backspace' && !box.value && idx>0) otpInputs[idx-1].focus();
+    });
+    box.addEventListener('paste', (e)=>{
+      e.preventDefault();
+      const digits = (e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,4).split('');
+      digits.forEach((d,i)=>{ if(otpInputs[i]) otpInputs[i].value = d; });
+      const next = Math.min(digits.length, otpInputs.length-1);
+      otpInputs[next].focus();
+    });
+  });
+
+  function otpValue(){ return otpInputs.map(b=>b.value).join(''); }
+
+  verifyOtpBtn.addEventListener('click', async function(){
+    const otp = otpValue();
+    if(otp.length !== 4){ showOtpError('Please enter the 4-digit code.'); return; }
+    verifyOtpBtn.classList.add('is-loading');
+    verifyOtpBtn.disabled = true;
+    verifyOtpBtn.textContent = 'Verifying…';
+    const res = await postForm(URLS.verifyOtp, {instructor_id: selected.id, otp});
+    verifyOtpBtn.classList.remove('is-loading');
+    verifyOtpBtn.disabled = false;
+    verifyOtpBtn.textContent = 'Verify Code';
+    if(res.data.ok){
+      clearInterval(timerInt);
+      goToPassword();
+    } else {
+      showOtpError(res.data.error || 'Verification failed.');
+      if(res.data.expired || res.data.locked){
+        clearInterval(timerInt);
+        timerEl.classList.add('is-expired');
+        resendBtn.disabled = false;
+      }
+    }
+  });
+
+  function showOtpError(msg){
+    otpError.textContent = msg;
+    otpError.style.display = 'block';
+  }
+
+  resendBtn.addEventListener('click', async function(){
+    if(resendBtn.disabled) return;
+    resendBtn.disabled = true;
+    resendBtn.textContent = 'Sending…';
+    const res = await postForm(URLS.sendOtp, {instructor_id: selected.id});
+    resendBtn.textContent = 'Resend OTP';
+    if(res.data.ok){
+      otpError.style.display = 'none';
+      otpInputs.forEach(b=>b.value='');
+      otpInputs[0].focus();
+      maskedEmail.textContent = res.data.masked_email || maskedEmail.textContent;
+      startTimer(res.data.expires_in || 300);
+    } else {
+      showOtpError(res.data.error || 'Could not resend the code.');
+      resendBtn.disabled = false;
+    }
+  });
+
+  backBtn.addEventListener('click', function(){
+    clearInterval(timerInt);
+    pane2.style.display = 'none';
+    pane1.style.display = 'block';
+    setStep(1);
+  });
+
+  // ---- Step 3: password ----
+  function goToPassword(){
+    pane2.style.display = 'none';
+    pane3.style.display = 'block';
+    setStep(3);
+    pwd.focus();
+  }
+  function refreshSubmit(){
+    submitBtn.disabled = !(pwd.value.length >= 5 && pwd.value === pwd2.value);
+  }
+  pwd.addEventListener('input', refreshSubmit);
+  pwd2.addEventListener('input', refreshSubmit);
+})();
+</script>
+{% endblock %}

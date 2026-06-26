@@ -29,6 +29,11 @@ urlpatterns = [
     path('saved-prefills/<int:prefill_id>/delete/', views.delete_saved_prefill, name='delete_saved_prefill'),
     path('role', views.role, name='role'),
     path('teacher-login', views.teacherlogin, name='teacher/login'),
+    path('teacher-register/', views.teacher_register, name='teacher_register'),
+    path('teacher-register/teachers/', views.teacher_register_teachers, name='teacher_register_teachers'),
+    path('teacher-register/info/', views.teacher_register_info, name='teacher_register_info'),
+    path('teacher-register/send-otp/', views.teacher_register_send_otp, name='teacher_register_send_otp'),
+    path('teacher-register/verify-otp/', views.teacher_register_verify_otp, name='teacher_register_verify_otp'),
     path('dean-login', views.deanlogin, name='dean/login'),
     path('set-role/hod/', views.admindash_role_set, name='set_role_hod'),
     path('set-role/teacher/', views.teacher_role_set, name='set_role_teacher'),
@@ -56,6 +61,7 @@ urlpatterns = [
     path('superadmin/drilldown/', views.superadmin_drilldown, name='superadmin_drilldown'),
     path('superadmin/room-analytics/', views.superadmin_room_analytics, name='superadmin_room_analytics'),
     path('superadmin/teacher-detail/', views.superadmin_teacher_detail, name='superadmin_teacher_detail'),
+    path('superadmin/teacher-workload/', views.superadmin_teacher_workload, name='superadmin_teacher_workload'),
     path('superadmin/saved/', views.superadmin_saved_list, name='superadmin_saved_list'),
     path('superadmin/saved/<int:tid>/', views.superadmin_saved_detail, name='superadmin_saved_detail'),
     path('superadmin/move-slot/', views.superadmin_move_slot, name='superadmin_move_slot'),
@@ -132,6 +138,7 @@ urlpatterns = [
 
     path("generate_timetable/loading/", views.generate_timetable_loading, name="generate_timetable_loading"),
     path("generate_timetable/", views.generate_timetables, name="generate_timetables"),
+    path("generate_timetable/logs/", views.generation_logs, name="generation_logs"),
     path("timetables/", views.timetables_page, name="timetables_page"),
     path("timetable/<int:index>/departments/", views.timetable_dept_select, name="timetable_dept_select"),
     path("timetable/<int:index>/full-statistics/", views.full_statistics, name="full_statistics"),
@@ -154,6 +161,7 @@ urlpatterns = [
     path('parking/delete-slot/<path:section>/<str:day>/<int:slot>/', views.generated_delete_slot_item, name='generated_delete_slot_item'),
     path('delete_slot/<path:section>/<str:day>/<int:slot>/', views.delete_slot, name='delete_slot'),
     path('add_slot/<path:section>/', views.add_slot, name='add_slot'),
+    path('rename_instructor/', views.rename_instructor, name='rename_instructor'),
     
     path('save_timetable/<int:index>/', views.save_timetable, name='save_timetable'),
     path('saved_timetables/', views.saved_timetable_list, name='saved_timetable_list'),
@@ -167,6 +175,21 @@ urlpatterns = [
         'download_generated_timetable_excel/<int:index>/<str:view_type>/',
         views.download_generated_timetable_excel,
         name='download_generated_timetable_excel'
+    ),
+    path(
+        'timetable/<int:index>/download/',
+        views.timetable_download_center,
+        name='timetable_download_center'
+    ),
+    path(
+        'download_generated_timetable_pdf/<int:index>/',
+        views.download_generated_timetable_pdf,
+        name='download_generated_timetable_pdf'
+    ),
+    path(
+        'download_generated_timetable_pdf/<int:index>/<str:view_type>/',
+        views.download_generated_timetable_pdf,
+        name='download_generated_timetable_pdf_view'
     ),
     
     # Saved timetable slot editing
