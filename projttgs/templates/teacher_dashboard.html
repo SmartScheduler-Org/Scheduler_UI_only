@@ -117,7 +117,7 @@
                 {% endfor %}
               </td>
               {% elif cell.type == "class" %}
-              <td class="teacher-table__class">
+              <td colspan="{{ cell.colspan }}" class="teacher-table__class">
                 {% for cls in cell.classes %}
                 <div class="teacher-table__block">
                   <strong>{{ cls.subject.subject_name }}</strong>

@@ -5,6 +5,15 @@
 {% block subheading %}Rooms &amp; labs usage across the university · {{ totals.rooms }} rooms · {{ totals.labs }} labs{% endblock %}
 
 {% block content %}
+  <style>
+    #roomTable tbody tr.room-row{cursor:pointer}
+    #roomTable tbody tr.room-row:hover td{text-decoration:none}
+    .util-badge{display:inline-flex;align-items:center;justify-content:center;min-width:74px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid transparent}
+    .util-badge.full{background:rgba(34,197,94,.18);color:#86efac;border-color:rgba(34,197,94,.42)}
+    .util-badge.high{background:rgba(59,130,246,.18);color:#93c5fd;border-color:rgba(59,130,246,.38)}
+    .util-badge.mid{background:rgba(245,158,11,.18);color:#fcd34d;border-color:rgba(245,158,11,.36)}
+    .util-badge.low{background:rgba(239,68,68,.16);color:#fca5a5;border-color:rgba(239,68,68,.34)}
+  </style>
   <section class="grid g3">
     <div class="panel">
       <div class="ph">
@@ -66,11 +75,11 @@
       </tr></thead>
       <tbody>
         {% for r in room_util %}
-        <tr>
+        <tr class="room-row" data-room-id="{{ r.id }}" data-room-name="{{ r.number }}">
           <td>{{ r.number }}</td>
           <td>{% if r.type == 'Lab' %}<span class="pill lab">Lab</span>{% else %}<span class="pill theory">{{ r.type }}</span>{% endif %}</td>
           <td>{{ r.dept }}</td>
-          <td data-sort="{{ r.util }}">{{ r.util }}%</td>
+          <td data-sort="{{ r.util }}">{% if r.util >= 100 %}<span class="util-badge full">{{ r.util }}%</span>{% elif r.util >= 70 %}<span class="util-badge high">{{ r.util }}%</span>{% elif r.util >= 40 %}<span class="util-badge mid">{{ r.util }}%</span>{% else %}<span class="util-badge low">{{ r.util }}%</span>{% endif %}</td>
           <td><div class="bar"><i style="width:{{ r.util }}%"></i></div></td>
         </tr>
         {% empty %}<tr><td colspan="5" class="empty">No rooms.</td></tr>{% endfor %}
@@ -100,6 +109,16 @@
 {% block scripts %}
 <script>
   const ROOM_URL = "{% url 'superadmin_room_analytics' %}";
+
+  function utilBadgeClass(util){
+    if(util >= 100) return 'full';
+    if(util >= 70) return 'high';
+    if(util >= 40) return 'mid';
+    return 'low';
+  }
+  function renderUtilBadge(util){
+    return `<span class="util-badge ${utilBadgeClass(util)}">${util}%</span>`;
+  }
 
   let resChart;
   function drawRes(key){
@@ -164,6 +183,10 @@
     b.onclick=()=>{filtMenu.classList.remove('open');openRooms(b.dataset.bucket);};
   });
 
+  document.querySelectorAll('#roomTable tbody tr.room-row').forEach(row=>{
+    row.addEventListener('click',()=>openRoomDetail(row.dataset.roomId, row.dataset.roomName));
+  });
+
   async function openRooms(bucket){
     const res=await fetch(`${ROOM_URL}?bucket=${bucket}&dept=${encodeURIComponent(CURRENT_DEPT)}`);
     const j=await res.json();
@@ -172,7 +195,7 @@
     document.getElementById('roomStats').innerHTML=`
       <div class="stat"><div class="l">Rooms</div><div class="v">${j.summary.rooms}</div></div>
       <div class="stat"><div class="l">Classes</div><div class="v">${j.summary.classes}</div></div>
-      <div class="stat"><div class="l">Avg Utilization</div><div class="v">${j.summary.avg_util}%</div></div>`;
+      <div class="stat"><div class="l">Avg Utilization</div><div class="v">${renderUtilBadge(j.summary.avg_util)}</div></div>`;
     const top=j.rooms.slice(0,8);
     destroyChart('rb');
     _mc.rb=new Chart(document.getElementById('roomBucketChart'),{type:'bar',
@@ -187,6 +210,29 @@
     list.innerHTML=j.rooms.length?j.rooms.map(r=>roomCardHTML(r,j.times)).join(''):'<div class="empty">No rooms in this category.</div>';
     document.getElementById('roomModal').classList.add('open');
   }
+  async function openRoomDetail(roomId, roomName){
+    const res=await fetch(`${ROOM_URL}?bucket=all&dept=${encodeURIComponent(CURRENT_DEPT)}&room_id=${encodeURIComponent(roomId)}`);
+    const j=await res.json();
+    const room=(j.rooms||[])[0];
+    if(!room){showToast('Could not load room details.','err');return;}
+    document.getElementById('roomModalTitle').textContent='Room Detail — '+(roomName||room.number);
+    document.getElementById('roomModalSub').textContent=`${room.department} · ${room.type} · ${room.util}% utilization`;
+    document.getElementById('roomStats').innerHTML=`
+      <div class="stat"><div class="l">Room</div><div class="v">${room.number}</div></div>
+      <div class="stat"><div class="l">Used Slots</div><div class="v">${room.used}</div></div>
+      <div class="stat"><div class="l">Free Slots</div><div class="v">${room.free_count}</div></div>
+      <div class="stat"><div class="l">Utilization</div><div class="v">${renderUtilBadge(room.util)}</div></div>`;
+    destroyChart('rb');
+    _mc.rb=new Chart(document.getElementById('roomBucketChart'),{type:'bar',
+      data:{labels:[room.number],datasets:[{label:'Util %',data:[room.util],backgroundColor:'#3b82f6',borderRadius:6}]},
+      options:{plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}});
+    destroyChart('rf');
+    _mc.rf=new Chart(document.getElementById('roomFreeChart'),{type:'doughnut',
+      data:{labels:['Used','Free'],datasets:[{data:[room.used,Math.max(room.total-room.used,0)],backgroundColor:['#3b82f6','#1e293b'],borderWidth:0}]},
+      options:{cutout:'66%',plugins:{legend:{position:'bottom'}}}});
+    document.getElementById('roomList').innerHTML=roomCardHTML(room,j.times);
+    document.getElementById('roomModal').classList.add('open');
+  }
   function roomCardHTML(r,times){
     const grid=r.grid.map(row=>`
       <div class="mr"><div class="heatlabel">${row.day}</div>
@@ -199,7 +245,7 @@
     return `<div class="roomcard">
       <div class="rh">
         <b>${r.number} <span class="pill ${r.type==='Lab'?'lab':'theory'}">${r.type}</span></b>
-        <div style="font-size:12px;color:var(--mut)">Dept: <b style="color:#cbd5e1">${r.department}</b> · Capacity ${r.capacity} · ${r.util}% used · ${r.free_count} free</div>
+        <div style="font-size:12px;color:var(--mut)">Dept: <b style="color:#cbd5e1">${r.department}</b> · Capacity ${r.capacity} · ${renderUtilBadge(r.util)} · ${r.free_count} free</div>
       </div>
       <div class="miniheat">
         <div class="mr"><div></div><div class="mc" style="grid-template-columns:repeat(${times.length},1fr)">${times.map(t=>`<span style="text-align:center;font-size:10px;color:var(--mut)">${t}</span>`).join('')}</div></div>

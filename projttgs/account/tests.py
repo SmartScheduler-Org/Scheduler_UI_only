@@ -26,32 +26,19 @@ class TeacherOnboardingFlowTests(TestCase):
         self.hod_profile.role = "hod"
         self.hod_profile.save(update_fields=["role"])
 
-    def test_teacher_dashboard_redirects_to_onboarding_until_submitted(self):
+    def test_teacher_dashboard_redirects_to_registration_without_onboarding_gate(self):
         self.client.force_login(self.teacher)
 
         response = self.client.get(reverse("teacher_dashboard"))
 
-        self.assertRedirects(response, reverse("teacher_onboarding"))
+        self.assertRedirects(response, reverse("teacher_register"))
 
-    def test_teacher_onboarding_submission_creates_single_record(self):
+    def test_teacher_onboarding_url_redirects_to_dashboard(self):
         self.client.force_login(self.teacher)
 
-        response = self.client.post(
-            reverse("teacher_onboarding"),
-            {
-                "full_name": "Teacher User",
-                "designation": "Assistant Professor",
-                "joining_year": "2022",
-                "email": "teacher@example.com",
-                "subjects_taught": "DBMS, Operating Systems",
-            },
-        )
+        response = self.client.get(reverse("teacher_onboarding"), follow=True)
 
-        self.assertRedirects(response, reverse("teacher_dashboard"))
-        onboarding = TeacherOnboarding.objects.get(user=self.teacher)
-        self.assertEqual(onboarding.full_name, "Teacher User")
-        self.assertEqual(onboarding.designation, "Assistant Professor")
-        self.assertEqual(onboarding.joining_year, 2022)
+        self.assertRedirects(response, reverse("teacher_register"))
 
     def test_hod_can_view_and_export_teacher_onboarding_submissions(self):
         TeacherOnboarding.objects.create(
@@ -73,7 +60,7 @@ class TeacherOnboardingFlowTests(TestCase):
         self.assertContains(export_response, "Teacher User")
         self.assertContains(export_response, "AI, ML")
 
-    def test_hod_can_request_resubmission_and_teacher_is_redirected_back_to_form(self):
+    def test_hod_can_request_resubmission_without_blocking_teacher_dashboard(self):
         submission = TeacherOnboarding.objects.create(
             user=self.teacher,
             full_name="Teacher User",
@@ -94,7 +81,7 @@ class TeacherOnboardingFlowTests(TestCase):
 
         self.client.force_login(self.teacher)
         dashboard_response = self.client.get(reverse("teacher_dashboard"))
-        self.assertRedirects(dashboard_response, reverse("teacher_onboarding"))
+        self.assertRedirects(dashboard_response, reverse("teacher_register"))
 
     def test_hod_can_delete_teacher_onboarding_submission(self):
         submission = TeacherOnboarding.objects.create(

@@ -2843,6 +2843,15 @@ function initDragAndDrop() {
                     <input id="create-slot-secondary-teacher" class="swal2-input" style="margin:0; width:100%;" placeholder="Secondary Teacher UID">
                     <small style="color:#64748b;">This teacher will be locked with the same subject and room slot.</small>
                   </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#334155;">
+                    <input id="create-slot-elective" type="checkbox" style="width:16px; height:16px; margin:0;">
+                    <span>Elective (shared with other sections)</span>
+                  </label>
+                  <label id="create-slot-elective-wrap" style="display:none; gap:6px; font-size:13px; color:#334155;">
+                    <span style="font-weight:700;">Elective Section IDs</span>
+                    <input id="create-slot-elective-sections" class="swal2-input" style="margin:0; width:100%;" placeholder="e.g. CE52 5th Sem; CE32 3rd Sem">
+                    <small style="color:#64748b;">Separate multiple sections with a semicolon. The same slot will be created in each section's bucket.</small>
+                  </label>
                   <label style="display:grid; gap:6px; font-size:13px; color:#334155;">
                     <span style="font-weight:700;">Room Number</span>
                     <input id="create-slot-room" class="swal2-input" style="margin:0; width:100%;" placeholder="Room number, e.g. LH-101">
@@ -2868,6 +2877,15 @@ function initDragAndDrop() {
               confirmButtonText: "Create In Bucket",
               confirmButtonColor: "#2563eb",
               didOpen: () => {
+                const electiveCheck = document.getElementById("create-slot-elective");
+                const electiveWrap = document.getElementById("create-slot-elective-wrap");
+                const electiveInput = document.getElementById("create-slot-elective-sections");
+                if (electiveCheck && electiveWrap && electiveInput) {
+                  electiveCheck.addEventListener("change", () => {
+                    electiveWrap.style.display = electiveCheck.checked ? "grid" : "none";
+                    if (!electiveCheck.checked) electiveInput.value = "";
+                  });
+                }
                 const sharedTeacher = document.getElementById("create-slot-shared-teacher");
                 const secondaryWrap = document.getElementById("create-slot-secondary-teacher-wrap");
                 const secondaryInput = document.getElementById("create-slot-secondary-teacher");
@@ -2884,12 +2902,18 @@ function initDragAndDrop() {
                 const secondaryTeacherUid = document.getElementById("create-slot-secondary-teacher").value.trim();
                 const roomNumber = document.getElementById("create-slot-room").value.trim();
                 const duration = document.getElementById("create-slot-duration").value;
+                const elective = document.getElementById("create-slot-elective").checked;
+                const electiveSectionIds = document.getElementById("create-slot-elective-sections").value.trim();
                 if (!subjectText || !teacherUid || !roomNumber) {
                   Swal.showValidationMessage("Subject, Teacher ID, and Room Number are required.");
                   return false;
                 }
                 if (sharedTeacher && !secondaryTeacherUid) {
                   Swal.showValidationMessage("Secondary Teacher ID is required when Shared Teacher is checked.");
+                  return false;
+                }
+                if (elective && !electiveSectionIds) {
+                  Swal.showValidationMessage("Section ID(s) are required when Elective is checked.");
                   return false;
                 }
                 return {
@@ -2899,6 +2923,8 @@ function initDragAndDrop() {
                   secondary_teacher_uid: secondaryTeacherUid,
                   room_number: roomNumber,
                   duration: duration,
+                  elective: elective,
+                  elective_section_ids: electiveSectionIds,
                 };
               }
             });
@@ -3960,9 +3986,9 @@ function initDragAndDrop() {
             </td>
 
           {% elif cell.type == "class" %}
-            <td>
+            <td colspan="{{ cell.colspan }}">
               {% for cls in cell.classes %}
-                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% endif %}">
+                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   Section: {{ cls.section }}<br>
                   {{ cls.room.r_number|default:cls.room_label }}

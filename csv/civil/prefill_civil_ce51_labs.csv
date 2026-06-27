@@ -1,0 +1,38 @@
+record_type,section_id,move_type,subject_text,teacher_uid,second_teacher_uid,co_teacher_uids,room_number,day,start_slot,duration,manual_entry,manual_slot_uid,prefill_locked,batch,total_batches,parking,slot_span
+section,CE11/CE12 1st Sem,,,,,,,,,,,,,,,,
+section,CE31 3rd Sem,,,,,,,,,,,,,,,,
+section,CE32 3rd Sem,,,,,,,,,,,,,,,,
+section,CE51 5th Sem,,,,,,,,,,,,,,,,
+section,CE52 5th Sem,,,,,,,,,,,,,,,,
+section,CE71 7th Sem,,,,,,,,,,,,,,,,
+section,CE72 7th Sem,,,,,,,,,,,,,,,,
+slot,CE51 5th Sem,lab,Hydraulic Engineering Lab,CE04,,,Materials Testing,Monday,1,4,true,manual-1,true,1,3,false,4
+slot,CE51 5th Sem,lab,Wastewater Engineering Lab,CE05,,,Water Lab,Monday,1,4,true,manual-2,true,2,3,false,4
+slot,CE51 5th Sem,lab,Computational Analysis and Design Laboratory,CE02,CE03,,CADD Lab,Monday,1,4,true,manual-3,true,3,3,false,4
+slot,CE51 5th Sem,lab,Computational Analysis and Design Laboratory,CE02,CE03,,CADD Lab,Friday,6,4,true,manual-4,true,1,3,false,4
+slot,CE51 5th Sem,lab,Hydraulic Engineering Lab,CE04,,,Materials Testing,Friday,6,4,true,manual-5,true,2,3,false,4
+slot,CE51 5th Sem,lab,Wastewater Engineering Lab,CE05,,,Water Lab,Friday,6,4,true,manual-6,true,3,3,false,4
+slot,CE51 5th Sem,lab,Wastewater Engineering Lab,CE05,,,Water Lab,Tuesday,1,4,true,manual-7,true,1,3,false,4
+slot,CE51 5th Sem,lab,Computational Analysis and Design Laboratory,CE02,CE03,,CADD Lab,Tuesday,1,4,true,manual-8,true,2,3,false,4
+slot,CE51 5th Sem,lab,Hydraulic Engineering Lab,CE04,,,Materials Testing,Tuesday,1,4,true,manual-9,true,3,3,false,4
+slot,CE31 3rd Sem,lab,Fluid Mechanics Lab,CE06,,,Geotechnical Engg.,Wednesday,1,4,true,manual-10,true,1,3,false,4
+slot,CE31 3rd Sem,lab,Survey Lab,CE08,CE10,,Open Area Ground,Wednesday,1,4,true,manual-11,true,2,3,false,4
+slot,CE31 3rd Sem,lab,Materials Testing Lab,CE03,CE02,,Materials Testing,Wednesday,1,4,true,manual-12,true,3,3,false,4
+slot,CE31 3rd Sem,lab,Materials Testing Lab,CE03,CE02,,Materials Testing,Friday,1,4,true,manual-13,true,1,3,false,4
+slot,CE31 3rd Sem,lab,Fluid Mechanics Lab,CE06,,,Geotechnical Engg.,Friday,1,4,true,manual-14,true,2,3,false,4
+slot,CE31 3rd Sem,lab,Survey Lab,CE08,CE10,,Open Area Ground,Friday,1,4,true,manual-15,true,3,3,false,4
+slot,CE31 3rd Sem,lab,Survey Lab,CE08,CE10,,Open Area Ground,Thursday,1,4,true,manual-16,true,1,3,false,4
+slot,CE31 3rd Sem,lab,Materials Testing Lab,CE03,CE02,,Materials Testing,Thursday,1,4,true,manual-17,true,2,3,false,4
+slot,CE31 3rd Sem,lab,Fluid Mechanics Lab,CE06,,,Geotechnical Engg.,Thursday,1,4,true,manual-18,true,3,3,false,4
+slot,CE52 5th Sem,lab,Hydraulic Engineering Lab,CE04,,,Materials Testing,Monday,1,4,true,manual-19,true,1,3,false,4
+slot,CE52 5th Sem,lab,Hydraulic Engineering Lab,CE04,,,Materials Testing,Friday,6,4,true,manual-20,true,2,3,false,4
+slot,CE52 5th Sem,lab,Hydraulic Engineering Lab,CE04,,,Materials Testing,Tuesday,1,4,true,manual-21,true,3,3,false,4
+slot,CE52 5th Sem,lab,Wastewater Engineering Lab,CE05,,,Water Lab,Monday,1,4,true,manual-22,true,2,3,false,4
+slot,CE52 5th Sem,lab,Wastewater Engineering Lab,CE05,,,Water Lab,Friday,6,4,true,manual-23,true,3,3,false,4
+slot,CE52 5th Sem,lab,Wastewater Engineering Lab,CE05,,,Water Lab,Tuesday,1,4,true,manual-24,true,1,3,false,4
+slot,CE32 3rd Sem,lab,Fluid Mechanics Lab,CE06,,,Geotechnical Engg.,Wednesday,1,4,true,manual-25,true,1,3,false,4
+slot,CE32 3rd Sem,lab,Fluid Mechanics Lab,CE06,,,Geotechnical Engg.,Friday,1,4,true,manual-26,true,2,3,false,4
+slot,CE32 3rd Sem,lab,Fluid Mechanics Lab,CE06,,,Geotechnical Engg.,Thursday,1,4,true,manual-27,true,3,3,false,4
+slot,CE32 3rd Sem,lab,Survey Lab,CE08,CE10,,Open Area Ground,Wednesday,1,4,true,manual-28,true,2,3,false,4
+slot,CE32 3rd Sem,lab,Survey Lab,CE08,CE10,,Open Area Ground,Friday,1,4,true,manual-29,true,3,3,false,4
+slot,CE32 3rd Sem,lab,Survey Lab,CE08,CE10,,Open Area Ground,Thursday,1,4,true,manual-30,true,1,3,false,4

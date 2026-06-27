@@ -19,6 +19,7 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth import get_user_model, login
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -32,9 +33,13 @@ from .views_other import *  # noqa: F401,F403
 from .superadmin_views import (  # noqa: F401
     superadmin_login,
     superadmin_logout,
+    superadmin_choose_user,
+    superadmin_select_user,
     superadmin_dashboard,
     superadmin_resource,
     superadmin_teachers,
+    superadmin_teacher_edit,
+    superadmin_teacher_delete,
     superadmin_depts,
     superadmin_slots,
     superadmin_explorer,
@@ -71,6 +76,7 @@ _GENERATOR_VIEW_NAMES = (
     "timetable_dept_select",
     "show_timetable",
     "full_statistics",
+    "saved_full_statistics",
     "timetable",
     "update_slot",
     "move_slot_dragdrop",
@@ -812,5 +818,9 @@ for _view_name in _GENERATOR_VIEW_NAMES:
         globals()[_view_name] = _wrap_substitute(_view)
     elif _view_name in {"move_slot_dragdrop", "generated_park_slot", "generated_create_parking_slot", "generated_restore_parked_slot", "generated_delete_parking_item", "generated_delete_slot_item", "generated_delete_manual_slot_item", "generated_update_parking_item", "generated_update_manual_slot_item"}:
         globals()[_view_name] = _view
+    elif _view_name == "saved_full_statistics":
+        # Saved statistics are owned by the user (ownership checked in the view);
+        # no generation credit/guard required — just require login.
+        globals()[_view_name] = login_required(_view)
     else:
         globals()[_view_name] = _guard_generation_view(_view)

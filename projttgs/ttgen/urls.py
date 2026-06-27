@@ -42,9 +42,13 @@ urlpatterns = [
     # --- Super Admin (inbuilt .env login + analytics dashboard) ---
     path('superadmin/login/', views.superadmin_login, name='superadmin_login'),
     path('superadmin/logout/', views.superadmin_logout, name='superadmin_logout'),
+    path('superadmin/choose-user/', views.superadmin_choose_user, name='superadmin_choose_user'),
+    path('superadmin/select-user/', views.superadmin_select_user, name='superadmin_select_user'),
     path('superadmin/dashboard/', views.superadmin_dashboard, name='superadmin_dashboard'),
     path('superadmin/resource/', views.superadmin_resource, name='superadmin_resource'),
     path('superadmin/teachers/', views.superadmin_teachers, name='superadmin_teachers'),
+    path('superadmin/teachers/<int:teacher_id>/edit/', views.superadmin_teacher_edit, name='superadmin_teacher_edit'),
+    path('superadmin/teachers/<int:teacher_id>/delete/', views.superadmin_teacher_delete, name='superadmin_teacher_delete'),
     path('superadmin/departments/', views.superadmin_depts, name='superadmin_depts'),
     path('superadmin/slots/', views.superadmin_slots, name='superadmin_slots'),
     path('superadmin/explorer/', views.superadmin_explorer, name='superadmin_explorer'),
@@ -166,9 +170,12 @@ urlpatterns = [
     path('save_timetable/<int:index>/', views.save_timetable, name='save_timetable'),
     path('saved_timetables/', views.saved_timetable_list, name='saved_timetable_list'),
     path('saved_timetables/<int:tid>/', views.saved_timetable, name='saved_timetable'),
+    path('saved_timetables/<int:tid>/full-statistics/', views.saved_full_statistics, name='saved_full_statistics'),
     path("saved_timetable/delete/<int:tid>/", views.delete_saved_timetable, name="delete_saved_timetable"),
 
+    path('saved_timetables/<int:tid>/download/', views.saved_timetable_download_center, name='saved_timetable_download_center'),
     path('download_timetable/<int:tid>/', views.download_saved_timetable_pdf, name='download_timetable'),
+    path('download_timetable/<int:tid>/<str:view_type>/', views.download_saved_timetable_pdf, name='download_timetable_view'),
     path('download_timetable_excel/<int:tid>/', views.download_timetable_excel, name='download_timetable_excel'),
     path('download_timetable_excel/<int:tid>/<str:view_type>/', views.download_timetable_excel, name='download_timetable_excel_view'),
     path(
@@ -205,6 +212,10 @@ urlpatterns = [
 
     # Publish / Teacher read-only
     path('saved_timetable/<int:tid>/publish/', views.publish_timetable, name='publish_timetable'),
+    path('saved_timetable/<int:tid>/publish/notifications/', views.saved_timetable_publish_notifications, name='saved_timetable_publish_notifications'),
+    path('saved_timetable/<int:tid>/publish/notify-teachers/', views.publish_notify_all_teachers, name='publish_notify_all_teachers'),
+    path('saved_timetable/<int:tid>/publish/notify-teacher/', views.publish_notify_single_teacher, name='publish_notify_single_teacher'),
+    path('saved_timetable/<int:tid>/publish/notify-coordinators/', views.publish_notify_all_coordinators, name='publish_notify_all_coordinators'),
     path('saved_timetable/<int:tid>/unpublish/', views.unpublish_timetable, name='unpublish_timetable'),
     path('teacher/enter-code/', views.teacher_enter_code, name='teacher_enter_code'),
     path('teacher/view/<int:tid>/', views.teacher_view_timetable, name='teacher_view_timetable'),

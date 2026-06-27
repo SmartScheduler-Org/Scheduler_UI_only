@@ -5,6 +5,45 @@
 {% block subheading %}Workload, schedules &amp; profiles · {{ totals.teachers }} teachers · avg {{ avg_workload }} hrs/teacher{% endblock %}
 
 {% block content %}
+  <section class="panel" style="margin-bottom:18px">
+    <div class="ph">
+      <div><h3>Central Teacher Directory</h3><small>Upload the super-admin CSV used by publish search and teacher-role search</small></div>
+    </div>
+    <div class="toolbar" style="align-items:flex-start; gap:16px; flex-wrap:wrap;">
+      <form method="post" enctype="multipart/form-data" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; flex:1; min-width:280px;">
+        {% csrf_token %}
+        <input type="file" name="csv_file" accept=".csv" class="inp" required style="max-width:340px;">
+        <button type="submit" class="btn">Upload Central Teacher CSV</button>
+      </form>
+      <div class="pill ok" style="align-self:center">{{ central_teacher_total }} central teachers</div>
+    </div>
+    <div style="font-size:12px; color:var(--mut); margin-top:10px; line-height:1.7">
+      Accepted headers: <strong>name</strong>, <strong>teacher_name</strong>, <strong>email</strong>, <strong>email_id</strong>, <strong>uid</strong>, <strong>Teacher_id</strong>, <strong>teacher code</strong>, <strong>department</strong>, <strong>department_code</strong>, <strong>designation</strong>, <strong>contact_number</strong>.
+    </div>
+    <div style="max-height:280px; overflow:auto; margin-top:14px; border-top:1px solid rgba(148,163,184,.12); padding-top:14px;">
+      <table id="centralTeacherTable">
+        <thead><tr><th>Name</th><th>Teacher Code</th><th>Email</th><th>Department</th><th>Designation</th><th style="text-align:right">Action</th></tr></thead>
+        <tbody>
+          {% for t in central_teachers %}
+          <tr>
+            <td>{{ t.name }}</td>
+            <td>{{ t.uid|default:"—" }}</td>
+            <td>{{ t.email|default:"—" }}</td>
+            <td>{% if t.department_name or t.department_code %}{{ t.department_name|default:t.department_code }}{% if t.department_name and t.department_code %} ({{ t.department_code }}){% endif %}{% else %}—{% endif %}</td>
+            <td>{{ t.designation }}</td>
+            <td style="text-align:right; white-space:nowrap;">
+              <a class="vbtn" href="{% url 'superadmin_teacher_edit' t.id %}">Update</a>
+              <a class="vbtn" style="margin-left:6px; color:#fca5a5; border-color:rgba(239,68,68,.35)" href="{% url 'superadmin_teacher_delete' t.id %}">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="empty">No central teachers uploaded yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="grid g3">
     <div class="panel">
       <div class="ph"><div><h3>Workload Distribution</h3><small>Teachers by hours bucket</small></div></div>
@@ -92,13 +131,6 @@
         <div><h2 id="wName">Workload Analysis</h2><div class="sub" id="wMeta"></div></div>
         <button class="closex" onclick="closeModal('workloadModal')">✕</button>
       </div>
-      <div class="panel" style="background:var(--bg); margin-bottom:16px">
-        <div class="ph"><div><h3>Choose Saved Timetable</h3><small>Kis user ke saved timetable ke according analysis karna hai</small></div></div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:6px 2px">
-          <select id="wTimetable" class="inp" style="flex:1; min-width:260px"></select>
-          <button class="btn" onclick="runWorkload()">Analyze</button>
-        </div>
-      </div>
       <div id="wResult"></div>
     </div>
   </div>
@@ -174,55 +206,85 @@
   let WK_TEACHER_ID = null;
   async function openWorkload(id){
     WK_TEACHER_ID = id;
-    const sel = document.getElementById('wTimetable');
-    sel.innerHTML = '<option value="">Loading…</option>';
-    document.getElementById('wResult').innerHTML = '';
+    const wr = document.getElementById('wResult');
+    wr.innerHTML = '<div class="empty" style="padding:20px">Loading workload breakdown…</div>';
     document.getElementById('workloadModal').classList.add('open');
     const res = await fetch(`${WORKLOAD_URL}?id=${encodeURIComponent(id)}`);
-    if(!res.ok){showToast('Could not load timetables.','err');return;}
+    if(!res.ok){wr.innerHTML='<div class="empty" style="padding:20px">Could not load workload analysis.</div>';return;}
     const j = await res.json();
     document.getElementById('wName').textContent = `Workload Analysis — ${j.teacher.name}`;
     document.getElementById('wMeta').textContent = `${j.teacher.designation} · UID ${j.teacher.uid}`;
-    if(!j.timetables.length){
-      sel.innerHTML = '<option value="">No saved timetables available</option>';
-      document.getElementById('wResult').innerHTML = '<div class="empty" style="padding:20px">No saved timetables to analyze.</div>';
-      return;
-    }
-    sel.innerHTML = '<option value="">— Select a user\'s saved timetable —</option>' +
-      j.timetables.map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+    renderWorkload(j.analysis);
   }
 
-  async function runWorkload(){
-    const tid = document.getElementById('wTimetable').value;
-    if(!tid){showToast('Pehle ek saved timetable chuniye.','err');return;}
+  function renderWorkload(a){
     const wr = document.getElementById('wResult');
-    wr.innerHTML = '<div class="empty" style="padding:20px">Analyzing…</div>';
-    const res = await fetch(`${WORKLOAD_URL}?id=${encodeURIComponent(WK_TEACHER_ID)}&tid=${encodeURIComponent(tid)}`);
-    if(!res.ok){wr.innerHTML='<div class="empty" style="padding:20px">Could not analyze.</div>';return;}
-    const j = await res.json();
-    const a = j.analysis;
     if(!a || !a.found || !a.departments.length){
-      wr.innerHTML = '<div class="empty" style="padding:20px">Is timetable me is teacher ki koi class nahi mili.</div>';
+      wr.innerHTML = '<div class="empty" style="padding:20px">Selected user ke active timetable me is teacher ki koi class nahi mili.</div>';
       return;
     }
     const head = `
       <div class="statrow" style="margin-bottom:14px">
         <div class="stat"><div class="l">Home Department</div><div class="v" style="font-size:15px">${a.home_department}</div></div>
         <div class="stat"><div class="l">Total Workload</div><div class="v">${a.total_hours} / ${a.max_workload}</div></div>
-        <div class="stat"><div class="l">Departments Taught</div><div class="v">${a.departments.length}</div></div>
+        <div class="stat"><div class="l">Lecture Load</div><div class="v">${a.lecture_hours}</div></div>
+        <div class="stat"><div class="l">Lab Load</div><div class="v">${a.lab_hours}</div></div>
+        <div class="stat"><div class="l">Home Load</div><div class="v">${a.home_hours}</div></div>
+        <div class="stat"><div class="l">Cross Dept Load</div><div class="v">${a.cross_hours}</div></div>
+      </div>`;
+    const summary = `
+      <div class="grid g2" style="margin-bottom:14px">
+        <div class="panel" style="background:var(--bg)">
+          <div class="ph"><div><h3>Home Department Load</h3><small>${a.home_department} (${a.home_code || '—'})</small></div></div>
+          <div style="padding:8px 4px 2px; font-size:13px; line-height:1.9">
+            <div><b>Total:</b> ${a.home_hours} hrs/week</div>
+            <div><b>Lectures:</b> ${a.home_lecture_hours} hrs/week</div>
+            <div><b>Labs:</b> ${a.home_lab_hours} hrs/week</div>
+          </div>
+        </div>
+        <div class="panel" style="background:var(--bg)">
+          <div class="ph"><div><h3>Cross Department Load</h3><small>${a.cross_departments} department(s)</small></div></div>
+          <div style="padding:8px 4px 2px; font-size:13px; line-height:1.9">
+            <div><b>Total:</b> ${a.cross_hours} hrs/week</div>
+            <div><b>Lectures + Labs outside home dept:</b> ${a.cross_hours}</div>
+          </div>
+        </div>
       </div>`;
     const cards = a.departments.map(d=>`
       <div class="panel" style="background:var(--bg); margin-bottom:12px; ${d.is_home?'border:1px solid #0e7490':''}">
         <div class="ph"><div>
           <h3>${d.name} <span style="font-size:11px; color:var(--mut)">(${d.code})</span>
           ${d.is_home?'<span class="pill ok" style="margin-left:6px">Home Dept</span>':'<span class="pill" style="margin-left:6px;background:#e0f2fe;color:#0369a1">Other Dept</span>'}</h3>
-          <small>${d.hours} hrs/week · ${d.subjects.length} subject(s)</small>
+          <small>${d.hours} hrs/week · Lecture ${d.lecture_hours} · Lab ${d.lab_hours} · ${d.subjects.length} subject(s)</small>
         </div></div>
         <div style="padding:6px 4px 10px; font-size:13px; line-height:1.9">
           ${d.subjects.map(s=>`<span style="display:inline-block; background:var(--card); border:1px solid var(--line,#e5e7eb); border-radius:6px; padding:3px 9px; margin:3px 4px 0 0">${s}</span>`).join('')}
         </div>
       </div>`).join('');
-    wr.innerHTML = `<div class="sub" style="margin-bottom:10px">Source: ${a.timetable_label}</div>` + head + cards;
+
+    const rows = a.details.map(item=>`
+      <tr>
+        <td>${item.subject}</td>
+        <td>${item.section}</td>
+        <td>${item.type}</td>
+        <td data-sort="${item.duration}">${item.duration} hr</td>
+        <td data-sort="${item.weekly_hours}">${item.weekly_hours} hr</td>
+        <td>${item.department_name} (${item.department_code})</td>
+        <td>${item.blocks.join(', ')}</td>
+      </tr>`).join('');
+
+    const details = `
+      <div class="panel" style="background:var(--bg); margin-top:12px">
+        <div class="ph"><div><h3>Subject Breakdown</h3><small>Subject, duration, section and weekly load detail</small></div></div>
+        <div style="max-height:320px; overflow:auto">
+          <table>
+            <thead><tr><th>Subject</th><th>Section</th><th>Type</th><th>Duration</th><th>Weekly Load</th><th>Department</th><th>Schedule</th></tr></thead>
+            <tbody>${rows || '<tr><td colspan="7" class="empty">No subject breakdown available.</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>`;
+
+    wr.innerHTML = `<div class="sub" style="margin-bottom:10px">Source: ${a.source_label}</div>` + head + summary + cards + details;
   }
 </script>
 {% endblock %}

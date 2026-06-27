@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publish Notifications</title>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: linear-gradient(180deg, #f4fbff, #eef7f4); color: #173042; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 18px 48px; }
+    .hero, .panel { background: rgba(255,255,255,0.94); border: 1px solid rgba(23,48,66,0.08); border-radius: 24px; box-shadow: 0 20px 44px rgba(27,79,114,0.10); }
+    .hero { padding: 28px; margin-bottom: 22px; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: #fff7ed; color: #b45309; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .code { font-size: 32px; font-weight: 900; letter-spacing: 0.18em; color: #0f6f7d; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .panel { padding: 22px; }
+    .panel h2 { margin: 0 0 8px; font-size: 22px; color: #0f3d5d; }
+    .meta { color: #5a7283; font-size: 14px; line-height: 1.6; margin-bottom: 14px; }
+    .count { font-weight: 800; color: #0f6f7d; }
+    form { margin: 0; }
+    .btn { border: none; border-radius: 14px; padding: 12px 18px; font-size: 14px; font-weight: 800; cursor: pointer; }
+    .btn-primary { background: linear-gradient(135deg, #0f6f7d, #1da0b4); color: white; }
+    .btn-secondary { background: linear-gradient(135deg, #166534, #22c55e); color: white; }
+    .btn-muted { background: #eef5fb; color: #214762; text-decoration: none; display: inline-flex; align-items: center; }
+    .field { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid #c8d9e6; font-size: 14px; background: #fbfdff; color: #16324a; }
+    .stack { display: grid; gap: 12px; }
+    .list { max-height: 260px; overflow: auto; margin-top: 14px; border: 1px solid #e2ecf3; border-radius: 16px; background: #fbfdff; }
+    .row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #edf3f8; font-size: 13px; }
+    .row:last-child { border-bottom: none; }
+    .muted { color: #6b7f8f; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .code { font-size: 24px; letter-spacing: 0.12em; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    {% if messages %}
+    <div style="display:grid; gap:10px; margin-bottom:16px;">
+      {% for message in messages %}
+      <div style="padding:12px 14px; border-radius:14px; background:{% if 'error' in message.tags %}#fff1f2{% else %}#effcf6{% endif %}; border:1px solid {% if 'error' in message.tags %}#fecdd3{% else %}#bbf7d0{% endif %}; color:{% if 'error' in message.tags %}#be123c{% else %}#166534{% endif %}; font-size:14px; font-weight:700;">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="hero">
+      <div class="brand">
+        <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/J.C._Bose_University_of_Science_and_Technology%2C_YMCA_logo.png" alt="College logo" width="44" height="44">
+        <div>
+          <div style="font-size:24px; font-weight:900;">SmartScheduler Publish Center</div>
+          <div class="muted">Mail the publish code for this timetable to teachers and coordinators.</div>
+        </div>
+      </div>
+      <div class="badge">SIH Winner Innovation Team</div>
+      <div style="margin-top:14px;" class="muted">Timetable: {{ timetable_title }}</div>
+      <div style="margin-top:8px;" class="code">{{ saved.publish_code }}</div>
+      <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="{% url 'saved_timetable' saved.id %}" class="btn btn-muted">Back to Saved Timetable</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Notify All Teachers</h2>
+        <div class="meta"><span class="count">{{ teacher_count }}</span> teacher emails are available in this timetable.</div>
+        <form method="post" action="{% url 'publish_notify_all_teachers' saved.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">Notify All Teachers</button>
+        </form>
+
+        <div class="list">
+          {% for teacher in teacher_recipients %}
+          <div class="row">
+            <div>
+              <div><strong>{{ teacher.name }}</strong></div>
+              <div class="muted">{{ teacher.email }}</div>
+            </div>
+            <div class="muted">{{ teacher.department|default:"-" }}</div>
+          </div>
+          {% empty %}
+          <div class="row"><div>No teacher emails available in this timetable.</div></div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Notify One Teacher</h2>
+        <div class="meta">Search the central teacher directory and send the publish code to any selected teacher only. <span class="count">{{ search_teacher_count }}</span> central teachers are available.</div>
+        <form method="post" action="{% url 'publish_notify_single_teacher' saved.id %}" class="stack">
+          {% csrf_token %}
+          <input type="text" id="teacherSearch" class="field" placeholder="Search teacher by name or email">
+          <select name="teacher_id" id="teacherSelect" class="field" required>
+            <option value="">Select a teacher</option>
+            {% for teacher in search_teacher_recipients %}
+            <option value="{{ teacher.id }}" data-label="{{ teacher.name|lower }} {{ teacher.email|lower }} {{ teacher.department|lower }} {{ teacher.uid|lower }}">{{ teacher.name }}{% if teacher.uid %} · {{ teacher.uid }}{% endif %}{% if teacher.department %} · {{ teacher.department }}{% endif %} · {{ teacher.email }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-secondary">Notify Selected Teacher</button>
+        </form>
+      </div>
+
+      <div class="panel" style="grid-column: 1 / -1;">
+        <h2>Notify All Timetable Coordinators</h2>
+        <div class="meta"><span class="count">{{ coordinator_count }}</span> appointed coordinator emails are available.</div>
+        <form method="post" action="{% url 'publish_notify_all_coordinators' saved.id %}" style="margin-bottom:14px;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">Notify All Timetable Coordinators</button>
+        </form>
+        <div class="list">
+          {% for coordinator in coordinator_recipients %}
+          <div class="row">
+            <div>
+              <div><strong>{{ coordinator.name }}</strong></div>
+              <div class="muted">{{ coordinator.email }}</div>
+            </div>
+            <div class="muted">{{ coordinator.role }}</div>
+          </div>
+          {% empty %}
+          <div class="row"><div>No coordinator appointments found.</div></div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var search = document.getElementById('teacherSearch');
+      var select = document.getElementById('teacherSelect');
+      if (!search || !select) return;
+      search.addEventListener('input', function () {
+        var query = (search.value || '').trim().toLowerCase();
+        Array.prototype.forEach.call(select.options, function (option, index) {
+          if (index === 0) return;
+          var label = (option.getAttribute('data-label') || '').toLowerCase();
+          option.hidden = !!query && label.indexOf(query) === -1;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

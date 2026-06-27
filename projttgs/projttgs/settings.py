@@ -187,11 +187,17 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in {"1", "true", "yes", "on"}
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "SmartScheduler")
 
 # Sender shown to recipients. With relays like Brevo the SMTP login is NOT a
 # valid "from" address, so set EMAIL_FROM to your verified sender. Falls back to
 # the SMTP login (works for plain Gmail SMTP).
-DEFAULT_FROM_EMAIL = os.getenv("EMAIL_FROM", "") or EMAIL_HOST_USER
+_email_from_addr = os.getenv("EMAIL_FROM", "") or EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = (
+    f"{EMAIL_FROM_NAME} <{_email_from_addr}>"
+    if _email_from_addr and "<" not in _email_from_addr
+    else _email_from_addr
+)
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False").lower() in {"1", "true", "yes", "on"}

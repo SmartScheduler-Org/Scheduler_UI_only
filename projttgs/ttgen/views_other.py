@@ -40,6 +40,21 @@ import random as rnd
 
 logger = logging.getLogger(__name__)
 
+LOGO_CID = "smartscheduler_logo"
+SIH_WINNER_TEXT = "SmartScheduler | SIH Winner Innovation Team"
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _brand_from_email():
+    from email.utils import formataddr
+
+    sender = (getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER or "").strip()
+    if not sender:
+        return ""
+    if "<" in sender and ">" in sender:
+        return sender
+    return formataddr(("SmartScheduler", sender))
+
 
 # ──────────────────────────────────────────────────────────────────────────
 # Live generation log capture
@@ -645,9 +660,15 @@ def _prefill_restore_class(entry, user):
     except Section.DoesNotExist:
         return None
     teacher = _prefill_restore_teacher(entry.get("teacher_uid"), user)
-    room = _prefill_restore_room(entry.get("room_number"), user)
-    if teacher is None or room is None:
+    room_number = str(entry.get("room_number") or "").strip()
+    room = _prefill_restore_room(room_number, user)
+    if teacher is None:
         return None
+    missing_room_label = ""
+    if room is None:
+        if not room_number:
+            return None
+        missing_room_label = room_number
     duration = _parse_prefill_duration(entry.get("duration"))
     subject = _resolve_manual_prefill_subject(section_obj, entry.get("subject_text"), duration)
     cls = ClassImpl(_next_in_memory_class_id(), section_obj.department, section_obj.section_id, subject)
@@ -656,6 +677,9 @@ def _prefill_restore_class(entry, user):
     if hasattr(cls, "set_co_instructors"):
         cls.set_co_instructors([teacher_obj for teacher_obj in co_teachers if teacher_obj])
     cls.set_room(room)
+    if missing_room_label:
+        cls.room_label = missing_room_label
+        cls.missing_room = True
     times = _prefill_restore_meeting_times(entry, user)
     if times:
         cls.set_meetingTime(times[0])
@@ -676,9 +700,15 @@ def _prefill_restore_lab(entry, user):
     except Section.DoesNotExist:
         return None
     teacher = _prefill_restore_teacher(entry.get("teacher_uid"), user)
-    room = _prefill_restore_room(entry.get("room_number"), user)
-    if teacher is None or room is None:
+    room_number = str(entry.get("room_number") or "").strip()
+    room = _prefill_restore_room(room_number, user)
+    if teacher is None:
         return None
+    missing_room_label = ""
+    if room is None:
+        if not room_number:
+            return None
+        missing_room_label = room_number
     duration = _parse_prefill_duration(entry.get("duration"))
     subject = _resolve_manual_prefill_subject(section_obj, entry.get("subject_text"), duration)
     lab = LabImpl(_next_in_memory_class_id(), section_obj.department, section_obj.section_id, subject, entry.get("batch", 1), entry.get("total_batches", 1))
@@ -690,6 +720,9 @@ def _prefill_restore_lab(entry, user):
     if hasattr(lab, "set_co_instructors"):
         lab.set_co_instructors([teacher_obj for teacher_obj in co_teachers if teacher_obj])
     lab.set_room(room)
+    if missing_room_label:
+        lab.room_label = missing_room_label
+        lab.missing_room = True
     times = _prefill_restore_meeting_times(entry, user)
     if times:
         lab.set_meetingTimes(times)
@@ -990,9 +1023,7 @@ def teacher_role_set(request):
         return render(request, 'role_locked.html', {'current_role': profile.get_role_display()})
     profile.role = 'teacher'
     profile.save()
-    if _get_teacher_onboarding(request.user):
-        return redirect('teacher_dashboard')
-    return redirect('teacher_onboarding')
+    return redirect('teacher_dashboard')
 
 
 @login_required
@@ -1012,7 +1043,7 @@ def teacherlogin(request):
 
     if request.user.is_authenticated:
         profile, _ = Profile.objects.get_or_create(user=request.user)
-        if (profile.role or "").lower() == "teacher" and profile.linked_instructor_id:
+        if (profile.role or "").lower() == "teacher" and (profile.linked_instructor_id or getattr(profile, "linked_admin_teacher_id", None)):
             return redirect("teacher_dashboard")
 
     if request.method == "POST":
@@ -1025,13 +1056,20 @@ def teacherlogin(request):
             return render(request, "teacherlogin.html", _teacher_nav_context())
 
         authenticated_user = None
-        instructors = (
-            Instructor.objects.filter(uid__iexact=code, name__iexact=name)
-            .select_related("teacher_account_profile", "teacher_account_profile__user")
-        )
-        for instr in instructors:
-            profile = getattr(instr, "teacher_account_profile", None)
-            if profile and profile.user and profile.user.check_password(password):
+        profiles = Profile.objects.select_related("user", "linked_instructor", "linked_admin_teacher").filter(role__iexact="teacher")
+        for profile in profiles:
+            identity_name = ""
+            identity_code = ""
+            if getattr(profile, "linked_admin_teacher", None):
+                identity_name = (profile.linked_admin_teacher.name or "").strip()
+                identity_code = (profile.linked_admin_teacher.uid or "").strip()
+            elif getattr(profile, "linked_instructor", None):
+                identity_name = (profile.linked_instructor.name or "").strip()
+                identity_code = (profile.linked_instructor.uid or "").strip()
+
+            if not identity_name or not identity_code:
+                continue
+            if identity_name.lower() == name.lower() and identity_code.lower() == code.lower() and profile.user.check_password(password):
                 authenticated_user = profile.user
                 break
 
@@ -1075,7 +1113,11 @@ def _connect_teacher_timetable(profile, code):
 
     update_fields = ["active_timetable"]
     profile.active_timetable = timetable
-    if profile.linked_instructor and profile.linked_instructor.user_id != timetable.user_id:
+    resolved_instructor = _resolve_profile_instructor(profile, timetable.user)
+    if resolved_instructor and profile.linked_instructor_id != resolved_instructor.id:
+        profile.linked_instructor = resolved_instructor
+        update_fields.append("linked_instructor")
+    elif profile.linked_instructor and profile.linked_instructor.user_id != timetable.user_id:
         profile.linked_instructor = None
         update_fields.append("linked_instructor")
     profile.save(update_fields=update_fields)
@@ -1093,10 +1135,7 @@ def _get_teacher_onboarding(user):
 
 
 def _teacher_onboarding_redirect_response(request):
-    onboarding = _get_teacher_onboarding(request.user)
-    if onboarding and not onboarding.requires_resubmission:
-        return None
-    return redirect("teacher_onboarding")
+    return None
 
 
 def _user_can_manage_teacher_onboarding(user):
@@ -1131,10 +1170,18 @@ def _resolve_teacher_dashboard_context(request, profile):
         profile.active_timetable = None
         sync_fields.append("active_timetable")
 
-    if (
+    resolved_instructor = _resolve_profile_instructor(profile, active_timetable.user if active_timetable else None)
+    if resolved_instructor and profile.linked_instructor_id != resolved_instructor.id:
+        profile.linked_instructor = resolved_instructor
+        sync_fields.append("linked_instructor")
+    elif profile.linked_instructor_id and getattr(profile, "linked_admin_teacher_id", None) and resolved_instructor is None:
+        profile.linked_instructor = None
+        sync_fields.append("linked_instructor")
+    elif (
         profile.linked_instructor_id
         and active_timetable
         and profile.linked_instructor.user_id != active_timetable.user_id
+        and getattr(profile, "linked_admin_teacher_id", None) is None
     ):
         profile.linked_instructor = None
         sync_fields.append("linked_instructor")
@@ -1143,6 +1190,7 @@ def _resolve_teacher_dashboard_context(request, profile):
         profile.save(update_fields=sync_fields)
 
     linked_instructor = profile.linked_instructor
+    linked_admin_teacher = getattr(profile, "linked_admin_teacher", None)
     teacher_subjects = []
     my_teacher_table = None
     teacher_workload = {"lectures": 0, "labs": 0, "shared_labs": 0, "total": 0}
@@ -1174,23 +1222,53 @@ def _resolve_teacher_dashboard_context(request, profile):
             )
             teacher_workload = teacher_workloads.get(linked_instructor, teacher_workload)
 
+    schedule_rows = _teacher_schedule_rows(my_teacher_table)
+    rooms_used = sorted({row["room"] for row in schedule_rows if row.get("room") and row["room"] != "—"})
+
+    teacher_name = ""
+    teacher_code = ""
+    teacher_email = ""
+    teacher_department = "—"
+    teacher_department_code = ""
+    if linked_admin_teacher:
+        teacher_name = linked_admin_teacher.name or ""
+        teacher_code = linked_admin_teacher.uid or ""
+        teacher_email = linked_admin_teacher.email or ""
+        teacher_department = linked_admin_teacher.department_name or teacher_department
+        teacher_department_code = linked_admin_teacher.department_code or ""
+    if linked_instructor and not linked_admin_teacher:
+        dept = linked_instructor.department
+        teacher_name = linked_instructor.name or teacher_name
+        teacher_code = linked_instructor.uid or teacher_code
+        teacher_email = linked_instructor.email or teacher_email
+        teacher_department = dept.name if dept else teacher_department
+        teacher_department_code = dept.code if dept else teacher_department_code
+    elif linked_instructor and linked_admin_teacher:
+        dept = linked_instructor.department
+        if dept and teacher_department == "—":
+            teacher_department = dept.name or teacher_department
+            teacher_department_code = dept.code or teacher_department_code
+
     display_name = (
         onboarding.full_name
         if onboarding
         else request.user.get_full_name().strip() or request.user.username
     )
-    if linked_instructor:
-        display_name = linked_instructor.name
+    if teacher_name:
+        display_name = teacher_name
 
     role_label = profile.get_role_display() or "Teacher"
     designation = (
-        linked_instructor.designation
-        if linked_instructor
+        linked_admin_teacher.designation
+        if linked_admin_teacher
+        else linked_instructor.designation if linked_instructor
         else onboarding.designation if onboarding else "Teacher"
     )
     profile_card_state = (
         f"Linked to {linked_instructor.uid}"
         if linked_instructor else
+        f"Central teacher {linked_admin_teacher.uid or linked_admin_teacher.name}"
+        if linked_admin_teacher else
         "Add contact and faculty UID"
     )
     published_card_state = (
@@ -1212,22 +1290,31 @@ def _resolve_teacher_dashboard_context(request, profile):
         "teacher_onboarding": onboarding,
         "active_timetable": active_timetable,
         "linked_instructor": linked_instructor,
+        "linked_admin_teacher": linked_admin_teacher,
         "teacher_subjects": teacher_subjects,
         "my_teacher_table": my_teacher_table,
         "teacher_workload": teacher_workload,
+        "schedule_rows": schedule_rows,
+        "rooms_used": rooms_used,
+        "rooms_count": len(rooms_used),
+        "class_count": len(schedule_rows),
         "published_section_count": published_section_count,
         "published_teacher_count": published_teacher_count,
         "teacher_display_name": display_name,
         "teacher_role_label": role_label,
         "teacher_designation": designation,
-        "faculty_uid_value": linked_instructor.uid if linked_instructor else "",
-        "profile_email_value": request.user.email or "",
+        "teacher_code": teacher_code,
+        "teacher_email": teacher_email or (request.user.email or ""),
+        "teacher_department": teacher_department,
+        "teacher_department_code": teacher_department_code,
+        "faculty_uid_value": linked_instructor.uid if linked_instructor else teacher_code,
+        "profile_email_value": teacher_email or (request.user.email or ""),
         "slot_labels": SLOT_LABELS,
         "profile_card_state": profile_card_state,
         "published_card_state": published_card_state,
         "timetable_card_state": timetable_card_state,
         "teacher_subject_count": len(teacher_subjects),
-}
+    }
     context.update(_teacher_nav_context())
     return context
 
@@ -1265,55 +1352,173 @@ TEACHER_DEPARTMENT_LIST = [
 ]
 
 
+def _teacher_department_catalog():
+    catalog = {}
+    for item in TEACHER_DEPARTMENT_LIST:
+        code = (item.get("code") or "").strip()
+        name = (item.get("name") or "").strip()
+        if code:
+            catalog[code.lower()] = {"name": name or code, "code": code}
+    for name, code in Department.objects.values_list("name", "code").distinct():
+        code = (code or "").strip()
+        name = (name or "").strip()
+        if code:
+            catalog[code.lower()] = {"name": name or code, "code": code}
+    return catalog
+
+
+def _normalize_teacher_department(name, code):
+    name = (name or "").strip()
+    code = (code or "").strip()
+    catalog = _teacher_department_catalog()
+
+    if code and code.lower() in catalog:
+        item = catalog[code.lower()]
+        resolved_name = item.get("name") or name or code
+        return {"name": resolved_name, "code": item.get("code") or code}
+
+    if name:
+        for item in catalog.values():
+            if (item.get("name") or "").strip().lower() == name.lower():
+                return {"name": item.get("name") or name, "code": item.get("code") or code}
+
+    return {"name": name or code, "code": code}
+
+
 def _teacher_department_options():
-    """Hardcoded full department list (all departments in the DB)."""
-    return list(TEACHER_DEPARTMENT_LIST)
-
-
-def _teachers_in_department(dept_name, dept_code, query=""):
-    """Instructors in a department (matched by name+code), optionally filtered
-    by a partial name search. De-duplicated by (name, uid) so seeded
-    duplicates appear once."""
-    qs = Instructor.objects.select_related("department", "teacher_account_profile")
-    filters = Q()
-    if dept_name:
-        filters &= Q(department__name__iexact=dept_name)
-    if dept_code:
-        filters &= Q(department__code__iexact=dept_code)
-    query = (query or "").strip()
-    if query:
-        filters &= Q(name__icontains=query)
-    qs = qs.filter(filters).order_by("name", "uid")
-
-    seen = {}
-    for instr in qs:
-        key = (instr.name.strip().lower(), instr.uid.strip().lower())
-        if key in seen:
-            # Prefer an instructor that already has an account linked so the
-            # "already registered" state is detected correctly.
-            if getattr(instr, "teacher_account_profile", None) and not seen[key]["has_account"]:
-                seen[key] = _teacher_option_payload(instr)
+    """Preferred department list for teacher self-service search."""
+    rows = []
+    seen = set()
+    for teacher in AdminTeacher.objects.filter(is_active=True).order_by("department_name", "department_code", "name"):
+        normalized = _normalize_teacher_department(teacher.department_name, teacher.department_code)
+        name = normalized["name"]
+        code = normalized["code"]
+        key = (name.lower(), code.lower())
+        if key in seen or (not name and not code):
             continue
-        seen[key] = _teacher_option_payload(instr)
-    return list(seen.values())
+        seen.add(key)
+        rows.append({"name": name or code, "code": code})
+    return rows or list(TEACHER_DEPARTMENT_LIST)
 
 
-def _teacher_option_payload(instr):
-    has_account = getattr(instr, "teacher_account_profile", None) is not None
-    dept = instr.department
+def _admin_teacher_has_account(admin_teacher):
+    if not admin_teacher:
+        return False
+
+    filters = Q(linked_admin_teacher=admin_teacher)
+    uid = (admin_teacher.uid or "").strip()
+    name = (admin_teacher.name or "").strip()
+    if uid and name:
+        filters |= Q(linked_instructor__uid__iexact=uid, linked_instructor__name__iexact=name)
+    return Profile.objects.filter(role__iexact="teacher").filter(filters).exists()
+
+
+def _admin_teacher_option_payload(admin_teacher):
+    normalized = _normalize_teacher_department(admin_teacher.department_name, admin_teacher.department_code)
     return {
-        "id": instr.id,
-        "name": instr.name,
-        "uid": instr.uid,
-        "email": instr.email or "",
-        "department": dept.name if dept else "",
-        "department_code": dept.code if dept else "",
-        "has_account": has_account,
+        "id": admin_teacher.id,
+        "name": admin_teacher.name,
+        "uid": admin_teacher.uid or "",
+        "email": admin_teacher.email or "",
+        "department": normalized["name"],
+        "department_code": normalized["code"],
+        "has_account": _admin_teacher_has_account(admin_teacher),
     }
 
 
-def _instructor_has_account(instr):
-    return getattr(instr, "teacher_account_profile", None) is not None
+def _find_instructor_for_admin_teacher(admin_teacher, timetable_user=None):
+    if not admin_teacher:
+        return None
+
+    qs = Instructor.objects.select_related("department")
+    if timetable_user is not None:
+        qs = qs.filter(user=timetable_user)
+
+    uid = (admin_teacher.uid or "").strip()
+    email = (admin_teacher.email or "").strip()
+    name = (admin_teacher.name or "").strip()
+    dept_name = (admin_teacher.department_name or "").strip().lower()
+    dept_code = (admin_teacher.department_code or "").strip().lower()
+
+    filters = Q()
+    if uid:
+        filters |= Q(uid__iexact=uid)
+    if email:
+        filters |= Q(email__iexact=email)
+    if name:
+        filters |= Q(name__iexact=name)
+    if not filters:
+        return None
+
+    candidates = list(qs.filter(filters))
+    if not candidates and timetable_user is not None:
+        return _find_instructor_for_admin_teacher(admin_teacher, None)
+
+    def _score(instr):
+        points = 0
+        if uid and (instr.uid or "").strip().lower() == uid.lower():
+            points += 5
+        if email and (instr.email or "").strip().lower() == email.lower():
+            points += 4
+        if name and (instr.name or "").strip().lower() == name.lower():
+            points += 3
+        instr_dept = getattr(instr, "department", None)
+        if instr_dept:
+            if dept_name and (instr_dept.name or "").strip().lower() == dept_name:
+                points += 2
+            if dept_code and (instr_dept.code or "").strip().lower() == dept_code:
+                points += 2
+        return (-points, instr.id)
+
+    if not candidates:
+        return None
+    candidates.sort(key=_score)
+    best = candidates[0]
+    best_uid = bool(uid and (best.uid or "").strip().lower() == uid.lower())
+    best_email = bool(email and (best.email or "").strip().lower() == email.lower())
+    best_name = bool(name and (best.name or "").strip().lower() == name.lower())
+    best_dept = False
+    best_dept_obj = getattr(best, "department", None)
+    if best_dept_obj:
+        best_dept = bool(
+            (dept_name and (best_dept_obj.name or "").strip().lower() == dept_name)
+            or (dept_code and (best_dept_obj.code or "").strip().lower() == dept_code)
+        )
+
+    confident_match = (
+        best_email
+        or (best_uid and best_name)
+        or (best_uid and best_dept)
+        or (best_name and best_dept)
+    )
+    return best if confident_match else None
+
+
+def _resolve_profile_instructor(profile, timetable_user=None):
+    linked_admin_teacher = getattr(profile, "linked_admin_teacher", None)
+    if linked_admin_teacher:
+        return _find_instructor_for_admin_teacher(linked_admin_teacher, timetable_user)
+    linked_instructor = getattr(profile, "linked_instructor", None)
+    if linked_instructor and (timetable_user is None or linked_instructor.user_id == timetable_user.id):
+        return linked_instructor
+    return linked_instructor
+
+
+def _teachers_in_department(dept_name, dept_code, query=""):
+    """Central teacher directory search used by teacher self-registration."""
+    qs = AdminTeacher.objects.filter(is_active=True)
+    normalized = _normalize_teacher_department(dept_name, dept_code)
+    canonical_name = (normalized.get("name") or "").strip()
+    canonical_code = (normalized.get("code") or "").strip()
+    filters = Q()
+    if canonical_code:
+        filters &= Q(department_code__iexact=canonical_code)
+    elif canonical_name:
+        filters &= Q(department_name__iexact=canonical_name)
+    query = (query or "").strip()
+    if query:
+        filters &= (Q(name__icontains=query) | Q(email__icontains=query) | Q(uid__icontains=query))
+    return [_admin_teacher_option_payload(teacher) for teacher in qs.filter(filters).order_by("name", "uid", "id")]
 
 
 def _matching_instructor_ids(uid, name):
@@ -1474,26 +1679,38 @@ def _send_teacher_otp_email(instructor, code):
     from django.core.mail import EmailMultiAlternatives
 
     name = instructor.name or "Teacher"
-    dept_name = instructor.department.name if instructor.department else "your department"
+    dept = getattr(instructor, "department", None)
+    dept_name = getattr(dept, "name", "") or getattr(instructor, "department_name", "") or "your department"
     subject = "Verify Your SmartScheduler Account"
 
     text_body = (
         f"Dear {name},\n\n"
+        "SmartScheduler by the SIH Winner Innovation Team\n\n"
         f"We received a request to create your SmartScheduler account "
         f"using your details from {dept_name}.\n\n"
         f"Your verification code is: {code}\n\n"
         f"This code will expire in 5 minutes.\n"
         f"Please do not share this code with anyone.\n\n"
         f"If you did not initiate this request, you can safely ignore this email.\n\n"
-        f"Regards,\nSmartScheduler Team"
+        f"Regards,\nSmartScheduler Team\n{SIH_WINNER_TEXT}"
     )
 
     html_body = f"""
     <div style="margin:0;padding:24px;background:#0b1020;font-family:Segoe UI,Roboto,Arial,sans-serif;">
       <div style="max-width:520px;margin:0 auto;background:#11162b;border:1px solid #232a45;border-radius:16px;overflow:hidden;">
         <div style="padding:22px 28px;background:linear-gradient(120deg,#6366f1,#ec4899);">
-          <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">SmartScheduler</h1>
-          <p style="margin:4px 0 0;color:rgba(255,255,255,.85);font-size:13px;">Account Verification</p>
+                    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                        <td style="vertical-align:middle;">
+                            <div style="width:46px;height:46px;border-radius:50%;background:rgba(8,20,36,.55);text-align:center;line-height:46px;overflow:hidden;">
+                                <img src="cid:{LOGO_CID}" width="34" height="41" alt="SmartScheduler" style="display:inline-block;width:34px;height:41px;vertical-align:middle;">
+                            </div>
+                        </td>
+                        <td style="padding-left:14px;vertical-align:middle;">
+                            <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">SmartScheduler</h1>
+                            <p style="margin:4px 0 0;color:rgba(255,255,255,.85);font-size:13px;">Account Verification</p>
+                            <p style="margin:8px 0 0;color:#fff7ed;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">SIH Winner Innovation Team</p>
+                        </td>
+                    </tr></table>
         </div>
         <div style="padding:28px;">
           <p style="color:#e2e8f0;font-size:15px;margin:0 0 14px;">Dear <strong>{name}</strong>,</p>
@@ -1514,16 +1731,244 @@ def _send_teacher_otp_email(instructor, code):
             Please <strong>do not share</strong> this code with anyone. If you did not
             initiate this request, you can safely ignore this email.
           </p>
-          <p style="color:#64748b;font-size:13px;margin:18px 0 0;">Regards,<br>SmartScheduler Team</p>
+                      <p style="color:#64748b;font-size:13px;margin:18px 0 0;">Regards,<br>SmartScheduler Team<br><span style="color:#f59e0b;font-weight:700;">SIH Winner Innovation Team</span></p>
         </div>
       </div>
     </div>
     """
 
-    sender = getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER
+    sender = _brand_from_email()
     msg = EmailMultiAlternatives(subject, text_body, sender, [instructor.email])
     msg.attach_alternative(html_body, "text/html")
+    _attach_email_logo(msg)
     msg.send(fail_silently=False)
+
+
+def _attach_email_logo(msg):
+    from email.mime.image import MIMEImage
+    from pathlib import Path
+
+    for base in settings.STATICFILES_DIRS or []:
+        for fname in ("logo_email.png", "logo.jpeg"):
+            logo_path = Path(base) / "img" / fname
+            if logo_path.exists():
+                try:
+                    img = MIMEImage(logo_path.read_bytes())
+                    img.add_header("Content-ID", f"<{LOGO_CID}>")
+                    img.add_header("Content-Disposition", "inline", filename=fname)
+                    msg.attach(img)
+                except Exception:
+                    logger.warning("Could not attach email logo", exc_info=True)
+                return
+
+
+def _saved_timetable_title(saved_t):
+    dept_name = getattr(getattr(saved_t, "department", None), "name", "") or "All Departments"
+    created = timezone.localtime(saved_t.created_at).strftime("%d %b %Y %I:%M %p") if saved_t.created_at else ""
+    return f"{dept_name} timetable · {created}" if created else f"{dept_name} timetable"
+
+
+def _collect_saved_teacher_recipients(saved_t):
+    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
+    recipients = {}
+
+    def _add(teacher):
+        if not teacher:
+            return
+        email = (getattr(teacher, "email", "") or "").strip().lower()
+        if not email or not EMAIL_RE.match(email):
+            return
+        teacher_id = getattr(teacher, "id", None)
+        dept = getattr(getattr(teacher, "department", None), "name", "") or ""
+        recipients[teacher_id] = {
+            "id": teacher_id,
+            "name": getattr(teacher, "name", "Teacher") or "Teacher",
+            "email": email,
+            "department": dept,
+        }
+
+    for cls in classes:
+        _add(getattr(cls, "instructor", None))
+        for co_teacher in getattr(cls, "co_instructors", []) or []:
+            _add(co_teacher)
+    for lab in labs:
+        _add(getattr(lab, "instructor", None))
+        _add(getattr(lab, "second_instructor", None))
+        for co_teacher in getattr(lab, "co_instructors", []) or []:
+            _add(co_teacher)
+
+    return sorted(recipients.values(), key=lambda item: ((item.get("name") or "").lower(), item.get("email") or ""))
+
+
+def _collect_admin_teacher_recipients(query=""):
+    qs = AdminTeacher.objects.filter(is_active=True)
+    query = (query or "").strip()
+    if query:
+        qs = qs.filter(Q(name__icontains=query) | Q(email__icontains=query) | Q(uid__icontains=query))
+
+    recipients = []
+    seen = set()
+    for teacher in qs.order_by("name", "uid", "id"):
+        email = (teacher.email or "").strip().lower()
+        if not email or not EMAIL_RE.match(email):
+            continue
+        key = ((teacher.name or "").strip().lower(), (teacher.uid or "").strip().lower(), email)
+        if key in seen:
+            continue
+        seen.add(key)
+        recipients.append({
+            "id": f"admin:{teacher.id}",
+            "name": teacher.name or "Teacher",
+            "email": email,
+            "department": teacher.department_name or "",
+            "uid": teacher.uid or "",
+        })
+    return recipients
+
+
+def _coordinator_recipients():
+        qs = CoordinatorAppointment.objects.filter(role__icontains="Timetable Coordinator").order_by("role", "name")
+        recipients = []
+        seen = set()
+        for appointment in qs:
+                email = (appointment.email or "").strip().lower()
+                if not email or email in seen or not EMAIL_RE.match(email):
+                        continue
+                seen.add(email)
+                recipients.append({
+                        "name": appointment.name or "Coordinator",
+                        "email": email,
+                        "role": appointment.role,
+                        "department": appointment.department,
+                })
+        return recipients
+
+
+def _published_timetable_email_content(*, recipient_name, publish_code, login_url, timetable_title, role_label, note=""):
+        safe_name = recipient_name or "Faculty Member"
+        safe_note_text = (note or "").strip()
+        safe_note_html = safe_note_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+        subject = f"Published timetable access code {publish_code} — SmartScheduler"
+        text_body = (
+                f"Hello {safe_name},\n\n"
+                "J.C. Bose University of Science and Technology, YMCA (Formerly YMCA UST)\n"
+                f"{SIH_WINNER_TEXT}\n\n"
+                f"A timetable has been published for you on SmartScheduler.\n"
+                f"Timetable: {timetable_title}\n"
+                f"Role: {role_label}\n"
+                f"Publish code: {publish_code}\n\n"
+                f"Use this code here: {login_url}\n"
+                "This code uniquely identifies the timetable you should connect to.\n"
+                + (f"\nNote:\n{safe_note_text}\n" if safe_note_text else "")
+                + "\nRegards,\nSmartScheduler Team\n"
+        )
+        note_block = ""
+        if safe_note_text:
+                note_block = (
+                        '<tr><td style="padding:18px 28px 0;">'
+                        '<div style="background:#0f1a2c;border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:16px 18px;color:#cbd5e1;font-size:14px;line-height:1.6;">'
+                        '<div style="color:#64748b;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Additional note</div>'
+                        f'{safe_note_html}</div></td></tr>'
+                )
+        html_body = f"""
+<!DOCTYPE html><html><body style="margin:0;background:#0b1220;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b1220;padding:28px 12px;">
+        <tr><td align="center">
+            <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background:#111c30;border:1px solid rgba(148,163,184,.16);border-radius:18px;overflow:hidden;">
+                <tr><td style="background:linear-gradient(135deg,#38bdf8,#0ea5e9 55%,#0c3557);padding:26px 28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                        <td style="vertical-align:middle;">
+                            <div style="width:46px;height:46px;border-radius:13px;background:rgba(8,20,36,.55);text-align:center;line-height:46px;">
+                                <img src="cid:{LOGO_CID}" width="34" height="41" alt="SmartScheduler" style="display:inline-block;width:34px;height:41px;vertical-align:middle;">
+                            </div>
+                        </td>
+                        <td style="padding-left:14px;vertical-align:middle;">
+                            <div style="color:#ffffff;font-size:19px;font-weight:700;">SmartScheduler</div>
+                            <div style="color:rgba(255,255,255,.82);font-size:12px;">Published Timetable Access</div>
+                            <div style="color:#fff7ed;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:6px;">SIH Winner Innovation Team</div>
+                        </td>
+                    </tr></table>
+                </td></tr>
+                <tr><td style="background:#ffffff;padding:14px 28px;border-bottom:1px solid rgba(148,163,184,.16);">
+                    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                        <td style="vertical-align:middle;">
+                            <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/J.C._Bose_University_of_Science_and_Technology%2C_YMCA_logo.png" width="40" height="40" alt="J.C. Bose University" style="display:block;width:40px;height:40px;object-fit:contain;">
+                        </td>
+                        <td style="padding-left:12px;vertical-align:middle;">
+                            <div style="color:#e11d2f;font-size:13.5px;font-weight:700;line-height:1.35;">J.C. Bose University of Science and Technology, YMCA (Formerly YMCA UST)</div>
+                        </td>
+                    </tr></table>
+                </td></tr>
+                <tr><td style="padding:26px 28px 4px;">
+                    <div style="color:#e2e8f0;font-size:17px;font-weight:600;margin-bottom:6px;">Hello {safe_name},</div>
+                    <div style="color:#94a3b8;font-size:14px;line-height:1.65;">A timetable has been published for you on SmartScheduler. Use the access code below to connect to the right timetable.</div>
+                </td></tr>
+                <tr><td style="padding:18px 28px 0;">
+                    <div style="background:linear-gradient(160deg,#0f1a2c,#0d1626);border:1px solid rgba(56,189,248,.28);border-radius:12px;padding:18px 20px;">
+                        <div style="color:#64748b;font-size:11px;letter-spacing:.08em;text-transform:uppercase;">Publish code</div>
+                        <div style="color:#38bdf8;font-size:26px;font-weight:800;letter-spacing:.18em;margin-top:6px;">{publish_code}</div>
+                        <div style="color:#94a3b8;font-size:13px;margin-top:10px;">Timetable · {timetable_title}<br>Recipient type · {role_label}</div>
+                    </div>
+                </td></tr>
+                <tr><td style="padding:18px 28px 0;">
+                    <div style="background:#0f1a2c;border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:16px 18px;color:#cbd5e1;font-size:14px;line-height:1.7;">
+                        Open <a href="{login_url}" style="color:#38bdf8;">{login_url}</a> and enter this publish code. The code uniquely identifies this timetable.
+                    </div>
+                </td></tr>
+                {note_block}
+                <tr><td style="padding:22px 28px 28px;">
+                    <div style="border-top:1px solid rgba(148,163,184,.16);padding-top:16px;color:#64748b;font-size:12px;line-height:1.6;">This is an automated message from SmartScheduler.<br><span style="color:#f59e0b;font-weight:700;">SIH Winner Innovation Team</span></div>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body></html>"""
+        return subject, text_body, html_body
+
+
+def _send_publish_notification_email(*, recipient_name, recipient_email, publish_code, request, role_label, timetable_title):
+        from django.core.mail import EmailMultiAlternatives
+        from email.utils import formataddr
+
+        login_url = request.build_absolute_uri(reverse("teacher_published_timetable"))
+        subject, text_body, html_body = _published_timetable_email_content(
+                recipient_name=recipient_name,
+                publish_code=publish_code,
+                login_url=login_url,
+                timetable_title=timetable_title,
+                role_label=role_label,
+        )
+        sender = _brand_from_email()
+        msg = EmailMultiAlternatives(
+                subject=subject,
+                body=text_body,
+                from_email=sender,
+                to=[formataddr((recipient_name, recipient_email))],
+        )
+        msg.attach_alternative(html_body, "text/html")
+        _attach_email_logo(msg)
+        msg.send(fail_silently=False)
+
+
+def _send_publish_summary_email(request, saved_t, action_label, sent_count, failed_count):
+        from django.core.mail import EmailMultiAlternatives
+
+        owner_email = (getattr(request.user, "email", "") or "").strip()
+        if not owner_email or not EMAIL_RE.match(owner_email):
+                return
+        subject, text_body, html_body = _published_timetable_email_content(
+                recipient_name=getattr(request.user, "get_full_name", lambda: "")() or getattr(request.user, "username", "Owner"),
+                publish_code=saved_t.publish_code,
+                login_url=request.build_absolute_uri(reverse("saved_timetable_publish_notifications", args=[saved_t.id])),
+                timetable_title=_saved_timetable_title(saved_t),
+                role_label="Timetable Owner",
+                note=f"{action_label}\nSuccessful emails: {sent_count}\nFailed emails: {failed_count}",
+        )
+        sender = _brand_from_email()
+        msg = EmailMultiAlternatives(subject, text_body, sender, [owner_email])
+        msg.attach_alternative(html_body, "text/html")
+        _attach_email_logo(msg)
+        msg.send(fail_silently=True)
 
 
 def teacher_register(request):
@@ -1532,28 +1977,28 @@ def teacher_register(request):
 
     if request.user.is_authenticated:
         profile, _ = Profile.objects.get_or_create(user=request.user)
-        if (profile.role or "").lower() == "teacher" and profile.linked_instructor_id:
+        if (profile.role or "").lower() == "teacher" and (profile.linked_instructor_id or getattr(profile, "linked_admin_teacher_id", None)):
             return redirect("teacher_dashboard")
 
     dept_options = _teacher_department_options()
 
     if request.method == "POST":
-        instructor_id = (request.POST.get("instructor_id") or "").strip()
+        teacher_id = (request.POST.get("teacher_id") or request.POST.get("instructor_id") or "").strip()
         password = request.POST.get("password") or ""
         confirm = request.POST.get("confirm_password") or ""
 
-        instructor = Instructor.objects.select_related("department").filter(id=instructor_id).first() if instructor_id.isdigit() else None
+        teacher = AdminTeacher.objects.filter(id=teacher_id, is_active=True).first() if teacher_id.isdigit() else None
 
         errors = []
-        if instructor is None:
+        if teacher is None:
             errors.append("Please select your name from the department list.")
-        elif not _teacher_otp_verified_for(request, instructor.id):
+        elif not _teacher_otp_verified_for(request, teacher.id):
             errors.append("Please verify your identity with the email code before creating your account.")
         if len(password) < 5:
             errors.append("Password must be at least 5 characters.")
         if password != confirm:
             errors.append("Passwords do not match.")
-        if instructor is not None and _instructor_has_account(instructor):
+        if teacher is not None and _admin_teacher_has_account(teacher):
             errors.append("An account already exists for this teacher. Please log in instead.")
 
         if errors:
@@ -1561,7 +2006,7 @@ def teacher_register(request):
                 messages.error(request, err)
         else:
             User = get_user_model()
-            username = f"teacher_{instructor.id}"
+            username = f"teacher_{teacher.id}"
             base_username = username
             suffix = 1
             while User.objects.filter(username=username).exists():
@@ -1570,17 +2015,18 @@ def teacher_register(request):
 
             new_user = User.objects.create_user(
                 username=username,
-                email=instructor.email or "",
+                email=teacher.email or "",
                 password=password,
             )
-            if instructor.name:
-                new_user.first_name = instructor.name[:30]
+            if teacher.name:
+                new_user.first_name = teacher.name[:30]
                 new_user.save(update_fields=["first_name"])
 
             profile, _ = Profile.objects.get_or_create(user=new_user)
             profile.role = "teacher"
-            profile.linked_instructor = instructor
-            profile.save(update_fields=["role", "linked_instructor"])
+            profile.linked_admin_teacher = teacher
+            profile.linked_instructor = _find_instructor_for_admin_teacher(teacher)
+            profile.save(update_fields=["role", "linked_admin_teacher", "linked_instructor"])
 
             _clear_teacher_otp(request)
             auth_login(request, new_user, backend="django.contrib.auth.backends.ModelBackend")
@@ -1605,19 +2051,19 @@ def teacher_register_teachers(request):
 
 def teacher_register_info(request):
     """AJAX: teacher code + email for a selected instructor id."""
-    instructor_id = (request.GET.get("id") or "").strip()
-    if not instructor_id.isdigit():
+    teacher_id = (request.GET.get("id") or "").strip()
+    if not teacher_id.isdigit():
         return JsonResponse({"ok": False}, status=400)
-    instr = Instructor.objects.select_related("teacher_account_profile", "department").filter(id=instructor_id).first()
-    if instr is None:
+    teacher = AdminTeacher.objects.filter(id=teacher_id, is_active=True).first()
+    if teacher is None:
         return JsonResponse({"ok": False}, status=404)
     return JsonResponse({
         "ok": True,
-        "uid": instr.uid,
-        "email": instr.email or "",
-        "name": instr.name,
-        "department": instr.department.name if instr.department else "",
-        "has_account": _instructor_has_account(instr),
+        "uid": teacher.uid,
+        "email": teacher.email or "",
+        "name": teacher.name,
+        "department": teacher.department_name or "",
+        "has_account": _admin_teacher_has_account(teacher),
     })
 
 
@@ -1626,24 +2072,21 @@ def teacher_register_send_otp(request):
     if request.method != "POST":
         return JsonResponse({"ok": False, "error": "Invalid request method."}, status=405)
 
-    instructor_id = (request.POST.get("instructor_id") or "").strip()
-    instr = (
-        Instructor.objects.select_related("department", "teacher_account_profile")
-        .filter(id=instructor_id)
-        .first()
-        if instructor_id.isdigit() else None
-    )
-    if instr is None:
+    teacher_id = (request.POST.get("teacher_id") or request.POST.get("instructor_id") or "").strip()
+    teacher = AdminTeacher.objects.filter(id=teacher_id, is_active=True).first() if teacher_id.isdigit() else None
+    if teacher is None:
         return JsonResponse({"ok": False, "error": "Please select your profile first."}, status=404)
-    if _instructor_has_account(instr):
+    if _admin_teacher_has_account(teacher):
         return JsonResponse({"ok": False, "error": "An account already exists for this teacher. Please log in instead."}, status=400)
-    if not (instr.email or "").strip():
+    if not (teacher.uid or "").strip():
+        return JsonResponse({"ok": False, "error": "Teacher code is missing for this profile. Please contact your coordinator."}, status=400)
+    if not (teacher.email or "").strip():
         return JsonResponse({"ok": False, "error": "No email is registered for this teacher. Please contact your coordinator."}, status=400)
 
     code = _generate_teacher_otp()
-    _store_teacher_otp(request, instr, code)
+    _store_teacher_otp(request, teacher, code)
     try:
-        _send_teacher_otp_email(instr, code)
+        _send_teacher_otp_email(teacher, code)
     except Exception:
         logger.exception("Teacher OTP email failed")
         _clear_teacher_otp(request)
@@ -1651,7 +2094,7 @@ def teacher_register_send_otp(request):
 
     return JsonResponse({
         "ok": True,
-        "masked_email": _mask_email(instr.email),
+        "masked_email": _mask_email(teacher.email),
         "expires_in": TEACHER_OTP_TTL_SECONDS,
     })
 
@@ -1699,105 +2142,7 @@ def teacher_register_verify_otp(request):
 
 @login_required
 def teacher_onboarding(request):
-    profile, locked_response = _get_teacher_profile_or_locked_response(request.user)
-    if locked_response:
-        return render(request, "role_locked.html", {"current_role": locked_response})
-
-    _ensure_teacher_role(profile)
-
-    existing_onboarding = _get_teacher_onboarding(request.user)
-    if existing_onboarding and not existing_onboarding.requires_resubmission:
-        return redirect("teacher_dashboard")
-
-    form_values = {
-        "full_name": existing_onboarding.full_name if existing_onboarding else request.user.get_full_name().strip() or request.user.username,
-        "designation": existing_onboarding.designation if existing_onboarding else "",
-        "joining_year": existing_onboarding.joining_year if existing_onboarding else "",
-        "email": existing_onboarding.email if existing_onboarding else request.user.email or "",
-        "subjects_taught": existing_onboarding.subjects_taught if existing_onboarding else "",
-    }
-
-    if request.method == "POST":
-        form_values = {
-            "full_name": request.POST.get("full_name", "").strip(),
-            "designation": request.POST.get("designation", "").strip(),
-            "joining_year": request.POST.get("joining_year", "").strip(),
-            "email": request.POST.get("email", "").strip(),
-            "subjects_taught": request.POST.get("subjects_taught", "").strip(),
-        }
-
-        errors = []
-        if not form_values["full_name"]:
-            errors.append("Please enter your full name.")
-        if form_values["designation"] not in dict(TeacherOnboarding.DESIGNATION_CHOICES):
-            errors.append("Please choose a valid designation.")
-        if not form_values["email"] or "@" not in form_values["email"]:
-            errors.append("Please enter a valid email address.")
-        if not form_values["subjects_taught"]:
-            errors.append("Please enter the subjects you teach.")
-
-        joining_year = None
-        if not form_values["joining_year"]:
-            errors.append("Please enter your joining year.")
-        else:
-            try:
-                joining_year = int(form_values["joining_year"])
-            except ValueError:
-                errors.append("Joining year must be a number.")
-
-        current_year = date.today().year
-        if joining_year is not None and not (1950 <= joining_year <= current_year + 1):
-            errors.append(f"Joining year must be between 1950 and {current_year + 1}.")
-
-        if errors:
-            for error in errors:
-                messages.error(request, error)
-        else:
-            if existing_onboarding:
-                existing_onboarding.full_name = form_values["full_name"]
-                existing_onboarding.designation = form_values["designation"]
-                existing_onboarding.joining_year = joining_year
-                existing_onboarding.email = form_values["email"]
-                existing_onboarding.subjects_taught = form_values["subjects_taught"]
-                existing_onboarding.requires_resubmission = False
-                existing_onboarding.resubmission_requested_at = None
-                existing_onboarding.save(
-                    update_fields=[
-                        "full_name",
-                        "designation",
-                        "joining_year",
-                        "email",
-                        "subjects_taught",
-                        "requires_resubmission",
-                        "resubmission_requested_at",
-                        "updated_at",
-                    ]
-                )
-            else:
-                TeacherOnboarding.objects.create(
-                    user=request.user,
-                    full_name=form_values["full_name"],
-                    designation=form_values["designation"],
-                    joining_year=joining_year,
-                    email=form_values["email"],
-                    subjects_taught=form_values["subjects_taught"],
-                )
-            if request.user.email != form_values["email"]:
-                request.user.email = form_values["email"]
-                request.user.save(update_fields=["email"])
-            if existing_onboarding:
-                messages.success(request, "Your corrected teacher form has been submitted.")
-            else:
-                messages.success(request, "Your teacher profile form has been submitted.")
-            return redirect("teacher_dashboard")
-
-    context = {
-        "designation_choices": TeacherOnboarding.DESIGNATION_CHOICES,
-        "form_values": form_values,
-        "show_resubmission_notice": bool(existing_onboarding and existing_onboarding.requires_resubmission),
-    }
-    context.update(_teacher_nav_context())
-    return render(request, "teacher_onboarding.html", context)
+    return redirect("teacher_dashboard")
 
 
 @login_required
@@ -1808,47 +2153,10 @@ def teacher_dashboard(request):
 
     _ensure_teacher_role(profile)
 
-    # New credential flow: a linked instructor is required. If the account is
-    # not linked yet, send the user to the registration page.
-    if not profile.linked_instructor_id:
+    if not (profile.linked_instructor_id or getattr(profile, "linked_admin_teacher_id", None)):
         messages.error(request, "Please register your teacher account to continue.")
         return redirect("teacher_register")
-
-    linked_instructor = profile.linked_instructor
-    timetable, my_table, workload, instructor_used = _resolve_teacher_timetable(linked_instructor)
-    schedule_rows = _teacher_schedule_rows(my_table)
-
-    teacher_subjects = list(
-        Subject.objects.filter(
-            user=linked_instructor.user,
-            instructors=linked_instructor,
-        ).order_by("subject_name", "subject_number").distinct()
-    )
-
-    dept = linked_instructor.department
-    rooms_used = sorted({r["room"] for r in schedule_rows if r["room"] and r["room"] != "—"})
-
-    context = {
-        "teacher_profile": profile,
-        "linked_instructor": linked_instructor,
-        "teacher_display_name": linked_instructor.name,
-        "teacher_code": linked_instructor.uid,
-        "teacher_email": linked_instructor.email or (request.user.email or ""),
-        "teacher_designation": linked_instructor.designation or "Teacher",
-        "teacher_department": dept.name if dept else "—",
-        "teacher_department_code": dept.code if dept else "",
-        "active_timetable": timetable,
-        "my_teacher_table": my_table,
-        "teacher_workload": workload,
-        "schedule_rows": schedule_rows,
-        "teacher_subjects": teacher_subjects,
-        "teacher_subject_count": len(teacher_subjects),
-        "rooms_used": rooms_used,
-        "rooms_count": len(rooms_used),
-        "class_count": len(schedule_rows),
-        "slot_labels": SLOT_LABELS,
-    }
-    context.update(_teacher_nav_context())
+    context = _resolve_teacher_dashboard_context(request, profile)
     return render(request, "teacher_dashboard.html", context)
 
 
@@ -1967,7 +2275,7 @@ def contact(request):
             msg = EmailMessage(
                 subject=f"[SmartScheduler] {subject} — from {name}",
                 body=body,
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER,
+                from_email=_brand_from_email(),
                 to=['smartschedulertech@gmail.com'],
                 reply_to=[f"{name} <{email}>"],         # Reply goes to the visitor
             )
@@ -2012,7 +2320,7 @@ def institute_application(request):
             msg = EmailMessage(
                 subject=f"[SmartScheduler] Institute application - {selected_type or 'New request'}",
                 body=body,
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER,
+                from_email=_brand_from_email(),
                 to=["smartschedulertech@gmail.com"],
                 reply_to=[f"{contact_name} <{official_email}>"] if official_email else None,
             )
@@ -2531,7 +2839,7 @@ if "build_teacher_tables" not in globals():
             for lab in items["labs"]:
                 slot_count = _lab_slot_count(lab)
                 if getattr(lab, "second_instructor", None):
-                    shared_labs += slot_count / 2
+                    shared_labs += slot_count
                 else:
                     labs += slot_count
             total = lectures + labs + shared_labs
@@ -2925,12 +3233,36 @@ def _compute_teacher_workloads(classes, labs):
         if dept_name:
             data["departments"].add(str(dept_name))
 
+    # Elective sessions are taught once physically but exist as one object per
+    # shared section. Track seen (teacher, physical-session) pairs so an elective
+    # adds to a teacher's load only once instead of once per section.
+    seen_elective = set()
+
+    def _is_dup_elective(item_obj, kind, first_mt, assigned_teacher):
+        if not getattr(item_obj, "is_elective", False):
+            return False
+        key = (
+            getattr(assigned_teacher, "pk", None) or id(assigned_teacher),
+            kind,
+            getattr(getattr(item_obj, "subject", None), "pk", None),
+            getattr(getattr(item_obj, "room", None), "pk", None),
+            getattr(first_mt, "day", None),
+            getattr(first_mt, "time", None),
+            getattr(item_obj, "group", None),
+        )
+        if key in seen_elective:
+            return True
+        seen_elective.add(key)
+        return False
+
     for cls in classes:
         teacher = cls.instructor
         cls_dur = getattr(cls, 'duration', 1)
         teachers = [teacher] + list(getattr(cls, "co_instructors", []) or [])
         for assigned_teacher in teachers:
             if not assigned_teacher:
+                continue
+            if _is_dup_elective(cls, "class", getattr(cls, "meeting_time", None), assigned_teacher):
                 continue
             data = _ensure_teacher(assigned_teacher)
             data["lectures"] += cls_dur
@@ -2941,10 +3273,13 @@ def _compute_teacher_workloads(classes, labs):
         lab_slot_count = len(lab.meeting_times) if lab.meeting_times else getattr(lab, 'duration', LAB_DURATION)
         second_teacher = getattr(lab, "second_instructor", None)
         co_teachers = list(getattr(lab, "co_instructors", []) or [])
+        _lab_first_mt = (lab.meeting_times or [None])[0]
         if second_teacher:
-            shared_load = lab_slot_count / 2
+            shared_load = lab_slot_count
             for assigned_teacher in [teacher, second_teacher] + co_teachers:
                 if not assigned_teacher:
+                    continue
+                if _is_dup_elective(lab, "lab", _lab_first_mt, assigned_teacher):
                     continue
                 data = _ensure_teacher(assigned_teacher)
                 data["shared_labs"] += shared_load
@@ -2953,6 +3288,8 @@ def _compute_teacher_workloads(classes, labs):
         else:
             for assigned_teacher in [teacher] + co_teachers:
                 if not assigned_teacher:
+                    continue
+                if _is_dup_elective(lab, "lab", _lab_first_mt, assigned_teacher):
                     continue
                 data = _ensure_teacher(assigned_teacher)
                 data["labs"] += lab_slot_count
@@ -3005,6 +3342,38 @@ def _get_department_filter_options(user):
     return options
 
 
+def _get_saved_department_filter_options(user, classes, labs):
+    all_options = _get_department_filter_options(user)
+    names_by_code = {opt["code"]: opt["name"] for opt in all_options}
+    relevant_codes = set()
+
+    def _add_code(code):
+        code = (code or "").strip()
+        if code:
+            relevant_codes.add(code)
+
+    for cls in classes:
+        dept = getattr(getattr(cls, "section", None), "department", None) or getattr(cls, "department", None)
+        _add_code(getattr(dept, "code", ""))
+        teacher_dept = getattr(getattr(cls, "instructor", None), "department", None)
+        _add_code(getattr(teacher_dept, "code", ""))
+        for co_teacher in getattr(cls, "co_instructors", []) or []:
+            teacher_dept = getattr(co_teacher, "department", None)
+            _add_code(getattr(teacher_dept, "code", ""))
+
+    for lab in labs:
+        dept = getattr(getattr(lab, "section", None), "department", None) or getattr(lab, "department", None)
+        _add_code(getattr(dept, "code", ""))
+        for teacher in [getattr(lab, "instructor", None), getattr(lab, "second_instructor", None)] + list(getattr(lab, "co_instructors", []) or []):
+            teacher_dept = getattr(teacher, "department", None)
+            _add_code(getattr(teacher_dept, "code", ""))
+
+    options = []
+    for code in sorted(relevant_codes):
+        options.append({"code": code, "name": names_by_code.get(code, code)})
+    return options
+
+
 def _teacher_home_dept_fallback(classes, labs):
     """Derive a fallback home-department code per teacher from where they teach
     most. Used only when an Instructor has no stored department."""
@@ -3047,11 +3416,37 @@ def _filter_section_tables_by_department(tables, selected_department):
     sel = selected_department.strip().lower()
     out = []
     for table in tables:
-        dept = table.get("dept")
+        section = table.get("section")
+        dept = getattr(section, "department", None) if section else None
         code = (getattr(dept, "code", "") or "").strip().lower() if dept else ""
         if code == sel:
             out.append(table)
     return out
+
+
+def _collect_department_codes_from_rows(rows):
+    codes = set()
+    for row in rows or []:
+        for cell in row.get("cells", []):
+            for cls in cell.get("classes", []):
+                dept = getattr(getattr(cls, "section", None), "department", None) or getattr(cls, "department", None)
+                code = (getattr(dept, "code", "") or "").strip().lower()
+                if code:
+                    codes.add(code)
+            for lab in cell.get("labs", []):
+                dept = getattr(getattr(lab, "section", None), "department", None) or getattr(lab, "department", None)
+                code = (getattr(dept, "code", "") or "").strip().lower()
+                if code:
+                    codes.add(code)
+    return codes
+
+
+def _table_has_scheduled_entries(table):
+    for row in table.get("rows", []):
+        for cell in row.get("cells", []):
+            if cell.get("classes") or cell.get("labs"):
+                return True
+    return False
 
 
 def _filter_room_tables_by_department(room_tables, selected_department):
@@ -3060,36 +3455,46 @@ def _filter_room_tables_by_department(room_tables, selected_department):
     sel = selected_department.strip().lower()
     out = []
     for table in room_tables:
-        codes = [str(c).strip().lower() for c in table.get("dept_codes", [])]
-        if sel in codes:
+        codes = {
+            str(c).strip().lower()
+            for c in table.get("dept_codes", [])
+            if str(c).strip()
+        }
+        codes.update(_collect_department_codes_from_rows(table.get("rows", [])))
+        if sel in codes and _table_has_scheduled_entries(table):
             out.append(table)
     return out
 
 
-def _filter_teacher_tables_by_home_department(teacher_tables, selected_department, fallback_map):
-    """Keep only teachers whose HOME department matches the selection. Each
-    teacher's grid is left untouched so it still shows every class they teach
-    (including classes in other departments)."""
+def _filter_teacher_tables_by_department(teacher_tables, selected_department, fallback_map):
+    """Keep only teachers whose home department matches the selection.
+
+    Saved timetable teacher/workload views are grouped by teacher home
+    department, not by every department they teach into.
+    """
     if not selected_department or selected_department.lower() == "all":
         return teacher_tables
     sel = selected_department.strip().lower()
     out = []
     for table in teacher_tables:
         teacher = table.get("teacher")
-        home = _teacher_home_dept_code(teacher, fallback_map)
-        if home and home.lower() == sel:
+        home = (table.get("home_dept_code") or _teacher_home_dept_code(teacher, fallback_map) or "").strip().lower()
+        if home == sel and _table_has_scheduled_entries(table):
             out.append(table)
     return out
 
 
-def _filter_workloads_by_home_department(workloads, selected_department, fallback_map):
+def _filter_workloads_for_teacher_tables(workloads, teacher_tables, selected_department):
     if not selected_department or selected_department.lower() == "all":
         return workloads
-    sel = selected_department.strip().lower()
+    visible_teacher_ids = {
+        getattr(table.get("teacher"), "id", None)
+        for table in teacher_tables
+        if table.get("teacher") is not None
+    }
     out = {}
     for teacher, data in workloads.items():
-        home = _teacher_home_dept_code(teacher, fallback_map)
-        if home and home.lower() == sel:
+        if getattr(teacher, "id", None) in visible_teacher_ids:
             out[teacher] = data
     return out
 
@@ -3106,6 +3511,27 @@ def _normalize_selected_department(user, selected_department):
     if selected_department.lower() in valid_codes:
         return selected_department
     return "all"
+
+
+def _decorate_section_tables_with_department_meta(tables):
+    for table in tables:
+        section = table.get("section")
+        dept = getattr(section, "department", None) if section else None
+        table["section_department_code"] = (getattr(dept, "code", "") or "").strip()
+        table["section_department_name"] = (getattr(dept, "name", "") or "").strip()
+    return tables
+
+
+def _saved_filtered_entities_for_request(request, saved_t):
+    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
+    selected_program = request.GET.get("program", "all")
+    classes, labs, selected_program = _filter_entities_by_program(
+        classes, labs, request.user, selected_program
+    )
+    selected_department = _normalize_selected_department(
+        request.user, request.GET.get("department", "all")
+    )
+    return classes, labs, selected_program, selected_department
 
 
 
@@ -3206,17 +3632,21 @@ def saved_timetable_list(request):
 @login_required
 def saved_timetable(request, tid):
     saved_t = _get_saved_timetable_or_404(tid, request.user)
-    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
-
-    selected_program = request.GET.get("program", "all")
-    classes, labs, selected_program = _filter_entities_by_program(classes, labs, request.user, selected_program)
-
-    selected_department = _normalize_selected_department(request.user, request.GET.get("department", "all"))
+    classes, labs, selected_program, selected_department = _saved_filtered_entities_for_request(request, saved_t)
+    department_options = _get_saved_department_filter_options(request.user, classes, labs)
+    valid_department_codes = {
+        (option.get("code") or "").strip().lower()
+        for option in department_options
+        if (option.get("code") or "").strip()
+    }
+    if selected_department != "all" and selected_department.strip().lower() not in valid_department_codes:
+        selected_department = "all"
     # Fallback home-department map (used only for teachers with no stored department).
     home_dept_fallback = _teacher_home_dept_fallback(classes, labs)
 
     # Section / room tables are filtered to the selected department directly.
     tables = build_section_tables(classes, labs, user=request.user)
+    tables = _decorate_section_tables_with_department_meta(tables)
     tables = _build_saved_parking_context(saved_t, tables)
     tables = _filter_section_tables_by_department(tables, selected_department)
     room_tables = build_room_tables(classes, labs, user=request.user)
@@ -3226,9 +3656,9 @@ def saved_timetable(request, tid):
     # grid stays complete, then the LIST is restricted to teachers whose HOME
     # department matches the selection.
     teacher_tables = build_teacher_tables(classes, labs, user=request.user)
-    teacher_tables = _filter_teacher_tables_by_home_department(teacher_tables, selected_department, home_dept_fallback)
+    teacher_tables = _filter_teacher_tables_by_department(teacher_tables, selected_department, home_dept_fallback)
     teacher_workloads = _compute_teacher_workloads(classes, labs)
-    teacher_workloads = _filter_workloads_by_home_department(teacher_workloads, selected_department, home_dept_fallback)
+    teacher_workloads = _filter_workloads_for_teacher_tables(teacher_workloads, teacher_tables, selected_department)
 
     permissions = _get_plan_permissions(request.user)
 
@@ -3240,13 +3670,16 @@ def saved_timetable(request, tid):
         "teacher_workloads": teacher_workloads,
         "program_options": _get_program_filter_options(request.user),
         "active_program": selected_program,
-        "department_options": _get_department_filter_options(request.user),
+        "department_options": department_options,
         "active_department": selected_department,
         "SLOT_LABELS": SLOT_LABELS,
         "can_edit_delete": permissions["can_edit_delete"],
         "can_substitute": permissions["can_substitute"],
         "can_drag_drop": permissions["can_drag_drop"],
     }
+    if request.session.get("is_superadmin") and request.session.get("sa_impersonate_uid"):
+        context["superadmin_exit_url"] = reverse("superadmin_stop_impersonate")
+        context["superadmin_exit_title"] = "Back to Super Admin"
     return render(request, "saved_timetable.html", context)
 
 
@@ -3614,12 +4047,12 @@ def publish_timetable(request, tid):
     """HOD publishes a saved timetable with a custom code."""
     saved_t = _get_saved_timetable_or_404(tid, request.user)
     if request.method == "POST":
-        code = request.POST.get("publish_code", "").strip()
+        code = re.sub(r"\s+", "", request.POST.get("publish_code", "")).upper().strip()
         if not code:
             messages.error(request, "Please enter a publish code.")
             return redirect("saved_timetable", tid=tid)
         conflict = SavedTimetable.objects.filter(
-            user=request.user, publish_code=code, is_published=True
+            publish_code__iexact=code, is_published=True
         ).exclude(id=tid).exists()
         if conflict:
             messages.error(request, "This code is already used for another timetable.")
@@ -3628,7 +4061,93 @@ def publish_timetable(request, tid):
         saved_t.publish_code = code
         saved_t.save(update_fields=["is_published", "publish_code"])
         messages.success(request, f"Timetable published with code: {code}")
+        return redirect("saved_timetable_publish_notifications", tid=tid)
     return redirect("saved_timetable", tid=tid)
+
+
+@login_required
+def saved_timetable_publish_notifications(request, tid):
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    if not saved_t.is_published or not saved_t.publish_code:
+        messages.error(request, "Publish this timetable first to send notifications.")
+        return redirect("saved_timetable", tid=tid)
+    teacher_recipients = _collect_saved_teacher_recipients(saved_t)
+    search_teacher_recipients = _collect_admin_teacher_recipients()
+    coordinator_recipients = _coordinator_recipients()
+    context = {
+        "saved": saved_t,
+        "teacher_recipients": teacher_recipients,
+        "teacher_count": len(teacher_recipients),
+        "search_teacher_recipients": search_teacher_recipients,
+        "search_teacher_count": len(search_teacher_recipients),
+        "coordinator_recipients": coordinator_recipients,
+        "coordinator_count": len(coordinator_recipients),
+        "timetable_title": _saved_timetable_title(saved_t),
+    }
+    return render(request, "publish_notify_center.html", context)
+
+
+def _send_publish_notifications(request, saved_t, recipients, role_label, action_label):
+    sent_count = 0
+    failed_count = 0
+    timetable_title = _saved_timetable_title(saved_t)
+    for recipient in recipients:
+        try:
+            _send_publish_notification_email(
+                recipient_name=recipient.get("name") or role_label,
+                recipient_email=recipient.get("email") or "",
+                publish_code=saved_t.publish_code,
+                request=request,
+                role_label=role_label,
+                timetable_title=timetable_title,
+            )
+            sent_count += 1
+        except Exception:
+            failed_count += 1
+            logger.exception("Publish notification email failed for %s", recipient.get("email"))
+    _send_publish_summary_email(request, saved_t, action_label, sent_count, failed_count)
+    return sent_count, failed_count
+
+
+@login_required
+def publish_notify_all_teachers(request, tid):
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    if request.method != "POST":
+        return redirect("saved_timetable_publish_notifications", tid=tid)
+    recipients = _collect_saved_teacher_recipients(saved_t)
+    sent_count, failed_count = _send_publish_notifications(request, saved_t, recipients, "Teacher", "Teacher notification broadcast")
+    messages.success(request, f"Teacher notifications sent: {sent_count}. Failed: {failed_count}.")
+    return redirect("saved_timetable_publish_notifications", tid=tid)
+
+
+@login_required
+def publish_notify_single_teacher(request, tid):
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    if request.method != "POST":
+        return redirect("saved_timetable_publish_notifications", tid=tid)
+    teacher_id = request.POST.get("teacher_id", "").strip()
+    recipients = _collect_admin_teacher_recipients()
+    selected = next((item for item in recipients if str(item.get("id")) == teacher_id), None)
+    if not selected:
+        messages.error(request, "Select a valid teacher to notify.")
+        return redirect("saved_timetable_publish_notifications", tid=tid)
+    sent_count, failed_count = _send_publish_notifications(request, saved_t, [selected], "Teacher", f"Single teacher notification for {selected.get('name')}")
+    if sent_count:
+        messages.success(request, f"Publish code mailed to {selected.get('name')}.")
+    else:
+        messages.error(request, f"Could not send email to {selected.get('name')}. Failed: {failed_count}.")
+    return redirect("saved_timetable_publish_notifications", tid=tid)
+
+
+@login_required
+def publish_notify_all_coordinators(request, tid):
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    if request.method != "POST":
+        return redirect("saved_timetable_publish_notifications", tid=tid)
+    recipients = _coordinator_recipients()
+    sent_count, failed_count = _send_publish_notifications(request, saved_t, recipients, "Timetable Coordinator", "Coordinator notification broadcast")
+    messages.success(request, f"Coordinator notifications sent: {sent_count}. Failed: {failed_count}.")
+    return redirect("saved_timetable_publish_notifications", tid=tid)
 
 
 @login_required
@@ -5900,7 +6419,19 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.http import HttpResponse, Http404, HttpResponseForbidden
 
-def download_saved_timetable_pdf(request, tid):
+@login_required
+def saved_timetable_download_center(request, tid):
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    return render(request, "download_center.html", {
+        "saved_mode": True,
+        "saved_id": saved_t.id,
+        "departments": _get_department_filter_options(request.user),
+        "college_name": COLLEGE_NAME,
+    })
+
+
+@login_required
+def download_saved_timetable_pdf(request, tid, view_type='section'):
     try:
         from xhtml2pdf import pisa
     except ImportError:
@@ -5910,52 +6441,88 @@ def download_saved_timetable_pdf(request, tid):
         )
 
     saved_t = _get_saved_timetable_or_404(tid, request.user)
+    view_type = (view_type or 'section').lower()
+    if view_type not in {"section", "room", "teacher", "workload"}:
+        view_type = "section"
 
-    # Rebuild in-memory classes and labs (with proper batch grouping)
-    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
+    classes, labs, _selected_program, selected_department = _saved_filtered_entities_for_request(request, saved_t)
+    dept_filter = _parse_dept_filter(request)
+    if not dept_filter and selected_department and selected_department != "all":
+        dept_filter = {selected_department}
+    blocks = []
+    is_workload = False
+    workload_rows = []
+    view_label = "Section"
 
-    # Build tables scoped to the current user
-    tables = build_section_tables(classes, labs, user=request.user)
+    if view_type == "section":
+        view_label = "Section"
+        tables = build_section_tables(classes, labs, user=request.user)
+        tables = _decorate_section_tables_with_department_meta(tables)
+        if dept_filter:
+            tables = [
+                table for table in tables
+                if (getattr(getattr(table.get("section"), "department", None), "code", "") or "") in dept_filter
+            ]
+        blocks = [_section_pdf_block(t) for t in tables]
+    elif view_type == "room":
+        view_label = "Room"
+        room_tables = build_room_tables(classes, labs, user=request.user)
+        if dept_filter:
+            room_tables = [
+                table for table in room_tables
+                if any(code in dept_filter for code in table.get("dept_codes", []))
+            ]
+        blocks = [_room_pdf_block(t) for t in room_tables]
+    elif view_type == "teacher":
+        view_label = "Teacher"
+        fallback_map = _teacher_home_dept_fallback(classes, labs)
+        teacher_tables = build_teacher_tables(classes, labs, user=request.user)
+        if dept_filter:
+            teacher_tables = [
+                table for table in teacher_tables
+                if (_teacher_home_dept_code(table.get("teacher"), fallback_map) or "") in dept_filter
+            ]
+        blocks = [_teacher_pdf_block(t) for t in teacher_tables]
+    else:
+        view_label = "Workload"
+        is_workload = True
+        fallback_map = _teacher_home_dept_fallback(classes, labs)
+        workloads = _compute_teacher_workloads(classes, labs)
+        if dept_filter:
+            workloads = {
+                teacher: data for teacher, data in workloads.items()
+                if (_teacher_home_dept_code(teacher, fallback_map) or "") in dept_filter
+            }
+        for teacher, data in workloads.items():
+            workload_rows.append({
+                "name": teacher.name,
+                "uid": getattr(teacher, "uid", ""),
+                "departments": data.get("departments", "-"),
+                "lectures": data.get("lectures", 0),
+                "labs": data.get("labs", 0),
+                "shared_labs": data.get("shared_labs", 0),
+                "total": data.get("total", 0),
+            })
+        workload_rows.sort(key=lambda row: str(row["name"]).lower())
 
-    # Expand cells for PDF so colspan renders properly in xhtml2pdf
-    for table in tables:
-        for row in table["rows"]:
-            for cell in row["cells"]:
-                if cell["type"] == "lab":
-                    cell["width"] = 85 * cell["colspan"]
-                else:
-                    cell["width"] = 85
-
-    html = render_to_string("saved_timetable_pdf.html", {
-        "tables": tables,
-        "SLOT_LABELS": SLOT_LABELS
+    html = render_to_string("generated_timetable_pdf.html", {
+        "blocks": blocks,
+        "is_workload": is_workload,
+        "workload_rows": workload_rows,
+        "view_label": view_label,
+        "college_name": COLLEGE_NAME,
+        "college_logo": settings.STATIC_URL + "img/college_logo.png",
+        "brand_logo": settings.STATIC_URL + "img/logo_email.png",
     })
 
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="timetable_{tid}.pdf"'
+    inline = request.GET.get("inline") == "1"
+    disposition = "inline" if inline else "attachment"
+    response['Content-Disposition'] = f'{disposition}; filename="saved_{view_type}_timetable_{tid}.pdf"'
 
-    pisa_status = pisa.CreatePDF(html, dest=response)
-
+    pisa_status = pisa.CreatePDF(html, dest=response, link_callback=_pdf_link_callback)
     if pisa_status.err:
-        return HttpResponse("PDF creation crashed.<br><br>" + html)
-
-    return response
-
-    # Render HTML
-    html = render_to_string("saved_timetable_pdf.html", {
-        "tables": tables
-    })
-
-    # Generate PDF
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="saved_timetable.pdf"'
-
-    pisa_status = pisa.CreatePDF(html, dest=response)
-
-    # If PDF fails, return HTML to debug
-    if pisa_status.err:
-        return HttpResponse("PDF creation crashed.<br><br>" + html)
-
+        return HttpResponse("PDF creation failed.", status=500)
     return response
 
 
@@ -5977,7 +6544,7 @@ def _pick_slot_cell(table_rows, day, slot_number):
     return None
 
 
-def _build_timetable_excel_response(classes, labs, user, filename, view_type='section'):
+def _build_timetable_excel_response(classes, labs, user, filename, view_type='section', dept_filter=None):
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -5995,6 +6562,25 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
     room_tables = build_room_tables(classes, labs, user=user)
     teacher_tables = build_teacher_tables(classes, labs, user=user)
     teacher_workloads = _compute_teacher_workloads(classes, labs)
+
+    if dept_filter:
+        fb = _teacher_home_dept_fallback(classes, labs)
+        section_tables = [
+            t for t in section_tables
+            if (getattr(getattr(t.get("section"), "department", None), "code", "") or "") in dept_filter
+        ]
+        room_tables = [
+            rt for rt in room_tables
+            if any(code in dept_filter for code in rt.get("dept_codes", []))
+        ]
+        teacher_tables = [
+            t for t in teacher_tables
+            if (_teacher_home_dept_code(t.get("teacher"), fb) or "") in dept_filter
+        ]
+        teacher_workloads = {
+            teacher: data for teacher, data in teacher_workloads.items()
+            if (_teacher_home_dept_code(teacher, fb) or "") in dept_filter
+        }
 
     wb = Workbook()
     wb.remove(wb.active)
@@ -6189,12 +6775,31 @@ def download_timetable_excel(request, tid, view_type='section'):
 
     classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
 
+    # Apply the same program + department filters used by the saved view so the
+    # Excel export matches whatever the user is currently looking at.
+    selected_program = request.GET.get("program", "all")
+    classes, labs, _selected_program = _filter_entities_by_program(
+        classes, labs, request.user, selected_program
+    )
+
+    dept_filter = None
+    multi_dept_filter = _parse_dept_filter(request)
+    if multi_dept_filter:
+        dept_filter = multi_dept_filter
+    else:
+        selected_department = _normalize_selected_department(
+            request.user, request.GET.get("department", "all")
+        )
+        if selected_department and selected_department != "all":
+            dept_filter = {selected_department}
+
     return _build_timetable_excel_response(
         classes=classes,
         labs=labs,
         user=request.user,
         filename=f"timetable_{tid}.xlsx",
         view_type=view_type,
+        dept_filter=dept_filter,
     )
 
 
@@ -6221,6 +6826,7 @@ def download_generated_timetable_excel(request, index, view_type='section'):
         user=request.user,
         filename=f"generated_timetable_{idx}.xlsx",
         view_type=view_type,
+        dept_filter=_parse_dept_filter(request),
     )
 
 
@@ -6496,11 +7102,23 @@ def download_generated_timetable_pdf(request, index, view_type='section'):
     elif view_type == "teacher":
         view_label = "Teacher"
         teacher_tables = build_teacher_tables(classes, labs, user=request.user)
+        if dept_filter:
+            fb = _teacher_home_dept_fallback(classes, labs)
+            teacher_tables = [
+                t for t in teacher_tables
+                if (_teacher_home_dept_code(t.get("teacher"), fb) or "") in dept_filter
+            ]
         blocks = [_teacher_pdf_block(t) for t in teacher_tables]
     else:  # workload
         view_label = "Workload"
         is_workload = True
         workloads = _compute_teacher_workloads(classes, labs)
+        if dept_filter:
+            fb = _teacher_home_dept_fallback(classes, labs)
+            workloads = {
+                teacher: data for teacher, data in workloads.items()
+                if (_teacher_home_dept_code(teacher, fb) or "") in dept_filter
+            }
         for teacher, data in workloads.items():
             workload_rows.append({
                 "name": teacher.name,
@@ -6853,7 +7471,7 @@ def teacher_pref_submit(request):
         try:
             _sm(subject=f'SmartScheduler — Preferences Received: {name}',
                 message=f'Name: {name}\nEmail: {email}\nDesignation: {desg}\nSubjects: {", ".join(subj)}\nClasses: {", ".join(cls)}\nYears: {", ".join(yrs)}',
-                from_email=_cfg.EMAIL_HOST_USER,
+                from_email=_brand_from_email(),
                 recipient_list=[email, _cfg.EMAIL_HOST_USER], fail_silently=True)
         except: pass
         return JsonResponse({'ok': True, 'id': sub.id})
@@ -6873,8 +7491,8 @@ def send_pref_links_smtp(request):
             if not _ERE.match(email): failed.append(email); continue
             try:
                 _sm(subject='SmartScheduler — Fill Your Teaching Preferences',
-                    message=f'Dear Teacher,\n\nFill your preferences:\n{base}?email={email}\n\nThank you,\nSmartScheduler Team',
-                    from_email=_cfg.EMAIL_HOST_USER,
+                    message=f'Dear Teacher,\n\nSmartScheduler by the SIH Winner Innovation Team\n\nFill your preferences:\n{base}?email={email}\n\nThank you,\nSmartScheduler Team\n{SIH_WINNER_TEXT}',
+                    from_email=_brand_from_email(),
                     recipient_list=[email], fail_silently=False)
                 sent.append(email)
             except: failed.append(email)

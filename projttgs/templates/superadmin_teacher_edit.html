@@ -1,0 +1,73 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Update Central Teacher{% endblock %}
+{% block heading %}Update Central Teacher{% endblock %}
+{% block subheading %}Edit one central teacher directory record{% endblock %}
+{% block topbar_extra %}<div></div>{% endblock %}
+
+{% block extra_css %}
+  .edit-wrap{max-width:760px}
+  .edit-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px}
+  .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .edit-field{display:flex;flex-direction:column;gap:7px}
+  .edit-field label{font-size:12px;color:var(--mut);font-weight:600}
+  .edit-field input,.edit-field select{background:var(--bg);border:1px solid var(--line);color:var(--txt);padding:10px 12px;border-radius:10px;font-size:13px}
+  .edit-field.full{grid-column:1 / -1}
+  .checkline{display:flex;align-items:center;gap:10px;margin-top:4px;color:#cbd5e1;font-size:13px}
+  .actions{display:flex;gap:12px;margin-top:20px}
+  .btn-save{background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .btn-cancel{background:var(--panel);border:1px solid var(--line);color:#cbd5e1;padding:11px 20px;border-radius:10px;font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center}
+  @media(max-width:760px){.edit-grid{grid-template-columns:1fr}}
+{% endblock %}
+
+{% block content %}
+  <div class="edit-wrap">
+    <div class="edit-card">
+      <form method="post">
+        {% csrf_token %}
+        <div class="edit-grid">
+          <div class="edit-field">
+            <label>Name</label>
+            <input type="text" name="name" value="{{ target_teacher.name }}" required>
+          </div>
+          <div class="edit-field">
+            <label>Teacher Code</label>
+            <input type="text" name="uid" value="{{ target_teacher.uid }}">
+          </div>
+          <div class="edit-field">
+            <label>Email</label>
+            <input type="email" name="email" value="{{ target_teacher.email }}">
+          </div>
+          <div class="edit-field">
+            <label>Contact Number</label>
+            <input type="text" name="contact_number" value="{{ target_teacher.contact_number }}">
+          </div>
+          <div class="edit-field">
+            <label>Department Name</label>
+            <input type="text" name="department_name" value="{{ target_teacher.department_name }}">
+          </div>
+          <div class="edit-field">
+            <label>Department Code</label>
+            <input type="text" name="department_code" value="{{ target_teacher.department_code }}">
+          </div>
+          <div class="edit-field full">
+            <label>Designation</label>
+            <select name="designation">
+              {% for value, label in designation_choices %}
+                <option value="{{ value }}" {% if target_teacher.designation == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="edit-field full">
+            <label>Status</label>
+            <label class="checkline"><input type="checkbox" name="is_active" {% if target_teacher.is_active %}checked{% endif %}> Active in central directory</label>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn-save">Save Changes</button>
+          <a href="{% url 'superadmin_teachers' %}" class="btn-cancel">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

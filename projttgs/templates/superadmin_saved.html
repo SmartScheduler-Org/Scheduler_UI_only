@@ -3,12 +3,16 @@
 {% block page_title %}Saved Timetables{% endblock %}
 {% block heading %}Saved Timetables{% endblock %}
 {% block subheading %}Open any saved timetable in the full editor — view, edit, drag-drop &amp; export{% endblock %}
-{% block topbar_extra %}<div></div>{% endblock %}
+{% block topbar_extra %}
+<div style="display:flex;justify-content:flex-end;width:100%;">
+  <a class="btn clearflt" href="{% url 'superadmin_choose_user' %}" style="text-decoration:none;">Switch User</a>
+</div>
+{% endblock %}
 
 {% block content %}
   <section class="panel">
     <div class="ph">
-      <div><h3>All Saved Timetables</h3><small>Across every department &amp; user · click Open for full control</small></div>
+      <div><h3>Saved Timetables</h3><small>Only the selected user account's saved timetables are shown here · click Open for full control</small></div>
       <button class="btn" onclick="loadSaved()">↻ Refresh</button>
     </div>
     <div class="toolbar"><input class="inp" id="savedSearch" placeholder="Search scope / owner…" oninput="filterTable('savedTable',this.value)" style="flex:1"></div>

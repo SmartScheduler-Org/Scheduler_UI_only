@@ -195,7 +195,7 @@ h1 {
             </td>
 
           {% elif cell.type == "class" %}
-            <td class="slot-cell">
+            <td colspan="{{ cell.colspan }}" class="slot-cell">
               {% for cls in cell.classes %}
                 <div class="class-box">
                   <strong>{{ cls.subject.subject_name }}</strong><br>

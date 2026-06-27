@@ -1,0 +1,44 @@
+{% extends "superadmin_base.html" %}
+
+{% block page_title %}Delete Central Teacher{% endblock %}
+{% block heading %}Delete Central Teacher{% endblock %}
+{% block subheading %}This permanently removes the central teacher record{% endblock %}
+{% block topbar_extra %}<div></div>{% endblock %}
+
+{% block extra_css %}
+  .confirm-wrap{max-width:560px}
+  .warn-card{background:var(--panel);border:1px solid rgba(239,68,68,.4);border-radius:14px;padding:22px 24px}
+  .warn-icon{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);margin-bottom:14px}
+  .warn-card h3{margin:0 0 6px;font-size:18px;color:#fca5a5}
+  .warn-card p{margin:0 0 16px;font-size:13.5px;color:#cbd5e1;line-height:1.6}
+  .u-info{background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:20px}
+  .u-info .row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+  .u-info .row span:first-child{color:var(--mut)}
+  .u-info .row span:last-child{color:#e2e8f0;font-weight:600}
+  .actions{display:flex;gap:12px}
+  .btn-danger{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;border:none;padding:11px 20px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .btn-cancel{background:var(--panel);border:1px solid var(--line);color:#cbd5e1;padding:11px 20px;border-radius:10px;font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center}
+{% endblock %}
+
+{% block content %}
+  <div class="confirm-wrap">
+    <div class="warn-card">
+      <div class="warn-icon">⚠️</div>
+      <h3>Delete this central teacher?</h3>
+      <p>This action removes the selected record from the central teacher directory. Linked teacher profiles will no longer resolve to this entry.</p>
+
+      <div class="u-info">
+        <div class="row"><span>Name</span><span>{{ target_teacher.name }}</span></div>
+        <div class="row"><span>Teacher Code</span><span>{{ target_teacher.uid|default:"—" }}</span></div>
+        <div class="row"><span>Email</span><span>{{ target_teacher.email|default:"—" }}</span></div>
+        <div class="row"><span>Department</span><span>{% if target_teacher.department_name or target_teacher.department_code %}{{ target_teacher.department_name|default:target_teacher.department_code }}{% if target_teacher.department_name and target_teacher.department_code %} ({{ target_teacher.department_code }}){% endif %}{% else %}—{% endif %}</span></div>
+      </div>
+
+      <form method="post" action="{% url 'superadmin_teacher_delete' target_teacher.id %}" class="actions">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">Yes, delete</button>
+        <a href="{% url 'superadmin_teachers' %}" class="btn-cancel">Cancel</a>
+      </form>
+    </div>
+  </div>
+{% endblock %}

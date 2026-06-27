@@ -153,7 +153,9 @@ h1 {
   flex-direction: column !important;
 }
 
-.lab-box.shared-lab {
+.lab-box.shared-lab,
+.class-box.shared-teacher,
+.room-slot-card.shared-teacher {
   background: linear-gradient(135deg, #fff8d6 0%, #ffe082 100%);
   border-color: #f9a825;
   box-shadow: 0 2px 8px rgba(249, 168, 37, 0.25);
@@ -188,6 +190,48 @@ h1 {
 .room-slot-card.is-elective {
   border: 3px solid #2563eb !important;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18), 0 8px 18px rgba(37, 99, 235, 0.18) !important;
+}
+
+.parallel-slot-stack {
+  align-items: flex-start !important;
+}
+
+.parallel-item-grid {
+  display: grid !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+.parallel-item-grid > .draggable-slot-item {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.parallel-subslot-grid {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.parallel-subslot-drop {
+  min-height: 34px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.62);
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+body.drag-drop-active .parallel-subslot-drop {
+  border-color: #38bdf8;
+  background: rgba(240, 249, 255, 0.92);
+  color: #0369a1;
 }
 
 .lunch-cell {
@@ -667,6 +711,95 @@ body.drag-drop-active .draggable-slot-item.is-dragging {
     box-shadow: 0 0 12px rgba(99,102,241,0.35);
 }
 
+.section-parking-wrap {
+  max-width: 1100px;
+  margin: 0 auto 14px;
+}
+
+.section-parking-panel {
+  border-radius: 18px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,249,255,0.96) 100%);
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.section-parking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.section-parking-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.section-parking-title span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.section-parking-title strong {
+  font-size: 15px;
+  color: #0f3d56;
+}
+
+.section-parking-title small {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.section-parking-dropzone {
+  position: relative;
+  min-height: 88px;
+  border-radius: 16px;
+  border: 1px dashed rgba(37, 99, 235, 0.32);
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95) 0%, rgba(236, 253, 245, 0.9) 100%);
+  padding: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.section-parking-dropzone.drag-over {
+  border-color: rgba(37, 99, 235, 0.6);
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.14), 0 12px 24px rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
+}
+
+.section-parking-hint {
+  margin-bottom: 10px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.section-parking-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.section-parking-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.72);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 @media (max-width: 1180px) {
   .section-editor-shell {
     grid-template-columns: 1fr;
@@ -1021,6 +1154,27 @@ body.drag-drop-active .parking-dropzone::after {
 @keyframes msgLift { 0% { transform: translateY(26px) scale(0.85); opacity: 0; } 22% { opacity: 1; } 72% { opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 0; } }
 
 /* View switcher */
+.command-bar {
+    position: relative; z-index: 2;
+    display: flex; justify-content: center; align-items: center; flex-wrap: wrap;
+    gap: 12px; max-width: 1340px; margin: 18px auto 0; padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(240,248,252,0.97));
+    border: 1px solid rgba(37,122,122,0.12); border-radius: 22px;
+    box-shadow: 0 12px 28px rgba(27,79,114,0.07);
+}
+.command-bar__left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.command-bar__right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dept-select-wrap {
+    display: flex; align-items: center; gap: 8px; padding: 6px 14px;
+    background: rgba(37,122,122,0.06); border: 1px solid rgba(37,122,122,0.18); border-radius: 999px;
+}
+.dept-select-label { font-size: 11px; font-weight: 800; color: #257a7a; letter-spacing: 0.06em; white-space: nowrap; }
+.dept-select {
+    border: none; background: transparent; color: #1a5c5c; font-size: 13px; font-weight: 700;
+    cursor: pointer; outline: none; padding: 2px 6px; max-width: 220px;
+}
+.dept-select:focus { outline: 2px solid rgba(37,122,122,0.35); border-radius: 6px; }
+
 .view-switcher {
     display: flex; justify-content: center; align-items: center; flex-wrap: wrap;
     gap: 14px; margin: 30px auto 24px; padding: 16px; width: min(920px, 94%);
@@ -1028,7 +1182,6 @@ body.drag-drop-active .parking-dropzone::after {
     border: 1px solid rgba(37, 122, 122, 0.12); border-radius: 22px;
     box-shadow: 0 16px 30px rgba(27, 79, 114, 0.08);
 }
-
 .view-toggle {
     position: relative; overflow: hidden; border: none; border-radius: 16px;
     padding: 13px 18px; min-width: 190px; color: #fff; font-size: 15px;
@@ -1050,6 +1203,7 @@ body.drag-drop-active .parking-dropzone::after {
 .view-toggle--room { background: linear-gradient(135deg, #16873f, #33b25b); }
 .view-toggle--workload { color: #3e2c00; background: linear-gradient(135deg, #ffd451, #ffb400); }
 .view-toggle--teacher { background: linear-gradient(135deg, #1186a2, #2eb5d4); }
+.view-toggle--statistics { background: linear-gradient(135deg, #7b2ff7, #b54bff); text-decoration: none; }
 
 /* Room view styles */
 .room-view-title { margin: 0; font-size: 2.1rem; color: #1f4d6b; letter-spacing: 0.01em; }
@@ -1103,6 +1257,84 @@ body.drag-drop-active .parking-dropzone::after {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .fullpage-pdf-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 28px rgba(91, 33, 237, 0.32); }
+
+.fullpage-excel-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #166534, #22c55e);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 12px 24px rgba(22, 101, 52, 0.22);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fullpage-excel-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(22, 101, 52, 0.32); }
+
+.eval-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b45309, #f59e0b);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 12px 24px rgba(180, 83, 9, 0.22);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.eval-dl-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(180, 83, 9, 0.32); }
+
+.export-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px auto 10px;
+  justify-content: center;
+}
+
+.ta-toolbar { display:flex; flex-direction:column; align-items:center; gap:12px; margin:6px 0 22px; }
+.ta-btn {
+  display:inline-flex; align-items:center; gap:2px;
+  padding:10px 18px; border:none; border-radius:12px; cursor:pointer;
+  background:linear-gradient(135deg, #1d4ed8, #3b82f6); color:#fff;
+  font-size:14px; font-weight:700; letter-spacing:0.02em;
+  box-shadow:0 10px 22px rgba(29, 78, 216, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ta-btn:hover { transform: translateY(-2px); box-shadow:0 14px 26px rgba(29, 78, 216, 0.32); }
+.ta-btn.is-open { background:linear-gradient(135deg, #475569, #64748b); }
+.ta-panel {
+  width:min(560px, 92%); background:#f8fbff; border:1px solid #cfe0f2;
+  border-radius:14px; padding:16px 18px; box-shadow:0 12px 30px rgba(15, 53, 99, 0.10);
+}
+.ta-panel__row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.ta-panel__row:last-child { margin-bottom:0; }
+.ta-panel__label { font-size:13px; font-weight:700; color:#28506e; min-width:90px; }
+.ta-select {
+  flex:1; min-width:180px; padding:9px 12px; border:1px solid #b7d0e8;
+  border-radius:9px; background:#fff; font-size:13px; color:#1b3a57; font-weight:600;
+}
+.ta-panel__modes { gap:8px; }
+.ta-mode-btn {
+  padding:8px 14px; border:1px solid #b7d0e8; border-radius:9px; cursor:pointer;
+  background:#fff; color:#28506e; font-size:13px; font-weight:700;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.ta-mode-btn:hover { border-color:#3b82f6; }
+.ta-mode-btn.is-active { background:#1d4ed8; color:#fff; border-color:#1d4ed8; }
+.ta-mode-btn--reset { margin-left:auto; }
+.ta-mode-btn--reset.is-active { background:#475569; border-color:#475569; }
+.ta-summary { font-size:12.5px; color:#3a5b78; font-weight:600; min-height:16px; }
+.ta-card.ta-hidden { display:none !important; }
 
 .pdf-college-header {
   text-align: center;
@@ -1292,6 +1524,99 @@ body.drag-drop-active .parking-dropzone::after {
         worker.save()
             .then(function() { _showDownloadDone(); })
             .catch(function(err) { console.error('PDF generation failed:', err); Swal.close(); });
+    }
+
+    function downloadForEvaluation(viewName) {
+        function _proceed() { _evaluationDownload(viewName); }
+        if (window.Swal && Swal.fire) {
+            Swal.fire({
+                title: 'Evaluation Download',
+                input: 'password',
+                inputLabel: 'Enter pass key',
+                inputPlaceholder: 'Pass key',
+                showCancelButton: true,
+                confirmButtonText: 'Download',
+                inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
+                inputValidator: function(value) {
+                    if (value !== 'sam7677') { return 'Incorrect pass key'; }
+                }
+            }).then(function(res) {
+                if (res && res.isConfirmed) { _proceed(); }
+            });
+        } else {
+            var key = prompt('Enter pass key for evaluation download:');
+            if (key === null) { return; }
+            if (key !== 'sam7677') { alert('Incorrect pass key'); return; }
+            _proceed();
+        }
+    }
+
+    function _evaluationDownload(viewName) {
+        var viewEl = document.getElementById(viewName + '-view');
+        if (!viewEl) { alert('No timetable view found.'); return; }
+
+        var allCards = Array.from(viewEl.querySelectorAll('.export-surface'));
+        if (!allCards.length) allCards = Array.from(viewEl.querySelectorAll('.room-card'));
+        if (!allCards.length) allCards = [viewEl];
+        var cards = allCards.filter(function(c) {
+            return window.getComputedStyle(c).display !== 'none';
+        });
+        if (!cards.length) { alert('No visible sections to export.'); return; }
+
+        _showDownloadPopup();
+
+        // Hide UI-only action buttons so they don't appear in the export
+        var hiddenBtns = viewEl.querySelectorAll('.btn-save-tt, .room-pdf-btn, .fullpage-pdf-btn, .fullpage-excel-btn, .eval-dl-btn, .action-buttons');
+        hiddenBtns.forEach(function(b) { b.style.display = 'none'; });
+
+        // Clone each card KEEPING everything (parking, subject counts, etc.) — no college logo / brand header
+        var clones = cards.map(function(c) { return c.cloneNode(true); });
+        hiddenBtns.forEach(function(b) { b.style.display = ''; });
+
+        var labels = { section: 'Section', room: 'Room', workload: 'Workload', teacher: 'Teacher' };
+        var fname = 'SmartScheduler_' + (labels[viewName] || viewName) + '_Evaluation.pdf';
+
+        var opt = {
+            margin: [6, 4, 6, 4],
+            filename: fname,
+            image: { type: 'jpeg', quality: 0.92 },
+            html2canvas: { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', logging: false },
+            jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' },
+            pagebreak: { mode: ['css', 'legacy'] },
+        };
+
+        var worker = html2pdf().set(opt).from(clones[0]).toContainer().toCanvas().toPdf();
+        for (var i = 1; i < clones.length; i++) {
+            (function(card) {
+                worker = worker.get('pdf').then(function(pdf) {
+                    pdf.addPage();
+                }).from(card).toContainer().toCanvas().toPdf();
+            })(clones[i]);
+        }
+        worker.save()
+            .then(function() { _showDownloadDone(); })
+            .catch(function(err) { console.error('Evaluation PDF generation failed:', err); if (window.Swal) Swal.close(); });
+    }
+
+    function downloadViewExcel(viewName) {
+        var savedId = "{{ saved.id }}";
+        if (!savedId) { alert('No saved timetable found.'); return; }
+        _showDownloadPopup();
+        // Carry the active department / program filter so the Excel matches the view.
+        var cur = new URL(window.location.href);
+        var params = new URLSearchParams();
+        var dept = cur.searchParams.get('department');
+        var prog = cur.searchParams.get('program');
+        if (dept) { params.set('department', dept); }
+        if (prog) { params.set('program', prog); }
+        var qs = params.toString();
+        var url = "/download_timetable_excel/" + savedId + "/" + viewName + "/" + (qs ? "?" + qs : "");
+        var link = document.createElement('a');
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { _showDownloadDone(); }, 900);
     }
 
     function showView(view) {
@@ -1614,7 +1939,9 @@ body.drag-drop-active .parking-dropzone::after {
             <line x1="3" y1="21" x2="10" y2="14"></line>
         </svg>
     </button>
-    {% if is_readonly %}
+    {% if superadmin_exit_url %}
+    <a href="{{ superadmin_exit_url }}" class="utility-btn is-close" title="{{ superadmin_exit_title|default:'Back to Super Admin' }}">
+    {% elif is_readonly %}
     <a href="{% url 'teacher_published_timetable' %}" class="utility-btn is-close" title="Back">
     {% else %}
     <a href="{% url 'admindash' %}" class="utility-btn is-close" title="Close and go to dashboard">
@@ -1661,6 +1988,7 @@ body.drag-drop-active .parking-dropzone::after {
     {% if saved.is_published %}
         <div style="padding: 10px 18px; background: #e8f5e9; border: 1px solid #66bb6a; border-radius: 8px; display: inline-block;">
             <strong style="color:#2e7d32;">Published</strong> &mdash; Code: <code style="font-size:15px; font-weight:700; letter-spacing:1px;">{{ saved.publish_code }}</code>
+        <a href="{% url 'saved_timetable_publish_notifications' saved.id %}" style="display:inline-block; margin-left:10px; background:#1565c0; color:white; text-decoration:none; border:none; border-radius:6px; padding:5px 14px; cursor:pointer; font-weight:600; font-size:13px;">Notify</a>
             <form method="post" action="{% url 'unpublish_timetable' saved.id %}" style="display:inline; margin-left:10px;">
                 {% csrf_token %}
                 <button type="submit" style="background:#ef5350; color:white; border:none; border-radius:6px; padding:5px 14px; cursor:pointer; font-weight:600; font-size:13px;">Unpublish</button>
@@ -1677,40 +2005,43 @@ body.drag-drop-active .parking-dropzone::after {
 </div>
 {% endif %}
 
-{% if not is_readonly %}
-<div class="top-actions">
-  <button id="dragDropToggle" type="button" class="drag-toggle-btn" data-drag-toggle>
-        Activate Drag & Drop
+{% if not is_readonly or program_options|length > 0 or department_options|length > 0 %}
+<div class="command-bar">
+  {% if not is_readonly %}
+  <div class="command-bar__left">
+    <button id="dragDropToggle" type="button" class="drag-toggle-btn" data-drag-toggle>
+        Activate Drag &amp; Drop
     </button>
     <div class="drag-mode-badge">
         <span class="drag-mode-badge__dot"></span>
         Advanced drag mode active
     </div>
-</div>
-{% endif %}
-
-{% if program_options|length > 0 or department_options|length > 0 %}
-<div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 4px 0 16px;">
-  {% if department_options|length > 0 %}
-  <div style="display:inline-flex; align-items:center; gap:8px; padding:8px 12px; background:#f4f8fb; border:1px solid #d5e3ef; border-radius:10px;">
-    <span style="font-size:12px; font-weight:700; color:#1f4d6b; letter-spacing:0.05em;">DEPARTMENT:</span>
-    <select onchange="filterByDepartmentSelect(this)" style="padding:6px 10px; border-radius:8px; border:1px solid #b7c9d8; background:white; color:#0f2f45; font-size:13px; font-weight:600; min-width:170px;">
-      <option value="all" {% if active_department == 'all' %}selected{% endif %}>All Departments</option>
-      {% for dept in department_options %}
-      <option value="{{ dept.code }}" {% if active_department == dept.code %}selected{% endif %}>{{ dept.name }} ({{ dept.code }})</option>
-      {% endfor %}
-    </select>
   </div>
   {% endif %}
-  {% if program_options|length > 0 %}
-  <div style="display:inline-flex; align-items:center; gap:8px; padding:8px 12px; background:#f4f8fb; border:1px solid #d5e3ef; border-radius:10px;">
-    <span style="font-size:12px; font-weight:700; color:#1f4d6b; letter-spacing:0.05em;">PROGRAM:</span>
-    <select onchange="filterByProgramSelect(this)" style="padding:6px 10px; border-radius:8px; border:1px solid #b7c9d8; background:white; color:#0f2f45; font-size:13px; font-weight:600; min-width:170px;">
-      <option value="all" {% if active_program == 'all' %}selected{% endif %}>All Programs</option>
-      {% for program in program_options %}
-      <option value="{{ program }}" {% if active_program == program %}selected{% endif %}>{{ program }}</option>
-      {% endfor %}
-    </select>
+  {% if program_options|length > 0 or department_options|length > 0 %}
+  <div class="command-bar__right">
+    {% if department_options|length > 0 %}
+    <div class="dept-select-wrap">
+      <span class="dept-select-label">FILTER:</span>
+      <select class="dept-select" onchange="filterByDepartmentSelect(this)">
+        <option value="all" {% if active_department == 'all' %}selected{% endif %}>All Departments</option>
+        {% for dept in department_options %}
+        <option value="{{ dept.code }}" {% if active_department == dept.code %}selected{% endif %}>{{ dept.name }} ({{ dept.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    {% if program_options|length > 0 %}
+    <div class="dept-select-wrap">
+      <span class="dept-select-label">PROGRAM:</span>
+      <select class="dept-select" onchange="filterByProgramSelect(this)">
+        <option value="all" {% if active_program == 'all' %}selected{% endif %}>All Programs</option>
+        {% for program in program_options %}
+        <option value="{{ program }}" {% if active_program == program %}selected{% endif %}>{{ program }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 </div>
@@ -1718,30 +2049,35 @@ body.drag-drop-active .parking-dropzone::after {
 
 <div class="view-switcher">
   <button class="view-toggle view-toggle--section is-active" type="button" data-view="section" onclick="showView('section')" aria-pressed="true">
-    <span class="view-toggle__label">Section Timetable</span>
+    <span class="view-toggle__label">📘 Section Timetable</span>
   </button>
   <button class="view-toggle view-toggle--room" type="button" data-view="room" onclick="showView('room')" aria-pressed="false">
-    <span class="view-toggle__label">Room Timetable</span>
+    <span class="view-toggle__label">🏫 Room Timetable</span>
   </button>
   <button class="view-toggle view-toggle--workload" type="button" data-view="workload" onclick="showView('workload')" aria-pressed="false">
-    <span class="view-toggle__label">Teacher Workload</span>
+    <span class="view-toggle__label">📊 Teacher Workload</span>
   </button>
   <button class="view-toggle view-toggle--teacher" type="button" data-view="teacher" onclick="showView('teacher')" aria-pressed="false">
-    <span class="view-toggle__label">Teacher Timetable</span>
+    <span class="view-toggle__label">👩‍🏫 Teacher Timetable</span>
   </button>
+  <a class="view-toggle view-toggle--statistics" href="{% url 'saved_full_statistics' saved.id %}" style="text-decoration:none;">
+    <span class="view-toggle__label">📈 Full Statistics</span>
+  </a>
 </div>
 
 {# ===================== SECTION TIMETABLES ===================== #}
 <div id="section-view">
-<div style="text-align:center; margin:18px 0 10px;">
-  <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('section')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download All Section Timetables PDF
+<div class="export-group">
+  <a href="{% url 'saved_timetable_download_center' saved.id %}" class="fullpage-pdf-btn" id="section-pdf-btn" style="text-decoration:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('section')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
   </button>
 </div>
 {% for table in tables %}
-  <div class="section-editor-shell">
-  <div class="section-editor-main">
   <div id="section-tt-{{ forloop.counter }}" class="export-surface">
     <div class="export-watermark">
       <div class="export-watermark__grid">
@@ -1753,11 +2089,42 @@ body.drag-drop-active .parking-dropzone::after {
     </div>
     <div style="position:relative; z-index:1;">
     <h2 class="secHead">
-      {{ table.section.section_id }} ({{ table.section.department.dept_name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
+      {{ table.section.section_id }} ({{ table.section_department_name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
     </h2>
 
+  {% if not is_readonly %}
+  <div class="section-parking-wrap export-exclude">
+    <div class="section-parking-panel">
+      <div class="section-parking-header">
+        <div class="section-parking-title">
+          <span>Section Bucket</span>
+          <strong>Parking for {{ table.section.section_id }}</strong>
+          <small>Drag a filled slot here to park it above this section, just like the generated timetable view.</small>
+        </div>
+      </div>
+      <div class="section-parking-dropzone parking-dropzone" data-section-id="{{ table.section.section_id }}">
+        <div class="section-parking-hint parking-dropzone__hint">Drag a filled slot here to park it above this section.</div>
+        {% if table.parking_items %}
+        <div class="section-parking-list parking-list">
+          {% for parked in table.parking_items %}
+          <div class="parking-item draggable-slot-item" data-drag-source="parking" data-parking-id="{{ parked.id }}" data-section-id="{{ table.section.section_id }}" data-move-type="{% if parked.is_lab %}lab{% else %}class{% endif %}">
+            <span class="parking-item__tag">{% if parked.is_lab %}Parked Lab{% else %}Parked Class{% endif %}</span>
+            <div class="parking-item__title parking-item__subject">{{ parked.subject.subject_name }}{% if parked.is_lab %} Lab{% endif %}</div>
+            <div class="parking-item__teacher">{{ parked.instructor.name }}{% if parked.second_instructor %} + {{ parked.second_instructor.name }}{% endif %}</div>
+            <div class="parking-item__meta">{% if parked.original_room %}Room {{ parked.original_room.r_number }}{% endif %}{% if parked.slot_span > 1 %} · {{ parked.slot_span }} slots{% endif %}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="section-parking-empty parking-empty-state">Bucket empty for this section.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   {% if table.missed_labs %}
-    <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
+    <div class="export-exclude" style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
       <div style="font-weight: 700; color: #9a3412; margin-bottom: 8px;">Missed Labs</div>
       <div style="display: flex; flex-wrap: wrap; gap: 8px;">
         {% for lab in table.missed_labs %}
@@ -1773,7 +2140,7 @@ body.drag-drop-active .parking-dropzone::after {
   {% endif %}
 
   {% if table.subject_counts %}
-    <div style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #f7fbff; border: 1px solid #d6e9f8; border-radius: 10px;">
+    <div class="export-exclude" style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #f7fbff; border: 1px solid #d6e9f8; border-radius: 10px;">
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
         <div style="font-weight: 700; color: #0d47a1;">Subjects Scheduled</div>
         <div style="font-size: 13px; font-weight: 700; color: #c62828; background: #fff3f3; border: 1px solid #ffcdd2; border-radius: 999px; padding: 5px 10px;">
@@ -1810,9 +2177,6 @@ body.drag-drop-active .parking-dropzone::after {
          style="padding:6px 14px; font-size:13px;">
          + Add Slot
       </a>
-      <button type="button" class="drag-toggle-btn drag-toggle-btn--section section-drag-toggle" data-drag-toggle>
-        Activate Drag & Drop
-      </button>
       {% endif %}
       <button class="btn-save-tt" onclick="saveAsImage('section-tt-{{ forloop.counter }}', 'Section_{{ table.section.section_id }}')">
         Save as Image
@@ -1852,9 +2216,9 @@ body.drag-drop-active .parking-dropzone::after {
 
           {% elif cell.type == "lab" %}
             <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" data-has-room-context="false">
-              <div class="labs-container">
+              <div class="labs-container {% if cell.use_parallel_grid %}parallel-item-grid{% endif %}" {% if cell.use_parallel_grid %}style="grid-template-columns: repeat({{ cell.display_grid_columns|default:cell.colspan }}, minmax(0, 1fr));"{% endif %}>
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                  <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" style="{% if cell.use_parallel_grid %}grid-column: {{ lab.display_grid_start|default:1 }} / span {{ lab.display_grid_span|default:cell.display_grid_columns }};{% else %}width: {{ lab.display_width_percent|default:'100' }}% !important;{% endif %}" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ lab.display_slot_number|default:cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
@@ -1864,6 +2228,11 @@ body.drag-drop-active .parking-dropzone::after {
                     <strong style="color: #283593; font-size: 13px;">
                       {{ lab.instructor.name }}
                     </strong>
+                    {% for co_teacher in lab.co_instructors %}
+                    <strong style="color: #283593; font-size: 13px;">
+                      + {{ co_teacher.name }}
+                    </strong>
+                    {% endfor %}
                     {% if lab.second_instructor %}
                     <strong style="color: #5d4037; font-size: 13px;">
                       {{ lab.second_instructor.name }}
@@ -1887,15 +2256,54 @@ body.drag-drop-active .parking-dropzone::after {
               </div>
             </td>
 
+          {% elif cell.type == "parallel" %}
+            <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" data-has-room-context="false">
+              <div class="labs-container parallel-slot-stack parallel-item-grid" style="grid-template-columns: repeat({{ cell.display_grid_columns|default:cell.colspan }}, minmax(0, 1fr));">
+                {% for lab in cell.labs %}
+                  <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" style="grid-column: {{ lab.display_grid_start|default:1 }} / span {{ lab.display_grid_span|default:cell.colspan }};" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ lab.display_slot_number|default:cell.slot_number }}">
+                    <strong style="font-size: 14px; color: #0d47a1;">{{ lab.subject.subject_name }} Lab</strong>
+                    <strong style="color: #1565c0; font-size: 13px;">Batch {{ lab.batch }}/{{ lab.total_batches }}</strong>
+                    <strong style="color: #283593; font-size: 13px;">{{ lab.instructor.name }}</strong>
+                    {% for co_teacher in lab.co_instructors %}<strong style="color: #283593; font-size: 13px;">+ {{ co_teacher.name }}</strong>{% endfor %}
+                    {% if lab.second_instructor %}<strong style="color: #5d4037; font-size: 13px;">{{ lab.second_instructor.name }}</strong>{% endif %}
+                    <span style="color: #424242; font-size: 12px;">{{ lab.room.r_number }}</span>
+                    {% if not is_readonly %}
+                    <div class="action-buttons">
+                      <a href="{% url 'saved_update_slot' saved.id table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}" class="action-button btn-update">Update</a>
+                      <a href="{% url 'saved_delete_slot' saved.id table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}" class="action-button btn-delete">Delete</a>
+                      <a href="{% url 'saved_substitute_lab_teacher' saved.id table.section.section_id row.day cell.slot_number %}?batch={{ lab.batch }}" class="action-button btn-substitute">Substitute Lab</a>
+                    </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+                {% for cls in cell.classes %}
+                  <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" style="grid-column: {{ cls.display_grid_start|default:1 }} / span {{ cls.display_grid_span|default:1 }};" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cls.display_slot_number|default:cell.slot_number }}">
+                    <strong>{{ cls.subject.subject_name }}</strong><br>
+                    {{ cls.instructor.name }}{% for co_teacher in cls.co_instructors %}<br>+ {{ co_teacher.name }}{% endfor %}<br>
+                    {{ cls.room.r_number|default:cls.room_label }}
+                    {% if not is_readonly %}
+                    <div class="action-buttons">
+                      <a href="{% url 'saved_update_slot' saved.id table.section.section_id row.day cell.slot_number %}" class="action-button btn-update">Update</a>
+                      <a href="{% url 'saved_delete_slot' saved.id table.section.section_id row.day cell.slot_number %}" class="action-button btn-delete">Delete</a>
+                      <a href="{% url 'saved_substitute_teacher' saved.id table.section.section_id row.day cell.slot_number %}" class="action-button btn-substitute">Substitute</a>
+                    </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            </td>
+
           {% elif cell.type == "class" %}
             <td colspan="{{ cell.colspan }}" class="slot-cell {% if not is_readonly %}drop-target{% endif %}" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" data-has-room-context="false">
+              <div class="{% if cell.use_parallel_grid %}parallel-item-grid{% endif %}" {% if cell.use_parallel_grid %}style="grid-template-columns: repeat({{ cell.display_grid_columns|default:cell.colspan }}, minmax(0, 1fr));"{% endif %}>
               {% for cls in cell.classes %}
-                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
+                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cls.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" style="{% if cell.use_parallel_grid %}grid-column: {{ cls.display_grid_start|default:1 }} / span {{ cls.display_grid_span|default:1 }};{% else %}width: {{ cls.display_width_percent|default:'100' }}% !important;{% endif %}" data-drag-source="slot" data-move-type="class" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ cls.display_slot_number|default:cell.slot_number }}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
-                  {{ cls.instructor.name }}<br>
-                  {{ cls.room.r_number }}
+                  {{ cls.instructor.name }}{% for co_teacher in cls.co_instructors %}<br>+ {{ co_teacher.name }}{% endfor %}<br>
+                  {{ cls.room.r_number|default:cls.room_label }}
                 </div>
               {% endfor %}
+              </div>
 
               {% if not is_readonly %}
               <div class="action-buttons">
@@ -1929,45 +2337,7 @@ body.drag-drop-active .parking-dropzone::after {
     {% endfor %}
     </tbody>
   </table>
-    </div>
   </div>
-  </div>
-
-  {% if not is_readonly %}
-  <aside class="parking-panel">
-    <div class="parking-panel__head">
-      <div>
-        <span class="parking-panel__eyebrow">Section Parking</span>
-        <h3>Right-side bucket</h3>
-        <p>Drag any filled slot here. The emptied timetable cell keeps its room, so restoring another parked item back there only needs teacher validation.</p>
-      </div>
-    </div>
-    <div class="parking-dropzone" data-section-id="{{ table.section.section_id }}">
-      <div class="parking-dropzone__hint">
-        Drop a filled class or lab block here for {{ table.section.section_id }}.
-      </div>
-      {% if table.parking_items %}
-      <div class="parking-list">
-        {% for parked in table.parking_items %}
-        <div class="parking-item draggable-slot-item" data-drag-source="parking" data-parking-id="{{ parked.id }}" data-section-id="{{ table.section.section_id }}" data-move-type="{% if parked.is_lab %}lab{% else %}class{% endif %}">
-          <div class="parking-item__tag">{% if parked.is_lab %}Parked Lab{% else %}Parked Class{% endif %}</div>
-          <div class="parking-item__subject">{{ parked.subject.subject_name }}{% if parked.is_lab %} Lab{% endif %}</div>
-          <div class="parking-item__teacher">
-            {{ parked.instructor.name }}{% if parked.second_instructor %} + {{ parked.second_instructor.name }}{% endif %}
-          </div>
-          <div class="parking-item__meta">
-            {% if parked.original_room %}Saved from room {{ parked.original_room.r_number }}{% endif %}
-            {% if parked.slot_span > 1 %} · {{ parked.slot_span }} slots{% endif %}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div class="parking-empty-state">No parked slots yet for {{ table.section.section_id }}.</div>
-      {% endif %}
-    </div>
-  </aside>
-  {% endif %}
   </div>
 
 {% endfor %}
@@ -1981,14 +2351,20 @@ body.drag-drop-active .parking-dropzone::after {
     <h2 class="room-view-title">Room Timetables</h2>
     <div class="room-view-toolbar__hint">Clean room-wise layout with export-ready separation</div>
   </div>
-  <button class="fullpage-pdf-btn" type="button" onclick="downloadViewPdf('room')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download All Room Timetables PDF
-  </button>
+  <div class="export-group" style="margin:0;">
+    <a href="{% url 'saved_timetable_download_center' saved.id %}" class="fullpage-pdf-btn" style="text-decoration:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Proceed to Download</span>
+    </a>
+    <button class="eval-dl-btn" type="button" onclick="downloadForEvaluation('room')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>Download for Evaluation</span>
+    </button>
+  </div>
 </div>
 
 {% for rt in room_tables %}
-  <div id="room-tt-{{ forloop.counter }}" class="room-card export-surface">
+  <div id="room-tt-{{ forloop.counter }}" class="room-card export-surface" data-dept-codes="{{ rt.dept_codes|join:',' }}">
     <div class="export-watermark">
       <div class="export-watermark__grid">
         <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
@@ -2000,6 +2376,9 @@ body.drag-drop-active .parking-dropzone::after {
     <div class="room-card__content">
       <div class="room-card__header">
         <h3 class="room-card__title">Room {{ rt.room.r_number }} ({{ rt.room.room_type }})</h3>
+        {% if rt.dept_names %}
+        <div style="font-size:12px; color:#28506e; font-weight:700; margin-top:6px;">Department: {{ rt.dept_names|join:", " }}</div>
+        {% endif %}
         <div class="room-card__meta">
           <div class="room-optimization">
             <span>Utilization</span>
@@ -2038,11 +2417,14 @@ body.drag-drop-active .parking-dropzone::after {
 
           {% elif cell.type == "lab" %}
             <td colspan="{{ cell.colspan }}">
-              <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor %}room-slot-card--lab-shared{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cell.labs.0.is_elective %}is-elective{% endif %}">
+              <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor or cell.labs.0.co_instructors %}room-slot-card--lab-shared shared-teacher{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cell.labs.0.is_elective %}is-elective{% endif %}">
               {% for lab in cell.labs %}
                 <strong>{{ lab.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ lab.section }} ({{ lab.group }})</div>
                 <div class="room-slot-card__teacher">{{ lab.instructor.name }}</div>
+                {% for co_teacher in lab.co_instructors %}
+                <div class="room-slot-card__teacher">{{ co_teacher.name }}</div>
+                {% endfor %}
                 {% if lab.second_instructor %}
                 <div class="room-slot-card__teacher">{{ lab.second_instructor.name }}</div>
                 {% endif %}
@@ -2052,11 +2434,14 @@ body.drag-drop-active .parking-dropzone::after {
 
           {% elif cell.type == "class" %}
             <td colspan="{{ cell.colspan }}">
-              <div class="room-slot-card room-slot-card--class {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cell.classes.0.is_elective %}is-elective{% endif %}">
+              <div class="room-slot-card room-slot-card--class {% if cell.classes.0.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cell.classes.0.is_elective %}is-elective{% endif %}">
               {% for cls in cell.classes %}
                 <strong>{{ cls.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ cls.section }}</div>
                 <div class="room-slot-card__teacher">{{ cls.instructor.name }}</div>
+                {% for co_teacher in cls.co_instructors %}
+                <div class="room-slot-card__teacher">{{ co_teacher.name }}</div>
+                {% endfor %}
               {% endfor %}
               </div>
             </td>
@@ -2078,10 +2463,14 @@ body.drag-drop-active .parking-dropzone::after {
 
 {# ===================== TEACHER WORKLOAD SUMMARY ===================== #}
 <div id="workload-view" style="display:none;">
-<div style="text-align:center; margin:18px 0 10px;">
-  <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('workload')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download Workload Summary PDF
+<div class="export-group">
+  <a href="{% url 'saved_timetable_download_center' saved.id %}" class="fullpage-pdf-btn" style="text-decoration:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('workload')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
   </button>
 </div>
 <h1 class="secHead" style="margin-top: 20px;">Teacher Workload Summary</h1>
@@ -2090,6 +2479,7 @@ body.drag-drop-active .parking-dropzone::after {
   <thead>
     <tr>
       <th>Teacher</th>
+      <th>Department</th>
       <th>Lectures</th>
       <th>Lab Workload</th>
       <th>Shared Lab Workload</th>
@@ -2106,6 +2496,7 @@ body.drag-drop-active .parking-dropzone::after {
             <br>
             <span style="font-size:12px; color:#555;">({{ teacher.uid }})</span>
           </td>
+          <td>{{ data.departments|default:"-" }}</td>
           <td>{{ data.lectures }}</td>
           <td>{{ data.labs }}</td>
           <td>{{ data.shared_labs|default:0|floatformat:"-1" }}</td>
@@ -2122,7 +2513,7 @@ body.drag-drop-active .parking-dropzone::after {
       {% endfor %}
     {% else %}
       <tr>
-        <td colspan="5" style="text-align:center; font-weight:600;">
+        <td colspan="6" style="text-align:center; font-weight:600;">
           No workload data available
         </td>
       </tr>
@@ -2133,16 +2524,44 @@ body.drag-drop-active .parking-dropzone::after {
 
 {# ===================== TEACHER TIMETABLES ===================== #}
 <div id="teacher-view" style="display:none;">
-<div style="text-align:center; margin:18px 0 10px;">
-  <button type="button" class="fullpage-pdf-btn" onclick="downloadViewPdf('teacher')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download All Teacher Timetables PDF
+<div class="export-group">
+  <a href="{% url 'saved_timetable_download_center' saved.id %}" class="fullpage-pdf-btn" style="text-decoration:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('teacher')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
   </button>
 </div>
 <h1 class="secHead" style="margin-top: 20px;">Teacher Timetables</h1>
 
+<div class="ta-toolbar">
+  <button type="button" id="taToggleBtn" class="ta-btn" onclick="toggleTeacherAnalysis()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:6px;"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 4-5"/></svg>
+    <span>Teacher Analysis</span>
+  </button>
+
+  <div id="taPanel" class="ta-panel" style="display:none;">
+    <div class="ta-panel__row">
+      <label class="ta-panel__label" for="taDeptSelect">Department</label>
+      <select id="taDeptSelect" class="ta-select" onchange="applyTeacherAnalysis()">
+        {% for dept in department_options %}
+        <option value="{{ dept.code }}">{{ dept.name }} ({{ dept.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="ta-panel__row ta-panel__modes">
+      <button type="button" class="ta-mode-btn is-active" data-ta-mode="home" onclick="setTeacherAnalysisMode('home')">Home department teachers</button>
+      <button type="button" class="ta-mode-btn" data-ta-mode="cross" onclick="setTeacherAnalysisMode('cross')">Cross department teachers</button>
+      <button type="button" class="ta-mode-btn ta-mode-btn--reset" data-ta-mode="all" onclick="setTeacherAnalysisMode('all')">Show all</button>
+    </div>
+    <div id="taSummary" class="ta-summary"></div>
+  </div>
+</div>
+
 {% for ttable in teacher_tables %}
-  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface">
+  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface ta-card" data-dept-codes="{{ ttable.dept_codes|join:',' }}" data-home-dept="{{ ttable.home_dept_code }}" data-teach-depts="{{ ttable.dept_codes|join:',' }}">
   <div class="export-watermark">
     <div class="export-watermark__grid">
       <span>SmartScheduler</span><span>SmartScheduler</span><span>SmartScheduler</span>
@@ -2161,6 +2580,12 @@ body.drag-drop-active .parking-dropzone::after {
       Save as Image
     </button>
   </h2>
+  {% if ttable.dept_names %}
+  <div style="text-align:center; margin:-6px 0 10px; font-size:12px; color:#28506e; font-weight:700;">Department: {{ ttable.dept_names|join:", " }}</div>
+  {% endif %}
+  {% if ttable.home_dept_name %}
+  <div class="ta-home-label" style="text-align:center; margin:-4px 0 10px; font-size:11px; color:#7a5b00; font-weight:700;">Home Dept: {{ ttable.home_dept_name }}</div>
+  {% endif %}
 
   <table class="table2">
     <thead>
@@ -2196,7 +2621,7 @@ body.drag-drop-active .parking-dropzone::after {
             <td colspan="{{ cell.colspan }}">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if lab.second_instructor %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+                  <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
@@ -2209,6 +2634,11 @@ body.drag-drop-active .parking-dropzone::after {
                     <strong style="color: #283593; font-size: 13px;">
                       {{ lab.instructor.name }}
                     </strong><br>
+                    {% for co_teacher in lab.co_instructors %}
+                    <strong style="color: #283593; font-size: 13px;">
+                      + {{ co_teacher.name }}
+                    </strong><br>
+                    {% endfor %}
                     {% if lab.second_instructor %}
                     <strong style="color: #5d4037; font-size: 13px;">
                       + {{ lab.second_instructor.name }}
@@ -2225,10 +2655,10 @@ body.drag-drop-active .parking-dropzone::after {
           {% elif cell.type == "class" %}
             <td>
               {% for cls in cell.classes %}
-                <div class="class-box {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   Section: {{ cls.section }}<br>
-                  {{ cls.room.r_number }}
+                  {{ cls.room.r_number|default:cls.room_label }}
                 </div>
               {% endfor %}
             </td>
@@ -2246,6 +2676,85 @@ body.drag-drop-active .parking-dropzone::after {
 
 {% endfor %}
 </div>
+
+<script>
+(function () {
+  var taMode = "home";
+
+  function taCards() {
+    return Array.prototype.slice.call(document.querySelectorAll("#teacher-view .ta-card"));
+  }
+  function taSplit(value) {
+    return (value || "")
+      .split(",")
+      .map(function (s) { return s.trim().toLowerCase(); })
+      .filter(Boolean);
+  }
+
+  window.toggleTeacherAnalysis = function () {
+    var panel = document.getElementById("taPanel");
+    var btn = document.getElementById("taToggleBtn");
+    if (!panel) return;
+    var open = panel.style.display === "none" || panel.style.display === "";
+    panel.style.display = open ? "block" : "none";
+    if (btn) btn.classList.toggle("is-open", open);
+    if (open) window.applyTeacherAnalysis();
+    else window.resetTeacherAnalysis();
+  };
+
+  window.setTeacherAnalysisMode = function (mode) {
+    taMode = mode;
+    document.querySelectorAll(".ta-mode-btn").forEach(function (b) {
+      b.classList.toggle("is-active", b.getAttribute("data-ta-mode") === mode);
+    });
+    window.applyTeacherAnalysis();
+  };
+
+  window.resetTeacherAnalysis = function () {
+    taCards().forEach(function (card) { card.classList.remove("ta-hidden"); });
+    var summary = document.getElementById("taSummary");
+    if (summary) summary.textContent = "";
+  };
+
+  window.applyTeacherAnalysis = function () {
+    var select = document.getElementById("taDeptSelect");
+    var summary = document.getElementById("taSummary");
+    var dept = select ? (select.value || "").trim().toLowerCase() : "";
+    var cards = taCards();
+
+    if (taMode === "all") {
+      window.resetTeacherAnalysis();
+      if (summary) summary.textContent = "Showing all " + cards.length + " teacher timetable(s).";
+      return;
+    }
+
+    var shown = 0;
+    cards.forEach(function (card) {
+      var home = (card.getAttribute("data-home-dept") || "").trim().toLowerCase();
+      var taught = taSplit(card.getAttribute("data-teach-depts"));
+      var visible;
+      if (taMode === "home") {
+        visible = home === dept;
+      } else {
+        var homeHereGoneOut = home === dept && taught.some(function (c) { return c !== dept; });
+        var outsiderCameIn = home !== dept && taught.indexOf(dept) !== -1;
+        visible = homeHereGoneOut || outsiderCameIn;
+      }
+      card.classList.toggle("ta-hidden", !visible);
+      if (visible) shown += 1;
+    });
+
+    if (summary) {
+      var deptLabel = select && select.options.length ? select.options[select.selectedIndex].text : dept;
+      if (taMode === "home") {
+        summary.textContent = shown + " teacher(s) belong to " + deptLabel + ".";
+      } else {
+        summary.textContent = shown + " cross-department teacher(s) for " + deptLabel + ".";
+      }
+    }
+  };
+})();
+</script>
 
 <script src="{% static 'chatbot.js' %}"></script>
 </body>

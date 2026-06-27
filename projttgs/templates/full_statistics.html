@@ -204,7 +204,7 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
 <div class="page-shell">
 
     <div class="topbar">
-        <a class="page-back" href="{% url 'show_timetable' index %}">&larr; Back to Timetable</a>
+        <a class="page-back" href="{% if saved_mode %}{% url 'saved_timetable' saved_id %}{% else %}{% url 'show_timetable' index %}{% endif %}">&larr; Back to Timetable</a>
         <div style="text-align:right;">
             <div class="page-title">Full <span>Statistics</span></div>
             <div class="page-sub">Room utilization across all generated departments</div>
@@ -289,7 +289,7 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
         {% if manual_error %}<div class="alert">{{ manual_error }}</div>{% endif %}
 
         <form id="manual-form" class="upload-form" method="post" enctype="multipart/form-data"
-              action="{% url 'full_statistics' index %}">
+              action="{% if saved_mode %}{% url 'saved_full_statistics' saved_id %}{% else %}{% url 'full_statistics' index %}{% endif %}">
             {% csrf_token %}
             <input type="file" name="manual_file" accept=".pdf,.xlsx,.xls" required>
             <button type="submit" class="btn" id="scan-btn">Scan &amp; Compare</button>

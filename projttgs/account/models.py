@@ -20,6 +20,13 @@ class Profile(models.Model):
         blank=True,
         related_name='teacher_account_profile',
     )
+    linked_admin_teacher = models.ForeignKey(
+        'ttgen.AdminTeacher',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='teacher_profiles',
+    )
     active_timetable = models.ForeignKey(
         'ttgen.SavedTimetable',
         on_delete=models.SET_NULL,

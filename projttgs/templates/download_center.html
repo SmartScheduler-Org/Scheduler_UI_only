@@ -89,7 +89,7 @@ body{
 <body>
 <div class="shell">
 
-    <a class="back" href="{% url 'show_timetable' index %}">&larr; Back to Timetable</a>
+    <a class="back" href="{% if saved_mode %}{% url 'saved_timetable' saved_id %}{% else %}{% url 'show_timetable' index %}{% endif %}">&larr; Back to Timetable</a>
 
     <div class="college-head">
         <img src="{% static 'img/college_logo.png' %}" alt="College logo">
@@ -144,7 +144,7 @@ body{
             </label>
             {% endfor %}
         </div>
-        <p class="hint" id="dept-note">Department filter applies to Section &amp; Room views.</p>
+        <p class="hint" id="dept-note">Department filter applies to all views. For Teacher &amp; Workload, teachers are matched by their home department.</p>
         {% if not departments %}
         <p class="hint">No departments found for this timetable.</p>
         {% endif %}
@@ -181,7 +181,9 @@ body{
 
 <script>
 (function(){
-    var index = {{ index }};
+    var savedMode = {{ saved_mode|yesno:"true,false" }};
+    var index = {{ index|default:'null' }};
+    var savedId = {{ saved_id|default:'null' }};
     var allCb = document.getElementById('all-depts');
     var allPill = document.getElementById('all-pill');
     var deptCbs = Array.prototype.slice.call(document.querySelectorAll('.dept-cb'));
@@ -196,11 +198,6 @@ body{
         viewRadios.forEach(function(r){
             r.closest('.view-pill').classList.toggle('is-checked', r.checked);
         });
-        // Dept filter only relevant for section & room
-        var v = currentView();
-        var dimmed = (v === 'teacher' || v === 'workload');
-        deptCard.style.opacity = dimmed ? '0.45' : '1';
-        deptCard.style.pointerEvents = dimmed ? 'none' : 'auto';
     }
     viewRadios.forEach(function(r){ r.addEventListener('change', syncView); });
 
@@ -228,12 +225,16 @@ body{
         return codes.length ? codes.join(',') : 'all';
     }
     function pdfUrl(inline){
-        var u = '/download_generated_timetable_pdf/'+index+'/'+currentView()+'/?depts='+encodeURIComponent(selectedDepts());
+        var u = savedMode
+            ? '/download_timetable/' + savedId + '/' + currentView() + '/?depts=' + encodeURIComponent(selectedDepts())
+            : '/download_generated_timetable_pdf/'+index+'/'+currentView()+'/?depts='+encodeURIComponent(selectedDepts());
         if(inline) u += '&inline=1';
         return u;
     }
     function excelUrl(){
-        return '/download_generated_timetable_excel/'+index+'/'+currentView()+'/';
+        return savedMode
+            ? '/download_timetable_excel/' + savedId + '/' + currentView() + '/?depts=' + encodeURIComponent(selectedDepts())
+            : '/download_generated_timetable_excel/'+index+'/'+currentView()+'/?depts='+encodeURIComponent(selectedDepts());
     }
 
     document.getElementById('btn-pdf').addEventListener('click', function(e){
@@ -255,7 +256,7 @@ body{
                 var blob = await resp.blob();
                 var file = new File([blob], 'timetable.pdf', {type:'application/pdf'});
                 if(navigator.canShare({files:[file]})){
-                    await navigator.share({files:[file], title:'Timetable', text:'Generated timetable'});
+                    await navigator.share({files:[file], title:'Timetable', text:(savedMode ? 'Saved timetable' : 'Generated timetable')});
                     return;
                 }
             }

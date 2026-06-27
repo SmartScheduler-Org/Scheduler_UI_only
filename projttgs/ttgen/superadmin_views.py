@@ -18,6 +18,7 @@ import hmac
 import io
 import logging
 import re
+import csv
 from collections import defaultdict
 from datetime import datetime
 from functools import wraps
@@ -28,13 +29,14 @@ from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse, Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.db.models import Max, Count, Q
 
 from .models import (
+    AdminTeacher,
     CoordinatorAppointment,
     Department,
     Instructor,
@@ -48,12 +50,27 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+
+def _brand_from_email():
+    from email.utils import formataddr
+
+    sender = (getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER or "").strip()
+    if not sender:
+        return ""
+    if "<" in sender and ">" in sender:
+        return sender
+    return formataddr(("SmartScheduler", sender))
+
 SESSION_FLAG = "is_superadmin"
 SESSION_EMAIL = "superadmin_email"
+SESSION_OWNER = "superadmin_owner_id"
 SA_IMPERSONATE = "sa_impersonate_uid"
 
 WORKING_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 _DAY_ORDER = {d: i for i, d in enumerate(WORKING_DAYS)}
+# Lunch is slot 5 (1-indexed, 9 slots/day). Used to keep multi-hour lectures
+# from bleeding across the lunch break when expanding their continuation slots.
+LUNCH_SLOT = 5
 _SEM_RE = re.compile(r"(\d+)\s*(?:st|nd|rd|th)?\s*sem", re.IGNORECASE)
 
 
@@ -76,20 +93,40 @@ def _check_credentials(email, password):
     return hmac.compare_digest(password, expected)
 
 
+def _disable_response_cache(response):
+    """Prevent browser back-forward cache from resurfacing protected pages."""
+    response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
+    response["Pragma"] = "no-cache"
+    response["Expires"] = "0"
+    return response
+
+
 def superadmin_required(view_func):
     @wraps(view_func)
     def _wrapped(request, *args, **kwargs):
         if not request.session.get(SESSION_FLAG):
             messages.info(request, "Please sign in as Super Admin to continue.")
             return redirect("superadmin_login")
-        return view_func(request, *args, **kwargs)
+        exempt_views = {"superadmin_choose_user", "superadmin_select_user", "superadmin_logout"}
+        selected_owner_id = request.session.get(SESSION_OWNER)
+        if view_func.__name__ not in exempt_views:
+            if not selected_owner_id:
+                messages.info(request, "Choose a user account first to load that account's data.")
+                return redirect("superadmin_choose_user")
+            if not get_user_model().objects.filter(id=selected_owner_id).exists():
+                request.session.pop(SESSION_OWNER, None)
+                request.session.modified = True
+                messages.info(request, "Select a valid user account to continue.")
+                return redirect("superadmin_choose_user")
+        response = view_func(request, *args, **kwargs)
+        return _disable_response_cache(response)
 
     return _wrapped
 
 
 def superadmin_login(request):
     if request.session.get(SESSION_FLAG):
-        return redirect("superadmin_dashboard")
+        return redirect("superadmin_choose_user")
 
     if request.method == "POST":
         email = (request.POST.get("email") or "").strip()
@@ -102,21 +139,86 @@ def superadmin_login(request):
         elif _check_credentials(email, password):
             request.session[SESSION_FLAG] = True
             request.session[SESSION_EMAIL] = email.strip().lower()
+            request.session.pop(SESSION_OWNER, None)
             request.session.modified = True
-            return redirect("superadmin_dashboard")
+            return redirect("superadmin_choose_user")
         else:
             messages.error(request, "Invalid email or password.")
 
-    return render(request, "superadmin_login.html")
+    return _disable_response_cache(render(request, "superadmin_login.html"))
 
 
 def superadmin_logout(request):
     request.session.pop(SESSION_FLAG, None)
     request.session.pop(SESSION_EMAIL, None)
+    request.session.pop(SESSION_OWNER, None)
     request.session.pop(SA_IMPERSONATE, None)
     request.session.modified = True
     messages.success(request, "Signed out of Super Admin.")
-    return redirect("superadmin_login")
+    return _disable_response_cache(redirect("home"))
+
+
+def _all_user_accounts():
+    users = get_user_model().objects.all().order_by("username")
+    timetable_counts = dict(
+        SavedTimetable.objects.values("user").annotate(c=Count("id")).values_list("user", "c")
+    )
+    accounts = []
+    for user in users:
+        full_name = (user.get_full_name() or "").strip()
+        label = full_name or user.username or (user.email or "").split("@")[0] or f"Account #{user.id}"
+        accounts.append({
+            "id": user.id,
+            "label": label,
+            "email": user.email or "",
+            "username": user.username or "",
+            "timetables": timetable_counts.get(user.id, 0),
+        })
+    return accounts
+
+
+def _selected_owner_account(request):
+    owner_id = request.session.get(SESSION_OWNER)
+    if not owner_id:
+        return None
+    for account in _all_user_accounts():
+        if account["id"] == owner_id:
+            return account
+    return None
+
+
+@superadmin_required
+def superadmin_choose_user(request):
+    accounts = _all_user_accounts()
+    current = _selected_owner_account(request)
+    return render(
+        request,
+        "superadmin_choose_user.html",
+        {
+            "superadmin_email": request.session.get(SESSION_EMAIL, ""),
+            "accounts": accounts,
+            "selected_owner": current,
+        },
+    )
+
+
+@superadmin_required
+@require_POST
+def superadmin_select_user(request):
+    owner_id = (request.POST.get("owner_id") or "").strip()
+    if not owner_id.isdigit():
+        messages.error(request, "Choose a valid user account.")
+        return redirect("superadmin_choose_user")
+
+    user = get_user_model().objects.filter(id=int(owner_id)).first()
+    if user is None:
+        messages.error(request, "Selected user account was not found.")
+        return redirect("superadmin_choose_user")
+
+    request.session[SESSION_OWNER] = user.id
+    request.session.modified = True
+    messages.success(request, f"Now viewing data for {user.username or user.email or f'Account #{user.id}'}.")
+    return redirect("superadmin_dashboard")
 
 
 # ---------------------------------------------------------------------------
@@ -196,19 +298,11 @@ def _owner_accounts(owners):
 
 
 def _request_owners(request):
-    """Resolve the owner accounts in scope for this request.
-
-    Reads the ``account`` GET param. When it names a valid active owner, scope
-    everything to just that one account; otherwise fall back to every active
-    owner ("All Accounts"). Returns ``(owners_set, account_filter_value)``.
-    """
-    all_owners = _active_owner_ids()
-    account_filter = (request.GET.get("account") or "all").strip()
-    if account_filter != "all" and account_filter.isdigit():
-        chosen = int(account_filter)
-        if chosen in all_owners:
-            return {chosen}, account_filter
-    return all_owners, "all"
+    """Resolve the owner account selected in the super-admin session."""
+    selected_owner_id = request.session.get(SESSION_OWNER)
+    if selected_owner_id and get_user_model().objects.filter(id=selected_owner_id).exists():
+        return {selected_owner_id}, str(selected_owner_id)
+    return set(), ""
 
 
 def _scope_to_owners(qs, owners):
@@ -220,6 +314,82 @@ def _pct(used, total):
     if not total:
         return 0.0
     return round((used / total) * 100.0, 1)
+
+
+def _theory_continuation_cells(slot):
+    """Extra (day, time) cells a multi-hour theory lecture occupies.
+
+    Theory continuation slots are not stored on ScheduledSlot — the duration
+    lives on the Subject. A 2-hour lecture saved at slot N also occupies slot
+    N+1, so analytics/grids must expand it to count every hour. Lunch slots are
+    skipped so a lecture never bleeds across the lunch break.
+    """
+    try:
+        duration = int(getattr(slot.subject, "duration", 1) or 1)
+    except (TypeError, ValueError):
+        duration = 1
+    if duration <= 1:
+        return []
+    mt = slot.meeting_time
+    if not mt or not str(mt.time).isdigit():
+        return []
+    day = mt.day
+    start = int(mt.time)
+    extra = []
+    nxt = start + 1
+    while len(extra) < duration - 1 and nxt <= 9:
+        if nxt != int(LUNCH_SLOT):
+            extra.append((day, str(nxt)))
+        nxt += 1
+    return extra
+
+
+def _slot_cells(slot):
+    """All unique timetable cells occupied by one scheduled slot.
+
+    Labs already persist every occupied meeting time in ``lab_slots`` including
+    the start hour, while theory continuation hours must be expanded from the
+    subject duration. This helper normalises both paths so workload is counted
+    by occupied hour, not by duplicated section assignments.
+    """
+    if slot.is_lab:
+        cells = [(mt.day, str(mt.time)) for mt in slot.lab_slots.all()]
+        if not cells and slot.meeting_time:
+            cells = [(slot.meeting_time.day, str(slot.meeting_time.time))]
+    else:
+        cells = [(slot.meeting_time.day, str(slot.meeting_time.time))]
+        cells += _theory_continuation_cells(slot)
+    return list(dict.fromkeys(c for c in cells if c[0]))
+
+
+def _is_lunch_cell(cell):
+    return str(cell[1]) == str(LUNCH_SLOT)
+
+
+def _effective_room_capacity(universe, occupied_cells):
+    """Lunch slot does not reduce utilization unless that room is actually used then.
+
+    Slot 5 is treated as lunch by default, so an empty lunch slot should not make
+    a fully booked room look under-utilized. If a prefilled class occupies lunch,
+    that occupied lunch cell is counted as real capacity for that room.
+    """
+    non_lunch = sum(1 for cell in universe if not _is_lunch_cell(cell))
+    lunch_used = sum(1 for cell in occupied_cells if _is_lunch_cell(cell))
+    return non_lunch + lunch_used
+
+
+def _format_cell_block(cells):
+    """Human-readable label for one contiguous scheduled block."""
+    if not cells:
+        return "—"
+    ordered = sorted(cells, key=lambda item: (_DAY_ORDER.get(item[0], 99), int(item[1]) if str(item[1]).isdigit() else 99))
+    day = ordered[0][0]
+    nums = [int(time) for _day, time in ordered if str(time).isdigit()]
+    if nums:
+        start = nums[0]
+        end = nums[-1]
+        return f"{day} {start}" if start == end else f"{day} {start}-{end}"
+    return f"{day} {ordered[0][1]}"
 
 
 def _active_slots(owners=None):
@@ -249,7 +419,7 @@ def _build_analytics(request):
     search = (request.GET.get("q") or "").strip()
 
     universe = _slot_universe()
-    universe_count = len(universe) or 1
+    base_room_capacity = sum(1 for cell in universe if not _is_lunch_cell(cell)) or 1
 
     # Accounts that actually own scheduled timetables. Master data is per-user
     # and may be duplicated across accounts. By default we scope everything to
@@ -312,7 +482,7 @@ def _build_analytics(request):
     room_cells = defaultdict(set)            # room_id -> {(day,time)}
     dept_room_cells = defaultdict(set)       # dept_id -> {(room_id,day,time)}
     heat = defaultdict(int)                  # (day,time) -> occupancy
-    teacher_load = defaultdict(int)          # instructor_id -> cells taught
+    teacher_load = defaultdict(set)          # instructor_id -> {(day,time)} taught
     teacher_name = {}
     room_meta = {}                           # room_id -> {number,dept,is_lab}
     dept_meta = {}                           # dept_id -> {name,code}
@@ -379,11 +549,9 @@ def _build_analytics(request):
         if dept_id is not None:
             dept_scheduled.add(dept_id)
 
-        # All cells occupied by this slot (main + lab continuation slots).
-        cells = [(slot.meeting_time.day, str(slot.meeting_time.time))]
-        if slot.is_lab:
-            cells += [(mt.day, str(mt.time)) for mt in slot.lab_slots.all()]
-        cells = list({c for c in cells if c[0]})
+        # Count unique occupied hours so parallel sections in the same hour do
+        # not inflate a teacher's workload beyond real teaching time.
+        cells = _slot_cells(slot)
 
         for day, time in cells:
             if room_id is not None:
@@ -393,10 +561,10 @@ def _build_analytics(request):
                     dept_room_cells[room.department_id].add((room_id, day, time))
             heat[(day, time)] += 1
             if instr_id is not None:
-                teacher_load[instr_id] += 1
+                teacher_load[instr_id].add((day, time))
                 teacher_slot_sections[(instr_id, day, time)].add(sec_id)
             if second_id is not None:
-                teacher_load[second_id] += 1
+                teacher_load[second_id].add((day, time))
             section_slot_subjects[(sec_id, day, time)].add(slot.subject_id)
 
         preview_rows.append(
@@ -421,7 +589,12 @@ def _build_analytics(request):
 
     # Overall utilization.
     used_cells = sum(len(v) for v in room_cells.values())
-    available_cells = scope_room_count * universe_count
+    room_capacity_map = {
+        room["id"]: _effective_room_capacity(universe, room_cells.get(room["id"], set()))
+        for room in scope_room_list
+    }
+
+    available_cells = sum(room_capacity_map.values()) or 1
     overall_util = _pct(used_cells, available_cells)
 
     # Conflicts.
@@ -436,9 +609,12 @@ def _build_analytics(request):
     if dept_filter != "all":
         dept_qs = dept_qs.filter(id=dept_filter)
     for dept in dept_qs.order_by("name"):
-        d_rooms = _scope_to_owners(Room.objects.filter(department=dept), owners).count()
+        dept_room_ids = list(
+            _scope_to_owners(Room.objects.filter(department=dept), owners).values_list("id", flat=True)
+        )
+        d_rooms = len(dept_room_ids)
         used = len(dept_room_cells.get(dept.id, set()))
-        denom = d_rooms * universe_count
+        denom = sum(room_capacity_map.get(room_id, base_room_capacity) for room_id in dept_room_ids)
         dept_util.append(
             {
                 "id": dept.id,
@@ -456,6 +632,7 @@ def _build_analytics(request):
     room_util = []
     for room in scope_room_list:
         used = len(room_cells.get(room["id"], set()))
+        capacity = room_capacity_map.get(room["id"], base_room_capacity)
         room_util.append(
             {
                 "id": room["id"],
@@ -463,8 +640,8 @@ def _build_analytics(request):
                 "type": room["room_type"],
                 "dept": room["department__name"] or "—",
                 "used": used,
-                "capacity": universe_count,
-                "util": _pct(used, universe_count),
+                "capacity": capacity,
+                "util": _pct(used, capacity),
             }
         )
     room_util.sort(key=lambda r: r["util"], reverse=True)
@@ -480,7 +657,7 @@ def _build_analytics(request):
     teacher_workload = []
     seen_teacher = {}
     for instr in teacher_qs:
-        load = teacher_load.get(instr.id, 0)
+        load = len(teacher_load.get(instr.id, set()))
         key = (_norm(instr.uid), _norm(instr.name))
         entry = {
             "id": instr.id,
@@ -527,13 +704,13 @@ def _build_analytics(request):
         "all": {"used": used_cells, "total": available_cells, "util": overall_util},
         "labs": {
             "used": lab_used,
-            "total": lab_count_scope * universe_count,
-            "util": _pct(lab_used, lab_count_scope * universe_count),
+            "total": sum(room_capacity_map.get(r["id"], base_room_capacity) for r in scope_room_list if r["room_type"] == "Lab") or 1,
+            "util": _pct(lab_used, sum(room_capacity_map.get(r["id"], base_room_capacity) for r in scope_room_list if r["room_type"] == "Lab") or 1),
         },
         "rooms": {
             "used": lecture_used,
-            "total": lecture_count_scope * universe_count,
-            "util": _pct(lecture_used, lecture_count_scope * universe_count),
+            "total": sum(room_capacity_map.get(r["id"], base_room_capacity) for r in lecture_rooms) or 1,
+            "util": _pct(lecture_used, sum(room_capacity_map.get(r["id"], base_room_capacity) for r in lecture_rooms) or 1),
         },
     }
 
@@ -704,9 +881,101 @@ def _page_ctx(request, page):
     """Build the full analytics context for any super-admin page."""
     ctx = _build_analytics(request)
     ctx["superadmin_email"] = request.session.get(SESSION_EMAIL, "")
+    ctx["selected_owner"] = _selected_owner_account(request)
     ctx["page"] = page
     ctx["chart_data"] = _chart_data(ctx)
     return ctx
+
+
+def _basic_page_ctx(request, page):
+    """Minimal shell context for super-admin pages that do not need analytics."""
+    return {
+        "superadmin_email": request.session.get(SESSION_EMAIL, ""),
+        "selected_owner": _selected_owner_account(request),
+        "page": page,
+    }
+
+
+def _selected_owner_guard_or_404(request, owner_id):
+    selected_owner_id = request.session.get(SESSION_OWNER)
+    if selected_owner_id and owner_id == selected_owner_id:
+        return
+    raise Http404("This record is outside the selected user scope")
+
+
+def _csv_cell(row, *names):
+    lowered = {(str(k or "").strip().lower()): v for k, v in row.items()}
+    for name in names:
+        value = lowered.get(name.lower())
+        if value is not None:
+            return str(value).strip()
+    return ""
+
+
+def _department_name_from_code(code):
+    dept_code = (code or "").strip()
+    if not dept_code:
+        return ""
+    match = Department.objects.filter(code__iexact=dept_code).order_by("id").values_list("name", flat=True).first()
+    return (match or "").strip()
+
+
+def _import_admin_teacher_csv(uploaded_file):
+    raw = uploaded_file.read().decode("utf-8-sig", errors="ignore")
+    rows = csv.DictReader(io.StringIO(raw))
+    created = 0
+    updated = 0
+    skipped = 0
+
+    with transaction.atomic():
+        for row in rows:
+            name = _csv_cell(row, "name", "teacher name", "teacher_name", "faculty name", "faculty_name")
+            email = _csv_cell(row, "email", "mail", "email id", "email_id")
+            uid = _csv_cell(row, "uid", "teacher_id", "teacher id", "teacher code", "teacher_code", "faculty uid", "faculty_uid", "code")
+            department_name = _csv_cell(row, "department", "department name", "department_name", "branch")
+            department_code = _csv_cell(row, "department code", "department_code", "dept code", "dept_code")
+            contact_number = _csv_cell(row, "contact", "contact number", "contact_number", "phone", "mobile")
+            designation = _csv_cell(row, "designation") or "Associate Professor"
+
+            if not department_name and department_code:
+                department_name = _department_name_from_code(department_code)
+
+            if not name and not email and not uid:
+                skipped += 1
+                continue
+
+            if designation not in dict(AdminTeacher.DESIGNATION_CHOICES):
+                designation = "Associate Professor"
+
+            lookup = None
+            if uid:
+                lookup = AdminTeacher.objects.filter(uid__iexact=uid).first()
+            if lookup is None and email:
+                lookup = AdminTeacher.objects.filter(email__iexact=email).first()
+            if lookup is None and name:
+                lookup = AdminTeacher.objects.filter(name__iexact=name, department_name__iexact=department_name).first()
+
+            payload = {
+                "name": name or (lookup.name if lookup else ""),
+                "email": email or (lookup.email if lookup else ""),
+                "uid": uid or (lookup.uid if lookup else ""),
+                "contact_number": contact_number or (lookup.contact_number if lookup else ""),
+                "designation": designation,
+                "department_name": department_name or (lookup.department_name if lookup else ""),
+                "department_code": department_code or (lookup.department_code if lookup else ""),
+                "is_active": True,
+            }
+
+            if lookup:
+                for field, value in payload.items():
+                    setattr(lookup, field, value)
+                lookup.save()
+                updated += 1
+            else:
+                AdminTeacher.objects.create(**payload)
+                created += 1
+
+    return created, updated, skipped
 
 
 @superadmin_required
@@ -721,7 +990,66 @@ def superadmin_resource(request):
 
 @superadmin_required
 def superadmin_teachers(request):
-    return render(request, "superadmin_teachers.html", _page_ctx(request, "teachers"))
+    if request.method == "POST" and request.FILES.get("csv_file"):
+        try:
+            created, updated, skipped = _import_admin_teacher_csv(request.FILES["csv_file"])
+            messages.success(request, f"Central teachers imported. Created: {created}, updated: {updated}, skipped: {skipped}.")
+        except Exception:
+            logger.exception("Central teacher CSV import failed")
+            messages.error(request, "Could not import the teacher CSV. Check the file headers and try again.")
+        return redirect("superadmin_teachers")
+
+    ctx = _page_ctx(request, "teachers")
+    central_teachers = list(AdminTeacher.objects.order_by("name", "uid", "id")[:250])
+    ctx["central_teachers"] = central_teachers
+    ctx["central_teacher_total"] = AdminTeacher.objects.count()
+    return render(request, "superadmin_teachers.html", ctx)
+
+
+@superadmin_required
+def superadmin_teacher_edit(request, teacher_id):
+    teacher = get_object_or_404(AdminTeacher, id=teacher_id)
+
+    if request.method == "POST":
+        teacher.name = (request.POST.get("name") or "").strip()
+        teacher.uid = (request.POST.get("uid") or "").strip()
+        teacher.email = (request.POST.get("email") or "").strip()
+        teacher.contact_number = (request.POST.get("contact_number") or "").strip()
+        designation = (request.POST.get("designation") or "").strip()
+        if designation in dict(AdminTeacher.DESIGNATION_CHOICES):
+            teacher.designation = designation
+        teacher.department_code = (request.POST.get("department_code") or "").strip()
+        teacher.department_name = (request.POST.get("department_name") or "").strip()
+        if not teacher.department_name and teacher.department_code:
+            teacher.department_name = _department_name_from_code(teacher.department_code)
+        teacher.is_active = (request.POST.get("is_active") or "on") == "on"
+
+        if not teacher.name:
+            messages.error(request, "Teacher name is required.")
+        else:
+            teacher.save()
+            messages.success(request, f"Updated central teacher {teacher.name}.")
+            return redirect("superadmin_teachers")
+
+    ctx = _basic_page_ctx(request, "teachers")
+    ctx["target_teacher"] = teacher
+    ctx["designation_choices"] = AdminTeacher.DESIGNATION_CHOICES
+    return render(request, "superadmin_teacher_edit.html", ctx)
+
+
+@superadmin_required
+def superadmin_teacher_delete(request, teacher_id):
+    teacher = get_object_or_404(AdminTeacher, id=teacher_id)
+
+    if request.method == "POST":
+        label = teacher.name or teacher.uid or f"Teacher #{teacher.id}"
+        teacher.delete()
+        messages.success(request, f"Deleted central teacher {label}.")
+        return redirect("superadmin_teachers")
+
+    ctx = _basic_page_ctx(request, "teachers")
+    ctx["target_teacher"] = teacher
+    return render(request, "superadmin_teacher_confirm_delete.html", ctx)
 
 
 @superadmin_required
@@ -1024,6 +1352,7 @@ def _appoint_email(*, name, role, dept_name, message, appointer, creds=None, log
     text_body = (
         f"Hello {safe_name},\n\n"
         "J.C. Bose University of Science and Technology, YMCA (Formerly YMCA UST)\n\n"
+        "SmartScheduler by the SIH Winner Innovation Team\n\n"
         f"You have been appointed as {role}"
         + (f" for {dept_name}" if dept_name else "")
         + ".\n\n"
@@ -1031,7 +1360,7 @@ def _appoint_email(*, name, role, dept_name, message, appointer, creds=None, log
         + "You can sign in to SmartScheduler to manage timetable activities for your role.\n"
         + creds_text
         + f"\nAppointed by: {appointer}\n"
-        "— SmartScheduler"
+        "— SmartScheduler\nSIH Winner Innovation Team"
     )
 
     html_body = f"""\
@@ -1055,6 +1384,7 @@ def _appoint_email(*, name, role, dept_name, message, appointer, creds=None, log
             <td style="padding-left:14px;vertical-align:middle;">
               <div style="color:#ffffff;font-size:19px;font-weight:700;">SmartScheduler</div>
               <div style="color:rgba(255,255,255,.82);font-size:12px;">University Timetable Platform</div>
+                            <div style="color:#fff7ed;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:6px;">SIH Winner Innovation Team</div>
             </td>
           </tr></table>
         </td></tr>
@@ -1097,7 +1427,7 @@ def _appoint_email(*, name, role, dept_name, message, appointer, creds=None, log
           <div style="border-top:1px solid rgba(148,163,184,.16);padding-top:16px;
                       color:#64748b;font-size:12px;line-height:1.6;">
             Appointed by <span style="color:#cbd5e1;">{appointer}</span><br>
-            This is an automated message from SmartScheduler.
+                        This is an automated message from SmartScheduler.<br><span style="color:#f59e0b;font-weight:700;">SIH Winner Innovation Team</span>
           </div>
         </td></tr>
       </table>
@@ -1142,7 +1472,7 @@ def _superadmin_appoint_send(request):
         name=name, role=role, dept_name=dept_name, message=message,
         appointer=appointer, creds=creds, login_url=login_url,
     )
-    sender = getattr(settings, "DEFAULT_FROM_EMAIL", "") or settings.EMAIL_HOST_USER
+    sender = _brand_from_email()
     email_ok = False
     try:
         from email.utils import formataddr
@@ -1473,9 +1803,10 @@ def superadmin_room_analytics(request):
     """Detailed room analytics filtered by utilization bucket (real DB data)."""
     bucket = (request.GET.get("bucket") or "all").strip()
     dept_filter = (request.GET.get("dept") or "all").strip()
+    room_id = (request.GET.get("room_id") or "").strip()
 
     universe = _slot_universe()
-    universe_count = len(universe) or 1
+    base_room_capacity = sum(1 for cell in universe if not _is_lunch_cell(cell)) or 1
     days, times = _sorted_times(universe)
     owners, _account_filter = _request_owners(request)
     occ = _room_occupancy(owners)
@@ -1485,13 +1816,16 @@ def superadmin_room_analytics(request):
     ).order_by("r_number")
     if dept_filter != "all":
         rooms_qs = rooms_qs.filter(department_id=dept_filter)
+    if room_id.isdigit():
+        rooms_qs = rooms_qs.filter(id=int(room_id))
 
     rooms = []
     bucket_counts = {"gt70": 0, "50-70": 0, "20-50": 0, "ideal": 0}
     for room in rooms_qs:
         cells = occ.get(room.id, {})
         used = len(cells)
-        util = _pct(used, universe_count)
+        capacity = _effective_room_capacity(universe, set(cells.keys())) or base_room_capacity
+        util = _pct(used, capacity)
         b = _bucket_of(util)
         bucket_counts[b] += 1
         if bucket != "all" and b != bucket:
@@ -1499,7 +1833,7 @@ def superadmin_room_analytics(request):
 
         free_slots = [
             {"day": d, "slot": t} for (d, t) in sorted(
-                universe - set(cells.keys()), key=lambda c: (_DAY_ORDER.get(c[0], 99), int(c[1]) if c[1].isdigit() else 99)
+                {cell for cell in universe if not _is_lunch_cell(cell)} - set(cells.keys()), key=lambda c: (_DAY_ORDER.get(c[0], 99), int(c[1]) if c[1].isdigit() else 99)
             )
         ]
         grid = []
@@ -1526,9 +1860,9 @@ def superadmin_room_analytics(request):
                 "department": room.department.name if room.department_id else "—",
                 "capacity": room.seating_capacity,
                 "used": used,
-                "total": universe_count,
+                "total": capacity,
                 "util": util,
-                "free_count": universe_count - used,
+                "free_count": max(capacity - used, 0),
                 "free_slots": free_slots,
                 "grid": grid,
                 "bucket": b,
@@ -1543,6 +1877,7 @@ def superadmin_room_analytics(request):
         {
             "bucket": bucket,
             "bucket_label": _BUCKET_LABELS.get(bucket, "Rooms"),
+            "single_room": room_id.isdigit(),
             "bucket_counts": bucket_counts,
             "days": days,
             "times": times,
@@ -1571,7 +1906,7 @@ def superadmin_teacher_detail(request):
     universe = _slot_universe()
     days, times = _sorted_times(universe)
 
-    schedule = []
+    schedule_map = {}
     grid_map = {}
     departments = set()
     subjects = set()
@@ -1581,9 +1916,10 @@ def superadmin_teacher_detail(request):
     per_day = defaultdict(int)
 
     owners, _account_filter = _request_owners(request)
-    for slot in _active_slots(owners):
-        if slot.instructor_id != instr.id and slot.second_instructor_id != instr.id:
-            continue
+    teacher_slots = _active_slots(owners).filter(
+        Q(instructor_id=instr.id) | Q(second_instructor_id=instr.id)
+    )
+    for slot in teacher_slots:
         sec = slot.section
         if sec and sec.department_id:
             departments.add(sec.department.name)
@@ -1591,27 +1927,46 @@ def superadmin_teacher_detail(request):
         if sec:
             sections.add(sec.section_id)
 
-        cells = [(slot.meeting_time.day, str(slot.meeting_time.time))]
+        cells = _slot_cells(slot)
         if slot.is_lab:
-            cells += [(mt.day, str(mt.time)) for mt in slot.lab_slots.all()]
             lab_count += 1
         else:
             theory_count += 1
 
         for day, time in cells:
-            if not day:
-                continue
-            entry = {
-                "day": day,
-                "slot": time,
-                "section": sec.section_id if sec else "—",
-                "subject": getattr(slot.subject, "subject_name", "—"),
-                "room": getattr(slot.room, "r_number", "—"),
-                "type": "Lab" if slot.is_lab else "Theory",
-            }
-            schedule.append(entry)
-            grid_map[(day, time)] = entry
-            per_day[day] += 1
+            entry = schedule_map.setdefault(
+                (day, time),
+                {
+                    "day": day,
+                    "slot": time,
+                    "sections": set(),
+                    "subjects": set(),
+                    "rooms": set(),
+                    "types": set(),
+                },
+            )
+            entry["sections"].add(sec.section_id if sec else "—")
+            entry["subjects"].add(getattr(slot.subject, "subject_name", "—"))
+            entry["rooms"].add(getattr(slot.room, "r_number", "—"))
+            entry["types"].add("Lab" if slot.is_lab else "Theory")
+
+    schedule = []
+    for (day, time), entry in schedule_map.items():
+        sections_list = sorted(entry["sections"])
+        subjects_list = sorted(entry["subjects"])
+        rooms_list = sorted(entry["rooms"])
+        types_list = sorted(entry["types"])
+        merged = {
+            "day": day,
+            "slot": time,
+            "section": ", ".join(sections_list),
+            "subject": ", ".join(subjects_list),
+            "room": ", ".join(rooms_list),
+            "type": "Lab" if types_list == ["Lab"] else "Theory" if types_list == ["Theory"] else "Mixed",
+        }
+        schedule.append(merged)
+        grid_map[(day, time)] = merged
+        per_day[day] += 1
 
     schedule.sort(key=lambda e: (_DAY_ORDER.get(e["day"], 99), int(e["slot"]) if e["slot"].isdigit() else 99))
     load = len(schedule)
@@ -1662,7 +2017,7 @@ def superadmin_teacher_detail(request):
 
 
 # ---------------------------------------------------------------------------
-# Teacher workload analysis — per-department breakdown from a chosen timetable
+# Teacher workload analysis — selected user's active timetable breakdown
 # ---------------------------------------------------------------------------
 def _saved_timetable_label(st):
     if st.user:
@@ -1683,11 +2038,11 @@ def _norm_identity(value):
 
 @superadmin_required
 def superadmin_teacher_workload(request):
-    """Per-department workload breakdown for one teacher, computed from a
-    specific saved timetable chosen by the super admin.
+    """Detailed workload breakdown for one teacher in the selected user's
+    active saved timetable set.
 
-    The same physical teacher can exist under multiple accounts, so the teacher
-    is matched by identity (uid / name) within the chosen timetable's owner.
+    Teacher identity is matched by uid/name inside the session-selected owner
+    so duplicate teacher rows across different accounts never leak in.
     """
     raw_id = (request.GET.get("id") or "").strip()
     try:
@@ -1695,19 +2050,10 @@ def superadmin_teacher_workload(request):
     except (Instructor.DoesNotExist, ValueError):
         raise Http404("Teacher not found")
 
-    # Saved timetables (non-empty) the super admin can pick from.
-    timetables = []
-    for st in (
-        SavedTimetable.objects.filter(slots__isnull=False)
-        .select_related("department", "user")
-        .order_by("user_id", "-created_at")
-        .distinct()
-    ):
-        _owner, label = _saved_timetable_label(st)
-        timetables.append({"id": st.id, "label": label})
-
     target_uid = _norm_identity(clicked.uid)
     target_name = _norm_identity(clicked.name)
+    owners, _account_filter = _request_owners(request)
+    selected_owner = _selected_owner_account(request)
 
     response = {
         "teacher": {
@@ -1716,60 +2062,37 @@ def superadmin_teacher_workload(request):
             "uid": clicked.uid,
             "designation": clicked.designation,
         },
-        "timetables": timetables,
         "analysis": None,
     }
 
-    tid = (request.GET.get("tid") or "").strip()
-    if not tid:
+    active_ids = _active_timetable_ids(owners)
+    if not active_ids:
+        response["analysis"] = {"found": False, "departments": []}
         return JsonResponse(response)
 
-    try:
-        saved_t = SavedTimetable.objects.select_related("user").get(id=tid)
-    except (SavedTimetable.DoesNotExist, ValueError):
-        raise Http404("Timetable not found")
-
-    # Instructors in this timetable's owner that match the clicked teacher.
+    # Instructors in the selected owner scope that match the clicked teacher.
     matched_ids = []
     matched_instructors = []
-    for instr in Instructor.objects.filter(user_id=saved_t.user_id).select_related("department"):
+    for instr in Instructor.objects.filter(user_id__in=owners).select_related("department"):
         if (_norm_identity(instr.uid) and _norm_identity(instr.uid) == target_uid) or (
             _norm_identity(instr.name) and _norm_identity(instr.name) == target_name
         ):
             matched_ids.append(instr.id)
             matched_instructors.append(instr)
 
+    if not matched_ids:
+        response["analysis"] = {"found": False, "departments": []}
+        return JsonResponse(response)
+
     slots = (
-        saved_t.slots.select_related(
+        ScheduledSlot.objects.filter(timetable_id__in=active_ids)
+        .select_related(
             "section", "section__department", "subject", "instructor", "second_instructor"
         )
         .prefetch_related("lab_slots")
-        .all()
     )
 
-    # dept_code -> aggregate
-    dept_map = {}
-    total_hours = 0
-    for slot in slots:
-        if slot.instructor_id not in matched_ids and slot.second_instructor_id not in matched_ids:
-            continue
-        sec = slot.section
-        dept = sec.department if sec else None
-        code = (getattr(dept, "code", "") or "").strip() or "—"
-        name = (getattr(dept, "name", "") or "").strip() or code
-        hours = 1
-        if slot.is_lab:
-            hours += slot.lab_slots.count()
-        bucket = dept_map.setdefault(
-            code, {"code": code, "name": name, "hours": 0, "subjects": set()}
-        )
-        bucket["hours"] += hours
-        subject_name = getattr(slot.subject, "subject_name", "") or "—"
-        bucket["subjects"].add(subject_name)
-        total_hours += hours
-
-    # Home department: stored Instructor.department first, else the department
-    # where this teacher carries the most hours in this timetable.
+    # Home department: stored Instructor.department first, else busiest dept.
     home_code = ""
     home_name = ""
     for instr in matched_instructors:
@@ -1777,8 +2100,80 @@ def superadmin_teacher_workload(request):
             home_code = (instr.department.code or "").strip()
             home_name = (instr.department.name or "").strip() or home_code
             break
+
+    # dept_code -> aggregate, plus subject-level breakdown rows.
+    dept_map = {}
+    total_cells = set()
+    lecture_cells = set()
+    lab_cells = set()
+    home_cells = set()
+    cross_cells = set()
+    detail_map = {}
+
+    for slot in slots:
+        if slot.instructor_id not in matched_ids and slot.second_instructor_id not in matched_ids:
+            continue
+        sec = slot.section
+        dept = sec.department if sec else None
+        code = (getattr(dept, "code", "") or "").strip() or "—"
+        name = (getattr(dept, "name", "") or "").strip() or code
+        cells = _slot_cells(slot)
+        duration = len(cells)
+        if duration < 1:
+            duration = 1
+        section_name = sec.section_id if sec else "—"
+        subject_name = getattr(slot.subject, "subject_name", "") or "—"
+        block_label = _format_cell_block(cells)
+        is_home = bool(home_code) and code.lower() == home_code.lower()
+        kind = "Lab" if slot.is_lab else "Lecture"
+
+        bucket = dept_map.setdefault(
+            code,
+            {
+                "code": code,
+                "name": name,
+                "cells": set(),
+                "lecture_cells": set(),
+                "lab_cells": set(),
+                "subjects": set(),
+            },
+        )
+        bucket["cells"].update(cells)
+        if slot.is_lab:
+            bucket["lab_cells"].update(cells)
+            lab_cells.update(cells)
+        else:
+            bucket["lecture_cells"].update(cells)
+            lecture_cells.update(cells)
+        bucket["subjects"].add(subject_name)
+        total_cells.update(cells)
+        if is_home:
+            home_cells.update(cells)
+        else:
+            cross_cells.update(cells)
+
+        detail_key = (code, name, subject_name, section_name, kind, duration)
+        detail = detail_map.setdefault(
+            detail_key,
+            {
+                "department_code": code,
+                "department_name": name,
+                "subject": subject_name,
+                "section": section_name,
+                "type": kind,
+                "duration": duration,
+                "weekly_hours": 0,
+                "occurrences": 0,
+                "blocks": [],
+                "is_home": is_home,
+            },
+        )
+        detail["weekly_hours"] += len(cells)
+        detail["occurrences"] += 1
+        detail["blocks"].append(block_label)
+
     if not home_code and dept_map:
-        top = max(dept_map.values(), key=lambda d: d["hours"])
+        top = max(dept_map.values(), key=lambda d: len(d["cells"]))
         home_code = top["code"]
         home_name = top["name"]
 
@@ -1788,7 +2183,9 @@ def superadmin_teacher_workload(request):
             {
                 "code": bucket["code"],
                 "name": bucket["name"],
-                "hours": bucket["hours"],
+                "hours": len(bucket["cells"]),
+                "lecture_hours": len(bucket["lecture_cells"]),
+                "lab_hours": len(bucket["lab_cells"]),
                 "subjects": sorted(bucket["subjects"]),
                 "is_home": bool(home_code) and bucket["code"].lower() == home_code.lower(),
             }
@@ -1796,14 +2193,32 @@ def superadmin_teacher_workload(request):
     # Home department first, then by hours desc.
     departments.sort(key=lambda d: (not d["is_home"], -d["hours"]))
 
-    _owner, label = _saved_timetable_label(saved_t)
+    details = list(detail_map.values())
+    for item in details:
+        item["blocks"] = sorted(item["blocks"], key=lambda value: (_DAY_ORDER.get(value.split()[0], 99), value))
+    details.sort(key=lambda item: (not item["is_home"], item["department_name"], item["subject"], item["section"], item["type"]))
+
+    source_label = "Selected user active saved timetable"
+    if len(active_ids) > 1:
+        source_label = f"Selected user active saved timetables ({len(active_ids)})"
+    if selected_owner:
+        source_label += f" · {(selected_owner.get('label') or selected_owner.get('username') or selected_owner.get('email') or '').strip()}"
+
     response["analysis"] = {
-        "timetable_label": label,
+        "source_label": source_label,
         "home_department": home_name or "—",
         "home_code": home_code,
-        "total_hours": total_hours,
+        "total_hours": len(total_cells),
+        "lecture_hours": len(lecture_cells),
+        "lab_hours": len(lab_cells),
+        "home_hours": len(home_cells),
+        "cross_hours": len(cross_cells),
+        "home_lecture_hours": sum(d["lecture_hours"] for d in departments if d["is_home"]),
+        "home_lab_hours": sum(d["lab_hours"] for d in departments if d["is_home"]),
+        "cross_departments": sum(1 for d in departments if not d["is_home"] and d["hours"]),
         "max_workload": matched_instructors[0].max_workload if matched_instructors else clicked.max_workload,
         "departments": departments,
+        "details": details,
         "found": bool(matched_ids),
     }
     return JsonResponse(response)
@@ -1816,8 +2231,10 @@ def superadmin_teacher_workload(request):
 def superadmin_saved_list(request):
     """Every saved timetable across all users (admin oversight)."""
     items = []
+    owners, _account_filter = _request_owners(request)
     qs = (
         SavedTimetable.objects.select_related("department", "user")
+        .filter(user_id__in=owners)
         .order_by("-created_at")
     )
     for st in qs:
@@ -1866,16 +2283,12 @@ def superadmin_users(request):
     users_qs = User.objects.all().order_by("-date_joined")
     if q:
         users_qs = users_qs.filter(Q(username__icontains=q) | Q(email__icontains=q))
-    users_qs = users_qs.annotate(
-        n_depts=Count("departments", distinct=True),
-        n_teachers=Count("instructors", distinct=True),
-        n_rooms=Count("rooms", distinct=True),
-        n_sections=Count("sections", distinct=True),
-    )
 
-    tt_counts = dict(
-        SavedTimetable.objects.values("user").annotate(c=Count("id")).values_list("user", "c")
-    )
+    dept_counts = dict(Department.objects.values_list("user_id").annotate(c=Count("id")))
+    teacher_counts = dict(Instructor.objects.values_list("user_id").annotate(c=Count("id")))
+    room_counts = dict(Room.objects.values_list("user_id").annotate(c=Count("id")))
+    section_counts = dict(Section.objects.values_list("user_id").annotate(c=Count("id")))
+    tt_counts = dict(SavedTimetable.objects.values_list("user_id").annotate(c=Count("id")))
 
     rows = []
     for u in users_qs:
@@ -1889,15 +2302,15 @@ def superadmin_users(request):
                 "joined": timezone.localtime(u.date_joined).strftime("%d %b %Y")
                 if getattr(u, "date_joined", None)
                 else "—",
-                "departments": u.n_depts,
-                "teachers": u.n_teachers,
-                "rooms": u.n_rooms,
-                "sections": u.n_sections,
+                "departments": dept_counts.get(u.id, 0),
+                "teachers": teacher_counts.get(u.id, 0),
+                "rooms": room_counts.get(u.id, 0),
+                "sections": section_counts.get(u.id, 0),
                 "timetables": tt_counts.get(u.id, 0),
             }
         )
 
-    ctx = _page_ctx(request, "users")
+    ctx = _basic_page_ctx(request, "users")
     ctx["user_rows"] = rows
     ctx["user_total"] = len(rows)
     ctx["user_query"] = q
@@ -1925,7 +2338,7 @@ def superadmin_user_delete(request, uid):
         messages.success(request, f"Deleted user “{label}” and all of their data.")
         return redirect("superadmin_users")
 
-    ctx = _page_ctx(request, "users")
+    ctx = _basic_page_ctx(request, "users")
     ctx["target_user"] = {
         "id": target.id,
         "username": target.get_username(),
@@ -1949,6 +2362,7 @@ def superadmin_saved_delete(request, tid):
         st = SavedTimetable.objects.select_related("department", "user").get(id=tid)
     except SavedTimetable.DoesNotExist:
         raise Http404("Timetable not found")
+    _selected_owner_guard_or_404(request, st.user_id)
 
     if request.method == "POST":
         label = st.department.name if st.department_id else "All Departments"
@@ -1979,6 +2393,7 @@ def superadmin_saved_detail(request, tid):
         st = SavedTimetable.objects.get(id=tid)
     except SavedTimetable.DoesNotExist:
         raise Http404("Timetable not found")
+    _selected_owner_guard_or_404(request, st.user_id)
 
     universe = _slot_universe()
     days, times = _sorted_times(universe)
@@ -2053,6 +2468,7 @@ def superadmin_move_slot(request):
         slot = ScheduledSlot.objects.select_related("timetable", "section").get(id=slot_id)
     except (ScheduledSlot.DoesNotExist, ValueError):
         return JsonResponse({"ok": False, "message": "Slot not found."}, status=404)
+    _selected_owner_guard_or_404(request, getattr(slot.timetable, "user_id", None))
 
     owner_id = getattr(slot.timetable, "user_id", None)
     target = MeetingTime.objects.filter(day=new_day, time=new_time)
@@ -2115,6 +2531,7 @@ def superadmin_open_saved(request, tid):
         st = SavedTimetable.objects.get(id=tid)
     except SavedTimetable.DoesNotExist:
         raise Http404("Timetable not found")
+    _selected_owner_guard_or_404(request, st.user_id)
     request.session[SA_IMPERSONATE] = st.user_id
     request.session.modified = True
     return redirect("saved_timetable", tid=tid)
@@ -2163,6 +2580,9 @@ class SuperAdminImpersonationMiddleware:
                 request.session.modified = True
 
         response = self.get_response(request)
+
+        if request.path.startswith("/superadmin/") or impersonated_user is not None:
+            _disable_response_cache(response)
 
         if impersonated_user is not None:
             self._inject_banner(response, impersonated_user)

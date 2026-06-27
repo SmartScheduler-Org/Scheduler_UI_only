@@ -341,6 +341,13 @@
           <div class="avatar">{{ superadmin_email|slice:":1"|upper }}</div>
           <span>{{ superadmin_email }}</span>
         </div>
+        {% if selected_owner %}
+        <div class="who" style="gap:10px; margin-top:8px;">
+          <div class="avatar" style="background:linear-gradient(135deg,#0ea5e9,#22c55e);">{{ selected_owner.label|slice:":1"|upper }}</div>
+          <span>Viewing: {{ selected_owner.label }}</span>
+          <a class="btn clearflt" href="{% url 'superadmin_choose_user' %}" style="text-decoration:none;">Switch User</a>
+        </div>
+        {% endif %}
         <div class="college-bar">
           <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/J.C._Bose_University_of_Science_and_Technology%2C_YMCA_logo.png"
                alt="J.C. Bose University" onerror="this.style.display='none'">
@@ -351,14 +358,6 @@
       </div>
       {% block topbar_extra %}
       <form class="filters" method="get" id="filterForm">
-        {% if accounts %}
-        <select name="account" class="{% if account_filter != 'all' %}flt-on{% endif %}" onchange="document.getElementById('filterForm').submit()" title="Show data for one coordinator account">
-          <option value="all" {% if account_filter == 'all' %}selected{% endif %}>All Accounts</option>
-          {% for a in accounts %}
-            <option value="{{ a.id }}" {% if account_filter == a.id|stringformat:'s' %}selected{% endif %}>{{ a.label }}</option>
-          {% endfor %}
-        </select>
-        {% endif %}
         <select name="dept" class="{% if dept_filter != 'all' %}flt-on{% endif %}" onchange="document.getElementById('filterForm').submit()">
           <option value="all" {% if dept_filter == 'all' %}selected{% endif %}>All Departments</option>
           {% for d in departments %}
@@ -371,7 +370,7 @@
             <option value="{{ s }}" {% if sem_filter == s %}selected{% endif %}>{{ s }}</option>
           {% endfor %}
         </select>
-        {% if dept_filter != 'all' or sem_filter != 'all' or account_filter != 'all' %}
+        {% if dept_filter != 'all' or sem_filter != 'all' %}
         <a class="btn clearflt" href="?">✕ Clear</a>
         {% endif %}
         <a class="btn excel" href="{% url 'superadmin_export_excel' %}?{{ request.GET.urlencode }}">⬇ Excel</a>

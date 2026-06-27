@@ -9,7 +9,7 @@
     <div class="treg-head">
       <div class="treg-badge">Teacher Registration</div>
       <h1>Create your <span>Teacher</span> account</h1>
-      <p>Find your profile, verify your identity by email, then set a password.</p>
+      <p>Find your profile from the central teacher directory, verify your identity by email, then set a password.</p>
     </div>
 
     <!-- STEP PROGRESS -->
@@ -29,7 +29,7 @@
 
     <form method="post" id="tregForm" class="treg-form" autocomplete="off">
       {% csrf_token %}
-      <input type="hidden" name="instructor_id" id="tregInstructorId">
+      <input type="hidden" name="teacher_id" id="tregInstructorId">
 
       <!-- ====== STEP 1: FIND PROFILE ====== -->
       <section class="treg-pane" id="pane1">
@@ -350,9 +350,20 @@ select.treg-input option{background:#0b1020;color:#fff}
     instrId.value = t.id;
     codeInp.value = t.uid;
     emailInp.value = t.email || '—';
-    existsBox.style.display = t.has_account ? 'block' : 'none';
-    existsBox.innerHTML = 'An account already exists for this teacher. Please <a href="{% url 'teacher/login' %}">log in</a> instead.';
-    verifyBtn.style.display = t.has_account ? 'none' : 'block';
+    const missingCode = !(t.uid || '').trim();
+    if(t.has_account){
+      existsBox.style.display = 'block';
+      existsBox.innerHTML = 'An account already exists for this teacher. Please <a href="{% url 'teacher/login' %}">log in</a> instead.';
+      verifyBtn.style.display = 'none';
+    } else if(missingCode){
+      existsBox.style.display = 'block';
+      existsBox.innerHTML = 'Teacher code is missing for this profile. Please contact your coordinator.';
+      verifyBtn.style.display = 'none';
+    } else {
+      existsBox.style.display = 'none';
+      existsBox.innerHTML = '';
+      verifyBtn.style.display = 'block';
+    }
     selectedBox.style.display = 'block';
     selectedBox.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
@@ -360,6 +371,11 @@ select.treg-input option{background:#0b1020;color:#fff}
   // ---- Step 2: send + verify OTP ----
   verifyBtn.addEventListener('click', async function(){
     if(!selected) return;
+    if(!(selected.uid || '').trim()){
+      existsBox.style.display = 'block';
+      existsBox.innerHTML = 'Teacher code is missing for this profile. Please contact your coordinator.';
+      return;
+    }
     verifyBtn.classList.add('is-loading');
     verifyBtn.disabled = true;
     verifyBtn.textContent = 'Sending code…';

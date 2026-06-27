@@ -192,6 +192,34 @@ class Instructor(models.Model):
         return f"{self.uid} - {self.name}"
 
 
+class AdminTeacher(models.Model):
+    DESIGNATION_CHOICES = Instructor.DESIGNATION_CHOICES
+
+    name = models.CharField(max_length=100)
+    email = models.CharField(max_length=500, blank=True, default="")
+    uid = models.CharField(max_length=32, blank=True, default="")
+    contact_number = models.CharField(max_length=200, blank=True, default="")
+    designation = models.CharField(
+        max_length=50,
+        choices=DESIGNATION_CHOICES,
+        default="Associate Professor",
+    )
+    department_name = models.CharField(max_length=150, blank=True, default="")
+    department_code = models.CharField(max_length=30, blank=True, default="")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name", "uid", "id"]
+
+    def __str__(self):
+        label = self.name or "Teacher"
+        if self.uid:
+            label = f"{label} ({self.uid})"
+        return label
+
+
 class MeetingTime(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

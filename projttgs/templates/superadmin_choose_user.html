@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin · Choose User</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:radial-gradient(1200px 700px at 0% 0%,#172554,#020617 55%,#0f172a 100%);color:#e2e8f0}
+    .shell{max-width:1180px;margin:0 auto;padding:38px 18px 60px}
+    .hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap;margin-bottom:24px}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(59,130,246,.14);color:#93c5fd;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+    h1{margin:14px 0 8px;font-size:34px;line-height:1.05;color:#f8fafc}
+    .sub{max-width:720px;color:#94a3b8;font-size:15px;line-height:1.7}
+    .who{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:rgba(15,23,42,.76);border:1px solid rgba(148,163,184,.16)}
+    .avatar{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2563eb,#7c3aed);font-weight:800;color:#fff}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+    .card{background:rgba(15,23,42,.78);border:1px solid rgba(148,163,184,.16);border-radius:22px;padding:20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+    .card h3{margin:0 0 6px;font-size:20px;color:#fff}
+    .meta{font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:14px}
+    .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .pill{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(148,163,184,.18);font-size:12px;color:#cbd5e1}
+    .btn{width:100%;border:none;border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;font-weight:800;font-size:14px;cursor:pointer}
+    .btn.current{background:linear-gradient(135deg,#16a34a,#22c55e)}
+    .alerts{display:grid;gap:10px;margin-bottom:18px}
+    .msg{padding:12px 14px;border-radius:12px;font-size:13px;font-weight:700}
+    .msg.error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fca5a5}
+    .msg.success{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4);color:#86efac}
+    .msg.info{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.4);color:#93c5fd}
+    .empty{padding:28px;border-radius:20px;background:rgba(15,23,42,.78);border:1px solid rgba(148,163,184,.16);color:#94a3b8}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="hero">
+      <div>
+        <div class="badge">Super Admin</div>
+        <h1>Choose A User Account</h1>
+        <div class="sub">Login successful. Ab jis user ko select karoge, superadmin me usi account ka data dikhaya jayega across dashboard, analytics, saved timetables, and related views.</div>
+      </div>
+      <div class="who">
+        <div class="avatar">{{ superadmin_email|slice:":1"|upper }}</div>
+        <div>
+          <div style="font-size:12px;color:#94a3b8;">Signed in as</div>
+          <div style="font-weight:700;color:#fff;">{{ superadmin_email }}</div>
+        </div>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="alerts">
+      {% for message in messages %}
+      <div class="msg {{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if accounts %}
+    <div class="grid">
+      {% for account in accounts %}
+      <form method="post" action="{% url 'superadmin_select_user' %}" class="card">
+        {% csrf_token %}
+        <input type="hidden" name="owner_id" value="{{ account.id }}">
+        <h3>{{ account.label }}</h3>
+        <div class="meta">@{{ account.username|default:'user' }}{% if account.email %}<br>{{ account.email }}{% endif %}</div>
+        <div class="stats">
+          <span class="pill">User ID {{ account.id }}</span>
+          <span class="pill">{{ account.timetables }} timetable{{ account.timetables|pluralize }}</span>
+        </div>
+        <button type="submit" class="btn {% if selected_owner and selected_owner.id == account.id %}current{% endif %}">{% if selected_owner and selected_owner.id == account.id %}Continue With This User{% else %}Choose This User{% endif %}</button>
+      </form>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">No user accounts are available yet.</div>
+    {% endif %}
+  </div>
+</body>
+</html>
