@@ -934,56 +934,62 @@ def _import_admin_teacher_csv(uploaded_file):
     created = 0
     updated = 0
     skipped = 0
+    warnings = []
 
     with transaction.atomic():
-        for row in rows:
-            name = _csv_cell(row, "name", "teacher name", "teacher_name", "faculty name", "faculty_name")
-            email = _csv_cell(row, "email", "mail", "email id", "email_id")
-            uid = _csv_cell(row, "uid", "teacher_id", "teacher id", "teacher code", "teacher_code", "faculty uid", "faculty_uid", "code")
-            department_name = _csv_cell(row, "department", "department name", "department_name", "branch")
-            department_code = _csv_cell(row, "department code", "department_code", "dept code", "dept_code")
-            contact_number = _csv_cell(row, "contact", "contact number", "contact_number", "phone", "mobile")
-            designation = _csv_cell(row, "designation") or "Associate Professor"
+        for idx, row in enumerate(rows, start=2):
+            try:
+                name = _csv_cell(row, "name", "teacher name", "teacher_name", "faculty name", "faculty_name")
+                email = _csv_cell(row, "email", "mail", "email id", "email_id")
+                uid = _csv_cell(row, "uid", "teacher_id", "teacher id", "teacher code", "teacher_code", "faculty uid", "faculty_uid", "code")
+                department_name = _csv_cell(row, "department", "department name", "department_name", "branch")
+                department_code = _csv_cell(row, "department code", "department_code", "dept code", "dept_code")
+                contact_number = _csv_cell(row, "contact", "contact number", "contact_number", "phone", "mobile")
+                designation = _csv_cell(row, "designation") or "Associate Professor"
 
-            if not department_name and department_code:
-                department_name = _department_name_from_code(department_code)
+                if not department_name and department_code:
+                    department_name = _department_name_from_code(department_code)
 
-            if not name and not email and not uid:
+                if not name and not email and not uid:
+                    skipped += 1
+                    warnings.append(f"Row {idx}: skipped because name, email and teacher code were all empty.")
+                    continue
+
+                if designation not in dict(AdminTeacher.DESIGNATION_CHOICES):
+                    designation = "Associate Professor"
+
+                lookup = None
+                if uid:
+                    lookup = AdminTeacher.objects.filter(uid__iexact=uid).first()
+                if lookup is None and email:
+                    lookup = AdminTeacher.objects.filter(email__iexact=email).first()
+                if lookup is None and name:
+                    lookup = AdminTeacher.objects.filter(name__iexact=name, department_name__iexact=department_name).first()
+
+                payload = {
+                    "name": name or (lookup.name if lookup else ""),
+                    "email": email or (lookup.email if lookup else ""),
+                    "uid": uid or (lookup.uid if lookup else ""),
+                    "contact_number": contact_number or (lookup.contact_number if lookup else ""),
+                    "designation": designation,
+                    "department_name": department_name or (lookup.department_name if lookup else ""),
+                    "department_code": department_code or (lookup.department_code if lookup else ""),
+                    "is_active": True,
+                }
+
+                if lookup:
+                    for field, value in payload.items():
+                        setattr(lookup, field, value)
+                    lookup.save()
+                    updated += 1
+                else:
+                    AdminTeacher.objects.create(**payload)
+                    created += 1
+            except Exception as exc:
                 skipped += 1
-                continue
+                warnings.append(f"Row {idx}: not uploaded ({exc}).")
 
-            if designation not in dict(AdminTeacher.DESIGNATION_CHOICES):
-                designation = "Associate Professor"
-
-            lookup = None
-            if uid:
-                lookup = AdminTeacher.objects.filter(uid__iexact=uid).first()
-            if lookup is None and email:
-                lookup = AdminTeacher.objects.filter(email__iexact=email).first()
-            if lookup is None and name:
-                lookup = AdminTeacher.objects.filter(name__iexact=name, department_name__iexact=department_name).first()
-
-            payload = {
-                "name": name or (lookup.name if lookup else ""),
-                "email": email or (lookup.email if lookup else ""),
-                "uid": uid or (lookup.uid if lookup else ""),
-                "contact_number": contact_number or (lookup.contact_number if lookup else ""),
-                "designation": designation,
-                "department_name": department_name or (lookup.department_name if lookup else ""),
-                "department_code": department_code or (lookup.department_code if lookup else ""),
-                "is_active": True,
-            }
-
-            if lookup:
-                for field, value in payload.items():
-                    setattr(lookup, field, value)
-                lookup.save()
-                updated += 1
-            else:
-                AdminTeacher.objects.create(**payload)
-                created += 1
-
-    return created, updated, skipped
+    return created, updated, skipped, warnings
 
 
 @superadmin_required
@@ -1007,15 +1013,20 @@ def superadmin_teachers(request):
 
         if request.FILES.get("csv_file"):
             try:
-                created, updated, skipped = _import_admin_teacher_csv(request.FILES["csv_file"])
+                created, updated, skipped, warnings = _import_admin_teacher_csv(request.FILES["csv_file"])
                 messages.success(request, f"Central teachers imported. Created: {created}, updated: {updated}, skipped: {skipped}.")
+                if warnings:
+                    preview = " ".join(warnings[:5])
+                    if len(warnings) > 5:
+                        preview += f" And {len(warnings) - 5} more warning(s)."
+                    messages.warning(request, preview)
             except Exception:
                 logger.exception("Central teacher CSV import failed")
                 messages.error(request, "Could not import the teacher CSV. Check the file headers and try again.")
             return redirect("superadmin_teachers")
 
     ctx = _page_ctx(request, "teachers")
-    central_teachers = list(AdminTeacher.objects.order_by("name", "uid", "id")[:250])
+    central_teachers = list(AdminTeacher.objects.order_by("name", "uid", "id"))
     ctx["central_teachers"] = central_teachers
     ctx["central_teacher_total"] = AdminTeacher.objects.count()
     return render(request, "superadmin_teachers.html", ctx)
