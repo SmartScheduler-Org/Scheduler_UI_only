@@ -158,8 +158,11 @@ def superadmin_logout(request):
     return _disable_response_cache(redirect("home"))
 
 
-def _all_user_accounts():
+def _all_user_accounts(query=""):
     users = get_user_model().objects.all().order_by("username")
+    query = (query or "").strip()
+    if query:
+        users = users.filter(Q(username__icontains=query) | Q(email__icontains=query))
     timetable_counts = dict(
         SavedTimetable.objects.values("user").annotate(c=Count("id")).values_list("user", "c")
     )
@@ -189,7 +192,8 @@ def _selected_owner_account(request):
 
 @superadmin_required
 def superadmin_choose_user(request):
-    accounts = _all_user_accounts()
+    q = (request.GET.get("q") or "").strip()
+    accounts = _all_user_accounts(q)
     current = _selected_owner_account(request)
     return render(
         request,
@@ -197,6 +201,8 @@ def superadmin_choose_user(request):
         {
             "superadmin_email": request.session.get(SESSION_EMAIL, ""),
             "accounts": accounts,
+            "account_total": len(accounts),
+            "account_query": q,
             "selected_owner": current,
         },
     )

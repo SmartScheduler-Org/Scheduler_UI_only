@@ -15,6 +15,11 @@
     .sub{max-width:720px;color:#94a3b8;font-size:15px;line-height:1.7}
     .who{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:rgba(15,23,42,.76);border:1px solid rgba(148,163,184,.16)}
     .avatar{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2563eb,#7c3aed);font-weight:800;color:#fff}
+    .toolbar{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 18px}
+    .toolbar small{color:#94a3b8;font-size:13px}
+    .search{margin:0}
+    .search input{min-width:260px;width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.18);background:rgba(15,23,42,.82);color:#e2e8f0;font-size:14px;outline:none}
+    .search input:focus{border-color:rgba(59,130,246,.55);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
     .card{background:rgba(15,23,42,.78);border:1px solid rgba(148,163,184,.16);border-radius:22px;padding:20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
     .card h3{margin:0 0 6px;font-size:20px;color:#fff}
@@ -55,6 +60,13 @@
       {% endfor %}
     </div>
     {% endif %}
+
+    <div class="toolbar">
+      <small>Showing {{ account_total }} registered account{{ account_total|pluralize }}{% if account_query %} for “{{ account_query }}”{% endif %}</small>
+      <form method="get" action="{% url 'superadmin_choose_user' %}" class="search">
+        <input type="text" name="q" value="{{ account_query }}" placeholder="Search username / email…">
+      </form>
+    </div>
 
     {% if accounts %}
     <div class="grid">
