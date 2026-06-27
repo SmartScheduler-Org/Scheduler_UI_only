@@ -13,9 +13,17 @@
       <form method="post" enctype="multipart/form-data" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; flex:1; min-width:280px;">
         {% csrf_token %}
         <input type="file" name="csv_file" accept=".csv" class="inp" required style="max-width:340px;">
-        <button type="submit" class="btn">Upload Central Teacher CSV</button>
+        <button type="submit" class="btn" style="background:#fff; color:#0f172a; border-color:#fff; font-weight:700;">Upload Central Teacher CSV</button>
+      </form>
+      <form method="post" onsubmit="return confirm('Delete all central teachers? This cannot be undone.');" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_all_central_teachers">
+        <button type="submit" class="btn" style="background:rgba(239,68,68,.12); color:#fecaca; border-color:rgba(239,68,68,.4); font-weight:700;">Delete All</button>
       </form>
       <div class="pill ok" style="align-self:center">{{ central_teacher_total }} central teachers</div>
+    </div>
+    <div class="toolbar" style="margin-top:12px; margin-bottom:0;">
+      <input class="inp" id="centralTeacherSearch" placeholder="Search central teachers..." oninput="filterTable('centralTeacherTable',this.value)" style="flex:1; min-width:260px;">
     </div>
     <div style="font-size:12px; color:var(--mut); margin-top:10px; line-height:1.7">
       Accepted headers: <strong>name</strong>, <strong>teacher_name</strong>, <strong>email</strong>, <strong>email_id</strong>, <strong>uid</strong>, <strong>Teacher_id</strong>, <strong>teacher code</strong>, <strong>department</strong>, <strong>department_code</strong>, <strong>designation</strong>, <strong>contact_number</strong>.

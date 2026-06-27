@@ -74,8 +74,8 @@
       <form method="post" action="{% url 'superadmin_select_user' %}" class="card">
         {% csrf_token %}
         <input type="hidden" name="owner_id" value="{{ account.id }}">
-        <h3>{{ account.label }}</h3>
-        <div class="meta">@{{ account.username|default:'user' }}{% if account.email %}<br>{{ account.email }}{% endif %}</div>
+        <h3>{{ account.username|default:account.label }}</h3>
+        <div class="meta">{% if account.display_name %}{{ account.display_name }}<br>{% endif %}@{{ account.username|default:'user' }}{% if account.email %}<br>{{ account.email }}{% endif %}</div>
         <div class="stats">
           <span class="pill">User ID {{ account.id }}</span>
           <span class="pill">{{ account.timetables }} timetable{{ account.timetables|pluralize }}</span>

@@ -169,12 +169,14 @@ def _all_user_accounts(query=""):
     accounts = []
     for user in users:
         full_name = (user.get_full_name() or "").strip()
-        label = full_name or user.username or (user.email or "").split("@")[0] or f"Account #{user.id}"
+        username = user.username or ""
+        label = username or full_name or (user.email or "").split("@")[0] or f"Account #{user.id}"
         accounts.append({
             "id": user.id,
             "label": label,
+            "display_name": full_name,
             "email": user.email or "",
-            "username": user.username or "",
+            "username": username,
             "timetables": timetable_counts.get(user.id, 0),
         })
     return accounts
@@ -996,14 +998,21 @@ def superadmin_resource(request):
 
 @superadmin_required
 def superadmin_teachers(request):
-    if request.method == "POST" and request.FILES.get("csv_file"):
-        try:
-            created, updated, skipped = _import_admin_teacher_csv(request.FILES["csv_file"])
-            messages.success(request, f"Central teachers imported. Created: {created}, updated: {updated}, skipped: {skipped}.")
-        except Exception:
-            logger.exception("Central teacher CSV import failed")
-            messages.error(request, "Could not import the teacher CSV. Check the file headers and try again.")
-        return redirect("superadmin_teachers")
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        if action == "delete_all_central_teachers":
+            deleted_count, _ = AdminTeacher.objects.all().delete()
+            messages.success(request, f"Deleted {deleted_count} central teacher record(s).")
+            return redirect("superadmin_teachers")
+
+        if request.FILES.get("csv_file"):
+            try:
+                created, updated, skipped = _import_admin_teacher_csv(request.FILES["csv_file"])
+                messages.success(request, f"Central teachers imported. Created: {created}, updated: {updated}, skipped: {skipped}.")
+            except Exception:
+                logger.exception("Central teacher CSV import failed")
+                messages.error(request, "Could not import the teacher CSV. Check the file headers and try again.")
+            return redirect("superadmin_teachers")
 
     ctx = _page_ctx(request, "teachers")
     central_teachers = list(AdminTeacher.objects.order_by("name", "uid", "id")[:250])
