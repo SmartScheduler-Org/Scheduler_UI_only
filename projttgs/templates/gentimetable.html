@@ -814,6 +814,23 @@ body.drag-drop-active .drag-mode-badge {
   background: #eff6ff;
 }
 
+.manual-slot-duplicate-btn {
+  border: 1px solid rgba(5, 150, 105, 0.30);
+  background: rgba(255, 255, 255, 0.92);
+  color: #047857;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 6px;
+  margin-left: 6px;
+}
+
+.manual-slot-duplicate-btn:hover {
+  background: #ecfdf5;
+}
+
 .section-parking-panel {
   border-radius: 18px;
   padding: 14px;
@@ -2724,6 +2741,71 @@ function initDragAndDrop() {
             });
           });
 
+          // Duplicate a created slot: reuse the slot's values so the user does
+          // not have to re-type subject/teacher/room/duration. Opens the same
+          // editor pre-filled, then creates a copy in the section bucket.
+          document.querySelectorAll(".manual-slot-duplicate-btn").forEach(button => {
+            button.addEventListener("click", async function(event) {
+              event.preventDefault();
+              event.stopPropagation();
+              const item = button.closest(".draggable-slot-item");
+              if (!item) return;
+              const sectionId = item.dataset.sectionId || "";
+              if (!sectionId) {
+                Swal.fire({ icon: "error", title: "Duplicate Failed", text: "This slot is missing its section. Refresh the page and try again.", confirmButtonColor: "#4e73df" });
+                return;
+              }
+              const values = manualSlotValuesFromElement(item);
+              const result = await openManualSlotModal({
+                title: `Duplicate Slot for ${sectionId}`,
+                values,
+                confirmButtonText: "Create Copy",
+              });
+              if (!result.isConfirmed) return;
+
+              async function postDuplicateSlot(payload) {
+                const response = await fetch(`/parking/${encodeURIComponent(sectionId)}/create/`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCsrfToken(),
+                    "X-Requested-With": "XMLHttpRequest"
+                  },
+                  body: JSON.stringify(payload)
+                });
+                const data = await response.json().catch(() => ({}));
+                return { response, payload: data };
+              }
+
+              try {
+                let { response, payload } = await postDuplicateSlot(result.value);
+
+                if (payload && payload.room_missing) {
+                  const confirmMissing = await Swal.fire({
+                    icon: "warning",
+                    title: "Room not found",
+                    html: `Room <b>"${payload.room_number || result.value.room_number}"</b> does not exist in your Rooms.<br><br>Do you want to proceed with this room name anyway?<br><span style="font-size:13px;color:#64748b;">The teacher's slot will be locked, but no new room will be created and no room will be reserved.</span>`,
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, proceed",
+                    cancelButtonText: "No",
+                    confirmButtonColor: "#d97706",
+                    cancelButtonColor: "#64748b",
+                  });
+                  if (!confirmMissing.isConfirmed) return;
+                  ({ response, payload } = await postDuplicateSlot(Object.assign({}, result.value, { allow_missing_room: true })));
+                }
+
+                if (!response.ok || !payload.ok) {
+                  Swal.fire({ icon: "error", title: "Duplicate Failed", text: payload.message || "Could not duplicate slot.", confirmButtonColor: "#4e73df" });
+                  return;
+                }
+                Swal.fire({ icon: "success", title: "Slot Duplicated", text: payload.message || "A copy was added to this section's bucket.", timer: 1000, showConfirmButton: false }).then(() => window.location.reload());
+              } catch (error) {
+                Swal.fire({ icon: "error", title: "Network Error", text: "Could not duplicate slot right now.", confirmButtonColor: "#4e73df" });
+              }
+            });
+          });
+
         dropTargets.forEach(target => {
             target.addEventListener("dragover", function(event) {
                 if (!dragEnabled || !currentDrag) return;
@@ -3248,17 +3330,6 @@ function initDragAndDrop() {
       </select>
     </div>
     {% endif %}
-    {% if program_options|length > 0 %}
-    <div class="dept-select-wrap">
-      <span class="dept-select-label">PROGRAM:</span>
-      <select id="program-filter-select" class="dept-select" onchange="filterByProgramSelect(this)">
-        <option value="all" {% if active_program == 'all' %}selected{% endif %}>All Programs</option>
-        {% for program in program_options %}
-        <option value="{{ program }}" {% if active_program == program %}selected{% endif %}>{{ program }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    {% endif %}
     <span id="dept-filter-active-label" style="font-size:11px;font-weight:700;color:#94a3b8;display:none;"></span>
 </div>
 
@@ -3353,6 +3424,7 @@ function initDragAndDrop() {
             <div class="parking-item__meta">{% if parked.batch_label %}{{ parked.batch_label }} · {% endif %}{% if parked.original_room %}Room {{ parked.original_room.r_number }}{% elif parked.room_number %}Room {{ parked.room_number }}{% endif %}</div>
             {% if prefill_mode and parked.manual_entry %}
             <button type="button" class="manual-slot-edit-btn">Edit</button>
+            <button type="button" class="manual-slot-duplicate-btn">Duplicate</button>
             {% endif %}
           </div>
           {% endfor %}

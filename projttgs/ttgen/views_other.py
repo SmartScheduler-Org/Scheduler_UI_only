@@ -369,7 +369,7 @@ def _serialize_prefill_class(cls):
         "subject_text": _prefill_subject_text(getattr(cls, "subject", None)),
         "teacher_uid": _prefill_teacher_uid(getattr(cls, "instructor", None)),
         "co_teacher_uids": [_prefill_teacher_uid(teacher) for teacher in list(getattr(cls, "co_instructors", []) or []) if teacher],
-        "room_number": _prefill_room_number(getattr(cls, "room", None)),
+        "room_number": _prefill_room_number(getattr(cls, "room", None)) or str(getattr(cls, "room_label", "") or "").strip(),
         "day": getattr(first_time, "day", "") if first_time else "",
         "start_slot": str(getattr(first_time, "time", "") if first_time else ""),
         "duration": max(1, min(int(getattr(cls, "duration", None) or len(meeting_times) or 1), 8)),
@@ -389,7 +389,7 @@ def _serialize_prefill_lab(lab):
         "teacher_uid": _prefill_teacher_uid(getattr(lab, "instructor", None)),
         "second_teacher_uid": _prefill_teacher_uid(getattr(lab, "second_instructor", None)),
         "co_teacher_uids": [_prefill_teacher_uid(teacher) for teacher in list(getattr(lab, "co_instructors", []) or []) if teacher],
-        "room_number": _prefill_room_number(getattr(lab, "room", None)),
+        "room_number": _prefill_room_number(getattr(lab, "room", None)) or str(getattr(lab, "room_label", "") or "").strip(),
         "day": getattr(first_time, "day", "") if first_time else "",
         "start_slot": str(getattr(first_time, "time", "") if first_time else ""),
         "duration": max(1, min(int(getattr(lab, "duration", None) or len(meeting_times) or LAB_DURATION), 8)),
@@ -3080,7 +3080,16 @@ if "normalize_specific_rooms" not in globals():
     def normalize_specific_rooms(value):
         if not value:
             return ""
-        tokens = [token.strip() for token in re.split(r"[;,\n]+", str(value)) if token.strip()]
+        text = str(value).strip()
+        # Positional form: "(pos1;pos2;...)" aligned with required_lab_category.
+        # Preserve empty positions and '*' OR-groups so per-category room locks survive.
+        if text.startswith("(") and text.endswith(")"):
+            positions = []
+            for pos in text[1:-1].split(";"):
+                cands = [re.sub(r"\s+", " ", c.strip()) for c in pos.split("*")]
+                positions.append("*".join([c for c in cands if c]))
+            return "(" + ";".join(positions) + ")"
+        tokens = [token.strip() for token in re.split(r"[;,\n]+", text) if token.strip()]
         return ";".join(tokens)
 
 
@@ -3352,21 +3361,17 @@ def _get_saved_department_filter_options(user, classes, labs):
         if code:
             relevant_codes.add(code)
 
+    # Only surface departments that actually OWN a scheduled section in this
+    # timetable. Teacher home-departments are intentionally NOT added here: a
+    # teacher cross-teaching into another section must not make a department
+    # whose own timetable was never generated appear in the filter dropdown.
     for cls in classes:
         dept = getattr(getattr(cls, "section", None), "department", None) or getattr(cls, "department", None)
         _add_code(getattr(dept, "code", ""))
-        teacher_dept = getattr(getattr(cls, "instructor", None), "department", None)
-        _add_code(getattr(teacher_dept, "code", ""))
-        for co_teacher in getattr(cls, "co_instructors", []) or []:
-            teacher_dept = getattr(co_teacher, "department", None)
-            _add_code(getattr(teacher_dept, "code", ""))
 
     for lab in labs:
         dept = getattr(getattr(lab, "section", None), "department", None) or getattr(lab, "department", None)
         _add_code(getattr(dept, "code", ""))
-        for teacher in [getattr(lab, "instructor", None), getattr(lab, "second_instructor", None)] + list(getattr(lab, "co_instructors", []) or []):
-            teacher_dept = getattr(teacher, "department", None)
-            _add_code(getattr(teacher_dept, "code", ""))
 
     options = []
     for code in sorted(relevant_codes):
@@ -5022,6 +5027,15 @@ def map_teacher_subjects(request):
                 return []
             return [token.strip() for token in text.split(";")]
 
+        def _meaningful_token_count(tokens):
+            # Trailing empty entries (e.g. ";;;" -> ['', '', '', '']) are just
+            # placeholders and must not inflate the inferred group count.
+            last = 0
+            for index, token in enumerate(tokens, start=1):
+                if token:
+                    last = index
+            return last
+
         def _resolve_group_assignments(raw_value, slot_count, field_label, allow_empty=False):
             tokens = _split_teacher_tokens(raw_value)
             if not tokens:
@@ -5133,17 +5147,21 @@ def map_teacher_subjects(request):
 
             primary_tokens = _split_teacher_tokens(instructor_uid)
             secondary_tokens = _split_teacher_tokens(second_instructor_uid)
+            primary_token_count = _meaningful_token_count(primary_tokens)
+            # Second instructors only define groups for shared labs; ignore them
+            # otherwise so stray placeholder semicolons can't add phantom groups.
+            secondary_token_count = _meaningful_token_count(secondary_tokens) if shared_lab_flag else 0
             if section_group_count > 1:
                 inferred_group_count = max(
                     section_group_count,
-                    len(primary_tokens) if primary_tokens else 0,
-                    len(secondary_tokens) if secondary_tokens else 0,
+                    primary_token_count,
+                    secondary_token_count,
                     1,
                 )
             else:
                 inferred_group_count = max(
-                    len(primary_tokens) if primary_tokens else 0,
-                    len(secondary_tokens) if secondary_tokens else 0,
+                    primary_token_count,
+                    secondary_token_count,
                     1,
                 )
 
@@ -6422,10 +6440,14 @@ from django.http import HttpResponse, Http404, HttpResponseForbidden
 @login_required
 def saved_timetable_download_center(request, tid):
     saved_t = _get_saved_timetable_or_404(tid, request.user)
+    # Scope the department checkboxes to departments actually present in THIS saved
+    # timetable (same logic as the saved-view filter dropdown) so departments whose
+    # timetable was never generated don't show up here.
+    classes, labs, _selected_program, _selected_department = _saved_filtered_entities_for_request(request, saved_t)
     return render(request, "download_center.html", {
         "saved_mode": True,
         "saved_id": saved_t.id,
-        "departments": _get_department_filter_options(request.user),
+        "departments": _get_saved_department_filter_options(request.user, classes, labs),
         "college_name": COLLEGE_NAME,
     })
 

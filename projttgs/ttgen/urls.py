@@ -206,6 +206,8 @@ urlpatterns = [
     path("saved/<int:tid>/substitute/<path:section>/<str:day>/<int:slot>/", views.saved_substitute_teacher, name="saved_substitute_teacher"),
     path("saved/<int:tid>/substitute_lab/<path:section>/<str:day>/<int:slot>/", views.saved_substitute_lab_teacher, name="saved_substitute_lab_teacher"),
     path("saved/<int:tid>/move/<path:section>/<str:day>/<int:slot>/", views.saved_move_slot_dragdrop, name="saved_move_slot_dragdrop"),
+    path("saved/<int:tid>/park/<path:section>/<str:day>/<int:slot>/", views.saved_park_slot, name="saved_park_slot"),
+    path("saved/<int:tid>/parking/<int:parking_id>/restore/", views.saved_restore_parked_slot, name="saved_restore_parked_slot"),
 
     path("substitute_teacher/<path:section>/<str:day>/<int:slot>/",views.substitute_teacher,name="substitute_teacher"),
     path("substitute_lab/<path:section>/<str:day>/<int:slot>/",views.substitute_lab_teacher,name="substitute_lab_teacher"),
