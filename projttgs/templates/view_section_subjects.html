@@ -2,126 +2,54 @@
 {% load static %}
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'all_add_pageCSS.css' %}">
-
 <style>
-                            <li>
-                                {{ mapping.subject.subject_number }} - {{ mapping.subject.subject_name }}
-                                {% if mapping.group_count > 1 %}(groups: {{ mapping.group_count }}){% endif %}
-                                {% if mapping.elective_section_ids %}<br><small>elective with: {{ mapping.elective_section_ids }}</small>{% endif %}
-                            </li>
-    width: min(1100px, 92%);
-    margin: 24px auto;
-}
-
-.top-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.top-actions h2,
-.top-actions p {
-    margin: 0;
-}
-
-.action-btn {
-    display: inline-block;
-    padding: 10px 16px;
-    border-radius: 10px;
-    text-decoration: none;
-    color: white;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    backdrop-filter: blur(12px);
-    transition: 0.2s ease;
-}
-
-.action-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateY(-1px);
-}
-
-.mapping-update-link {
-    display: inline-grid;
-    place-items: center;
-    margin-top: 6px;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    color: #fff;
-    background: #2563eb;
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.mapping-update-link:hover {
-    background: #1d4ed8;
-}
-
-.section-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 18px;
-}
-
-.section-card {
-    padding: 18px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    backdrop-filter: blur(14px);
-}
-
-.section-card h3 {
-    margin: 0 0 12px;
-}
-
-.subject-list {
-    margin: 0;
-    padding-left: 18px;
-}
-
-.subject-list li + li {
-    margin-top: 6px;
-}
-
-.empty-text {
-    opacity: 0.8;
-}
+.manage-shell{width:min(1450px,96%);margin:24px auto;color:#fff}.manage-card{padding:24px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);backdrop-filter:blur(16px);border-radius:20px}.manage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}.manage-top h2{margin:0 0 6px}.manage-top p{margin:0;color:rgba(255,255,255,.72)}.back-btn{display:inline-flex;padding:10px 16px;background:#ffffffdd;border-radius:10px;color:#0f172a;text-decoration:none;font-weight:700}.section-card{padding:18px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}.section-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}.section-head{margin-bottom:12px}.section-head h3{margin:0 0 4px}.section-head p{margin:0;color:rgba(255,255,255,.68);font-size:13px}.mapping-table{width:100%;border-collapse:collapse;font-size:13px}.mapping-table th,.mapping-table td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}.mapping-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.68)}.mapping-update-link{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#fff;background:#2563eb;text-decoration:none}.empty-text{color:rgba(255,255,255,.7)}
 </style>
 
-<div class="mapping-wrapper">
-    <div class="top-actions">
-        <div>
-            <h2>Section Subject Mappings</h2>
-            <p>View all subjects currently mapped to each section.</p>
+<div class="manage-shell">
+    <div class="manage-card">
+        <div class="manage-top">
+            <div>
+                <h2>Section Subject Detail View</h2>
+                <p>Review the exact section-subject mapping data saved from the CSV: section, subject, group count, and elective linkage.</p>
+            </div>
+            <a href="{% url 'map_section_subjects' %}" class="back-btn">Back to Mapping</a>
         </div>
-        <a href="{% url 'map_section_subjects' %}" class="action-btn">Back to Mapping</a>
-    </div>
 
-    <div class="section-grid">
-        {% for section in section_mappings %}
+        <div class="section-grid">
+            {% for row in section_mappings %}
             <div class="section-card">
-                <h3>{{ section.section_id }}</h3>
-                {% if section.subjects %}
-                    <ul class="subject-list">
-                        {% for mapping in section.subjects %}
-                            <li>
-                                {{ mapping.subject.subject_number }} - {{ mapping.subject.subject_name }} {% if mapping.group_count > 1 %}(groups: {{ mapping.group_count }}){% endif %}
-                                {% if mapping.elective_section_ids %}<br><small>elective with: {{ mapping.elective_section_ids }}</small>{% endif %}
-                                <br><a class="mapping-update-link" href="{% url 'map_section_subjects' %}?edit={{ mapping.id }}" aria-label="Update mapping" title="Update mapping"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
-                            </li>
+                <div class="section-head">
+                    <h3>{{ row.section.section_id }}</h3>
+                    <p>{{ row.section.department.code }} · {{ row.section.program_name|default:"No program name" }}</p>
+                </div>
+                {% if row.subjects %}
+                <table class="mapping-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Groups</th>
+                            <th>Elective With</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mapping in row.subjects %}
+                        <tr>
+                            <td>{{ mapping.subject.subject_number }}<br><span class="empty-text">{{ mapping.subject.subject_name }}</span></td>
+                            <td>{{ mapping.group_count }}</td>
+                            <td>{{ mapping.elective_section_ids|default:"-" }}</td>
+                            <td><a class="mapping-update-link" href="{% url 'map_section_subjects' %}?edit={{ mapping.id }}" aria-label="Update mapping" title="Update mapping"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a></td>
+                        </tr>
                         {% endfor %}
-                    </ul>
+                    </tbody>
+                </table>
                 {% else %}
-                    <p class="empty-text">No subjects mapped yet.</p>
+                <p class="empty-text">No subjects mapped yet.</p>
                 {% endif %}
             </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
 </div>
 

@@ -23,6 +23,8 @@ class DepartmentForm(ModelForm):
 # ==================================================
 
 class RoomForm(ModelForm):
+    lab_category = forms.CharField(required=False)
+
     class Meta:
         model = Room
         fields = [
@@ -46,7 +48,10 @@ class RoomForm(ModelForm):
                 ('Lab', 'Lab'),
                 ('Seminar Room', 'Seminar Room'),
             ]),
-            "lab_category": forms.Select(choices=[("", "---------")] + list(LAB_CATEGORY_CHOICES)),
+            "lab_category": forms.TextInput(attrs={"placeholder": "e.g. Computer Lab or Computer Lab;General"}),
+        }
+        help_texts = {
+            "lab_category": "For lab rooms, enter one or more categories separated by semicolons.",
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -130,6 +135,9 @@ class MeetingTimeForm(ModelForm):
 # ==================================================
 
 class SubjectForm(ModelForm):
+    required_lab_category = forms.CharField(required=False)
+    specific_rooms = forms.CharField(required=False)
+
     class Meta:
         model = Subject
         fields = [
@@ -139,6 +147,7 @@ class SubjectForm(ModelForm):
             'max_numb_students',
             'room_required',
             'required_lab_category',
+            'specific_rooms',
             'instructors',
             'classes_per_week',
             'duration',
@@ -150,6 +159,7 @@ class SubjectForm(ModelForm):
             "max_numb_students": "Max Students",
             "room_required": "Required Room Type",
             "required_lab_category": "Required Lab Category",
+            "specific_rooms": "Specific Rooms / Equipment",
             "instructors": "Assigned Teachers",
             "classes_per_week": "Classes Per Week",
             "duration": "Duration (Hours)",
@@ -160,7 +170,8 @@ class SubjectForm(ModelForm):
                 ('Lecture Hall', 'Lecture Hall'),
                 ('Lab', 'Lab'),
             ]),
-            "required_lab_category": forms.Select(choices=[("", "---------")] + list(LAB_CATEGORY_CHOICES)),
+            "required_lab_category": forms.TextInput(attrs={"placeholder": "e.g. Computer Lab or Lab A;Lab B"}),
+            "specific_rooms": forms.TextInput(attrs={"placeholder": "Optional: CC06 or CC06;CC07"}),
             "instructors": forms.CheckboxSelectMultiple(),
             "classes_per_week": forms.NumberInput(attrs={
                 'min': 1,
@@ -176,6 +187,8 @@ class SubjectForm(ModelForm):
         help_texts = {
             "classes_per_week": "How many times this subject runs per week",
             "duration": "1 hour = 1 slot. Default is 1. Set 2 for a 2-hour class.",
+            "required_lab_category": "Enter one or more lab categories separated by semicolons.",
+            "specific_rooms": "Optional exact room IDs, separated by semicolons, to lock this subject to specific rooms.",
         }
 
     def __init__(self, *args, user=None, **kwargs):

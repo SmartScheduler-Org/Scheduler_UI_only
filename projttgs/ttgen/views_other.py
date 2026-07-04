@@ -4834,18 +4834,13 @@ def addSubjects(request):
             raw_room = (subject.room_required or "").strip().lower()
             subject.room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room, subject.room_required)
             subject.required_lab_category = normalize_lab_categories_value(subject.required_lab_category)
+            subject.specific_rooms = normalize_specific_rooms(subject.specific_rooms)
 
             if subject.room_required == "Lab" and not subject.required_lab_category:
                 messages.error(request, "Lab subjects must have a Required Lab Category.")
                 return redirect("addSubjects")
             if subject.room_required not in {"Lab", "Lecture Hall"}:
                 subject.required_lab_category = ""
-
-            # Auto-set classes per week
-            if subject.room_required == "Lab":
-                subject.classes_per_week = 4
-            else:
-                subject.classes_per_week = 3
 
             subject.save()
             form.save_m2m()
@@ -4942,9 +4937,13 @@ def addSubjects(request):
                         continue
 
                     # Skip duplicates
-                    if Subject.objects.filter(subject_number=subject_number, user=request.user).exists():
+                    if Subject.objects.filter(
+                        subject_number=subject_number,
+                        user=request.user,
+                        department=subject_department,
+                    ).exists():
                         skipped_count += 1
-                        _csv_issue(issues, row_number, f"subject_number '{subject_number}' already exists")
+                        _csv_issue(issues, row_number, f"subject_number '{subject_number}' already exists in department '{dept_code}'")
                         continue
 
                     if room_required == "Lab" and not required_lab_category:
@@ -5010,7 +5009,8 @@ def addSubjects(request):
 
 @login_required
 def subject_list_view(request):
-    return render(request, 'subjectslist.html', {'subjects': Subject.objects.filter(user=request.user)})
+    subjects = Subject.objects.filter(user=request.user).select_related("department").prefetch_related("instructors").order_by("department__code", "subject_number")
+    return render(request, 'subjectslist.html', {'subjects': subjects})
 
 
 @login_required
@@ -5348,7 +5348,7 @@ def map_section_subjects(request):
                 continue
 
             try:
-                subj = Subject.objects.get(subject_number=subject_number, user=request.user)
+                subj = _resolve_subject_for_user(subject_number, request.user, department=section.department)
             except Subject.DoesNotExist:
                 skipped += 1
                 _csv_issue(issues, row_number, f"subject not found '{subject_number}'")
@@ -5436,13 +5436,13 @@ def generate_without_prefills(request):
 
 @login_required
 def view_section_subjects(request):
-    sections = Section.objects.filter(user=request.user).order_by("section_id")
+    sections = Section.objects.filter(user=request.user).select_related("department").order_by("department__code", "section_id")
     section_mappings = [
         {
-            "section_id": section.section_id,
+            "section": section,
             "subjects": list(
                 SectionSubjectMapping.objects.filter(section=section)
-                .select_related("subject")
+                .select_related("subject", "subject__department")
                 .order_by("subject__subject_number")
             ),
         }
@@ -5453,6 +5453,37 @@ def view_section_subjects(request):
         "view_section_subjects.html",
         {"section_mappings": section_mappings},
     )
+
+
+@login_required
+def view_teacher_subject_mappings(request):
+    mappings = list(
+        SectionSubjectInstructor.objects.filter(user=request.user)
+        .select_related("section", "section__department", "subject", "subject__department", "instructor", "second_instructor")
+        .order_by("section__department__code", "section__section_id", "subject__subject_number")
+    )
+    for mapping in mappings:
+        mapping.primary_teacher_uids = _teacher_uid_string_from_ids(
+            getattr(mapping, "group_instructor_ids", []),
+            request.user,
+            getattr(mapping, "instructor", None),
+        )
+        mapping.primary_teacher_names = _teacher_name_string_from_ids(
+            getattr(mapping, "group_instructor_ids", []),
+            request.user,
+            getattr(mapping, "instructor", None),
+        )
+        mapping.second_teacher_uids = _teacher_uid_string_from_ids(
+            getattr(mapping, "group_second_instructor_ids", []),
+            request.user,
+            getattr(mapping, "second_instructor", None),
+        )
+        mapping.second_teacher_names = _teacher_name_string_from_ids(
+            getattr(mapping, "group_second_instructor_ids", []),
+            request.user,
+            getattr(mapping, "second_instructor", None),
+        )
+    return render(request, "view_teacher_subject_mappings.html", {"mappings": mappings})
 
 @login_required
 def map_teacher_subjects(request):
@@ -5484,15 +5515,6 @@ def map_teacher_subjects(request):
         if not text:
             return []
         return [token.strip() for token in text.split(";")]
-
-    def _teacher_uid_string_from_ids(id_values, fallback_teacher=None):
-        ids = [teacher_id for teacher_id in (id_values or []) if teacher_id]
-        teachers = Instructor.objects.filter(id__in=ids, user=request.user)
-        teacher_by_id = {teacher.id: teacher for teacher in teachers}
-        values = [teacher_by_id[teacher_id].uid for teacher_id in ids if teacher_id in teacher_by_id]
-        if values:
-            return ";".join(values)
-        return getattr(fallback_teacher, "uid", "") or ""
 
     if request.method == "POST" and "manual_save_mapping" in request.POST:
         section_pk = request.POST.get("section_id")
@@ -5711,7 +5733,7 @@ def map_teacher_subjects(request):
                 continue
 
             try:
-                subj = Subject.objects.get(subject_number=subject_number, user=request.user)
+                subj = _resolve_subject_for_user(subject_number, request.user, department=section.department)
             except Subject.DoesNotExist:
                 skipped += 1
                 validation_errors.append(
@@ -5836,8 +5858,8 @@ def map_teacher_subjects(request):
             "subjects": Subject.objects.filter(user=request.user).order_by("subject_number"),
             "instructors": Instructor.objects.filter(user=request.user).order_by("uid"),
             "edit_mapping": edit_mapping,
-            "edit_primary_teacher_uids": _teacher_uid_string_from_ids(getattr(edit_mapping, "group_instructor_ids", []), getattr(edit_mapping, "instructor", None)) if edit_mapping else "",
-            "edit_second_teacher_uids": _teacher_uid_string_from_ids(getattr(edit_mapping, "group_second_instructor_ids", []), getattr(edit_mapping, "second_instructor", None)) if edit_mapping else "",
+            "edit_primary_teacher_uids": _teacher_uid_string_from_ids(getattr(edit_mapping, "group_instructor_ids", []), request.user, getattr(edit_mapping, "instructor", None)) if edit_mapping else "",
+            "edit_second_teacher_uids": _teacher_uid_string_from_ids(getattr(edit_mapping, "group_second_instructor_ids", []), request.user, getattr(edit_mapping, "second_instructor", None)) if edit_mapping else "",
         },
     )
 
@@ -5850,6 +5872,43 @@ def delete_all_section_subject_mappings(request):
         "map_section_subjects",
         "section-subject mappings",
     )
+
+
+def _resolve_subject_for_user(subject_number, user, department=None):
+    subject_number = (subject_number or "").strip()
+    if not subject_number:
+        raise Subject.DoesNotExist
+
+    queryset = Subject.objects.filter(subject_number=subject_number, user=user)
+    if department is not None:
+        department_match = queryset.filter(department=department).first()
+        if department_match is not None:
+            return department_match
+
+    match = queryset.first()
+    if match is None:
+        raise Subject.DoesNotExist
+    return match
+
+
+def _teacher_uid_string_from_ids(id_values, user, fallback_teacher=None):
+    ids = [teacher_id for teacher_id in (id_values or []) if teacher_id]
+    teachers = Instructor.objects.filter(id__in=ids, user=user)
+    teacher_by_id = {teacher.id: teacher for teacher in teachers}
+    values = [teacher_by_id[teacher_id].uid for teacher_id in ids if teacher_id in teacher_by_id]
+    if values:
+        return ";".join(values)
+    return getattr(fallback_teacher, "uid", "") or ""
+
+
+def _teacher_name_string_from_ids(id_values, user, fallback_teacher=None):
+    ids = [teacher_id for teacher_id in (id_values or []) if teacher_id]
+    teachers = Instructor.objects.filter(id__in=ids, user=user)
+    teacher_by_id = {teacher.id: teacher for teacher in teachers}
+    values = [teacher_by_id[teacher_id].name for teacher_id in ids if teacher_id in teacher_by_id]
+    if values:
+        return "; ".join(values)
+    return getattr(fallback_teacher, "name", "") or ""
 
 
 @login_required
@@ -5866,7 +5925,7 @@ def delete_all_teacher_subject_mappings(request):
 def delete_teacher_subject_mapping(request, subject_number, instructor_id):
     if request.method == "POST":
         try:
-            subj = Subject.objects.get(subject_number=subject_number, user=request.user)
+            subj = _resolve_subject_for_user(subject_number, request.user)
             instructor = Instructor.objects.get(id=instructor_id, user=request.user)
             subj.instructors.remove(instructor)
             messages.success(request, "Mapping removed successfully.")
@@ -5893,7 +5952,7 @@ def inst_list_view(request):
     return render(
         request,
         'inslist.html',
-        {'instructors': Instructor.objects.filter(user=request.user)}
+        {'instructors': Instructor.objects.filter(user=request.user).select_related("department").order_by("uid")}
     )
 
 
@@ -5949,6 +6008,16 @@ def addRooms(request):
         if form.is_valid():
             room = form.save(commit=False)
             room.user = request.user
+            raw_room_type = (room.room_type or "").strip().lower()
+            room.room_type = {
+                "lecture hall": "Lecture Hall",
+                "lab": "Lab",
+                "seminar room": "Seminar Room",
+            }.get(raw_room_type, room.room_type)
+            room.lab_category = normalize_lab_categories_value(room.lab_category) if room.room_type == "Lab" else ""
+            if room.room_type == "Lab" and not room.lab_category:
+                messages.error(request, "Lab rooms must have a Lab Category.")
+                return redirect("addRooms")
             room.save()
 
             reset_global_schedule_cache(request.user.id)
@@ -6073,7 +6142,8 @@ def addRooms(request):
 
 @login_required
 def room_list(request):
-    return render(request, 'roomslist.html', {'rooms': Room.objects.filter(user=request.user)})
+    rooms = Room.objects.filter(user=request.user).select_related("department").order_by("department__code", "r_number")
+    return render(request, 'roomslist.html', {'rooms': rooms})
 
 
 @login_required
@@ -6227,7 +6297,8 @@ def addTimings(request):
 
 @login_required
 def meeting_list_view(request):
-    return render(request, 'mtlist.html', {'meeting_times': MeetingTime.objects.filter(user=request.user)})
+    meeting_times = MeetingTime.objects.filter(user=request.user).order_by("day", "time", "pid")
+    return render(request, 'mtlist.html', {'meeting_times': meeting_times})
 
 
 @login_required
@@ -6380,7 +6451,8 @@ def addDepts(request):
 
 @login_required
 def department_list(request):
-    return render(request, 'deptlist.html', {'departments': Department.objects.filter(user=request.user)})
+    departments = Department.objects.filter(user=request.user).order_by("code", "name")
+    return render(request, 'deptlist.html', {'departments': departments})
 
 
 @login_required
@@ -6943,7 +7015,8 @@ def delete_saved_prefill(request, prefill_id):
 
 @login_required
 def section_list(request):
-    return render(request, 'seclist.html', {'sections': Section.objects.filter(user=request.user)})
+    sections = Section.objects.filter(user=request.user).select_related("department").order_by("department__code", "section_id")
+    return render(request, 'seclist.html', {'sections': sections})
 
 
 @login_required

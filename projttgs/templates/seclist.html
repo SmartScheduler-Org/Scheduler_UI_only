@@ -3,142 +3,54 @@
 {% block content %}
 
 <style>
-    .manage-fieldset {
-    width: 90%;
-    margin: auto;
-    padding: 20px 30px;
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-}
-
-.back-btn {
-    padding: 8px 16px;
-    background: #ffffffdd;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.2s;
-}
-
-.back-btn:hover {
-    background: white;
-    transform: translateY(-2px);
-}
-
-.edit-container {
-    margin-top: 25px;
-}
-
-.styled-table {
-    width: 100%;
-    border-collapse: collapse;
-    color: white;
-    font-size: 18px;
-}
-
-.styled-table th {
-    padding: 12px 10px;
-    text-align: left;
-    font-weight: bold;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
-}
-
-.styled-table td {
-    padding: 12px 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    opacity: 0.9;
-}
-
-.styled-table tr:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transition: 0.2s;
-}
-
-.delete-btn {
-    width: 34px;
-    height: 34px;
-    display: inline-grid;
-    place-items: center;
-    background: #ff4d4dcc;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    color: white;
-    font-weight: 600;
-    transition: 0.2s;
-}
-
-.delete-btn:hover {
-    background: #ff3333;
-    transform: scale(1.05);
-}
-
-.row-actions { display: flex; gap: 8px; align-items: center; }
-.update-btn {
-    width: 34px;
-    height: 34px;
-    display: inline-grid;
-    place-items: center;
-    background: #2563ebcc;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-weight: 600;
-    text-decoration: none;
-    transition: 0.2s;
-}
-.update-btn:hover { background: #1d4ed8; transform: scale(1.05); }
-
+.manage-shell{width:min(1280px,95%);margin:24px auto;color:#fff}.manage-card{padding:24px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);backdrop-filter:blur(16px);border-radius:20px}.manage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}.manage-top h2{margin:0 0 6px}.manage-top p{margin:0;color:rgba(255,255,255,.72)}.back-btn{display:inline-flex;padding:10px 16px;background:#ffffffdd;border-radius:10px;color:#0f172a;text-decoration:none;font-weight:700}.table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:16px}.styled-table{width:100%;min-width:1050px;border-collapse:collapse;font-size:14px}.styled-table th,.styled-table td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.1);vertical-align:top}.styled-table th{text-align:left;text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:rgba(255,255,255,.7);background:rgba(15,23,42,.32)}.styled-table tr:hover{background:rgba(255,255,255,.05)}.muted{color:rgba(255,255,255,.64)}.cell-stack{display:grid;gap:4px}.row-actions{display:flex;gap:8px;align-items:center}.update-btn,.delete-btn{width:34px;height:34px;display:inline-grid;place-items:center;border:none;border-radius:8px;color:#fff;text-decoration:none;cursor:pointer}.update-btn{background:#2563ebcc}.delete-btn{background:#ff4d4dcc}
 </style>
 
-<fieldset class="manage-fieldset">
+<div class="manage-shell">
+    <div class="manage-card">
+        <div class="manage-top">
+            <div>
+                <h2>Section Detail View</h2>
+                <p>Check the same section fields you upload in CSV, including program, department, and student strength.</p>
+            </div>
+            <a href="{% url 'addSections' %}" class="back-btn">Back to Add Sections</a>
+        </div>
 
-    <a href="{% url 'addSections' %}" class="back-btn-link">
-        <button class="back-btn">← Back to Add Sections</button>
-    </a>
-
-    <div class="edit-container">
-
-        <table class="styled-table">
-            <thead>
-                <tr>
-                    <th>Section ID</th>
-                    <th>Program</th>
-                    <th>Department</th>
-                    <th>Total Classes / Week</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for sec in sections %}
-                <tr>
-                    <td>{{ sec.section_id }}</td>
-                    <td>{{ sec.program_name|default:"-" }}</td>
-                    <td>{{ sec.department }}</td>
-                    <td>{{ sec.num_class_in_week }}</td>
-                    <td>
-                        <div class="row-actions">
-                        <a class="update-btn" href="{% url 'addSections' %}?edit={{ sec.id }}" aria-label="Update section" title="Update section"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
-                        {% url 'deletesection' sec.section_id as del_url %}
-                        <form action="{{ del_url|default:'#' }}" method="post">
-                            {% csrf_token %}
-                            <button class="delete-btn" aria-label="Delete section" title="Delete section"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
-                        </form>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-
-        </table>
-
+        <div class="table-wrap">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Section ID</th>
+                        <th>Program Name</th>
+                        <th>Department</th>
+                        <th>Student Strength</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sec in sections %}
+                    <tr>
+                        <td>{{ sec.section_id }}</td>
+                        <td>{{ sec.program_name|default:"-" }}</td>
+                        <td><div class="cell-stack"><strong>{{ sec.department.code }}</strong><span class="muted">{{ sec.department.name }}</span></div></td>
+                        <td>{{ sec.student_strength }}</td>
+                        <td>
+                            <div class="row-actions">
+                                <a class="update-btn" href="{% url 'addSections' %}?edit={{ sec.id }}" aria-label="Update section" title="Update section"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
+                                <form action="{% url 'deletesection' sec.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button class="delete-btn" aria-label="Delete section" title="Delete section"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="muted">No sections saved yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-
-</fieldset>
-
+</div>
 
 {% endblock %}

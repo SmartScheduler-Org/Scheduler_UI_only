@@ -128,6 +128,7 @@ urlpatterns = [
     path('delete_all_teacher_subject_mappings/', views.delete_all_teacher_subject_mappings, name='delete_all_teacher_subject_mappings'),
     path("map-section-subjects/",views.map_section_subjects,name="map_section_subjects"),
     path("view-section-subjects/", views.view_section_subjects, name="view_section_subjects"),
+    path("view-teacher-subject-mappings/", views.view_teacher_subject_mappings, name="view_teacher_subject_mappings"),
     path('delete_all_section_subject_mappings/', views.delete_all_section_subject_mappings, name='delete_all_section_subject_mappings'),
 
 

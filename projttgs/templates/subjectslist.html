@@ -3,149 +3,101 @@
 {% block content %}
 
 <style>
-.manage-fieldset {
-    width: 90%;
-    margin: auto;
-    padding: 20px 30px;
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-}
-
-.back-btn {
-    padding: 8px 16px;
-    background: #ffffffdd;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.2s;
-}
-
-.back-btn:hover {
-    background: white;
-    transform: translateY(-2px);
-}
-
-.edit-container {
-    margin-top: 25px;
-}
-
-.styled-table {
-    width: 100%;
-    border-collapse: collapse;
-    color: white;
-    font-size: 18px;
-}
-
-.styled-table th {
-    padding: 12px 10px;
-    text-align: left;
-    font-weight: bold;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
-}
-
-.styled-table td {
-    padding: 12px 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    opacity: 0.9;
-}
-
-.styled-table tr:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transition: 0.2s;
-}
-
-.delete-btn {
-    width: 34px;
-    height: 34px;
-    display: inline-grid;
-    place-items: center;
-    background: #ff4d4dcc;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    color: white;
-    font-weight: 600;
-    transition: 0.2s;
-}
-
-.delete-btn:hover {
-    background: #ff3333;
-    transform: scale(1.05);
-}
-.row-actions { display: flex; gap: 8px; align-items: center; }
-.update-btn {
-    width: 34px;
-    height: 34px;
-    display: inline-grid;
-    place-items: center;
-    background: #2563ebcc;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-weight: 600;
-    text-decoration: none;
-    transition: 0.2s;
-}
-.update-btn:hover { background: #1d4ed8; transform: scale(1.05); }
+.manage-shell{width:min(1500px,96%);margin:24px auto;color:#fff}
+.manage-card{padding:24px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);backdrop-filter:blur(16px);border-radius:20px;box-shadow:0 20px 50px rgba(15,23,42,.22)}
+.manage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.manage-top h2{margin:0 0 6px;font-size:clamp(26px,3.4vw,36px)}
+.manage-top p{margin:0;color:rgba(255,255,255,.72)}
+.back-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;background:#ffffffdd;border-radius:10px;color:#0f172a;text-decoration:none;font-weight:700}
+.meta-strip{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.meta-chip{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:13px}
+.table-wrap{overflow:auto;border-radius:16px;border:1px solid rgba(255,255,255,.1)}
+.styled-table{width:100%;border-collapse:collapse;min-width:1400px;font-size:14px}
+.styled-table th,.styled-table td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.1);vertical-align:top}
+.styled-table th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.7);background:rgba(15,23,42,.32)}
+.styled-table tr:hover{background:rgba(255,255,255,.05)}
+.muted{color:rgba(255,255,255,.64)}
+.cell-stack{display:grid;gap:4px}
+.tag-list{display:flex;gap:6px;flex-wrap:wrap}
+.tag{padding:4px 8px;border-radius:999px;background:rgba(37,99,235,.2);border:1px solid rgba(96,165,250,.35);font-size:12px}
+.row-actions{display:flex;gap:8px;align-items:center}
+.update-btn,.delete-btn{width:34px;height:34px;display:inline-grid;place-items:center;border:none;border-radius:8px;color:#fff;text-decoration:none;cursor:pointer}
+.update-btn{background:#2563ebcc}
+.update-btn:hover{background:#1d4ed8}
+.delete-btn{background:#ff4d4dcc}
+.delete-btn:hover{background:#ef4444}
 </style>
 
-<fieldset class="manage-fieldset">
+<div class="manage-shell">
+    <div class="manage-card">
+        <div class="manage-top">
+            <div>
+                <h2>Subject Detail View</h2>
+                <p>Every saved subject is shown with the same values you import from CSV, plus teachers currently linked to it.</p>
+            </div>
+            <a href="{% url 'addSubjects' %}" class="back-btn">Back to Add Subjects</a>
+        </div>
 
-    <a href="{% url 'addSubjects' %}">
-        <button class="back-btn">← Back to Add Subjects</button>
-    </a>
+        <div class="meta-strip">
+            <span class="meta-chip">Total Subjects: {{ subjects|length }}</span>
+            <span class="meta-chip">Editable from the update icon on each row</span>
+        </div>
 
-    <div class="edit-container">
-
-        <table class="styled-table">
-            <thead>
-                <tr>
-                    <th>Subject Code</th>
-                    <th>Subject Name</th>
-                    <th>Max Students</th>
-                    <th>Duration</th>
-                    <th>Assigned Teachers</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for subj in subjects %}
-                <tr>
-                    <td>{{ subj.subject_number }}</td>
-                    <td>{{ subj.subject_name }}</td>
-                    <td>{{ subj.max_numb_students }}</td>
-                    <td>{{ subj.duration }} hr</td>
-
-                    <!-- ASSIGNED TEACHERS -->
-                    <td>
-                        {% for teacher in subj.instructors.all %}
-                            {{ teacher.name }}{% if not forloop.last %}, {% endif %}
-                        {% empty %}
-                            <span style="opacity:0.6;">No teacher assigned</span>
-                        {% endfor %}
-                    </td>
-
-                    <td>
-                        <div class="row-actions">
-                        <a class="update-btn" href="{% url 'addSubjects' %}?edit={{ subj.id }}" aria-label="Update subject" title="Update subject"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
-                        <form action="{% url 'deletesubject' subj.pk %}" method="post">
-                            {% csrf_token %}
-                            <button class="delete-btn" aria-label="Delete subject" title="Delete subject"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
-                        </form>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-
-        </table>
-
+        <div class="table-wrap">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Subject Number</th>
+                        <th>Subject Name</th>
+                        <th>Room Required</th>
+                        <th>Required Lab Category</th>
+                        <th>Specific Rooms</th>
+                        <th>Classes / Week</th>
+                        <th>Max Students</th>
+                        <th>Duration</th>
+                        <th>Assigned Teachers</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subj in subjects %}
+                    <tr>
+                        <td><div class="cell-stack"><strong>{{ subj.department.code }}</strong><span class="muted">{{ subj.department.name }}</span></div></td>
+                        <td>{{ subj.subject_number }}</td>
+                        <td>{{ subj.subject_name }}</td>
+                        <td>{{ subj.room_required }}</td>
+                        <td>{{ subj.required_lab_category|default:"-" }}</td>
+                        <td>{{ subj.specific_rooms|default:"-" }}</td>
+                        <td>{{ subj.classes_per_week }}</td>
+                        <td>{{ subj.max_numb_students }}</td>
+                        <td>{{ subj.duration }}</td>
+                        <td>
+                            <div class="tag-list">
+                                {% for teacher in subj.instructors.all %}
+                                <span class="tag">{{ teacher.uid }} · {{ teacher.name }}</span>
+                                {% empty %}
+                                <span class="muted">No teacher assigned</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="row-actions">
+                                <a class="update-btn" href="{% url 'addSubjects' %}?edit={{ subj.id }}" aria-label="Update subject" title="Update subject"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
+                                <form action="{% url 'deletesubject' subj.pk %}" method="post">
+                                    {% csrf_token %}
+                                    <button class="delete-btn" aria-label="Delete subject" title="Delete subject"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="11" class="muted">No subjects saved yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-
-</fieldset>
+</div>
 
 {% endblock %}

@@ -1,0 +1,62 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+.manage-shell{width:min(1450px,96%);margin:24px auto;color:#fff}.manage-card{padding:24px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);backdrop-filter:blur(16px);border-radius:20px}.manage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}.manage-top h2{margin:0 0 6px}.manage-top p{margin:0;color:rgba(255,255,255,.72)}.back-btn{display:inline-flex;padding:10px 16px;background:#ffffffdd;border-radius:10px;color:#0f172a;text-decoration:none;font-weight:700}.table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:16px}.styled-table{width:100%;min-width:1350px;border-collapse:collapse;font-size:14px}.styled-table th,.styled-table td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.1);vertical-align:top}.styled-table th{text-align:left;text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:rgba(255,255,255,.7);background:rgba(15,23,42,.32)}.styled-table tr:hover{background:rgba(255,255,255,.05)}.muted{color:rgba(255,255,255,.64)}.cell-stack{display:grid;gap:4px}.row-actions{display:flex;gap:8px;align-items:center}.update-btn,.delete-btn{width:34px;height:34px;display:inline-grid;place-items:center;border:none;border-radius:8px;color:#fff;text-decoration:none;cursor:pointer}.update-btn{background:#2563ebcc}.delete-btn{background:#ff4d4dcc}
+</style>
+
+<div class="manage-shell">
+    <div class="manage-card">
+        <div class="manage-top">
+            <div>
+                <h2>Teacher Subject Detail View</h2>
+                <p>Review the saved teacher-mapping rows in CSV-like form: section, subject, primary UID list, shared-lab flag, and second UID list.</p>
+            </div>
+            <a href="{% url 'map_teacher_subjects' %}" class="back-btn">Back to Mapping</a>
+        </div>
+
+        <div class="table-wrap">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Subject</th>
+                        <th>Primary Teacher UID(s)</th>
+                        <th>Primary Teacher Name(s)</th>
+                        <th>Shared Lab</th>
+                        <th>Second Teacher UID(s)</th>
+                        <th>Second Teacher Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in mappings %}
+                    <tr>
+                        <td><div class="cell-stack"><strong>{{ m.section.section_id }}</strong><span class="muted">{{ m.section.department.code }}</span></div></td>
+                        <td><div class="cell-stack"><strong>{{ m.subject.subject_number }}</strong><span class="muted">{{ m.subject.subject_name }}</span></div></td>
+                        <td>{{ m.primary_teacher_uids|default:"-" }}</td>
+                        <td>{{ m.primary_teacher_names|default:"-" }}</td>
+                        <td>{% if m.second_instructor or m.second_teacher_uids %}Yes{% else %}No{% endif %}</td>
+                        <td>{{ m.second_teacher_uids|default:"-" }}</td>
+                        <td>{% if m.second_teacher_names %}{{ m.second_teacher_names }}{% else %}<span class="muted">-</span>{% endif %}</td>
+                        <td>
+                            <div class="row-actions">
+                                <a class="update-btn" href="{% url 'map_teacher_subjects' %}?edit={{ m.id }}" aria-label="Update mapping" title="Update mapping"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
+                                <form action="{% url 'delete_sci_mapping' m.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button class="delete-btn" aria-label="Delete mapping" title="Delete mapping"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="muted">No teacher-subject mappings saved yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
