@@ -193,7 +193,11 @@ class Instructor(models.Model):
 
 
 class AdminTeacher(models.Model):
-    DESIGNATION_CHOICES = Instructor.DESIGNATION_CHOICES
+    DESIGNATION_CHOICES = [
+        ("Professor", "Professor"),
+        ("Associate Professor", "Associate Professor"),
+        ("Assistant Professor", "Assistant Professor"),
+    ]
 
     name = models.CharField(max_length=100)
     email = models.CharField(max_length=500, blank=True, default="")
@@ -214,10 +218,7 @@ class AdminTeacher(models.Model):
         ordering = ["name", "uid", "id"]
 
     def __str__(self):
-        label = self.name or "Teacher"
-        if self.uid:
-            label = f"{label} ({self.uid})"
-        return label
+        return f"{self.name} ({self.uid})" if self.uid else self.name
 
 
 class MeetingTime(models.Model):
@@ -439,6 +440,7 @@ class SavedTimetable(models.Model):
         null=True,
         blank=True,
     )
+    name = models.CharField(max_length=120, blank=True, default="")
     department = models.ForeignKey(
         "Department",
         on_delete=models.SET_NULL,
@@ -447,6 +449,7 @@ class SavedTimetable(models.Model):
         related_name="saved_timetables",
         help_text="If set, this timetable contains only slots for this department.",
     )
+    snapshot = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_published = models.BooleanField(default=False)
     publish_code = models.CharField(max_length=50, blank=True, default="")
@@ -455,6 +458,8 @@ class SavedTimetable(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
+        if self.name:
+            return self.name
         dept_label = f" [{self.department.name}]" if self.department_id else ""
         return f"Timetable{dept_label} ({self.created_at.strftime('%d %b %Y %H:%M')})"
 

@@ -716,40 +716,6 @@ body.drag-drop-active .draggable-slot-item.is-dragging {
   margin: 0 auto 14px;
 }
 
-/* Section body laid out as [timetable | parking] side-by-side. The parking
-   panel now sits to the RIGHT of each section's grid instead of above it.
-   Wraps below on narrow screens so the UI never breaks. */
-.section-grid-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 0 14px;
-}
-
-.section-grid-main {
-  flex: 1 1 620px;
-  min-width: 0;
-}
-
-.section-grid-main > .table2 {
-  width: 100%;
-  margin: 18px 0;
-}
-
-.section-parking-aside {
-  flex: 0 0 280px;
-  max-width: 280px;
-  margin: 18px 0 14px;
-}
-
-@media (max-width: 980px) {
-  .section-parking-aside {
-    flex-basis: 100%;
-    max-width: 100%;
-  }
-}
-
 .section-parking-panel {
   border-radius: 18px;
   padding: 14px;
@@ -1131,20 +1097,6 @@ body.drag-drop-active .parking-dropzone::after {
   }
 }
 
-/* Floating "Deactivate Drag & Drop" button — only visible while drag mode is on */
-.drag-deactivate-float {
-    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(12px);
-    display: none; align-items: center; gap: 8px;
-    padding: 12px 22px; border: none; border-radius: 999px;
-    background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;
-    font-size: 14px; font-weight: 700; letter-spacing: .2px; cursor: pointer;
-    box-shadow: 0 10px 28px rgba(185,28,28,0.42), 0 2px 6px rgba(0,0,0,0.18);
-    z-index: 10000; opacity: 0; transition: opacity .2s ease, transform .2s ease;
-}
-.drag-deactivate-float::before { content: "\\26D4"; font-size: 16px; line-height: 1; }
-.drag-deactivate-float:hover { transform: translateX(-50%) translateY(0) scale(1.03); }
-body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1; transform: translateX(-50%) translateY(0); }
-
 /* Drag activation overlay */
 .drag-activation-overlay {
     position: fixed; inset: 0; display: grid; place-items: center;
@@ -1200,91 +1152,6 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
 @keyframes particleBurst { 0% { transform: translate(0,0) scale(0.2); opacity: 0; } 16% { opacity: 1; } 72% { opacity: 0.95; } 100% { transform: translate(var(--x), var(--y)) scale(1.18); opacity: 0; } }
 @keyframes particleCore { 0% { transform: translate(0,0) scale(0.25); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(0,0) scale(3.6); opacity: 0; } }
 @keyframes msgLift { 0% { transform: translateY(26px) scale(0.85); opacity: 0; } 22% { opacity: 1; } 72% { opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 0; } }
-
-/* ===== Compact SaaS toolbar (saved timetable) ===== */
-.ss-toolbar {
-  position: relative; z-index: 6;
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  max-width: 1340px; margin: 14px auto 22px; padding: 8px 12px; min-height: 56px;
-  background: rgba(255,255,255,0.98);
-  border: 1px solid rgba(37,122,122,0.14); border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(27,79,114,0.07);
-}
-.ss-toolbar__group { display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.ss-toolbar__spacer { flex:1 1 auto; min-width:8px; }
-.ss-divider { width:1px; align-self:stretch; min-height:26px; background:rgba(37,122,122,0.16); margin:0 2px; }
-
-.ss-input {
-  padding:7px 12px; border:1px solid #cdd9d9; border-radius:9px;
-  font-size:13px; background:#f7fbfb; color:#1a3a3a; min-width:140px;
-}
-.ss-input:focus { outline:none; border-color:#257a7a; box-shadow:0 0 0 3px rgba(37,122,122,0.16); }
-.ss-pub-form { display:inline-flex; gap:6px; align-items:center; margin:0; }
-
-.ss-btn-primary {
-  display:inline-flex; align-items:center; gap:6px;
-  padding:8px 15px; border:none; border-radius:9px; cursor:pointer;
-  background:linear-gradient(135deg,#16873f,#33b25b); color:#fff;
-  font-size:13px; font-weight:700; box-shadow:0 6px 14px rgba(22,101,52,0.2);
-  transition:transform .15s ease, box-shadow .15s ease;
-}
-.ss-btn-primary svg { width:15px; height:15px; }
-.ss-btn-primary:hover { transform:translateY(-1px); box-shadow:0 9px 18px rgba(22,101,52,0.28); }
-.ss-btn-danger {
-  padding:8px 14px; border-radius:9px; cursor:pointer;
-  background:#fff; color:#d92d20; font-size:13px; font-weight:700;
-  border:1px solid rgba(217,45,32,0.3); transition:background .15s ease;
-}
-.ss-btn-danger:hover { background:#fef2f2; }
-.ss-pub-status { display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:700; color:#1a5c5c; }
-.ss-pub-status code { background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:6px; font-size:13px; letter-spacing:1px; }
-.ss-pub-dot { width:8px; height:8px; border-radius:50%; background:#33b25b; box-shadow:0 0 0 3px rgba(51,178,91,0.18); }
-
-.ss-tool-btn {
-  display:inline-flex; align-items:center; gap:7px; white-space:nowrap;
-  padding:8px 13px; border:1px solid rgba(37,122,122,0.18); border-radius:9px; cursor:pointer;
-  background:#fff; color:#1a5c5c; font-size:13px; font-weight:700; text-decoration:none;
-  transition:background .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease;
-}
-.ss-tool-btn svg { width:16px; height:16px; flex:none; }
-.ss-tool-btn:hover { background:#f0f7f7; border-color:#257a7a; }
-.ss-tool-btn.is-active { background:linear-gradient(135deg, rgba(17,103,216,0.12), rgba(40,152,255,0.14)); border-color:#2898ff; color:#1167d8; }
-.ss-tool-btn--accent { background:linear-gradient(135deg,#5b21ed,#7c4dff); color:#fff; border-color:transparent; box-shadow:0 6px 14px rgba(91,33,237,0.22); }
-.ss-tool-btn--accent:hover { background:linear-gradient(135deg,#6a2ff7,#8b5cff); border-color:transparent; }
-.ss-tool-btn--ghost { background:transparent; }
-.ss-drag-btn.is-active { background:linear-gradient(135deg,#16873f,#33b25b); border-color:transparent; color:#fff; box-shadow:0 6px 14px rgba(22,101,52,0.24); }
-
-.ss-filter { display:inline-flex; align-items:center; gap:7px; padding:5px 11px; background:rgba(37,122,122,0.06); border:1px solid rgba(37,122,122,0.18); border-radius:9px; }
-.ss-filter > svg { width:15px; height:15px; color:#257a7a; flex:none; }
-.ss-filter__label { font-size:11px; font-weight:800; color:#257a7a; letter-spacing:.05em; text-transform:uppercase; }
-.ss-filter__select { border:none; background:transparent; color:#1a5c5c; font-size:13px; font-weight:700; cursor:pointer; outline:none; max-width:200px; }
-
-.ss-menu { position:relative; display:inline-flex; }
-.ss-menu__chev { width:13px !important; height:13px !important; opacity:.75; transition:transform .18s ease; }
-.ss-menu.is-open .ss-menu__chev { transform:rotate(180deg); }
-.ss-menu__panel {
-  position:absolute; top:calc(100% + 8px); min-width:230px;
-  background:#fff; border:1px solid rgba(37,122,122,0.16); border-radius:12px;
-  box-shadow:0 18px 44px rgba(15,53,99,0.18); padding:6px;
-  display:none; flex-direction:column; gap:2px; z-index:80;
-}
-.ss-menu__panel--left { left:0; }
-.ss-menu__panel--right { right:0; }
-.ss-menu.is-open .ss-menu__panel { display:flex; animation:ssMenuIn .14s ease; }
-@keyframes ssMenuIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
-.ss-menu__item {
-  display:flex; align-items:center; gap:10px; width:100%;
-  padding:10px 12px; border:none; border-radius:8px; cursor:pointer;
-  background:transparent; color:#1f3d3d; font-size:13.5px; font-weight:600; text-align:left;
-  text-decoration:none; transition:background .12s ease;
-}
-.ss-menu__item:hover { background:#f0f7f7; }
-.ss-menu__emoji { font-size:15px; line-height:1; width:18px; text-align:center; }
-
-@media (max-width: 640px) {
-  .ss-toolbar { gap:6px; padding:8px; }
-  .ss-toolbar__spacer { display:none; }
-}
 
 /* View switcher */
 .command-bar {
@@ -1756,54 +1623,17 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
         const views = ["section", "room", "workload", "teacher"];
         views.forEach(function(name) {
             const panel = document.getElementById(name + "-view");
+            const button = document.querySelector('.view-toggle[data-view="' + name + '"]');
             if (panel) { panel.style.display = name === view ? "block" : "none"; }
+            if (button) {
+                button.classList.toggle("is-active", name === view);
+                button.setAttribute("aria-pressed", name === view ? "true" : "false");
+            }
         });
-        document.querySelectorAll("[data-view]").forEach(function(btn) {
-            const match = btn.getAttribute("data-view") === view;
-            btn.classList.toggle("is-active", match);
-            btn.setAttribute("aria-pressed", match ? "true" : "false");
-        });
-        const viewsTrigger = document.getElementById("ssViewsTrigger");
-        if (viewsTrigger) { viewsTrigger.classList.toggle("is-active", view !== "section"); }
-        window.__savedCurrentView = view;
         if (window.location.hash !== "#" + view) {
             window.history.replaceState(null, "", "#" + view);
         }
     }
-
-    // Compact toolbar dropdown menus (Views & Reports, Download)
-    document.addEventListener("DOMContentLoaded", function() {
-        const menus = Array.from(document.querySelectorAll("[data-ss-menu]"));
-        function closeAll(except) {
-            menus.forEach(function(m) {
-                if (m !== except) {
-                    m.classList.remove("is-open");
-                    const t = m.querySelector("[data-ss-menu-toggle]");
-                    if (t) { t.setAttribute("aria-expanded", "false"); }
-                }
-            });
-        }
-        menus.forEach(function(menu) {
-            const toggle = menu.querySelector("[data-ss-menu-toggle]");
-            if (toggle) {
-                toggle.addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    const willOpen = !menu.classList.contains("is-open");
-                    closeAll(menu);
-                    menu.classList.toggle("is-open", willOpen);
-                    toggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
-                });
-            }
-            menu.querySelectorAll(".ss-menu__item").forEach(function(item) {
-                item.addEventListener("click", function() {
-                    menu.classList.remove("is-open");
-                    if (toggle) { toggle.setAttribute("aria-expanded", "false"); }
-                });
-            });
-        });
-        document.addEventListener("click", function() { closeAll(null); });
-        if (!window.__savedCurrentView) { window.__savedCurrentView = "section"; }
-    });
 
       function filterByProgramSelect(sel) {
         const program = sel.value || "all";
@@ -1843,6 +1673,47 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
         });
     }
 
+    function showReshuffleLoading() {
+      Swal.fire({
+        title: 'Applying timetable changes...',
+        html: '<div style="font-size:15px;color:#555;">Creating and fixing the timetable slot...</div>',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: function() { Swal.showLoading(); },
+        customClass: { popup: 'plan-alert-popup' }
+      });
+    }
+
+    window.reshuffleSavedMissingSubject = async function(tid, sectionId, subjectId) {
+      const requestUrl = `/saved/${tid}/reshuffle/${encodeURIComponent(sectionId)}/${subjectId}/`;
+      showReshuffleLoading();
+      try {
+        const response = await fetch(requestUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({}),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.message || 'Unable to create a valid slot for this subject.');
+        }
+        window.location.reload();
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Reshuffle Failed',
+          text: error.message || 'Unable to create a valid slot for this subject.',
+          confirmButtonColor: '#4e73df',
+        });
+      }
+    }
+
     function initDragAndDrop() {
       const toggleButtons = Array.from(document.querySelectorAll("[data-drag-toggle]"));
       if (!toggleButtons.length) return;
@@ -1855,10 +1726,7 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
 
       function setToggleButtonState(button) {
         button.classList.toggle("is-active", dragEnabled);
-        const labelText = dragEnabled ? "Deactivate Drag & Drop" : "Activate Drag & Drop";
-        const labelEl = button.querySelector("[data-drag-label]");
-        if (labelEl) { labelEl.textContent = labelText; }
-        else { button.textContent = labelText; }
+        button.textContent = dragEnabled ? "Disable Drag & Drop" : "Activate Drag & Drop";
       }
 
         function syncDragState() {
@@ -1879,16 +1747,6 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
           if (dragEnabled) { showDragActivationOverlay(); }
         });
         });
-
-        const deactivateFloat = document.getElementById("dragDeactivateFloat");
-        if (deactivateFloat) {
-          deactivateFloat.addEventListener("click", function() {
-            if (!dragEnabled) return;
-            dragEnabled = false;
-            currentDrag = null;
-            syncDragState();
-          });
-        }
 
         dragItems.forEach(item => {
             item.setAttribute("draggable", "false");
@@ -2097,7 +1955,6 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
 </script>
 
 <body>
-<button type="button" id="dragDeactivateFloat" class="drag-deactivate-float">Deactivate Drag &amp; Drop</button>
 <div id="dragActivationOverlay" class="drag-activation-overlay" aria-hidden="true">
     <div class="drag-activation-core">
         <div class="drag-activation-ring"><span></span><span></span></div>
@@ -2167,89 +2024,100 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
 {% endif %}
 
 
-<div class="ss-toolbar">
-  {% if not is_readonly %}
-  <div class="ss-toolbar__group">
+{% if not is_readonly %}
+<div style="text-align:center; margin-bottom: 20px;">
     {% if saved.is_published %}
-      <span class="ss-pub-status">
-        <span class="ss-pub-dot"></span>Published
-        <code>{{ saved.publish_code }}</code>
-      </span>
-      <a class="ss-tool-btn ss-tool-btn--ghost" href="{% url 'saved_timetable_publish_notifications' saved.id %}" title="Notify teachers">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span>Notify</span>
-      </a>
-      <form method="post" action="{% url 'unpublish_timetable' saved.id %}" style="display:inline-flex; margin:0;">
-        {% csrf_token %}
-        <button type="submit" class="ss-btn-danger">Unpublish</button>
-      </form>
+        <div style="padding: 10px 18px; background: #e8f5e9; border: 1px solid #66bb6a; border-radius: 8px; display: inline-block;">
+            <strong style="color:#2e7d32;">Published</strong> &mdash; Code: <code style="font-size:15px; font-weight:700; letter-spacing:1px;">{{ saved.publish_code }}</code>
+        <a href="{% url 'saved_timetable_publish_notifications' saved.id %}" style="display:inline-block; margin-left:10px; background:#1565c0; color:white; text-decoration:none; border:none; border-radius:6px; padding:5px 14px; cursor:pointer; font-weight:600; font-size:13px;">Notify</a>
+            <form method="post" action="{% url 'unpublish_timetable' saved.id %}" style="display:inline; margin-left:10px;">
+                {% csrf_token %}
+                <button type="submit" style="background:#ef5350; color:white; border:none; border-radius:6px; padding:5px 14px; cursor:pointer; font-weight:600; font-size:13px;">Unpublish</button>
+            </form>
+        </div>
     {% else %}
-      <form method="post" action="{% url 'publish_timetable' saved.id %}" class="ss-pub-form">
-        {% csrf_token %}
-        <input class="ss-input" type="text" name="publish_code" placeholder="Enter publish code" required>
-        <button type="submit" class="ss-btn-primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          Publish
-        </button>
-      </form>
+        <form method="post" action="{% url 'publish_timetable' saved.id %}" style="display:inline-flex; gap:8px; align-items:center;">
+            {% csrf_token %}
+            <input type="text" name="publish_code" placeholder="Enter publish code" required
+                   style="padding:8px 14px; border-radius:8px; border:1px solid #ccc; font-size:14px;">
+            <button type="submit" style="background:#43a047; color:white; border:none; border-radius:8px; padding:8px 18px; font-weight:600; cursor:pointer; font-size:14px;">Publish</button>
+        </form>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if not is_readonly or program_options|length > 0 or department_options|length > 0 %}
+<div class="command-bar">
+  {% if not is_readonly %}
+  <div class="command-bar__left">
+    <button id="dragDropToggle" type="button" class="drag-toggle-btn" data-drag-toggle>
+        Activate Drag &amp; Drop
+    </button>
+    <div class="drag-mode-badge">
+        <span class="drag-mode-badge__dot"></span>
+        Advanced drag mode active
+    </div>
+  </div>
+  {% endif %}
+  {% if program_options|length > 0 or department_options|length > 0 %}
+  <div class="command-bar__right">
+    {% if department_options|length > 0 %}
+    <div class="dept-select-wrap">
+      <span class="dept-select-label">FILTER:</span>
+      <select class="dept-select" onchange="filterByDepartmentSelect(this)">
+        <option value="all" {% if active_department == 'all' %}selected{% endif %}>All Departments</option>
+        {% for dept in department_options %}
+        <option value="{{ dept.code }}" {% if active_department == dept.code %}selected{% endif %}>{{ dept.name }} ({{ dept.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    {% if program_options|length > 0 %}
+    <div class="dept-select-wrap">
+      <span class="dept-select-label">PROGRAM:</span>
+      <select class="dept-select" onchange="filterByProgramSelect(this)">
+        <option value="all" {% if active_program == 'all' %}selected{% endif %}>All Programs</option>
+        {% for program in program_options %}
+        <option value="{{ program }}" {% if active_program == program %}selected{% endif %}>{{ program }}</option>
+        {% endfor %}
+      </select>
+    </div>
     {% endif %}
   </div>
-  <span class="ss-divider"></span>
-  <button id="dragDropToggle" type="button" class="ss-tool-btn ss-drag-btn" data-drag-toggle title="Toggle drag &amp; drop to rearrange slots">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg>
-    <span data-drag-label>Activate Drag &amp; Drop</span>
-  </button>
   {% endif %}
+</div>
+{% endif %}
 
-  {% if department_options|length > 0 %}
-  <div class="ss-filter">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-    <span class="ss-filter__label">Filter</span>
-    <select class="ss-filter__select" onchange="filterByDepartmentSelect(this)">
-      <option value="all" {% if active_department == 'all' %}selected{% endif %}>All Departments</option>
-      {% for dept in department_options %}
-      <option value="{{ dept.code }}" {% if active_department == dept.code %}selected{% endif %}>{{ dept.name }} ({{ dept.code }})</option>
-      {% endfor %}
-    </select>
-  </div>
-  {% endif %}
-
-  <span class="ss-toolbar__spacer"></span>
-
-  <button class="ss-tool-btn ss-view-btn is-active" type="button" data-view="section" onclick="showView('section')" aria-pressed="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-    <span>Section</span>
+<div class="view-switcher">
+  <button class="view-toggle view-toggle--section is-active" type="button" data-view="section" onclick="showView('section')" aria-pressed="true">
+    <span class="view-toggle__label">📘 Section Timetable</span>
   </button>
-
-  <div class="ss-menu" data-ss-menu>
-    <button id="ssViewsTrigger" type="button" class="ss-tool-btn" data-ss-menu-toggle aria-haspopup="true" aria-expanded="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-      <span>Views &amp; Reports</span>
-      <svg class="ss-menu__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="ss-menu__panel ss-menu__panel--left">
-      <button type="button" class="ss-menu__item" data-view="room" onclick="showView('room')"><span class="ss-menu__emoji">🏫</span> Room Timetable</button>
-      <button type="button" class="ss-menu__item" data-view="teacher" onclick="showView('teacher')"><span class="ss-menu__emoji">👩‍🏫</span> Teacher Timetable</button>
-      <button type="button" class="ss-menu__item" data-view="workload" onclick="showView('workload')"><span class="ss-menu__emoji">📊</span> Teacher Workload</button>
-      <a class="ss-menu__item" href="{% url 'saved_full_statistics' saved.id %}"><span class="ss-menu__emoji">📈</span> Full Statistics</a>
-    </div>
-  </div>
-
-  <div class="ss-menu" data-ss-menu>
-    <button type="button" class="ss-tool-btn ss-tool-btn--accent" data-ss-menu-toggle aria-haspopup="true" aria-expanded="false" title="Download">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2.5"/><polyline points="7 11 12 16 17 11"/><line x1="12" y1="4" x2="12" y2="16"/></svg>
-      <span>Download</span>
-      <svg class="ss-menu__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="ss-menu__panel ss-menu__panel--right">
-      <a class="ss-menu__item" href="{% url 'saved_timetable_download_center' saved.id %}"><span class="ss-menu__emoji">📥</span> Download Timetable</a>
-      <button type="button" class="ss-menu__item" onclick="downloadForEvaluation(window.__savedCurrentView || 'section')"><span class="ss-menu__emoji">🔒</span> Download for Evaluation</button>
-    </div>
-  </div>
+  <button class="view-toggle view-toggle--room" type="button" data-view="room" onclick="showView('room')" aria-pressed="false">
+    <span class="view-toggle__label">🏫 Room Timetable</span>
+  </button>
+  <button class="view-toggle view-toggle--workload" type="button" data-view="workload" onclick="showView('workload')" aria-pressed="false">
+    <span class="view-toggle__label">📊 Teacher Workload</span>
+  </button>
+  <button class="view-toggle view-toggle--teacher" type="button" data-view="teacher" onclick="showView('teacher')" aria-pressed="false">
+    <span class="view-toggle__label">👩‍🏫 Teacher Timetable</span>
+  </button>
+  <a class="view-toggle view-toggle--statistics" href="{% url 'saved_full_statistics' saved.id %}" style="text-decoration:none;">
+    <span class="view-toggle__label">📈 Full Statistics</span>
+  </a>
 </div>
 
 {# ===================== SECTION TIMETABLES ===================== #}
 <div id="section-view">
+<div class="export-group">
+  <a href="{% url 'saved_timetable_download_center' saved.id %}" class="fullpage-pdf-btn" id="section-pdf-btn" style="text-decoration:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('section')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
+  </button>
+</div>
 {% for table in tables %}
   <div id="section-tt-{{ forloop.counter }}" class="export-surface">
     <div class="export-watermark">
@@ -2264,6 +2132,37 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
     <h2 class="secHead">
       {{ table.section.section_id }} ({{ table.section_department_name }}){% if table.section.program_name %} - {{ table.section.program_name }}{% endif %}
     </h2>
+
+  {% if not is_readonly %}
+  <div class="section-parking-wrap export-exclude">
+    <div class="section-parking-panel">
+      <div class="section-parking-header">
+        <div class="section-parking-title">
+          <span>Section Bucket</span>
+          <strong>Parking for {{ table.section.section_id }}</strong>
+          <small>Drag a filled slot here to park it above this section, just like the generated timetable view.</small>
+        </div>
+      </div>
+      <div class="section-parking-dropzone parking-dropzone" data-section-id="{{ table.section.section_id }}">
+        <div class="section-parking-hint parking-dropzone__hint">Drag a filled slot here to park it above this section.</div>
+        {% if table.parking_items %}
+        <div class="section-parking-list parking-list">
+          {% for parked in table.parking_items %}
+          <div class="parking-item draggable-slot-item" data-drag-source="parking" data-parking-id="{{ parked.id }}" data-section-id="{{ table.section.section_id }}" data-move-type="{% if parked.is_lab %}lab{% else %}class{% endif %}">
+            <span class="parking-item__tag">{% if parked.is_lab %}Parked Lab{% else %}Parked Class{% endif %}</span>
+            <div class="parking-item__title parking-item__subject">{{ parked.subject.subject_name }}{% if parked.is_lab %} Lab{% endif %}</div>
+            <div class="parking-item__teacher">{{ parked.instructor.name }}{% if parked.second_instructor %} + {{ parked.second_instructor.name }}{% endif %}</div>
+            <div class="parking-item__meta">{% if parked.original_room %}Room {{ parked.original_room.r_number }}{% endif %}{% if parked.slot_span > 1 %} · {{ parked.slot_span }} slots{% endif %}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="section-parking-empty parking-empty-state">Bucket empty for this section.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   {% if table.missed_labs %}
     <div class="export-exclude" style="max-width: 1100px; margin: 0 auto 14px auto; padding: 10px 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
@@ -2294,6 +2193,13 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
           <span style="display: inline-block; padding: 6px 10px; background: #ffffff; border: 1px solid #bbdefb; border-radius: 16px; color: #1565c0; font-size: 13px; font-weight: 600; max-width: 340px;">
             {{ subject.name }}: {{ subject.count }}/{{ subject.required }}
             {% if subject.unfulfilled %} | Missed {{ subject.unfulfilled }}{% endif %}
+            {% if subject.unfulfilled and subject.subject_id %}
+              <div style="margin-top: 6px;">
+                <button type="button" onclick="reshuffleSavedMissingSubject({{ saved.id }}, '{{ table.section.section_id|escapejs }}', {{ subject.subject_id }})" style="border: 1px solid #93c5fd; background: #eff6ff; color: #1d4ed8; border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                  Reshuffle This Subject
+                </button>
+              </div>
+            {% endif %}
             {% if subject.reason %}
               <div style="margin-top: 4px; font-size: 11px; font-weight: 500; color: #6b7280; line-height: 1.35;">Reason: {{ subject.reason }}</div>
             {% endif %}
@@ -2325,8 +2231,6 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
       </button>
   </div>
 
-  <div class="section-grid-row">
-  <div class="section-grid-main">
   <table class="table2">
     <thead>
       <tr>
@@ -2482,38 +2386,6 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
     </tbody>
   </table>
   </div>
-  {% if not is_readonly %}
-  <aside class="section-parking-wrap section-parking-aside export-exclude">
-    <div class="section-parking-panel">
-      <div class="section-parking-header">
-        <div class="section-parking-title">
-          <span>Section Bucket</span>
-          <strong>Parking for {{ table.section.section_id }}</strong>
-          <small>Drag a filled slot here to park it beside this section.</small>
-        </div>
-      </div>
-      <div class="section-parking-dropzone parking-dropzone" data-section-id="{{ table.section.section_id }}">
-        <div class="section-parking-hint parking-dropzone__hint">Drag a filled slot here to park it beside this section.</div>
-        {% if table.parking_items %}
-        <div class="section-parking-list parking-list">
-          {% for parked in table.parking_items %}
-          <div class="parking-item draggable-slot-item" data-drag-source="parking" data-parking-id="{{ parked.id }}" data-section-id="{{ table.section.section_id }}" data-move-type="{% if parked.is_lab %}lab{% else %}class{% endif %}">
-            <span class="parking-item__tag">{% if parked.is_lab %}Parked Lab{% else %}Parked Class{% endif %}</span>
-            <div class="parking-item__title parking-item__subject">{{ parked.subject.subject_name }}{% if parked.is_lab %} Lab{% endif %}</div>
-            <div class="parking-item__teacher">{{ parked.instructor.name }}{% if parked.second_instructor %} + {{ parked.second_instructor.name }}{% endif %}</div>
-            <div class="parking-item__meta">{% if parked.original_room %}Room {{ parked.original_room.r_number }}{% endif %}{% if parked.slot_span > 1 %} · {{ parked.slot_span }} slots{% endif %}</div>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <div class="section-parking-empty parking-empty-state">Bucket empty for this section.</div>
-        {% endif %}
-      </div>
-    </div>
-  </aside>
-  {% endif %}
-  </div>
-  </div>
   </div>
 
 {% endfor %}
@@ -2526,6 +2398,16 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
   <div>
     <h2 class="room-view-title">Room Timetables</h2>
     <div class="room-view-toolbar__hint">Clean room-wise layout with export-ready separation</div>
+  </div>
+  <div class="export-group" style="margin:0;">
+    <a href="{% url 'saved_timetable_download_center' saved.id %}" class="fullpage-pdf-btn" style="text-decoration:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Proceed to Download</span>
+    </a>
+    <button class="eval-dl-btn" type="button" onclick="downloadForEvaluation('room')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>Download for Evaluation</span>
+    </button>
   </div>
 </div>
 
@@ -2629,6 +2511,16 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
 
 {# ===================== TEACHER WORKLOAD SUMMARY ===================== #}
 <div id="workload-view" style="display:none;">
+<div class="export-group">
+  <a href="{% url 'saved_timetable_download_center' saved.id %}" class="fullpage-pdf-btn" style="text-decoration:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('workload')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
+  </button>
+</div>
 <h1 class="secHead" style="margin-top: 20px;">Teacher Workload Summary</h1>
 
 <table class="table2" style="width:70%; margin-bottom:40px;">
@@ -2680,6 +2572,16 @@ body.drag-drop-active .drag-deactivate-float { display: inline-flex; opacity: 1;
 
 {# ===================== TEACHER TIMETABLES ===================== #}
 <div id="teacher-view" style="display:none;">
+<div class="export-group">
+  <a href="{% url 'saved_timetable_download_center' saved.id %}" class="fullpage-pdf-btn" style="text-decoration:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Proceed to Download</span>
+  </a>
+  <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('teacher')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Download for Evaluation</span>
+  </button>
+</div>
 <h1 class="secHead" style="margin-top: 20px;">Teacher Timetables</h1>
 
 <div class="ta-toolbar">

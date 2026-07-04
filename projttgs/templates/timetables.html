@@ -95,6 +95,25 @@
             box-shadow: 0 0 14px rgba(56,189,248,0.45);
         }
 
+        .gen-time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 7px 15px;
+            border-radius: 999px;
+            background: rgba(16, 242, 164, 0.10);
+            box-shadow: inset 0 0 0 1px rgba(16, 242, 164, 0.30);
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .gen-time-badge svg {
+            opacity: 0.9;
+        }
+
         h1 {
             margin: 16px 0 8px;
             font-size: clamp(34px, 4.2vw, 52px);
@@ -328,6 +347,95 @@
                 width: 100%;
             }
         }
+
+        /* ===== Generation logs viewer ===== */
+        .genlog-fab {
+            position: fixed;
+            left: 22px;
+            bottom: 22px;
+            z-index: 1200;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(56,189,248,0.35);
+            background: rgba(15, 23, 42, 0.92);
+            color: #7dd3fc;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(2,8,18,0.5);
+            transition: transform 0.2s, background 0.2s;
+        }
+        .genlog-fab:hover { transform: translateY(-2px); background: rgba(30,41,59,0.96); }
+
+        .genlog-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2,8,18,0.55);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 1300;
+        }
+        .genlog-overlay.is-open { opacity: 1; pointer-events: auto; }
+
+        .genlog-panel {
+            position: fixed;
+            top: 0; right: 0;
+            height: 100vh;
+            width: min(560px, 94vw);
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, #0a1626, #060d18);
+            border-left: 1px solid rgba(56,189,248,0.28);
+            box-shadow: -24px 0 60px rgba(0,0,0,0.55);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+            z-index: 1301;
+        }
+        .genlog-panel.is-open { transform: translateX(0); }
+
+        .genlog-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(56,189,248,0.18);
+        }
+        .genlog-title { display: flex; flex-direction: column; gap: 3px; margin-right: auto; }
+        .genlog-title b { font-size: 15px; color: #e2e8f0; }
+        .genlog-title span { font-size: 12px; color: rgba(148,163,184,0.8); }
+        .genlog-copy, .genlog-close {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 11px; border-radius: 9px;
+            border: 1px solid rgba(148,163,184,0.2);
+            background: rgba(255,255,255,0.04);
+            color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .genlog-copy:hover, .genlog-close:hover { background: rgba(255,255,255,0.09); color: #fff; }
+        .genlog-close { padding: 7px 9px; }
+
+        .genlog-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+        .genlog-empty { color: rgba(148,163,184,0.7); padding: 20px 6px; }
+        .genlog-row { display: flex; gap: 12px; padding: 1px 4px; border-radius: 4px; }
+        .genlog-row:hover { background: rgba(255,255,255,0.03); }
+        .genlog-row__n { color: rgba(100,116,139,0.7); min-width: 34px; text-align: right; user-select: none; }
+        .genlog-row__t { color: #cbd5e1; white-space: pre-wrap; word-break: break-word; }
+        .genlog-row.is-sys .genlog-row__t { color: #7dd3fc; }
+        .genlog-row.is-ok .genlog-row__t { color: #86efac; }
+        .genlog-row.is-warn .genlog-row__t { color: #fcd34d; }
+        .genlog-row.is-fail .genlog-row__t { color: #fb7185; }
     </style>
 </head>
 <body>
@@ -338,6 +446,12 @@
             <p class="subhead">
                 Compare the generated timetable candidates through cleaner visual metrics and choose the schedule that best matches stability, workload balance, and resource usage.
             </p>
+            {% if generation_time is not None %}
+            <div class="gen-time-badge" title="Total time taken to generate this timetable">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg>
+                <span>Generated in {{ generation_time }}s</span>
+            </div>
+            {% endif %}
         </header>
 
         {% if indexes %}
@@ -549,6 +663,122 @@
                     }
                 }
             });
+        });
+    </script>
+
+    <!-- ───────────── Generation logs viewer (persists after generation) ───────────── -->
+    <button type="button" class="genlog-fab" id="genlogFab" onclick="openGenLogs()" title="View generation logs">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H4z"/><path d="M8 20h8"/><path d="M7 8h6M7 12h10"/></svg>
+        <span>Logs</span>
+    </button>
+    <div class="genlog-overlay" id="genlogOverlay" onclick="closeGenLogs()"></div>
+    <aside class="genlog-panel" id="genlogPanel" role="dialog" aria-modal="true" aria-labelledby="genlogTitle">
+        <div class="genlog-head">
+            <div class="genlog-title">
+                <b id="genlogTitle">Generation Logs</b>
+                <span>full engine output from this run</span>
+            </div>
+            <button type="button" class="genlog-copy" id="genlogCopyBtn" onclick="copyGenLogs()">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span id="genlogCopyLabel">Copy</span>
+            </button>
+            <button type="button" class="genlog-close" onclick="closeGenLogs()" aria-label="Close logs">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="genlog-body" id="genlogBody">
+            <div class="genlog-empty" id="genlogEmpty">Loading logs…</div>
+        </div>
+    </aside>
+
+    <script>
+        const GENLOG_URL = "{% url 'generation_logs' %}";
+        const genlogPanel = document.getElementById("genlogPanel");
+        const genlogOverlay = document.getElementById("genlogOverlay");
+        const genlogBody = document.getElementById("genlogBody");
+        const genlogEmpty = document.getElementById("genlogEmpty");
+        const genlogCopyBtn = document.getElementById("genlogCopyBtn");
+        const genlogCopyLabel = document.getElementById("genlogCopyLabel");
+        let genlogLines = [];
+        let genlogLoaded = false;
+
+        function genlogClassify(text) {
+            const t = (text || "").toLowerCase();
+            if (text.indexOf("[SmartScheduler]") !== -1) return "is-sys";
+            if (t.indexOf("force fail") !== -1 || t.indexOf("failed") !== -1 || t.indexOf("error") !== -1 || t.indexOf("traceback") !== -1) return "is-fail";
+            if (t.indexOf("warn") !== -1) return "is-warn";
+            if (/\bassigned\b|complete|finished/.test(t)) return "is-ok";
+            return "";
+        }
+        function renderGenLogs(lines) {
+            genlogLines = lines || [];
+            genlogBody.innerHTML = "";
+            if (!genlogLines.length) {
+                const e = document.createElement("div");
+                e.className = "genlog-empty";
+                e.textContent = "No logs captured for the last generation.";
+                genlogBody.appendChild(e);
+                return;
+            }
+            const frag = document.createDocumentFragment();
+            genlogLines.forEach((text, i) => {
+                const row = document.createElement("div");
+                row.className = "genlog-row " + genlogClassify(text);
+                const n = document.createElement("span");
+                n.className = "genlog-row__n";
+                n.textContent = i + 1;
+                const t = document.createElement("span");
+                t.className = "genlog-row__t";
+                t.textContent = text === "" ? " " : text;
+                row.appendChild(n); row.appendChild(t);
+                frag.appendChild(row);
+            });
+            genlogBody.appendChild(frag);
+        }
+        async function loadGenLogs() {
+            try {
+                const resp = await fetch(GENLOG_URL + "?since=0", {
+                    credentials: "same-origin",
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    renderGenLogs(Array.isArray(data.lines) ? data.lines : []);
+                } else {
+                    renderGenLogs([]);
+                }
+            } catch (_) {
+                renderGenLogs([]);
+            }
+            genlogLoaded = true;
+        }
+        function openGenLogs() {
+            genlogPanel.classList.add("is-open");
+            genlogOverlay.classList.add("is-open");
+            if (!genlogLoaded) loadGenLogs();
+        }
+        function closeGenLogs() {
+            genlogPanel.classList.remove("is-open");
+            genlogOverlay.classList.remove("is-open");
+        }
+        function copyGenLogs() {
+            const text = genlogLines.join("\n");
+            const done = () => {
+                genlogCopyLabel.textContent = "Copied!";
+                setTimeout(() => { genlogCopyLabel.textContent = "Copy"; }, 1600);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(done);
+            } else {
+                const ta = document.createElement("textarea");
+                ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand("copy"); } catch (_) {}
+                document.body.removeChild(ta); done();
+            }
+        }
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && genlogPanel.classList.contains("is-open")) closeGenLogs();
         });
     </script>
 <script src="{% static 'chatbot.js' %}"></script>

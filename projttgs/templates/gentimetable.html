@@ -814,23 +814,6 @@ body.drag-drop-active .drag-mode-badge {
   background: #eff6ff;
 }
 
-.manual-slot-duplicate-btn {
-  border: 1px solid rgba(5, 150, 105, 0.30);
-  background: rgba(255, 255, 255, 0.92);
-  color: #047857;
-  border-radius: 999px;
-  padding: 4px 9px;
-  font-size: 11px;
-  font-weight: 800;
-  cursor: pointer;
-  margin-top: 6px;
-  margin-left: 6px;
-}
-
-.manual-slot-duplicate-btn:hover {
-  background: #ecfdf5;
-}
-
 .section-parking-panel {
   border-radius: 18px;
   padding: 14px;
@@ -2387,9 +2370,49 @@ function filterByDept(code, label) {
             }, 180);
           });
         });
+        }
+
+      function showReshuffleLoading() {
+        Swal.fire({
+          title: 'Applying timetable changes...',
+          html: '<div style="font-size:15px;color:#555;">Creating and fixing the timetable slot...</div>',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: function() { Swal.showLoading(); },
+        });
       }
 
-function initDragAndDrop() {
+      window.reshuffleGeneratedMissingSubject = async function(index, sectionId, subjectId) {
+        const requestUrl = `/timetable/${index}/reshuffle/${encodeURIComponent(sectionId)}/${subjectId}/`;
+        showReshuffleLoading();
+        try {
+          const response = await fetch(requestUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCsrfToken(),
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({}),
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.ok) {
+            throw new Error(payload.message || 'Unable to create a valid slot for this subject.');
+          }
+          window.location.reload();
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Reshuffle Failed',
+            text: error.message || 'Unable to create a valid slot for this subject.',
+            confirmButtonColor: '#4e73df',
+          });
+        }
+      }
+
+    function initDragAndDrop() {
         const toggleBtn = document.getElementById("dragDropToggle");
         if (!toggleBtn) return;
 
@@ -2737,71 +2760,6 @@ function initDragAndDrop() {
                 Swal.fire({ icon: "success", title: "Slot Updated", text: payload.message || "Slot updated.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
               } catch (error) {
                 Swal.fire({ icon: "error", title: "Network Error", text: "Could not update slot right now.", confirmButtonColor: "#4e73df" });
-              }
-            });
-          });
-
-          // Duplicate a created slot: reuse the slot's values so the user does
-          // not have to re-type subject/teacher/room/duration. Opens the same
-          // editor pre-filled, then creates a copy in the section bucket.
-          document.querySelectorAll(".manual-slot-duplicate-btn").forEach(button => {
-            button.addEventListener("click", async function(event) {
-              event.preventDefault();
-              event.stopPropagation();
-              const item = button.closest(".draggable-slot-item");
-              if (!item) return;
-              const sectionId = item.dataset.sectionId || "";
-              if (!sectionId) {
-                Swal.fire({ icon: "error", title: "Duplicate Failed", text: "This slot is missing its section. Refresh the page and try again.", confirmButtonColor: "#4e73df" });
-                return;
-              }
-              const values = manualSlotValuesFromElement(item);
-              const result = await openManualSlotModal({
-                title: `Duplicate Slot for ${sectionId}`,
-                values,
-                confirmButtonText: "Create Copy",
-              });
-              if (!result.isConfirmed) return;
-
-              async function postDuplicateSlot(payload) {
-                const response = await fetch(`/parking/${encodeURIComponent(sectionId)}/create/`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCsrfToken(),
-                    "X-Requested-With": "XMLHttpRequest"
-                  },
-                  body: JSON.stringify(payload)
-                });
-                const data = await response.json().catch(() => ({}));
-                return { response, payload: data };
-              }
-
-              try {
-                let { response, payload } = await postDuplicateSlot(result.value);
-
-                if (payload && payload.room_missing) {
-                  const confirmMissing = await Swal.fire({
-                    icon: "warning",
-                    title: "Room not found",
-                    html: `Room <b>"${payload.room_number || result.value.room_number}"</b> does not exist in your Rooms.<br><br>Do you want to proceed with this room name anyway?<br><span style="font-size:13px;color:#64748b;">The teacher's slot will be locked, but no new room will be created and no room will be reserved.</span>`,
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, proceed",
-                    cancelButtonText: "No",
-                    confirmButtonColor: "#d97706",
-                    cancelButtonColor: "#64748b",
-                  });
-                  if (!confirmMissing.isConfirmed) return;
-                  ({ response, payload } = await postDuplicateSlot(Object.assign({}, result.value, { allow_missing_room: true })));
-                }
-
-                if (!response.ok || !payload.ok) {
-                  Swal.fire({ icon: "error", title: "Duplicate Failed", text: payload.message || "Could not duplicate slot.", confirmButtonColor: "#4e73df" });
-                  return;
-                }
-                Swal.fire({ icon: "success", title: "Slot Duplicated", text: payload.message || "A copy was added to this section's bucket.", timer: 1000, showConfirmButton: false }).then(() => window.location.reload());
-              } catch (error) {
-                Swal.fire({ icon: "error", title: "Network Error", text: "Could not duplicate slot right now.", confirmButtonColor: "#4e73df" });
               }
             });
           });
@@ -3160,67 +3118,88 @@ function initDragAndDrop() {
         // ── Save timetable (AJAX, with limit-warning) ─────────────────────
         window.saveTimetable = function(idx) {
             var url = "{% url 'save_timetable' 0 %}".replace('/0/', '/' + idx + '/');
+          Swal.fire({
+            title: 'Save Timetable',
+            input: 'text',
+            inputLabel: 'Name this saved timetable',
+            inputPlaceholder: 'e.g. Mid Sem Final',
+            inputAttributes: { maxlength: 120 },
+            showCancelButton: true,
+            confirmButtonText: 'Save',
+            confirmButtonColor: '#5b21ed',
+            customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+            buttonsStyling: false,
+          }).then(function(nameResult) {
+            if (!nameResult.isConfirmed) {
+              return;
+            }
+
+            var saveUrl = url;
+            if (nameResult.value && nameResult.value.trim()) {
+              saveUrl += '?name=' + encodeURIComponent(nameResult.value.trim());
+            }
+
             Swal.fire({
-                title: 'Saving…',
-                html: '<div style="font-size:15px;color:#555;">Storing your complete timetable…</div>',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                didOpen: function() { Swal.showLoading(); },
-                customClass: { popup: 'plan-alert-popup' }
+              title: 'Saving…',
+              html: '<div style="font-size:15px;color:#555;">Storing your complete timetable…</div>',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              showConfirmButton: false,
+              didOpen: function() { Swal.showLoading(); },
+              customClass: { popup: 'plan-alert-popup' }
             });
 
-            fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                }
+            fetch(saveUrl, {
+              method: 'GET',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+              }
             })
             .then(function(r) { return r.json().then(function(d) { return {ok: r.ok, status: r.status, data: d}; }); })
             .then(function(res) {
-                if (res.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Timetable Saved!',
-                        text: res.data.message || 'Your timetable has been saved successfully.',
-                        confirmButtonText: 'View Saved Timetables',
-                        confirmButtonColor: '#5b21ed',
-                        customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
-                        buttonsStyling: false,
-                    }).then(function(result) {
-                        if (result.isConfirmed) {
-                            window.location.href = res.data.redirect || '/saved_timetables/';
-                        }
-                    });
-                } else if (res.status === 409) {
-                    // Limit reached
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Save Limit Reached',
-                        html: '<div style="color:#334155;font-size:15px;line-height:1.6;">' + res.data.message + '</div>',
-                        confirmButtonText: 'Manage Saved Timetables',
-                        confirmButtonColor: '#5b21ed',
-                        showCancelButton: true,
-                        cancelButtonText: 'Stay here',
-                        customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
-                        buttonsStyling: false,
-                    }).then(function(result) {
-                        if (result.isConfirmed) {
-                            window.location.href = '/saved_timetables/';
-                        }
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Save Failed',
-                        text: res.data.message || 'An unexpected error occurred.',
-                        customClass: { popup: 'plan-alert-popup' }
-                    });
-                }
+              if (res.ok) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Timetable Saved!',
+                  text: res.data.message || 'Your timetable has been saved successfully.',
+                  confirmButtonText: 'View Saved Timetables',
+                  confirmButtonColor: '#5b21ed',
+                  customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+                  buttonsStyling: false,
+                }).then(function(result) {
+                  if (result.isConfirmed) {
+                    window.location.href = res.data.redirect || '/saved_timetables/';
+                  }
+                });
+              } else if (res.status === 409) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Save Limit Reached',
+                  html: '<div style="color:#334155;font-size:15px;line-height:1.6;">' + res.data.message + '</div>',
+                  confirmButtonText: 'Manage Saved Timetables',
+                  confirmButtonColor: '#5b21ed',
+                  showCancelButton: true,
+                  cancelButtonText: 'Stay here',
+                  customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+                  buttonsStyling: false,
+                }).then(function(result) {
+                  if (result.isConfirmed) {
+                    window.location.href = '/saved_timetables/';
+                  }
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Save Failed',
+                  text: res.data.message || 'An unexpected error occurred.',
+                  customClass: { popup: 'plan-alert-popup' }
+                });
+              }
             })
             .catch(function() {
-                Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not reach the server.', customClass: { popup: 'plan-alert-popup' } });
+              Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not reach the server.', customClass: { popup: 'plan-alert-popup' } });
+            });
             });
         };
     });
@@ -3330,6 +3309,17 @@ function initDragAndDrop() {
       </select>
     </div>
     {% endif %}
+    {% if program_options|length > 0 %}
+    <div class="dept-select-wrap">
+      <span class="dept-select-label">PROGRAM:</span>
+      <select id="program-filter-select" class="dept-select" onchange="filterByProgramSelect(this)">
+        <option value="all" {% if active_program == 'all' %}selected{% endif %}>All Programs</option>
+        {% for program in program_options %}
+        <option value="{{ program }}" {% if active_program == program %}selected{% endif %}>{{ program }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
     <span id="dept-filter-active-label" style="font-size:11px;font-weight:700;color:#94a3b8;display:none;"></span>
 </div>
 
@@ -3424,7 +3414,6 @@ function initDragAndDrop() {
             <div class="parking-item__meta">{% if parked.batch_label %}{{ parked.batch_label }} · {% endif %}{% if parked.original_room %}Room {{ parked.original_room.r_number }}{% elif parked.room_number %}Room {{ parked.room_number }}{% endif %}</div>
             {% if prefill_mode and parked.manual_entry %}
             <button type="button" class="manual-slot-edit-btn">Edit</button>
-            <button type="button" class="manual-slot-duplicate-btn">Duplicate</button>
             {% endif %}
           </div>
           {% endfor %}
@@ -3470,6 +3459,13 @@ function initDragAndDrop() {
             {{ subject.name }}: {{ subject.count }}/{{ subject.required }}
             {% if subject.unfulfilled %}
               | Missed {{ subject.unfulfilled }}
+            {% endif %}
+            {% if subject.unfulfilled and subject.subject_id %}
+              <div style="margin-top: 6px;">
+                <button type="button" onclick="reshuffleGeneratedMissingSubject({{ index }}, '{{ table.section.section_id|escapejs }}', {{ subject.subject_id }})" style="border: 1px solid #93c5fd; background: #eff6ff; color: #1d4ed8; border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                  Reshuffle This Subject
+                </button>
+              </div>
             {% endif %}
             {% if subject.reason %}
               <div style="margin-top: 4px; font-size: 11px; font-weight: 500; color: #6b7280; line-height: 1.35;">
@@ -4023,10 +4019,10 @@ function initDragAndDrop() {
             <td class="special-cell">SPECIAL CLASS</td>
 
           {% elif cell.type == "lab" %}
-            <td colspan="{{ cell.colspan }}">
+            <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               <div class="labs-container">
                 {% for lab in cell.labs %}
-                  <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+                  <div class="lab-box draggable-slot-item {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}" data-drag-source="slot" data-move-type="lab" data-section-id="{{ lab.section }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
@@ -4058,9 +4054,9 @@ function initDragAndDrop() {
             </td>
 
           {% elif cell.type == "class" %}
-            <td colspan="{{ cell.colspan }}">
+            <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
               {% for cls in cell.classes %}
-                <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+                <div class="class-box draggable-slot-item {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}" data-drag-source="slot" data-move-type="class" data-section-id="{{ cls.section }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                   <strong>{{ cls.subject.subject_name }}</strong><br>
                   Section: {{ cls.section }}<br>
                   {{ cls.room.r_number|default:cls.room_label }}
@@ -4069,7 +4065,7 @@ function initDragAndDrop() {
             </td>
 
           {% else %}
-            <td></td>
+            <td class="slot-cell drop-target" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}"></td>
           {% endif %}
         {% endfor %}
       </tr>

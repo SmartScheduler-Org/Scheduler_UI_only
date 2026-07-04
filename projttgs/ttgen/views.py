@@ -85,6 +85,7 @@ _GENERATOR_VIEW_NAMES = (
     "generated_restore_parked_slot",
     "generated_delete_parking_item",
     "generated_delete_slot_item",
+    "generated_reshuffle_missing_subject",
     "generated_delete_manual_slot_item",
     "generated_update_parking_item",
     "generated_update_manual_slot_item",
@@ -816,7 +817,7 @@ for _view_name in _GENERATOR_VIEW_NAMES:
         globals()[_view_name] = _wrap_edit_delete(_view)
     elif _view_name in {"substitute_teacher", "substitute_lab_teacher"}:
         globals()[_view_name] = _wrap_substitute(_view)
-    elif _view_name in {"move_slot_dragdrop", "generated_park_slot", "generated_create_parking_slot", "generated_restore_parked_slot", "generated_delete_parking_item", "generated_delete_slot_item", "generated_delete_manual_slot_item", "generated_update_parking_item", "generated_update_manual_slot_item"}:
+    elif _view_name in {"move_slot_dragdrop", "generated_park_slot", "generated_create_parking_slot", "generated_restore_parked_slot", "generated_delete_parking_item", "generated_delete_slot_item", "generated_delete_manual_slot_item", "generated_update_parking_item", "generated_update_manual_slot_item", "generated_reshuffle_missing_subject"}:
         globals()[_view_name] = _view
     elif _view_name == "saved_full_statistics":
         # Saved statistics are owned by the user (ownership checked in the view);

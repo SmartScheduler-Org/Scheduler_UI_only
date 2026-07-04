@@ -369,7 +369,7 @@ def _serialize_prefill_class(cls):
         "subject_text": _prefill_subject_text(getattr(cls, "subject", None)),
         "teacher_uid": _prefill_teacher_uid(getattr(cls, "instructor", None)),
         "co_teacher_uids": [_prefill_teacher_uid(teacher) for teacher in list(getattr(cls, "co_instructors", []) or []) if teacher],
-        "room_number": _prefill_room_number(getattr(cls, "room", None)) or str(getattr(cls, "room_label", "") or "").strip(),
+        "room_number": _prefill_room_number(getattr(cls, "room", None)),
         "day": getattr(first_time, "day", "") if first_time else "",
         "start_slot": str(getattr(first_time, "time", "") if first_time else ""),
         "duration": max(1, min(int(getattr(cls, "duration", None) or len(meeting_times) or 1), 8)),
@@ -389,7 +389,7 @@ def _serialize_prefill_lab(lab):
         "teacher_uid": _prefill_teacher_uid(getattr(lab, "instructor", None)),
         "second_teacher_uid": _prefill_teacher_uid(getattr(lab, "second_instructor", None)),
         "co_teacher_uids": [_prefill_teacher_uid(teacher) for teacher in list(getattr(lab, "co_instructors", []) or []) if teacher],
-        "room_number": _prefill_room_number(getattr(lab, "room", None)) or str(getattr(lab, "room_label", "") or "").strip(),
+        "room_number": _prefill_room_number(getattr(lab, "room", None)),
         "day": getattr(first_time, "day", "") if first_time else "",
         "start_slot": str(getattr(first_time, "time", "") if first_time else ""),
         "duration": max(1, min(int(getattr(lab, "duration", None) or len(meeting_times) or LAB_DURATION), 8)),
@@ -3073,23 +3073,17 @@ if "lab_category_matches" not in globals():
     def lab_category_matches(room_category, required_categories):
         normalized_room = normalize_lab_category(room_category)
         required = normalize_lab_categories(required_categories)
-        return not required or normalized_room in required
+        if not required:
+            return True
+        room_key = normalized_room.casefold()
+        return any(room_key == option.casefold() for option in required)
 
 
 if "normalize_specific_rooms" not in globals():
     def normalize_specific_rooms(value):
         if not value:
             return ""
-        text = str(value).strip()
-        # Positional form: "(pos1;pos2;...)" aligned with required_lab_category.
-        # Preserve empty positions and '*' OR-groups so per-category room locks survive.
-        if text.startswith("(") and text.endswith(")"):
-            positions = []
-            for pos in text[1:-1].split(";"):
-                cands = [re.sub(r"\s+", " ", c.strip()) for c in pos.split("*")]
-                positions.append("*".join([c for c in cands if c]))
-            return "(" + ";".join(positions) + ")"
-        tokens = [token.strip() for token in re.split(r"[;,\n]+", text) if token.strip()]
+        tokens = [token.strip() for token in re.split(r"[;,\n]+", str(value)) if token.strip()]
         return ";".join(tokens)
 
 
@@ -3217,7 +3211,532 @@ def _rebuild_classes_and_labs_from_saved(saved_t):
             lab_obj.meeting_times = list(slot.lab_slots.all())
             labs.append(lab_obj)
 
+    if (not classes and not labs) and getattr(saved_t, "snapshot", None):
+        snapshot = saved_t.snapshot or {}
+        for entry in list(snapshot.get("classes") or []):
+            restored = _prefill_restore_class(entry, saved_t.user)
+            if restored is not None:
+                classes.append(restored)
+        for entry in list(snapshot.get("labs") or []):
+            restored = _prefill_restore_lab(entry, saved_t.user)
+            if restored is not None:
+                labs.append(restored)
+
     return classes, labs
+
+
+def _room_usage_counts_from_entities(classes, labs):
+    usage_counts = {}
+    for cls in classes or []:
+        room = getattr(cls, "room", None)
+        if room is None:
+            continue
+        usage_counts[room.pk] = usage_counts.get(room.pk, 0) + max(int(getattr(cls, "duration", 1) or 1), 1)
+    for lab in labs or []:
+        room = getattr(lab, "room", None)
+        if room is None:
+            continue
+        usage_counts[room.pk] = usage_counts.get(room.pk, 0) + max(len(getattr(lab, "meeting_times", None) or []), 1)
+    return usage_counts
+
+
+def _section_subject_mapping(section_obj, subject):
+    if section_obj is None or getattr(subject, "pk", None) is None:
+        return None
+    return SectionSubjectInstructor.objects.filter(
+        user=getattr(section_obj, "user", None),
+        section=section_obj,
+        subject=subject,
+    ).select_related("instructor", "second_instructor").first()
+
+
+def _subject_teacher_candidates(section_obj, subject):
+    mapping = _section_subject_mapping(section_obj, subject)
+    ordered = []
+    seen = set()
+
+    def _add(teacher):
+        if not teacher:
+            return
+        key = getattr(teacher, "pk", None) or id(teacher)
+        if key in seen:
+            return
+        seen.add(key)
+        ordered.append(teacher)
+
+    if mapping is not None:
+        _add(mapping.instructor)
+        teacher_by_id = {
+            teacher.id: teacher
+            for teacher in Instructor.objects.filter(
+                id__in=list(filter(None, getattr(mapping, "group_instructor_ids", []) or [])),
+                user=getattr(section_obj, "user", None),
+            )
+        }
+        for teacher_id in getattr(mapping, "group_instructor_ids", []) or []:
+            _add(teacher_by_id.get(teacher_id))
+
+    for teacher in subject.instructors.all().order_by("name"):
+        _add(teacher)
+
+    return ordered, mapping
+
+
+def _subject_room_candidates(user, section_obj, subject, classes, labs):
+    is_lab = getattr(subject, "room_required", "") == "Lab"
+    usage_counts = _room_usage_counts_from_entities(classes, labs)
+    specific_tokens = [
+        token for token in normalize_specific_rooms(getattr(subject, "specific_rooms", "")).split(";")
+        if token
+    ]
+
+    rooms = []
+    if specific_tokens:
+        specific_by_name = {
+            room.r_number: room
+            for room in Room.objects.filter(user=user, r_number__in=specific_tokens).select_related("department")
+        }
+        rooms = [specific_by_name[token] for token in specific_tokens if token in specific_by_name]
+    else:
+        required_room_type = (getattr(subject, "room_required", "") or "").strip()
+        if is_lab:
+            room_qs = Room.objects.filter(user=user, room_type="Lab")
+        elif required_room_type:
+            room_qs = Room.objects.filter(user=user, room_type=required_room_type)
+        else:
+            room_qs = Room.objects.filter(user=user, room_type="Lecture Hall")
+
+        if section_obj is not None and getattr(section_obj, "department", None) is not None:
+            local_rooms = list(room_qs.filter(department=section_obj.department).select_related("department"))
+            rooms = local_rooms or list(room_qs.select_related("department"))
+        else:
+            rooms = list(room_qs.select_related("department"))
+
+    if is_lab:
+        required_categories = normalize_lab_categories(getattr(subject, "required_lab_category", ""))
+        if required_categories:
+            rooms = [room for room in rooms if lab_category_matches(getattr(room, "lab_category", ""), required_categories)]
+
+    rooms.sort(key=lambda room: (-usage_counts.get(room.pk, 0), str(getattr(room, "r_number", "") or "").lower(), room.pk))
+    return rooms
+
+
+def _section_subject_daily_count(classes, section_id, subject, day):
+    count = 0
+    for cls in classes or []:
+        meeting_time = getattr(cls, "meeting_time", None)
+        if not meeting_time:
+            continue
+        if str(getattr(cls, "section", "")) != str(section_id):
+            continue
+        if getattr(cls, "subject", None) != subject:
+            continue
+        if getattr(meeting_time, "day", "") != day:
+            continue
+        count += 1
+    return count
+
+
+def _required_subject_occurrences(section_obj, subject):
+    group_counter = globals().get("get_section_subject_group_count")
+    if callable(group_counter):
+        try:
+            group_count = max(1, int(group_counter(section_obj, subject) or 1))
+        except Exception:
+            group_count = 1
+    else:
+        try:
+            mapping = SectionSubjectMapping.objects.filter(section=section_obj, subject=subject).only("group_count").first()
+            group_count = max(1, getattr(mapping, "group_count", 1) or 1)
+        except Exception:
+            group_count = 1
+    return max(1, int(getattr(subject, "classes_per_week", 1) or 1) * group_count)
+
+
+def _assigned_subject_occurrences(classes, labs, section_id, subject):
+    if getattr(subject, "room_required", "") == "Lab":
+        return sum(1 for lab in labs or [] if str(getattr(lab, "section", "")) == str(section_id) and getattr(lab, "subject", None) == subject)
+    return sum(1 for cls in classes or [] if str(getattr(cls, "section", "")) == str(section_id) and getattr(cls, "subject", None) == subject)
+
+
+def _slot_block(day, start_slot, duration, user):
+    block = []
+    for offset in range(max(int(duration or 1), 1)):
+        slot_number = int(start_slot) + offset
+        if slot_number > 9 or str(slot_number) == str(LUNCH_SLOT):
+            return None
+        meeting_time = get_meeting_time(day, slot_number, user=user)
+        if meeting_time is None:
+            return None
+        block.append(meeting_time)
+    return block
+
+
+def _entity_occupied_slots(entity):
+    meeting_times = list(getattr(entity, "meeting_times", None) or [])
+    if meeting_times:
+        return {(mt.day, str(mt.time)) for mt in meeting_times if mt is not None}
+
+    meeting_time = getattr(entity, "meeting_time", None)
+    if meeting_time is None:
+        return set()
+
+    duration = max(1, int(getattr(entity, "duration", 1) or 1))
+    start_slot = int(meeting_time.time)
+    return {(meeting_time.day, str(start_slot + offset)) for offset in range(duration)}
+
+
+def _section_block_is_free(section_id, block, classes, labs):
+    target_slots = {(mt.day, str(mt.time)) for mt in block or []}
+    if not target_slots:
+        return False
+
+    for cls in classes or []:
+        if str(getattr(cls, "section", "")) != str(section_id):
+            continue
+        if _entity_occupied_slots(cls) & target_slots:
+            return False
+
+    for lab in labs or []:
+        if str(getattr(lab, "section", "")) != str(section_id):
+            continue
+        if _entity_occupied_slots(lab) & target_slots:
+            return False
+
+    return True
+
+
+def _explain_slot_conflict_for_entities(day, slot, teacher, room, section_id, subject, classes, labs, co_instructors=None):
+    slot_str = str(slot)
+
+    moving_teachers = set()
+    if teacher is not None:
+        moving_teachers.add(teacher)
+    for co_teacher in (co_instructors or []):
+        if co_teacher:
+            moving_teachers.add(co_teacher)
+
+    def _occupant_teachers(obj):
+        staff = set()
+        instructor = getattr(obj, "instructor", None)
+        if instructor:
+            staff.add(instructor)
+        second_instructor = getattr(obj, "second_instructor", None)
+        if second_instructor:
+            staff.add(second_instructor)
+        for co_teacher in (getattr(obj, "co_instructors", None) or []):
+            if co_teacher:
+                staff.add(co_teacher)
+        return staff
+
+    same_subject_slots = []
+    for cls in classes or []:
+        meeting_time = getattr(cls, "meeting_time", None)
+        if meeting_time is None:
+            continue
+        if str(getattr(cls, "section", "")) != str(section_id):
+            continue
+        if getattr(cls, "subject", None) != subject:
+            continue
+        if getattr(meeting_time, "day", "") != day:
+            continue
+        for _, occupied_slot in _entity_occupied_slots(cls):
+            same_subject_slots.append(int(occupied_slot))
+
+    if len(same_subject_slots) == 1:
+        existing_slot = same_subject_slots[0]
+        if abs(existing_slot - int(slot)) == 1:
+            return f"{subject.subject_name} already has a nearby slot on {day} at slot {existing_slot}, so adjacent scheduling is blocked."
+
+    for cls in classes or []:
+        if (day, slot_str) not in _entity_occupied_slots(cls):
+            continue
+        if room is not None and getattr(cls, "room", None) == room:
+            return f"Room {room.r_number} is already occupied by {cls.subject.subject_name} (Section {cls.section}) in this slot."
+        clash_teacher = moving_teachers & _occupant_teachers(cls)
+        if clash_teacher:
+            teacher_name = next(iter(clash_teacher)).name
+            return f"{teacher_name} is already teaching {cls.subject.subject_name} (Section {cls.section}) in this slot."
+        if str(getattr(cls, "section", "")) == str(section_id):
+            return f"Section {section_id} already has {cls.subject.subject_name} in this slot."
+
+    for lab in labs or []:
+        if (day, slot_str) not in _entity_occupied_slots(lab):
+            continue
+        if room is not None and getattr(lab, "room", None) == room:
+            return f"Room {room.r_number} is already occupied by {lab.subject.subject_name} Lab (Section {lab.section}) in this slot."
+        clash_teacher = moving_teachers & _occupant_teachers(lab)
+        if clash_teacher:
+            teacher_name = next(iter(clash_teacher)).name
+            return f"{teacher_name} is already assigned to {lab.subject.subject_name} Lab (Section {lab.section}) in this slot."
+        if str(getattr(lab, "section", "")) == str(section_id):
+            return f"Section {section_id} already has a lab running in this slot."
+
+    return None
+
+
+def _find_missing_subject_placement(user, section_obj, subject, classes, labs):
+    if section_obj is None or subject is None:
+        return None, "Section or subject was not found."
+
+    teacher_candidates, mapping = _subject_teacher_candidates(section_obj, subject)
+    room_candidates = _subject_room_candidates(user, section_obj, subject, classes, labs)
+    if not teacher_candidates:
+        return None, "No teacher is mapped to this subject."
+    if not room_candidates:
+        room_type = "lab room" if getattr(subject, "room_required", "") == "Lab" else "lecture hall"
+        return None, f"No matching {room_type} is available for this subject in the allowed department scope."
+
+    is_lab = getattr(subject, "room_required", "") == "Lab"
+    default_duration = LAB_DURATION if is_lab else 1
+    duration = max(1, int(getattr(subject, "duration", default_duration) or default_duration))
+    start_slots = [int(slot) for slot in VALID_LAB_START_SLOTS] if is_lab else [slot for slot in range(1, 10) if str(slot) != str(LUNCH_SLOT)]
+    sorted_teachers = sorted(
+        teacher_candidates,
+        key=lambda teacher: (_compute_teacher_workload(teacher, classes, labs), str(getattr(teacher, "name", "") or "").lower(), teacher.pk),
+    )
+    last_reason = "No conflict-free slot could be created for this subject."
+    candidate_blocks = []
+
+    for day in DAYS:
+        if not is_lab and _section_subject_daily_count(classes, section_obj.section_id, subject, day) >= 2:
+            last_reason = f"{subject.subject_name} already has the maximum allowed classes on {day}."
+            continue
+        for start_slot in start_slots:
+            block = _slot_block(day, start_slot, duration, user)
+            if not block:
+                if not is_lab:
+                    last_reason = f"This subject does not fit from slot {start_slot} on {day}."
+                continue
+
+            candidate_blocks.append({
+                "day": day,
+                "start_slot": start_slot,
+                "block": block,
+                "section_free": _section_block_is_free(section_obj.section_id, block, classes, labs),
+            })
+
+    candidate_blocks.sort(key=lambda item: (0 if item["section_free"] else 1, DAYS.index(item["day"]), int(item["start_slot"])))
+    section_free_windows = sum(1 for item in candidate_blocks if item["section_free"])
+
+    for candidate in candidate_blocks:
+        day = candidate["day"]
+        start_slot = candidate["start_slot"]
+        block = candidate["block"]
+        if not candidate["section_free"]:
+            continue
+
+        if is_lab:
+            free_teachers = [teacher for teacher in sorted_teachers if _teacher_is_free_for_lab(teacher, block, classes, labs)]
+        else:
+            free_teachers = [
+                teacher for teacher in sorted_teachers
+                if all(_teacher_is_free_at(teacher, day, int(mt.time), classes, labs) for mt in block)
+            ]
+        if not free_teachers:
+            last_reason = f"Section {section_obj.section_id} is free here, but all mapped teachers are busy on {day} at slot {start_slot}."
+            continue
+
+        for room in room_candidates:
+            for teacher in free_teachers:
+                blocked = False
+                for meeting_time in block:
+                    conflict_reason = _explain_slot_conflict_for_entities(
+                        day,
+                        int(meeting_time.time),
+                        teacher,
+                        room,
+                        section_obj.section_id,
+                        subject,
+                        classes,
+                        labs,
+                        co_instructors=[],
+                    )
+                    if conflict_reason:
+                        last_reason = conflict_reason
+                        blocked = True
+                        break
+                if blocked:
+                    continue
+                return {
+                    "section": section_obj,
+                    "subject": subject,
+                    "teacher": teacher,
+                    "second_instructor": getattr(mapping, "second_instructor", None) if is_lab else None,
+                    "room": room,
+                    "meeting_times": block,
+                    "is_lab": is_lab,
+                }, ""
+
+    if section_free_windows <= 0:
+        return None, f"Section {section_obj.section_id} does not have any fully empty {'lab block' if is_lab else 'slot'} left for {subject.subject_name}."
+
+    if last_reason == "No conflict-free slot could be created for this subject.":
+        last_reason = f"Scanned {section_free_windows} section-free window(s), but no teacher-room combination was conflict-free for {subject.subject_name}."
+
+    return None, last_reason
+
+
+def _apply_generated_missing_subject_placement(request, section_obj, subject):
+    state = _get_user_state(request.user.id)
+    classes = list(state.get("classes") or GLOBAL_CLASSES or [])
+    labs = list(state.get("labs") or GLOBAL_LABS or [])
+    placement, failure_reason = _find_missing_subject_placement(request.user, section_obj, subject, classes, labs)
+    if placement is None:
+        return None, failure_reason
+
+    if placement["is_lab"]:
+        new_lab = Lab(
+            _next_in_memory_class_id(),
+            section_obj.department,
+            section_obj.section_id,
+            subject,
+        )
+        new_lab.set_instructor(placement["teacher"])
+        if placement.get("second_instructor") is not None:
+            new_lab.set_second_instructor(placement["second_instructor"])
+        new_lab.set_room(placement["room"])
+        new_lab.set_meetingTimes(placement["meeting_times"])
+        labs.append(new_lab)
+        state["labs"] = labs
+        return {"kind": "lab", "slot": placement["meeting_times"][0]}, ""
+
+    new_class = Class(
+        _next_in_memory_class_id(),
+        section_obj.department,
+        section_obj.section_id,
+        subject,
+    )
+    new_class.set_instructor(placement["teacher"])
+    new_class.set_room(placement["room"])
+    new_class.set_meetingTime(placement["meeting_times"][0])
+    new_class.meeting_times = placement["meeting_times"]
+    new_class.duration = len(placement["meeting_times"])
+    classes.append(new_class)
+    state["classes"] = classes
+    return {"kind": "class", "slot": placement["meeting_times"][0]}, ""
+
+
+def _apply_generated_missing_subject_placements(request, section_obj, subject):
+    state = _get_user_state(request.user.id)
+    classes = list(state.get("classes") or GLOBAL_CLASSES or [])
+    labs = list(state.get("labs") or GLOBAL_LABS or [])
+    required = _required_subject_occurrences(section_obj, subject)
+    assigned = _assigned_subject_occurrences(classes, labs, section_obj.section_id, subject)
+    missing = max(0, required - assigned)
+    if missing <= 0:
+        return {"created": 0, "required": required, "remaining": 0, "kind": "lab" if getattr(subject, "room_required", "") == "Lab" else "class"}, "This subject is already fully scheduled."
+
+    created = 0
+    first_slot = None
+    last_slot = None
+    failure_reason = ""
+    kind = "lab" if getattr(subject, "room_required", "") == "Lab" else "class"
+
+    while created < missing:
+        result, failure_reason = _apply_generated_missing_subject_placement(request, section_obj, subject)
+        if result is None:
+            break
+        created += 1
+        first_slot = first_slot or result.get("slot")
+        last_slot = result.get("slot") or last_slot
+        kind = result.get("kind") or kind
+
+    return {
+        "created": created,
+        "required": required,
+        "remaining": max(0, missing - created),
+        "kind": kind,
+        "first_slot": first_slot,
+        "last_slot": last_slot,
+    }, failure_reason
+
+
+def _apply_saved_missing_subject_placement(saved_t, section_obj, subject):
+    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
+    placement, failure_reason = _find_missing_subject_placement(saved_t.user, section_obj, subject, classes, labs)
+    if placement is None:
+        return None, failure_reason
+
+    with transaction.atomic():
+        saved_slot = ScheduledSlot.objects.create(
+            timetable=saved_t,
+            section=section_obj,
+            subject=subject,
+            instructor=placement["teacher"],
+            second_instructor=placement.get("second_instructor") if placement["is_lab"] else None,
+            room=placement["room"],
+            meeting_time=placement["meeting_times"][0],
+            is_lab=placement["is_lab"],
+        )
+        if placement["is_lab"]:
+            saved_slot.lab_slots.set(placement["meeting_times"])
+    return {"kind": "lab" if placement["is_lab"] else "class", "slot": placement["meeting_times"][0]}, ""
+
+
+def _apply_saved_missing_subject_placements(saved_t, section_obj, subject):
+    classes, labs = _rebuild_classes_and_labs_from_saved(saved_t)
+    required = _required_subject_occurrences(section_obj, subject)
+    assigned = _assigned_subject_occurrences(classes, labs, section_obj.section_id, subject)
+    missing = max(0, required - assigned)
+    if missing <= 0:
+        return {"created": 0, "required": required, "remaining": 0, "kind": "lab" if getattr(subject, "room_required", "") == "Lab" else "class"}, "This subject is already fully scheduled."
+
+    created = 0
+    first_slot = None
+    last_slot = None
+    failure_reason = ""
+    kind = "lab" if getattr(subject, "room_required", "") == "Lab" else "class"
+
+    while created < missing:
+        result, failure_reason = _apply_saved_missing_subject_placement(saved_t, section_obj, subject)
+        if result is None:
+            break
+        created += 1
+        first_slot = first_slot or result.get("slot")
+        last_slot = result.get("slot") or last_slot
+        kind = result.get("kind") or kind
+
+    return {
+        "created": created,
+        "required": required,
+        "remaining": max(0, missing - created),
+        "kind": kind,
+        "first_slot": first_slot,
+        "last_slot": last_slot,
+    }, failure_reason
+
+
+@login_required
+def saved_reshuffle_missing_subject(request, tid, section_id, subject_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "message": "Invalid request method."}, status=405)
+
+    saved_t = _get_saved_timetable_or_404(tid, request.user)
+    section_obj = Section.objects.filter(user=request.user, section_id=section_id).select_related("department").first()
+    if section_obj is None:
+        return JsonResponse({"ok": False, "message": "Section not found."}, status=404)
+
+    subject = Subject.objects.filter(user=request.user, pk=subject_id).first()
+    if subject is None:
+        return JsonResponse({"ok": False, "message": "Subject not found."}, status=404)
+
+    result, failure_reason = _apply_saved_missing_subject_placements(saved_t, section_obj, subject)
+    if not result or result.get("created", 0) <= 0:
+        return JsonResponse({"ok": False, "message": failure_reason or "No conflict-free slot could be created for this subject."}, status=409)
+
+    first_slot = result.get("first_slot")
+    slot_label = SLOT_LABELS.get(str(first_slot.time), f"Slot {first_slot.time}") if first_slot else "a valid slot"
+    created = result.get("created", 0)
+    remaining = result.get("remaining", 0)
+    if remaining > 0:
+        message = f"Created {created} {result['kind']} slot(s) for {subject.subject_name}. {remaining} still could not be placed. First slot: {first_slot.day} at {slot_label}."
+    else:
+        message = f"Created {created} {result['kind']} slot(s) for {subject.subject_name}. First slot: {first_slot.day} at {slot_label}."
+    return JsonResponse({
+        "ok": True,
+        "message": message,
+    })
 
 
 def _compute_teacher_workloads(classes, labs):
@@ -3361,17 +3880,21 @@ def _get_saved_department_filter_options(user, classes, labs):
         if code:
             relevant_codes.add(code)
 
-    # Only surface departments that actually OWN a scheduled section in this
-    # timetable. Teacher home-departments are intentionally NOT added here: a
-    # teacher cross-teaching into another section must not make a department
-    # whose own timetable was never generated appear in the filter dropdown.
     for cls in classes:
         dept = getattr(getattr(cls, "section", None), "department", None) or getattr(cls, "department", None)
         _add_code(getattr(dept, "code", ""))
+        teacher_dept = getattr(getattr(cls, "instructor", None), "department", None)
+        _add_code(getattr(teacher_dept, "code", ""))
+        for co_teacher in getattr(cls, "co_instructors", []) or []:
+            teacher_dept = getattr(co_teacher, "department", None)
+            _add_code(getattr(teacher_dept, "code", ""))
 
     for lab in labs:
         dept = getattr(getattr(lab, "section", None), "department", None) or getattr(lab, "department", None)
         _add_code(getattr(dept, "code", ""))
+        for teacher in [getattr(lab, "instructor", None), getattr(lab, "second_instructor", None)] + list(getattr(lab, "co_instructors", []) or []):
+            teacher_dept = getattr(teacher, "department", None)
+            _add_code(getattr(teacher_dept, "code", ""))
 
     options = []
     for code in sorted(relevant_codes):
@@ -3630,7 +4153,8 @@ def saved_timetable_list(request):
     return render(request, "saved_timetable_list.html", {
         "timetables": timetables,
         "timetable_count": timetables.count(),
-        "save_limit": 2,
+        "save_limit": 15,
+        "save_usage_percent": min(100, int((timetables.count() / 15) * 100) if 15 else 0),
     })
 
 
@@ -3686,6 +4210,48 @@ def saved_timetable(request, tid):
         context["superadmin_exit_url"] = reverse("superadmin_stop_impersonate")
         context["superadmin_exit_title"] = "Back to Super Admin"
     return render(request, "saved_timetable.html", context)
+
+
+def _drop_room_type_for_subject(subject, original_room=None):
+    room_type = (getattr(original_room, "room_type", "") or "").strip()
+    if room_type:
+        return room_type
+    required = (getattr(subject, "room_required", "") or "").strip()
+    if required == "Lab":
+        return "Lab"
+    return required or "Lecture Hall"
+
+
+def _saved_drag_room_usage_counts(saved_timetable, ignore_slot=None):
+    usage_counts = {}
+    slots = saved_timetable.slots.select_related("room").prefetch_related("lab_slots")
+    for scheduled in slots:
+        if ignore_slot is not None and scheduled.pk == getattr(ignore_slot, "pk", None):
+            continue
+        room = getattr(scheduled, "room", None)
+        if room is None:
+            continue
+        span = len(list(scheduled.lab_slots.all())) if getattr(scheduled, "is_lab", False) else 1
+        usage_counts[room.pk] = usage_counts.get(room.pk, 0) + max(span, 1)
+    return usage_counts
+
+
+def _saved_drag_room_candidates(user, department, subject, original_room=None, usage_counts=None):
+    usage_counts = usage_counts or {}
+    room_type = _drop_room_type_for_subject(subject, original_room)
+    candidate_qs = Room.objects.filter(user=user, room_type=room_type)
+    if department is not None:
+        candidate_qs = candidate_qs.filter(department=department)
+    candidates = list(candidate_qs.select_related("department"))
+
+    preferred = []
+    preferred_pk = getattr(original_room, "pk", None)
+    if preferred_pk is not None:
+        preferred = [room for room in candidates if room.pk == preferred_pk]
+        candidates = [room for room in candidates if room.pk != preferred_pk]
+
+    candidates.sort(key=lambda room: (-usage_counts.get(room.pk, 0), str(room.r_number or "").lower(), room.pk))
+    return preferred + candidates
 
 
 @login_required
@@ -3850,43 +4416,65 @@ def saved_move_slot_dragdrop(request, tid, section, day, slot):
                 return JsonResponse({"ok": False, "message": f"Target slot {new_slot_num} on {target_day} does not exist."}, status=400)
             new_lab_times.append(new_lt)
 
-        # Check conflicts for all new lab times
+        # Check non-room conflicts for all new lab times
         for nlt in new_lab_times:
-            # Section conflict
             sec_conflict = saved_t.slots.filter(section=sec, meeting_time=nlt).exclude(id=scheduled.id).exists()
             if sec_conflict:
                 return JsonResponse({"ok": False, "message": f"Section conflict at {target_day} slot {nlt.time}."}, status=409)
-            # Teacher conflict
             teacher_conflict = saved_t.slots.filter(instructor=scheduled.instructor, meeting_time=nlt).exclude(id=scheduled.id).exists()
             if teacher_conflict:
                 return JsonResponse({"ok": False, "message": f"Teacher conflict at {target_day} slot {nlt.time}."}, status=409)
-            # Room conflict
-            room_conflict = saved_t.slots.filter(room=scheduled.room, meeting_time=nlt).exclude(id=scheduled.id).exists()
-            if room_conflict:
-                return JsonResponse({"ok": False, "message": f"Room conflict at {target_day} slot {nlt.time}."}, status=409)
+
+        usage_counts = _saved_drag_room_usage_counts(saved_t, ignore_slot=scheduled)
+        selected_room = None
+        for room in _saved_drag_room_candidates(
+            request.user,
+            sec.department,
+            scheduled.subject,
+            original_room=scheduled.room,
+            usage_counts=usage_counts,
+        ):
+            room_conflict = saved_t.slots.filter(room=room, meeting_time__in=new_lab_times).exclude(id=scheduled.id).exists()
+            if not room_conflict:
+                selected_room = room
+                break
+        if selected_room is None:
+            room_label = getattr(getattr(scheduled, "room", None), "r_number", "this room")
+            return JsonResponse({"ok": False, "message": f"No available { _drop_room_type_for_subject(scheduled.subject, scheduled.room) } room was found in {sec.department.name} for the selected time slot."}, status=409)
 
         # Apply move
         scheduled.meeting_time = new_lab_times[0]
-        scheduled.save(update_fields=["meeting_time"])
+        scheduled.room = selected_room
+        scheduled.save(update_fields=["meeting_time", "room"])
         scheduled.lab_slots.set(new_lab_times)
 
     else:
-        # Theory class move
-        # Check section conflict
         sec_conflict = saved_t.slots.filter(section=sec, meeting_time=target_mt).exclude(id=scheduled.id).exists()
         if sec_conflict:
             return JsonResponse({"ok": False, "message": "Section already has a class at target slot."}, status=409)
-        # Teacher conflict
         teacher_conflict = saved_t.slots.filter(instructor=scheduled.instructor, meeting_time=target_mt).exclude(id=scheduled.id).exists()
         if teacher_conflict:
             return JsonResponse({"ok": False, "message": "Teacher already has a class at target slot."}, status=409)
-        # Room conflict
-        room_conflict = saved_t.slots.filter(room=scheduled.room, meeting_time=target_mt).exclude(id=scheduled.id).exists()
-        if room_conflict:
-            return JsonResponse({"ok": False, "message": "Room already occupied at target slot."}, status=409)
+
+        usage_counts = _saved_drag_room_usage_counts(saved_t, ignore_slot=scheduled)
+        selected_room = None
+        for room in _saved_drag_room_candidates(
+            request.user,
+            sec.department,
+            scheduled.subject,
+            original_room=scheduled.room,
+            usage_counts=usage_counts,
+        ):
+            room_conflict = saved_t.slots.filter(room=room, meeting_time=target_mt).exclude(id=scheduled.id).exists()
+            if not room_conflict:
+                selected_room = room
+                break
+        if selected_room is None:
+            return JsonResponse({"ok": False, "message": f"No available {_drop_room_type_for_subject(scheduled.subject, scheduled.room)} room was found in {sec.department.name} for the selected time slot."}, status=409)
 
         scheduled.meeting_time = target_mt
-        scheduled.save(update_fields=["meeting_time"])
+        scheduled.room = selected_room
+        scheduled.save(update_fields=["meeting_time", "room"])
 
     return JsonResponse({"ok": True, "message": "Slot moved successfully."})
 
@@ -5027,15 +5615,6 @@ def map_teacher_subjects(request):
                 return []
             return [token.strip() for token in text.split(";")]
 
-        def _meaningful_token_count(tokens):
-            # Trailing empty entries (e.g. ";;;" -> ['', '', '', '']) are just
-            # placeholders and must not inflate the inferred group count.
-            last = 0
-            for index, token in enumerate(tokens, start=1):
-                if token:
-                    last = index
-            return last
-
         def _resolve_group_assignments(raw_value, slot_count, field_label, allow_empty=False):
             tokens = _split_teacher_tokens(raw_value)
             if not tokens:
@@ -5147,21 +5726,17 @@ def map_teacher_subjects(request):
 
             primary_tokens = _split_teacher_tokens(instructor_uid)
             secondary_tokens = _split_teacher_tokens(second_instructor_uid)
-            primary_token_count = _meaningful_token_count(primary_tokens)
-            # Second instructors only define groups for shared labs; ignore them
-            # otherwise so stray placeholder semicolons can't add phantom groups.
-            secondary_token_count = _meaningful_token_count(secondary_tokens) if shared_lab_flag else 0
             if section_group_count > 1:
                 inferred_group_count = max(
                     section_group_count,
-                    primary_token_count,
-                    secondary_token_count,
+                    len(primary_tokens) if primary_tokens else 0,
+                    len(secondary_tokens) if secondary_tokens else 0,
                     1,
                 )
             else:
                 inferred_group_count = max(
-                    primary_token_count,
-                    secondary_token_count,
+                    len(primary_tokens) if primary_tokens else 0,
+                    len(secondary_tokens) if secondary_tokens else 0,
                     1,
                 )
 
@@ -6410,6 +6985,26 @@ def delete_saved_timetable(request, tid):
     messages.success(request, "Saved timetable deleted.")
     return redirect('saved_timetable_list')
 
+
+@login_required
+def rename_saved_timetable(request, tid):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+
+    saved_t = SavedTimetable.objects.filter(id=tid, user=request.user).first()
+    if saved_t is None:
+        raise Http404("Saved timetable not found")
+
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        messages.error(request, "Enter a name before renaming the saved timetable.")
+        return redirect("saved_timetable_list")
+
+    saved_t.name = name[:120]
+    saved_t.save(update_fields=["name"])
+    messages.success(request, "Saved timetable renamed.")
+    return redirect("saved_timetable_list")
+
 def expand_labs_for_pdf(rows):
     new_rows = []
 
@@ -6440,14 +7035,10 @@ from django.http import HttpResponse, Http404, HttpResponseForbidden
 @login_required
 def saved_timetable_download_center(request, tid):
     saved_t = _get_saved_timetable_or_404(tid, request.user)
-    # Scope the department checkboxes to departments actually present in THIS saved
-    # timetable (same logic as the saved-view filter dropdown) so departments whose
-    # timetable was never generated don't show up here.
-    classes, labs, _selected_program, _selected_department = _saved_filtered_entities_for_request(request, saved_t)
     return render(request, "download_center.html", {
         "saved_mode": True,
         "saved_id": saved_t.id,
-        "departments": _get_saved_department_filter_options(request.user, classes, labs),
+        "departments": _get_department_filter_options(request.user),
         "college_name": COLLEGE_NAME,
     })
 

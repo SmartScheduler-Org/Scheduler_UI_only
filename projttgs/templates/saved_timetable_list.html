@@ -184,6 +184,46 @@
 }
 .stl-btn--delete:hover { background: rgba(239,68,68,0.22); color: #fecaca; }
 
+.stl-rename {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.stl-rename input {
+    min-width: min(100%, 260px);
+    border: 1px solid rgba(148,163,184,0.28);
+    border-radius: 999px;
+    padding: 9px 14px;
+    background: rgba(15, 23, 42, 0.5);
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.stl-btn--rename {
+    background: rgba(56,189,248,0.16);
+    border: 1px solid rgba(56,189,248,0.32);
+    color: #7dd3fc;
+}
+
+.stl-progress {
+    width: min(420px, calc(100% - 32px));
+    height: 10px;
+    border-radius: 999px;
+    margin-top: 14px;
+    background: rgba(148,163,184,0.18);
+    overflow: hidden;
+}
+
+.stl-progress__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #5b21ed, #38bdf8);
+    transition: width 0.3s ease;
+}
+
 /* empty state */
 .stl-empty {
     text-align: center;
@@ -227,17 +267,11 @@
         <p class="stl-sub">All your generated and saved timetables in one place.</p>
 
         {# ── Save-limit indicator ─────────────────────────────────── #}
-        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px;">
-            {% for i in "12" %}
-            <div style="
-                width:52px; height:8px; border-radius:999px;
-                background: {% if forloop.counter <= timetable_count %}linear-gradient(90deg,#5b21ed,#38bdf8){% else %}rgba(148,163,184,0.18){% endif %};
-                transition: background 0.3s;
-            "></div>
-            {% endfor %}
-            <span style="font-size:12px; font-weight:700; color:{% if timetable_count >= save_limit %}#f87171{% else %}#94a3b8{% endif %}; letter-spacing:0.04em;">
-                {{ timetable_count }}&nbsp;/&nbsp;{{ save_limit }} saved
-            </span>
+        <div class="stl-progress">
+            <div class="stl-progress__fill" style="width: {{ save_usage_percent|default:0 }}%;"></div>
+        </div>
+        <div style="margin-top:10px; font-size:12px; font-weight:700; color:{% if timetable_count >= save_limit %}#f87171{% else %}#94a3b8{% endif %}; letter-spacing:0.04em;">
+            {{ timetable_count }}&nbsp;/&nbsp;{{ save_limit }} saved
         </div>
         {% if timetable_count >= save_limit %}
         <div style="margin:12px auto 0; max-width:480px; padding:10px 16px; border-radius:14px; background:rgba(239,68,68,0.10); border:1px solid rgba(239,68,68,0.28); color:#fca5a5; font-size:13px; font-weight:600; text-align:center;">
@@ -252,7 +286,8 @@
         <div class="stl-card">
             <div class="stl-card__left">
                 <div class="stl-card__index">{{ forloop.counter }}</div>
-                <div class="stl-card__date">Saved on {{ t.created_at|date:"d M Y" }}</div>
+                <div class="stl-card__date">{{ t.name|default:"Saved Timetable" }}</div>
+                <div class="stl-card__time">Saved on {{ t.created_at|date:"d M Y" }}</div>
                 <div class="stl-card__time">at {{ t.created_at|date:"h:i A" }}</div>
                 {% if t.department %}
                 <div class="stl-published-badge" style="background:rgba(56,189,248,0.12);border-color:rgba(56,189,248,0.28);color:#7dd3fc;">
@@ -266,6 +301,11 @@
                 {% if t.is_published %}
                 <div class="stl-published-badge">Published &nbsp;·&nbsp; {{ t.publish_code }}</div>
                 {% endif %}
+                <form class="stl-rename" method="post" action="{% url 'rename_saved_timetable' t.id %}">
+                    {% csrf_token %}
+                    <input type="text" name="name" value="{{ t.name|default:'Saved Timetable' }}" maxlength="120" aria-label="Saved timetable name" required>
+                    <button type="submit" class="stl-btn stl-btn--rename">Rename</button>
+                </form>
             </div>
 
             <div class="stl-card__actions">

@@ -686,3 +686,1683 @@ Internal Server Error: /generate_timetable/
 Internal Server Error: /generate_timetable/
 Internal Server Error: /generate_timetable/
 Internal Server Error: /generate_timetable/
+Internal Server Error: /timetable/1/departments/
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session
+Internal Server Error: /favicon.ico
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 246, in _get_session
+    return self._session_cache
+           ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SessionStore' object has no attribute '_session_cache'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: django_session
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/projttgs/ttgen/superadmin_views.py", line 2594, in __call__
+    request.session.get(SESSION_FLAG)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 74, in get
+    return self._session.get(key, default)
+           ^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/base.py", line 251, in _get_session
+    self._session_cache = self.load()
+                          ~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 55, in load
+    s = self._get_session_from_db()
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/contrib/sessions/backends/db.py", line 34, in _get_session_from_db
+    return self.model.objects.get(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        session_key=self.session_key, expire_date__gt=timezone.now()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 635, in get
+    num = len(clone)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 372, in __len__
+    self._fetch_all()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 2000, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 95, in __iter__
+    results = compiler.execute_sql(
+        chunked_fetch=self.chunked_fetch, chunk_size=self.chunk_size
+    )
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1624, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/sammac/Desktop/org-repo/Scheduler_UI_only/.venv/lib/python3.13/site-packages/django/db/backends/sqlite3/base.py", line 359, in execute
+    return super().execute(query, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: django_session

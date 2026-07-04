@@ -270,7 +270,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.25s ease;
-            z-index: 60;
+            z-index: 10000;
         }
         .log-panel-overlay.is-open { opacity: 1; pointer-events: auto; }
 
@@ -287,7 +287,7 @@
             box-shadow: -24px 0 60px rgba(0,0,0,0.55);
             transform: translateX(100%);
             transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
-            z-index: 61;
+            z-index: 10001;
         }
         .log-panel.is-open { transform: translateX(0); }
 
@@ -701,6 +701,32 @@
             letter-spacing: -0.04em;
         }
 
+        .phase-metrics {
+            display: flex;
+            align-items: flex-end;
+            gap: 18px;
+        }
+
+        .stopwatch {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum";
+            font-size: clamp(20px, 2.4vw, 30px);
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 0.02em;
+            padding: 8px 14px;
+            border-radius: 12px;
+            color: #a7f3d0;
+            background: rgba(16, 242, 164, 0.10);
+            box-shadow: inset 0 0 0 1px rgba(16, 242, 164, 0.28);
+            white-space: nowrap;
+        }
+
+        .stopwatch.is-done {
+            color: #86efac;
+            background: rgba(16, 242, 164, 0.16);
+        }
+
         .hint {
             margin: 0;
             color: var(--soft);
@@ -1039,6 +1065,27 @@
             text-decoration: none;
         }
 
+        .err-btn-logs {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px 22px;
+            border-radius: 999px;
+            background: rgba(56,189,248,0.10);
+            border: 1px solid rgba(56,189,248,0.35);
+            color: #7dd3fc;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .err-btn-logs:hover {
+            background: rgba(56,189,248,0.18);
+            color: #bae6fd;
+        }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -1232,7 +1279,10 @@
             <div class="status-stack">
                 <div class="phase-row">
                     <p class="phase" id="phaseText">Initializing generation core...</p>
-                    <div class="percent" id="percentText">08%</div>
+                    <div class="phase-metrics">
+                        <div class="stopwatch" id="stopwatch" title="Elapsed generation time">00:00.0</div>
+                        <div class="percent" id="percentText">08%</div>
+                    </div>
                 </div>
                 <p class="hint" id="hintText">Preparing section, room, and subject graph.</p>
                 <div class="progress-track" aria-hidden="true">
@@ -1351,6 +1401,10 @@
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
                     Try Again
                 </button>
+                <button class="err-btn-logs" type="button" onclick="openLogPanel()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H4z"/><path d="M8 20h8"/><path d="M7 8h6M7 12h10"/></svg>
+                    View Logs
+                </button>
                 <a class="err-btn-dash" href="{% url 'admindash' %}">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     Dashboard
@@ -1375,6 +1429,7 @@
         const heroHeadline = document.getElementById("heroHeadline");
         const progressFill = document.getElementById("progressFill");
         const percentText = document.getElementById("percentText");
+        const stopwatchEl = document.getElementById("stopwatch");
         const errorState = document.getElementById("errorState");
         const errOverlay = document.getElementById("errOverlay");
         const errTitle   = document.getElementById("errTitle");
@@ -1383,6 +1438,35 @@
         const usePso = JSON.parse(document.getElementById("use-pso-data").textContent);
         const usePrefilledSlots = Boolean(JSON.parse(document.getElementById("use-prefilled-data").textContent));
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+        // ───────────── Generation stopwatch (total elapsed time) ─────────────
+        const genStartTime = performance.now();
+        let stopwatchTimer = null;
+        let stopwatchStopped = false;
+
+        function formatElapsed(seconds) {
+            const s = Math.max(0, seconds);
+            const mm = Math.floor(s / 60);
+            const rem = s - mm * 60;
+            return String(mm).padStart(2, "0") + ":" + rem.toFixed(1).padStart(4, "0");
+        }
+        function updateStopwatch() {
+            if (stopwatchStopped || !stopwatchEl) return;
+            stopwatchEl.textContent = formatElapsed((performance.now() - genStartTime) / 1000);
+        }
+        function stopStopwatch(finalSeconds) {
+            if (stopwatchStopped) return;
+            stopwatchStopped = true;
+            if (stopwatchTimer) { window.clearInterval(stopwatchTimer); stopwatchTimer = null; }
+            if (!stopwatchEl) return;
+            const secs = (typeof finalSeconds === "number" && !isNaN(finalSeconds))
+                ? finalSeconds
+                : (performance.now() - genStartTime) / 1000;
+            stopwatchEl.textContent = formatElapsed(secs);
+            stopwatchEl.classList.add("is-done");
+        }
+        stopwatchTimer = window.setInterval(updateStopwatch, 100);
+        updateStopwatch();
 
         function showErrorModal(title, detail, tip) {
             errTitle.textContent  = title  || "Generation Failed";
@@ -1468,6 +1552,7 @@
             window.clearInterval(progressTimer);
             window.clearInterval(heroTimer);
             stopLogFeed();
+            stopStopwatch();
             phaseText.textContent = "Generation stopped";
             hintText.textContent = "Returning to dashboard...";
             window.location.href = "{% url 'admindash' %}";
@@ -1533,6 +1618,7 @@
                     window.clearInterval(progressTimer);
                     window.clearInterval(heroTimer);
                     stopLogFeed();
+                    stopStopwatch();
                     phaseText.textContent = "Generation interrupted";
                     hintText.textContent  = "The engine could not finish this run.";
                     showErrorModal(errData.title, errData.detail, errData.tip);
@@ -1540,9 +1626,11 @@
                 }
 
                 let redirectUrl = "{% url 'timetables_page' %}";
+                let elapsedSeconds = null;
                 try {
                     const data = await response.json();
                     if (data.redirect) redirectUrl = data.redirect;
+                    if (typeof data.elapsed_seconds === "number") elapsedSeconds = data.elapsed_seconds;
                 } catch (_) {
                     if (response.redirected) redirectUrl = response.url;
                 }
@@ -1555,6 +1643,7 @@
                 window.clearInterval(progressTimer);
                 window.clearInterval(heroTimer);
                 stopLogFeed();
+                stopStopwatch(elapsedSeconds);
 
                 window.setTimeout(() => { window.location.href = redirectUrl; }, 450);
             } catch (error) {
@@ -1563,6 +1652,7 @@
                 window.clearInterval(progressTimer);
                 window.clearInterval(heroTimer);
                 stopLogFeed();
+                stopStopwatch();
                 phaseText.textContent = "Generation interrupted";
                 hintText.textContent  = "The engine could not finish this run.";
                 showErrorModal(

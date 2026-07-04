@@ -54,8 +54,15 @@ echo "[entrypoint] Collecting static files..."
 python "$MANAGE_PY" collectstatic --noinput
 
 if [ "$DJANGO_ENV" = "production" ]; then
-  echo "[entrypoint] Starting Gunicorn on ${HOST}:${PORT}"
-  exec gunicorn --chdir "$APP_DIR/projttgs" projttgs.wsgi:application --bind "${HOST}:${PORT}" --workers "${GUNICORN_WORKERS:-3}" --timeout "${GUNICORN_TIMEOUT:-120}"
+  # IMPORTANT: run a SINGLE process with multiple threads.
+  # The live generation-log buffer (_GEN_LOG_BUFFERS) and per-user in-memory
+  # state (_USER_STATE) live in the process memory and are thread-aware, not
+  # shared across processes. With multiple gunicorn workers the /generation_logs
+  # poll lands on a different worker than the one running generation, so logs
+  # never show up on the hosted server. One process + threads keeps the buffer
+  # shared while still serving the poll concurrently with a running generation.
+  echo "[entrypoint] Starting Gunicorn (1 process, threaded) on ${HOST}:${PORT}"
+  exec gunicorn --chdir "$APP_DIR/projttgs" projttgs.wsgi:application --bind "${HOST}:${PORT}" --workers "${GUNICORN_WORKERS:-1}" --threads "${GUNICORN_THREADS:-8}" --worker-class gthread --timeout "${GUNICORN_TIMEOUT:-300}"
 fi
 
 echo "[entrypoint] Starting Django development server on ${HOST}:${PORT}"

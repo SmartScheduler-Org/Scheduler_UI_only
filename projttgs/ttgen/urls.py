@@ -163,6 +163,7 @@ urlpatterns = [
     path('parking/delete-created/<str:manual_slot_uid>/', views.generated_delete_manual_slot_item, name='generated_delete_manual_slot_item'),
     path('parking/update-created/<str:manual_slot_uid>/', views.generated_update_manual_slot_item, name='generated_update_manual_slot_item'),
     path('parking/delete-slot/<path:section>/<str:day>/<int:slot>/', views.generated_delete_slot_item, name='generated_delete_slot_item'),
+    path('timetable/<int:index>/reshuffle/<path:section_id>/<int:subject_id>/', views.generated_reshuffle_missing_subject, name='generated_reshuffle_missing_subject'),
     path('delete_slot/<path:section>/<str:day>/<int:slot>/', views.delete_slot, name='delete_slot'),
     path('add_slot/<path:section>/', views.add_slot, name='add_slot'),
     path('rename_instructor/', views.rename_instructor, name='rename_instructor'),
@@ -172,6 +173,7 @@ urlpatterns = [
     path('saved_timetables/<int:tid>/', views.saved_timetable, name='saved_timetable'),
     path('saved_timetables/<int:tid>/full-statistics/', views.saved_full_statistics, name='saved_full_statistics'),
     path("saved_timetable/delete/<int:tid>/", views.delete_saved_timetable, name="delete_saved_timetable"),
+    path("saved_timetable/<int:tid>/rename/", views.rename_saved_timetable, name="rename_saved_timetable"),
 
     path('saved_timetables/<int:tid>/download/', views.saved_timetable_download_center, name='saved_timetable_download_center'),
     path('download_timetable/<int:tid>/', views.download_saved_timetable_pdf, name='download_timetable'),
@@ -206,8 +208,7 @@ urlpatterns = [
     path("saved/<int:tid>/substitute/<path:section>/<str:day>/<int:slot>/", views.saved_substitute_teacher, name="saved_substitute_teacher"),
     path("saved/<int:tid>/substitute_lab/<path:section>/<str:day>/<int:slot>/", views.saved_substitute_lab_teacher, name="saved_substitute_lab_teacher"),
     path("saved/<int:tid>/move/<path:section>/<str:day>/<int:slot>/", views.saved_move_slot_dragdrop, name="saved_move_slot_dragdrop"),
-    path("saved/<int:tid>/park/<path:section>/<str:day>/<int:slot>/", views.saved_park_slot, name="saved_park_slot"),
-    path("saved/<int:tid>/parking/<int:parking_id>/restore/", views.saved_restore_parked_slot, name="saved_restore_parked_slot"),
+    path("saved/<int:tid>/reshuffle/<path:section_id>/<int:subject_id>/", views.saved_reshuffle_missing_subject, name="saved_reshuffle_missing_subject"),
 
     path("substitute_teacher/<path:section>/<str:day>/<int:slot>/",views.substitute_teacher,name="substitute_teacher"),
     path("substitute_lab/<path:section>/<str:day>/<int:slot>/",views.substitute_lab_teacher,name="substitute_lab_teacher"),
