@@ -138,8 +138,8 @@ class Room(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "r_number"],
-                name="unique_room_number_per_user",
+                fields=["user", "department", "r_number"],
+                name="unique_room_number_per_department",
             ),
         ]
 
@@ -289,8 +289,8 @@ class Subject(models.Model):
         db_table = "ttgen_course"
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "subject_number"],
-                name="unique_course_number_per_user",
+                fields=["user", "department", "subject_number"],
+                name="unique_course_number_per_department",
             ),
         ]
 

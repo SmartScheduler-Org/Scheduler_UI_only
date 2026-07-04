@@ -3292,11 +3292,17 @@ def _subject_room_candidates(user, section_obj, subject, classes, labs):
 
     rooms = []
     if specific_tokens:
-        specific_by_name = {
-            room.r_number: room
-            for room in Room.objects.filter(user=user, r_number__in=specific_tokens).select_related("department")
-        }
-        rooms = [specific_by_name[token] for token in specific_tokens if token in specific_by_name]
+        for token in specific_tokens:
+            try:
+                rooms.append(
+                    _resolve_room_for_user(
+                        token,
+                        user,
+                        department=getattr(section_obj, "department", None),
+                    )
+                )
+            except Room.DoesNotExist:
+                continue
     else:
         required_room_type = (getattr(subject, "room_required", "") or "").strip()
         if is_lab:
@@ -5891,6 +5897,24 @@ def _resolve_subject_for_user(subject_number, user, department=None):
     return match
 
 
+def _resolve_room_for_user(room_number, user, department=None, case_insensitive=False):
+    room_number = (room_number or "").strip()
+    if not room_number:
+        raise Room.DoesNotExist
+
+    queryset = Room.objects.filter(user=user)
+    queryset = queryset.filter(r_number__iexact=room_number) if case_insensitive else queryset.filter(r_number=room_number)
+    if department is not None:
+        department_match = queryset.filter(department=department).first()
+        if department_match is not None:
+            return department_match
+
+    match = queryset.first()
+    if match is None:
+        raise Room.DoesNotExist
+    return match
+
+
 def _teacher_uid_string_from_ids(id_values, user, fallback_teacher=None):
     ids = [teacher_id for teacher_id in (id_values or []) if teacher_id]
     teachers = Instructor.objects.filter(id__in=ids, user=user)
@@ -6118,7 +6142,11 @@ def addRooms(request):
                 _csv_issue(issues, row_number, f"department '{department_value}' not found")
                 continue
 
-            if not Room.objects.filter(r_number=r_number, user=request.user).exists():
+            if not Room.objects.filter(
+                r_number=r_number,
+                user=request.user,
+                department=department,
+            ).exists():
                 Room.objects.create(
                     user=request.user,
                     r_number=r_number,
@@ -6130,7 +6158,7 @@ def addRooms(request):
                 added += 1
             else:
                 skipped += 1
-                _csv_issue(issues, row_number, f"room '{r_number}' already exists")
+                _csv_issue(issues, row_number, f"room '{r_number}' already exists in department '{department.code}'")
 
         reset_global_schedule_cache(request.user.id)
         messages.success(request, f"{added} room(s) added from CSV! {skipped} skipped.")
