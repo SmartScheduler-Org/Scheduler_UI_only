@@ -225,8 +225,27 @@ def _get_required_step_edit_object(request, model, post_param="edit_id", **filte
 _USER_STATE = {}  # {user_id: {"classes": ..., "labs": ..., "schedules": [...], "view_mode": ..., "data": ...}}
 
 
+def _coerce_user_state_key(user_or_id):
+    if hasattr(user_or_id, "user") and hasattr(getattr(user_or_id, "user", None), "id"):
+        return getattr(user_or_id.user, "id", None)
+    if hasattr(user_or_id, "id"):
+        return getattr(user_or_id, "id", None)
+    return user_or_id
+
+
+def _sync_legacy_runtime_globals(state):
+    global GLOBAL_CLASSES, GLOBAL_LABS, GLOBAL_GENERATED_SCHEDULES, CURRENT_VIEW_MODE
+    GLOBAL_CLASSES = state.get("classes")
+    GLOBAL_LABS = state.get("labs")
+    GLOBAL_GENERATED_SCHEDULES = state.get("schedules") or []
+    CURRENT_VIEW_MODE = state.get("view_mode")
+
+
 def _get_user_state(user_id):
     """Get or create per-user in-memory state."""
+    user_id = _coerce_user_state_key(user_id)
+    if user_id is None:
+        raise ValueError("user_id is required for runtime state")
     if user_id not in _USER_STATE:
         _USER_STATE[user_id] = {
             "classes": None,
@@ -244,7 +263,9 @@ def _get_user_state(user_id):
             "prefill_locked_classes": [],
             "prefill_locked_labs": [],
         }
-    return _USER_STATE[user_id]
+    state = _USER_STATE[user_id]
+    _sync_legacy_runtime_globals(state)
+    return state
 
 
 def _reset_generated_drag_state(state, current_index=None):
