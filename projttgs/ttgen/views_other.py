@@ -6960,6 +6960,15 @@ def prefilled_timetable_view(request):
         allowed_section_ids = set(section_ids)
         tables = [table for table in tables if table["section"].section_id in allowed_section_ids]
         tables = _decorate_generated_tables_with_parking(tables, state)
+        prefill_generated_available = any(
+            (schedule.get("classes") or schedule.get("labs"))
+            for schedule in list(state.get("schedules") or [])
+        )
+        prefill_locked_slot_count = (
+            len(list(state.get("classes") or []))
+            + len(list(state.get("labs") or []))
+            + len(list(state.get("generated_parking_items") or []))
+        )
 
         departments = []
         seen_depts = set()
@@ -6996,6 +7005,8 @@ def prefilled_timetable_view(request):
             "departments": departments,
             "prefill_mode": True,
             "active_saved_prefill": _get_active_saved_prefill(request),
+            "prefill_generated_available": prefill_generated_available,
+            "prefill_locked_slot_count": prefill_locked_slot_count,
             "can_edit_delete": True,
             "can_substitute": True,
             "can_drag_drop": True,

@@ -3254,8 +3254,18 @@ function filterByDept(code, label) {
 
 <h1>SmartScheduler</h1>
 <div style="text-align:center; font-size:1rem; font-weight:600; color:#4f6f6f; margin-bottom:12px;">
-  {% if prefill_mode %}Prefilled Empty Timetable{% else %}Generated Timetable{% endif %}
+  {% if prefill_mode %}Prefill Editor{% else %}Generated Timetable{% endif %}
 </div>
+
+{% if prefill_mode %}
+<div class="demo-banner">
+    <strong>Locked Prefill View</strong>
+    This page shows only the {{ prefill_locked_slot_count|default:0 }} locked prefill slot(s) that seed generation.
+    {% if prefill_generated_available %}
+    Generated subject allotments are available on the <a href="{% url 'timetables_page' %}" style="color:#fff; text-decoration:underline; font-weight:700;">generated timetable page</a>.
+    {% endif %}
+</div>
+{% endif %}
 
 {% if demo_mode %}
 <div class="demo-banner">
