@@ -3,7 +3,7 @@
 {% block content %}
 
 <style>
-.manage-shell{width:min(1450px,96%);margin:24px auto;color:#fff}.manage-card{padding:24px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);backdrop-filter:blur(16px);border-radius:20px}.manage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}.manage-top h2{margin:0 0 6px}.manage-top p{margin:0;color:rgba(255,255,255,.72)}.back-btn{display:inline-flex;padding:10px 16px;background:#ffffffdd;border-radius:10px;color:#0f172a;text-decoration:none;font-weight:700}.section-card{padding:18px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}.section-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}.section-head{margin-bottom:12px}.section-head h3{margin:0 0 4px}.section-head p{margin:0;color:rgba(255,255,255,.68);font-size:13px}.mapping-table{width:100%;border-collapse:collapse;font-size:13px}.mapping-table th,.mapping-table td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}.mapping-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.68)}.mapping-update-link{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#fff;background:#2563eb;text-decoration:none}.empty-text{color:rgba(255,255,255,.7)}
+.manage-shell{width:min(1450px,96%);margin:24px auto;color:#fff}.manage-card{padding:24px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);backdrop-filter:blur(16px);border-radius:20px}.manage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}.manage-top h2{margin:0 0 6px}.manage-top p{margin:0;color:rgba(255,255,255,.72)}.back-btn{display:inline-flex;padding:10px 16px;background:#ffffffdd;border-radius:10px;color:#0f172a;text-decoration:none;font-weight:700}.section-card{padding:18px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}.section-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}.section-head{margin-bottom:12px}.section-head h3{margin:0 0 4px}.section-head p{margin:0;color:rgba(255,255,255,.68);font-size:13px}.mapping-table{width:100%;border-collapse:collapse;font-size:13px}.mapping-table th,.mapping-table td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}.mapping-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.68)}.row-actions{display:flex;gap:8px;align-items:center}.mapping-update-link,.mapping-delete-btn{display:inline-grid;place-items:center;width:32px;height:32px;border:none;border-radius:8px;color:#fff;text-decoration:none;cursor:pointer}.mapping-update-link{background:#2563eb}.mapping-delete-btn{background:#ef4444}.empty-text{color:rgba(255,255,255,.7)}
 </style>
 
 <div class="manage-shell">
@@ -30,7 +30,7 @@
                             <th>Subject</th>
                             <th>Groups</th>
                             <th>Elective With</th>
-                            <th></th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,7 +39,15 @@
                             <td>{{ mapping.subject.subject_number }}<br><span class="empty-text">{{ mapping.subject.subject_name }}</span></td>
                             <td>{{ mapping.group_count }}</td>
                             <td>{{ mapping.elective_section_ids|default:"-" }}</td>
-                            <td><a class="mapping-update-link" href="{% url 'map_section_subjects' %}?edit={{ mapping.id }}" aria-label="Update mapping" title="Update mapping"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a></td>
+                            <td>
+                                <div class="row-actions">
+                                    <a class="mapping-update-link" href="{% url 'map_section_subjects' %}?edit={{ mapping.id }}" aria-label="Update mapping" title="Update mapping"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
+                                    <form action="{% url 'delete_section_subject_mapping' mapping.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button class="mapping-delete-btn" type="submit" aria-label="Delete mapping" title="Delete mapping"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

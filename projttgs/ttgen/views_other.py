@@ -304,13 +304,13 @@ def _decorate_generated_tables_with_parking(tables, state):
 
 
 class ManualPrefillSubject:
-    def __init__(self, label, duration=1):
+    def __init__(self, label, duration=1, room_required="Lecture Hall"):
         clean_label = (label or "Manual Subject").strip() or "Manual Subject"
         self.pk = None
         self.id = None
         self.subject_number = clean_label
         self.subject_name = clean_label
-        self.room_required = "Lecture Hall"
+        self.room_required = room_required
         self.required_lab_category = ""
         self.specific_rooms = ""
         self.classes_per_week = 0
@@ -320,16 +320,60 @@ class ManualPrefillSubject:
         return self.subject_name
 
 
-def _resolve_manual_prefill_subject(section_obj, subject_text, duration):
+def _normalize_prefill_subject_match_text(value):
+    text = re.sub(r"\s+", " ", str(value or "").replace("\n", " ")).strip().casefold()
+    return text.rstrip("*").strip()
+
+
+def _prefill_workshop_name_tokens(subject_text):
+    text = str(subject_text or "").strip()
+    if not text or "[" not in text or "]" not in text or "-" not in text:
+        return []
+    tokens = [token.strip() for token in re.findall(r"\[([^\[\]]+)\]", text)]
+    return tokens if len(tokens) > 1 else []
+
+
+def _resolve_manual_prefill_subject(section_obj, subject_text, duration, batch=None, total_batches=None, is_lab=False):
     subject_text = (subject_text or "").strip()
     if not subject_text:
-        return ManualPrefillSubject("Manual Subject", duration=duration)
-    matched = section_obj.allowed_subjects.filter(subject_number__iexact=subject_text).first()
-    if matched is None:
-        matched = section_obj.allowed_subjects.filter(subject_name__iexact=subject_text).first()
+        return ManualPrefillSubject("Manual Subject", duration=duration, room_required="Lab" if is_lab else "Lecture Hall")
+
+    normalized_text = _normalize_prefill_subject_match_text(subject_text)
+
+    def _match_allowed_subjects(candidate_text):
+        candidate_text = (candidate_text or "").strip()
+        if not candidate_text:
+            return None
+        matched = section_obj.allowed_subjects.filter(subject_number__iexact=candidate_text).first()
+        if matched is not None:
+            return matched
+        matched = section_obj.allowed_subjects.filter(subject_name__iexact=candidate_text).first()
+        if matched is not None:
+            return matched
+        candidate_normalized = _normalize_prefill_subject_match_text(candidate_text)
+        for subject in section_obj.allowed_subjects.all():
+            if _normalize_prefill_subject_match_text(getattr(subject, "subject_name", "")) == candidate_normalized:
+                return subject
+        return None
+
+    matched = _match_allowed_subjects(subject_text)
     if matched is not None:
         return matched
-    return ManualPrefillSubject(subject_text, duration=duration)
+
+    workshop_tokens = _prefill_workshop_name_tokens(subject_text)
+    if is_lab and workshop_tokens:
+        try:
+            batch_index = max(1, int(batch or 1)) - 1
+        except (TypeError, ValueError):
+            batch_index = 0
+        if batch_index < len(workshop_tokens):
+            token_text = workshop_tokens[batch_index]
+            matched = _match_allowed_subjects(token_text)
+            if matched is not None:
+                return matched
+            return ManualPrefillSubject(token_text, duration=duration, room_required="Lab")
+
+    return ManualPrefillSubject(subject_text if normalized_text else "Manual Subject", duration=duration, room_required="Lab" if is_lab else "Lecture Hall")
 
 
 def _parse_prefill_duration(value):
@@ -710,7 +754,14 @@ def _prefill_restore_lab(entry, user):
             return None
         missing_room_label = room_number
     duration = _parse_prefill_duration(entry.get("duration"))
-    subject = _resolve_manual_prefill_subject(section_obj, entry.get("subject_text"), duration)
+    subject = _resolve_manual_prefill_subject(
+        section_obj,
+        entry.get("subject_text"),
+        duration,
+        batch=entry.get("batch", 1),
+        total_batches=entry.get("total_batches", 1),
+        is_lab=True,
+    )
     lab = LabImpl(_next_in_memory_class_id(), section_obj.department, section_obj.section_id, subject, entry.get("batch", 1), entry.get("total_batches", 1))
     lab.set_instructor(teacher)
     second_teacher = _prefill_restore_teacher(entry.get("second_teacher_uid"), user)
@@ -5967,6 +6018,18 @@ def delete_sci_mapping(request, mapping_id):
         reset_global_schedule_cache(request.user.id)
         messages.success(request, "Mapping removed.")
     return redirect("map_teacher_subjects")
+
+
+@login_required
+def delete_section_subject_mapping(request, mapping_id):
+    if request.method == "POST":
+        SectionSubjectMapping.objects.filter(
+            id=mapping_id,
+            section__user=request.user,
+        ).delete()
+        reset_global_schedule_cache(request.user.id)
+        messages.success(request, "Section-subject mapping removed.")
+    return redirect("view_section_subjects")
 
 
 

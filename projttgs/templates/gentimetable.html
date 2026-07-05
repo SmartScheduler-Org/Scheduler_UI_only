@@ -3531,7 +3531,7 @@ function filterByDept(code, label) {
               <div class="parallel-item-grid" style="grid-template-columns: repeat({{ cell.display_grid_columns|default:cell.colspan }}, minmax(0, 1fr));">
               {% for lab in cell.labs %}
                 <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} draggable-slot-item" style="grid-column: {{ lab.display_grid_start|default:1 }} / span {{ lab.display_grid_span|default:cell.colspan }};" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ lab.display_slot_number|default:cell.slot_number }}">
-                  <strong>{{ lab.subject.subject_name }} Lab</strong><br>
+                  <strong>{{ lab.display_subject_name|default:lab.subject.subject_name }} Lab</strong><br>
                   {{ lab.instructor.name }}{% for co_teacher in lab.co_instructors %}<br>+ {{ co_teacher.name }}{% endfor %}{% if lab.second_instructor %}<br>{{ lab.second_instructor.name }}{% endif %}<br>
                   {{ lab.room.r_number }}
                 </div>
@@ -3561,8 +3561,8 @@ function filterByDept(code, label) {
               <div class="labs-container parallel-slot-stack parallel-item-grid" style="grid-template-columns: repeat({{ cell.display_grid_columns|default:cell.colspan }}, minmax(0, 1fr));">
                 {% for lab in cell.labs %}
                   <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} draggable-slot-item" style="grid-column: {{ lab.display_grid_start|default:1 }} / span {{ lab.display_grid_span|default:cell.colspan }};" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ lab.display_slot_number|default:cell.slot_number }}">
-                    <strong style="font-size: 14px; color: #0d47a1;">{{ lab.subject.subject_name }} Lab</strong>
-                    <strong style="color: #1565c0; font-size: 13px;">Batch {{ lab.batch }}/{{ lab.total_batches }}</strong>
+                    <strong style="font-size: 14px; color: #0d47a1;">{{ lab.display_subject_name|default:lab.subject.subject_name }} Lab</strong>
+                    <strong style="color: #1565c0; font-size: 13px;">G{{ lab.batch }}</strong>
                     <strong style="color: #283593; font-size: 13px;">{{ lab.instructor.name }}</strong>
                     {% for co_teacher in lab.co_instructors %}<strong style="color: #283593; font-size: 13px;">+ {{ co_teacher.name }}</strong>{% endfor %}
                     {% if lab.second_instructor %}<strong style="color: #5d4037; font-size: 13px;">{{ lab.second_instructor.name }}</strong>{% endif %}
@@ -3593,10 +3593,10 @@ function filterByDept(code, label) {
                 {% for lab in cell.labs %}
                   <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} draggable-slot-item" style="{% if cell.use_parallel_grid %}grid-column: {{ lab.display_grid_start|default:1 }} / span {{ lab.display_grid_span|default:cell.display_grid_columns }};{% else %}width: {{ lab.display_width_percent|default:'100' }}% !important;{% endif %}" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ lab.display_slot_number|default:cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
-                      {{ lab.subject.subject_name }} Lab
+                      {{ lab.display_subject_name|default:lab.subject.subject_name }} Lab
                     </strong>
                     <strong style="color: #1565c0; font-size: 13px;">
-                      Batch {{ lab.batch }}/{{ lab.total_batches }}
+                      G{{ lab.batch }}
                     </strong>
                     <strong style="color: #283593; font-size: 13px;">
                       {{ lab.instructor.name }}
@@ -3799,7 +3799,7 @@ function filterByDept(code, label) {
             <td colspan="{{ cell.colspan }}">
               <div class="room-slot-card room-slot-card--lab {% if cell.labs.0.second_instructor or cell.labs.0.co_instructors %}room-slot-card--lab-shared shared-teacher{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if cell.labs.0.is_elective %}is-elective{% endif %}">
               {% for lab in cell.labs %}
-                <strong>{{ lab.subject.subject_name }}</strong>
+                <strong>{{ lab.display_subject_name|default:lab.subject.subject_name }}</strong>
                 <div class="room-slot-card__section">{{ lab.section }} ({{ lab.group }})</div>
                 <div class="room-slot-card__teacher">{{ lab.instructor.name }}</div>
                 {% for co_teacher in lab.co_instructors %}
@@ -4024,10 +4024,10 @@ function filterByDept(code, label) {
                 {% for lab in cell.labs %}
                   <div class="lab-box draggable-slot-item {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}" data-drag-source="slot" data-move-type="lab" data-section-id="{{ lab.section }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">
-                      {{ lab.subject.subject_name }} Lab
+                      {{ lab.display_subject_name|default:lab.subject.subject_name }} Lab
                     </strong>
                     <strong style="color: #1565c0; font-size: 13px;">
-                      Batch {{ lab.batch }}/{{ lab.total_batches }}
+                      G{{ lab.batch }}
                     </strong>
                     <span style="color: #424242;">
                       Section: {{ lab.section }}

@@ -178,8 +178,8 @@ h1 {
             <td colspan="{{ cell.colspan }}" class="slot-cell">
               {% for lab in cell.labs %}
                 <div class="lab-box">
-                  <strong>{{ lab.subject.subject_name }} Lab</strong><br>
-                  Batch {{ lab.batch }}/{{ lab.total_batches }}<br>
+                  <strong>{{ lab.display_subject_name|default:lab.subject.subject_name }} Lab</strong><br>
+                  G{{ lab.batch }}<br>
                   {{ lab.instructor.name }}<br>
                   {{ lab.room.r_number }}
                 </div>

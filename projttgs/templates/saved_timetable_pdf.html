@@ -110,7 +110,7 @@ border: 2px solid #cc0000;
             <td colspan="{{ cell.colspan }}" width="{{ cell.width }}" class="lab">
                 {% for lab in cell.labs %}
                 <div style="margin-bottom: 6px;">
-                    <strong>{{ lab.subject.subject_name }} Lab (Batch {{ lab.batch }}/{{ lab.total_batches }})</strong><br>
+                    <strong>{{ lab.display_subject_name|default:lab.subject.subject_name }} Lab (G{{ lab.batch }})</strong><br>
                     {{ lab.instructor.name }}<br>
                     Room: {{ lab.room.r_number }}
                     <hr style="border:0.5px solid #666;">
