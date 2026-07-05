@@ -114,6 +114,75 @@ class SchedulerInitializationTests(TestCase):
         self.assertEqual(len(theory_classes), 9)
         self.assertTrue({cls.meeting_time.day for cls in theory_classes})
 
+    def test_prefilled_theory_counts_toward_required_occurrences(self):
+        subject = self.section.allowed_subjects.get(subject_number="TH001")
+        teacher = subject.instructors.first()
+        room = Room.objects.get(r_number="LH-1")
+        monday_1 = MeetingTime.objects.get(pid="Mo1")
+
+        locked = views_other.Class(900, self.department, self.section.section_id, subject)
+        locked.set_instructor(teacher)
+        locked.set_room(room)
+        locked.set_meetingTime(monday_1)
+        locked.meeting_times = [monday_1]
+        locked.duration = 1
+        locked.prefill_locked = True
+
+        original_classes = getattr(views_other, "PREFILLED_LOCKED_CLASSES", [])
+        original_labs = getattr(views_other, "PREFILLED_LOCKED_LABS", [])
+        try:
+            views_other.PREFILLED_LOCKED_CLASSES = [locked]
+            views_other.PREFILLED_LOCKED_LABS = []
+            with patch.object(views_other, "SECTION_LOAD_RULES", {"Test Section": (9, 4)}), patch.object(
+                views_other, "COMPACT_SECTIONS", {}
+            ):
+                views_other.data = views_other.Data()
+                schedule = views_other.Schedule().initialize()
+        finally:
+            views_other.PREFILLED_LOCKED_CLASSES = original_classes
+            views_other.PREFILLED_LOCKED_LABS = original_labs
+
+        theory_classes = [cls for cls in schedule.get_classes() if cls.section == "Test Section"]
+        subject_classes = [cls for cls in theory_classes if cls.subject == subject]
+
+        self.assertEqual(len(theory_classes), 9)
+        self.assertEqual(len(subject_classes), 2)
+
+    def test_prefilled_lab_counts_toward_required_occurrences(self):
+        subject = self.section.allowed_subjects.get(subject_number="LAB001")
+        teacher = subject.instructors.first()
+        room = Room.objects.get(r_number="LAB-1")
+        block = [
+            MeetingTime.objects.get(pid="Mo1"),
+            MeetingTime.objects.get(pid="Mo2"),
+            MeetingTime.objects.get(pid="Mo3"),
+            MeetingTime.objects.get(pid="Mo4"),
+        ]
+
+        locked = views_other.Lab(901, self.department, self.section.section_id, subject, batch=1, total_batches=1)
+        locked.set_instructor(teacher)
+        locked.set_room(room)
+        locked.set_meetingTimes(block)
+        locked.duration = 4
+        locked.prefill_locked = True
+
+        original_classes = getattr(views_other, "PREFILLED_LOCKED_CLASSES", [])
+        original_labs = getattr(views_other, "PREFILLED_LOCKED_LABS", [])
+        try:
+            views_other.PREFILLED_LOCKED_CLASSES = []
+            views_other.PREFILLED_LOCKED_LABS = [locked]
+            with patch.object(views_other, "SECTION_LOAD_RULES", {"Test Section": (9, 4)}), patch.object(
+                views_other, "COMPACT_SECTIONS", {}
+            ):
+                views_other.data = views_other.Data()
+                schedule = views_other.Schedule().initialize()
+        finally:
+            views_other.PREFILLED_LOCKED_CLASSES = original_classes
+            views_other.PREFILLED_LOCKED_LABS = original_labs
+
+        labs = [lab for lab in schedule.get_labs() if lab.section == "Test Section" and lab.subject == subject]
+        self.assertEqual(len(labs), 1)
+
     def test_lab_conflict_detection_blocks_overlapping_slots_for_same_room(self):
         second_lab_room = Room.objects.create(
             r_number="LAB-2",
@@ -259,6 +328,57 @@ class SchedulerInitializationTests(TestCase):
         self.assertNotIn("Manual Workshop", [subject["name"] for subject in test_table["subject_counts"]])
         self.assertNotIn("Manual Workshop", [lab["name"] for lab in test_table["missed_labs"]])
         self.assertEqual(test_table["total_missing_classes"], sum(subject["missing"] for subject in test_table["subject_counts"]))
+
+    def test_prefill_restore_lab_keeps_slot_when_room_is_blank(self):
+        entry = {
+            "section_id": self.section.section_id,
+            "subject_text": "Solo Lab",
+            "teacher_uid": "L001",
+            "second_teacher_uid": "",
+            "co_teacher_uids": [],
+            "room_number": "",
+            "day": "Monday",
+            "start_slot": "1",
+            "duration": "4",
+            "manual_entry": True,
+            "manual_slot_uid": "prefill-lab-1",
+            "prefill_locked": True,
+            "batch": 1,
+            "total_batches": 1,
+        }
+
+        restored = views_other._prefill_restore_lab(entry, self.user)
+
+        self.assertIsNotNone(restored)
+        self.assertEqual(restored.section, self.section.section_id)
+        self.assertEqual(getattr(restored, "room", None), None)
+        self.assertEqual(len(getattr(restored, "meeting_times", []) or []), 4)
+
+    def test_prefill_restore_lab_uses_placeholder_teacher_and_room_when_missing(self):
+        entry = {
+            "section_id": self.section.section_id,
+            "subject_text": "Solo Lab",
+            "teacher_uid": "Missing Teacher",
+            "second_teacher_uid": "",
+            "co_teacher_uids": [],
+            "room_number": "Missing Lab",
+            "day": "Monday",
+            "start_slot": "1",
+            "duration": "4",
+            "manual_entry": True,
+            "manual_slot_uid": "prefill-lab-2",
+            "prefill_locked": True,
+            "batch": 1,
+            "total_batches": 1,
+        }
+
+        restored = views_other._prefill_restore_lab(entry, self.user)
+
+        self.assertIsNotNone(restored)
+        self.assertEqual(getattr(restored.instructor, "uid", ""), "Missing Teacher")
+        self.assertEqual(getattr(restored.instructor, "name", ""), "Missing Teacher")
+        self.assertEqual(getattr(restored.room, "r_number", ""), "Missing Lab")
+        self.assertEqual(getattr(restored.room, "room_type", ""), "Lab")
 
     def test_build_section_tables_lists_missed_labs(self):
         extra_lab_subject = Subject.objects.create(

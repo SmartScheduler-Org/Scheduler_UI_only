@@ -320,6 +320,68 @@ class ManualPrefillSubject:
         return self.subject_name
 
 
+class ManualPrefillInstructor:
+    def __init__(self, label, department=None):
+        clean_label = (label or "Manual Teacher").strip() or "Manual Teacher"
+        self.pk = None
+        self.id = None
+        self.uid = clean_label
+        self.name = clean_label
+        self.email = ""
+        self.contact_number = ""
+        self.designation = "Assistant Professor"
+        self.max_workload = 99
+        self.department = department
+
+    def __str__(self):
+        return self.name
+
+
+class ManualPrefillRoom:
+    def __init__(self, label, room_type="Lecture Hall", department=None):
+        clean_label = (label or "Manual Room").strip() or "Manual Room"
+        self.pk = None
+        self.id = None
+        self.r_number = clean_label
+        self.room_type = room_type
+        self.lab_category = ""
+        self.seating_capacity = 0
+        self.department = department
+
+    def __str__(self):
+        return self.r_number
+
+
+_MANUAL_PREFILL_INSTRUCTOR_CACHE = {}
+_MANUAL_PREFILL_ROOM_CACHE = {}
+
+
+def _manual_prefill_instructor(label, user, section_obj=None):
+    clean_label = (label or "").strip()
+    if not clean_label:
+        return None
+    cache_key = (getattr(user, "pk", None), clean_label.casefold())
+    cached = _MANUAL_PREFILL_INSTRUCTOR_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+    placeholder = ManualPrefillInstructor(clean_label, department=getattr(section_obj, "department", None))
+    _MANUAL_PREFILL_INSTRUCTOR_CACHE[cache_key] = placeholder
+    return placeholder
+
+
+def _manual_prefill_room(label, user, room_type="Lecture Hall", section_obj=None):
+    clean_label = (label or "").strip()
+    if not clean_label:
+        return None
+    cache_key = (getattr(user, "pk", None), room_type.casefold(), clean_label.casefold())
+    cached = _MANUAL_PREFILL_ROOM_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+    placeholder = ManualPrefillRoom(clean_label, room_type=room_type, department=getattr(section_obj, "department", None))
+    _MANUAL_PREFILL_ROOM_CACHE[cache_key] = placeholder
+    return placeholder
+
+
 def _normalize_prefill_subject_match_text(value):
     text = re.sub(r"\s+", " ", str(value or "").replace("\n", " ")).strip().casefold()
     return text.rstrip("*").strip()
@@ -659,24 +721,38 @@ def _combine_prefill_snapshots(prefills):
     return combined
 
 
-def _prefill_restore_teacher(uid, user):
+def _prefill_restore_teacher(uid, user, section_obj=None):
     uid = str(uid or "").strip()
     if not uid:
         return None
     qs = Instructor.objects.filter(user=user)
     if uid.isdigit():
-        return qs.filter(Q(uid__iexact=uid) | Q(pk=int(uid))).first()
-    return qs.filter(uid__iexact=uid).first()
+        matched = qs.filter(Q(uid__iexact=uid) | Q(pk=int(uid))).first()
+        if matched is not None:
+            return matched
+    else:
+        matched = qs.filter(Q(uid__iexact=uid) | Q(name__iexact=uid)).first()
+        if matched is not None:
+            return matched
+    logger.warning("Prefill restore using placeholder instructor for user=%s uid=%s", getattr(user, "pk", None), uid)
+    return _manual_prefill_instructor(uid, user, section_obj=section_obj)
 
 
-def _prefill_restore_room(room_number, user):
+def _prefill_restore_room(room_number, user, room_type="Lecture Hall", section_obj=None):
     room_number = str(room_number or "").strip()
     if not room_number:
         return None
     qs = Room.objects.filter(user=user)
     if room_number.isdigit():
-        return qs.filter(Q(r_number__iexact=room_number) | Q(pk=int(room_number))).first()
-    return qs.filter(r_number__iexact=room_number).first()
+        matched = qs.filter(Q(r_number__iexact=room_number) | Q(pk=int(room_number))).first()
+        if matched is not None:
+            return matched
+    else:
+        matched = qs.filter(r_number__iexact=room_number).first()
+        if matched is not None:
+            return matched
+    logger.warning("Prefill restore using placeholder room for user=%s room=%s", getattr(user, "pk", None), room_number)
+    return _manual_prefill_room(room_number, user, room_type=room_type, section_obj=section_obj)
 
 
 def _prefill_restore_meeting_times(entry, user):
@@ -703,21 +779,19 @@ def _prefill_restore_class(entry, user):
         section_obj = Section.objects.get(section_id=entry.get("section_id"), user=user)
     except Section.DoesNotExist:
         return None
-    teacher = _prefill_restore_teacher(entry.get("teacher_uid"), user)
+    teacher = _prefill_restore_teacher(entry.get("teacher_uid"), user, section_obj=section_obj)
     room_number = str(entry.get("room_number") or "").strip()
-    room = _prefill_restore_room(room_number, user)
+    room = _prefill_restore_room(room_number, user, room_type="Lecture Hall", section_obj=section_obj)
     if teacher is None:
         return None
     missing_room_label = ""
     if room is None:
-        if not room_number:
-            return None
         missing_room_label = room_number
     duration = _parse_prefill_duration(entry.get("duration"))
     subject = _resolve_manual_prefill_subject(section_obj, entry.get("subject_text"), duration)
     cls = ClassImpl(_next_in_memory_class_id(), section_obj.department, section_obj.section_id, subject)
     cls.set_instructor(teacher)
-    co_teachers = [_prefill_restore_teacher(uid, user) for uid in list(entry.get("co_teacher_uids") or [])]
+    co_teachers = [_prefill_restore_teacher(uid, user, section_obj=section_obj) for uid in list(entry.get("co_teacher_uids") or [])]
     if hasattr(cls, "set_co_instructors"):
         cls.set_co_instructors([teacher_obj for teacher_obj in co_teachers if teacher_obj])
     cls.set_room(room)
@@ -743,15 +817,13 @@ def _prefill_restore_lab(entry, user):
         section_obj = Section.objects.get(section_id=entry.get("section_id"), user=user)
     except Section.DoesNotExist:
         return None
-    teacher = _prefill_restore_teacher(entry.get("teacher_uid"), user)
+    teacher = _prefill_restore_teacher(entry.get("teacher_uid"), user, section_obj=section_obj)
     room_number = str(entry.get("room_number") or "").strip()
-    room = _prefill_restore_room(room_number, user)
+    room = _prefill_restore_room(room_number, user, room_type="Lab", section_obj=section_obj)
     if teacher is None:
         return None
     missing_room_label = ""
     if room is None:
-        if not room_number:
-            return None
         missing_room_label = room_number
     duration = _parse_prefill_duration(entry.get("duration"))
     subject = _resolve_manual_prefill_subject(
@@ -764,10 +836,10 @@ def _prefill_restore_lab(entry, user):
     )
     lab = LabImpl(_next_in_memory_class_id(), section_obj.department, section_obj.section_id, subject, entry.get("batch", 1), entry.get("total_batches", 1))
     lab.set_instructor(teacher)
-    second_teacher = _prefill_restore_teacher(entry.get("second_teacher_uid"), user)
+    second_teacher = _prefill_restore_teacher(entry.get("second_teacher_uid"), user, section_obj=section_obj)
     if second_teacher and hasattr(lab, "set_second_instructor"):
         lab.set_second_instructor(second_teacher)
-    co_teachers = [_prefill_restore_teacher(uid, user) for uid in list(entry.get("co_teacher_uids") or [])]
+    co_teachers = [_prefill_restore_teacher(uid, user, section_obj=section_obj) for uid in list(entry.get("co_teacher_uids") or [])]
     if hasattr(lab, "set_co_instructors"):
         lab.set_co_instructors([teacher_obj for teacher_obj in co_teachers if teacher_obj])
     lab.set_room(room)
@@ -6852,8 +6924,15 @@ def prefilled_timetable_setup(request):
 @login_required
 def prefilled_timetable_view(request):
     state = _get_user_state(request.user.id)
-    section_ids = list(state.get("prefill_section_ids") or request.session.get("prefill_section_ids") or [])
-    if not (state.get("prefill_mode") or request.session.get("prefill_mode")) or not section_ids:
+    snapshot = request.session.get("prefill_saved_slots") or {}
+    section_ids = list(
+        state.get("prefill_section_ids")
+        or request.session.get("prefill_section_ids")
+        or snapshot.get("section_ids")
+        or []
+    )
+    has_prefill_snapshot = bool(snapshot and section_ids)
+    if not (state.get("prefill_mode") or request.session.get("prefill_mode") or has_prefill_snapshot) or not section_ids:
         messages.info(request, "Upload a sections CSV to create an empty prefilled timetable.")
         return redirect("prefilled_timetable_setup")
 
