@@ -49,7 +49,7 @@
                         <td>
                             <div class="row-actions">
                                 <a class="update-btn" href="{% url 'addInstructors' %}?edit={{ inst.id }}" aria-label="Update teacher" title="Update teacher"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
-                                <form action="{% url 'deleteinstructor' inst.id %}" method="post">
+                                <form action="{% url 'deleteinstructor' inst.id %}" method="post" data-confirm-saved-impact data-item-kind="teacher">
                                     {% csrf_token %}
                                     <button class="delete-btn" aria-label="Delete teacher" title="Delete teacher"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
                                 </form>

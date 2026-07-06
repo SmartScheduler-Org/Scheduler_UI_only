@@ -2270,9 +2270,9 @@ body.drag-drop-active .parking-dropzone::after {
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
-                    <strong style="color: #1565c0; font-size: 13px;">
-                      Batch {{ lab.batch }}/{{ lab.total_batches }}
-                    </strong>
+                    {% if lab.total_batches > 1 %}<strong style="color: #1565c0; font-size: 13px;">
+                      Group {{ lab.batch }}
+                    </strong>{% endif %}
                     <strong style="color: #283593; font-size: 13px;">
                       {{ lab.instructor.name }}
                     </strong>
@@ -2310,7 +2310,7 @@ body.drag-drop-active .parking-dropzone::after {
                 {% for lab in cell.labs %}
                   <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} {% if not is_readonly %}draggable-slot-item{% endif %}" style="grid-column: {{ lab.display_grid_start|default:1 }} / span {{ lab.display_grid_span|default:cell.colspan }};" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ lab.display_slot_number|default:cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">{{ lab.subject.subject_name }} Lab</strong>
-                    <strong style="color: #1565c0; font-size: 13px;">Batch {{ lab.batch }}/{{ lab.total_batches }}</strong>
+                    {% if lab.total_batches > 1 %}<strong style="color: #1565c0; font-size: 13px;">Group {{ lab.batch }}</strong>{% endif %}
                     <strong style="color: #283593; font-size: 13px;">{{ lab.instructor.name }}</strong>
                     {% for co_teacher in lab.co_instructors %}<strong style="color: #283593; font-size: 13px;">+ {{ co_teacher.name }}</strong>{% endfor %}
                     {% if lab.second_instructor %}<strong style="color: #5d4037; font-size: 13px;">{{ lab.second_instructor.name }}</strong>{% endif %}
@@ -2674,7 +2674,7 @@ body.drag-drop-active .parking-dropzone::after {
                       {{ lab.subject.subject_name }} Lab
                     </strong>
                     <strong style="color: #1565c0; font-size: 13px;">
-                      Batch {{ lab.batch }}/{{ lab.total_batches }}
+                      {% if lab.total_batches > 1 %}Group {{ lab.batch }}{% endif %}
                     </strong>
                     <span style="color: #424242;">
                       Section: {{ lab.section }}

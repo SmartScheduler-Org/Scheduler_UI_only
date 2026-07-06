@@ -37,7 +37,7 @@
                         <td>
                             <div class="row-actions">
                                 <a class="update-btn" href="{% url 'addSections' %}?edit={{ sec.id }}" aria-label="Update section" title="Update section"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
-                                <form action="{% url 'deletesection' sec.id %}" method="post">
+                                <form action="{% url 'deletesection' sec.id %}" method="post" data-confirm-saved-impact data-item-kind="section">
                                     {% csrf_token %}
                                     <button class="delete-btn" aria-label="Delete section" title="Delete section"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
                                 </form>

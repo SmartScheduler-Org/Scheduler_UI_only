@@ -317,7 +317,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     Download
                 </a>
-                <a href="{% url 'delete_saved_timetable' t.id %}" class="stl-btn stl-btn--delete">
+                <a href="{% url 'delete_saved_timetable' t.id %}" class="stl-btn stl-btn--delete" data-confirm-saved-delete>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                     Delete
                 </a>
@@ -338,4 +338,28 @@
     {% endif %}
 
 </div>
+<script>
+document.addEventListener('click', function(event) {
+    var deleteLink = event.target.closest('a[data-confirm-saved-delete]');
+    if (!deleteLink) {
+        return;
+    }
+    event.preventDefault();
+    if (typeof window.smartSchedulerConfirm !== 'function') {
+        window.location.href = deleteLink.href;
+        return;
+    }
+    window.smartSchedulerConfirm({
+        title: 'Delete saved timetable?',
+        text: 'This will permanently remove the saved timetable from your account.',
+        tip: 'Download the timetable as PDF or Excel first if you may need this copy later.',
+        confirmText: 'Delete timetable',
+        cancelText: 'Keep timetable'
+    }).then(function(confirmed) {
+        if (confirmed) {
+            window.location.href = deleteLink.href;
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -102,7 +102,7 @@
                     <td>{{ inst.designation }}</td>
                     <td>{{ inst.max_workload }}</td>
                     <td>
-                        <form action="{% url 'deleteinstructor' inst.id %}" method="post">
+                        <form action="{% url 'deleteinstructor' inst.id %}" method="post" data-confirm-saved-impact data-item-kind="teacher">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>

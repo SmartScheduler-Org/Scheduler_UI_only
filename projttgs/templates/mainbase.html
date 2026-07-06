@@ -93,6 +93,118 @@
      {% include 'mainfotter.html' %}
     <script src="{% static 'chatbot.js' %}"></script>
     <style>
+      .smart-confirm {
+        position: fixed;
+        inset: 0;
+        z-index: 1000002;
+        display: none;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .smart-confirm.is-open {
+        display: grid;
+      }
+
+      .smart-confirm__backdrop {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 34%),
+          radial-gradient(circle at bottom right, rgba(248, 113, 113, 0.18), transparent 32%),
+          rgba(2, 6, 23, 0.82);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      .smart-confirm__panel {
+        position: relative;
+        width: min(720px, 100%);
+        border-radius: 28px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(8, 15, 30, 0.99));
+        box-shadow: 0 30px 100px rgba(2, 6, 23, 0.52);
+        overflow: hidden;
+      }
+
+      .smart-confirm__accent {
+        height: 6px;
+        background: linear-gradient(90deg, #38bdf8, #0ea5e9 38%, #f59e0b 72%, #ef4444);
+      }
+
+      .smart-confirm__body {
+        padding: 28px 30px 26px;
+      }
+
+      .smart-confirm__eyebrow {
+        margin: 0 0 10px;
+        color: #38bdf8;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .smart-confirm__title {
+        margin: 0 0 10px;
+        color: #f8fafc;
+        font-size: clamp(24px, 3vw, 34px);
+        line-height: 1.08;
+      }
+
+      .smart-confirm__text {
+        margin: 0;
+        color: rgba(226, 232, 240, 0.82);
+        font-size: 15px;
+        line-height: 1.65;
+      }
+
+      .smart-confirm__tip {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(250, 204, 21, 0.2);
+        background: rgba(120, 53, 15, 0.2);
+        color: #fde68a;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .smart-confirm__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+      }
+
+      .smart-confirm__btn {
+        min-width: 150px;
+        padding: 12px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      }
+
+      .smart-confirm__btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .smart-confirm__btn--cancel {
+        background: rgba(148, 163, 184, 0.12);
+        color: #e2e8f0;
+      }
+
+      .smart-confirm__btn--confirm {
+        background: linear-gradient(135deg, #ef4444, #f97316);
+        border-color: rgba(248, 113, 113, 0.28);
+        color: #fff;
+        box-shadow: 0 18px 40px rgba(239, 68, 68, 0.22);
+      }
+
       .message-modal {
         position: fixed;
         inset: 0;
@@ -253,6 +365,22 @@
       }
 
       @media (max-width: 640px) {
+        .smart-confirm {
+          padding: 14px;
+        }
+
+        .smart-confirm__body {
+          padding: 22px 20px 20px;
+        }
+
+        .smart-confirm__actions {
+          justify-content: stretch;
+        }
+
+        .smart-confirm__btn {
+          width: 100%;
+        }
+
         .message-modal {
           padding: 14px;
         }
@@ -371,6 +499,96 @@
         }
       }
     </style>
+    <script>
+      (function() {
+        function createConfirmModal() {
+          var wrapper = document.createElement('div');
+          wrapper.className = 'smart-confirm';
+          wrapper.innerHTML = '' +
+            '<div class="smart-confirm__backdrop"></div>' +
+            '<div class="smart-confirm__panel" role="dialog" aria-modal="true" aria-labelledby="smartConfirmTitle">' +
+              '<div class="smart-confirm__accent"></div>' +
+              '<div class="smart-confirm__body">' +
+                '<p class="smart-confirm__eyebrow">SmartScheduler Warning</p>' +
+                '<h2 class="smart-confirm__title" id="smartConfirmTitle"></h2>' +
+                '<p class="smart-confirm__text" id="smartConfirmText"></p>' +
+                '<div class="smart-confirm__tip" id="smartConfirmTip"></div>' +
+                '<div class="smart-confirm__actions">' +
+                  '<button type="button" class="smart-confirm__btn smart-confirm__btn--cancel" data-confirm-cancel>Cancel</button>' +
+                  '<button type="button" class="smart-confirm__btn smart-confirm__btn--confirm" data-confirm-ok>Delete Anyway</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          document.body.appendChild(wrapper);
+          return wrapper;
+        }
+
+        var confirmModal;
+        window.smartSchedulerConfirm = function(options) {
+          options = options || {};
+          if (!confirmModal) {
+            confirmModal = createConfirmModal();
+          }
+          var titleEl = confirmModal.querySelector('#smartConfirmTitle');
+          var textEl = confirmModal.querySelector('#smartConfirmText');
+          var tipEl = confirmModal.querySelector('#smartConfirmTip');
+          var okBtn = confirmModal.querySelector('[data-confirm-ok]');
+          var cancelBtn = confirmModal.querySelector('[data-confirm-cancel]');
+          titleEl.textContent = options.title || 'This deletion can affect saved timetables';
+          textEl.textContent = options.text || 'If this master data is already used inside any saved timetable, deleting it can affect how that saved timetable opens or displays later.';
+          tipEl.textContent = options.tip || 'Download the affected timetable first as PDF or Excel if you want a permanent copy before deleting this data.';
+          okBtn.textContent = options.confirmText || 'Delete Anyway';
+          cancelBtn.textContent = options.cancelText || 'Cancel';
+
+          confirmModal.classList.add('is-open');
+          document.body.classList.add('message-modal-open');
+
+          return new Promise(function(resolve) {
+            function close(answer) {
+              confirmModal.classList.remove('is-open');
+              document.body.classList.remove('message-modal-open');
+              confirmModal.querySelector('.smart-confirm__backdrop').removeEventListener('click', onCancel);
+              cancelBtn.removeEventListener('click', onCancel);
+              okBtn.removeEventListener('click', onConfirm);
+              document.removeEventListener('keydown', onKey);
+              resolve(answer);
+            }
+            function onCancel() { close(false); }
+            function onConfirm() { close(true); }
+            function onKey(event) {
+              if (event.key === 'Escape') close(false);
+            }
+            confirmModal.querySelector('.smart-confirm__backdrop').addEventListener('click', onCancel);
+            cancelBtn.addEventListener('click', onCancel);
+            okBtn.addEventListener('click', onConfirm);
+            document.addEventListener('keydown', onKey);
+            okBtn.focus();
+          });
+        };
+
+        document.addEventListener('submit', function(event) {
+          var form = event.target.closest('form[data-confirm-saved-impact]');
+          if (!form || form.dataset.confirmed === 'true') {
+            return;
+          }
+          event.preventDefault();
+          var itemKind = form.getAttribute('data-item-kind') || 'item';
+          window.smartSchedulerConfirm({
+            title: 'Delete ' + itemKind + '?',
+            text: 'If this ' + itemKind + ' is already used in any saved timetable, deleting it can affect that saved timetable data.',
+            tip: 'Before deleting, download the saved timetable as PDF or Excel if you need a stable copy.',
+            confirmText: 'Delete ' + itemKind,
+            cancelText: 'Keep ' + itemKind
+          }).then(function(confirmed) {
+            if (!confirmed) {
+              return;
+            }
+            form.dataset.confirmed = 'true';
+            form.requestSubmit ? form.requestSubmit() : form.submit();
+          });
+        });
+      })();
+    </script>
     <script>
       (function () {
         const messageModal = document.getElementById("globalMessageModal");

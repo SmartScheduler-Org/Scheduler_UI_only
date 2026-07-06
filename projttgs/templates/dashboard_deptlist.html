@@ -96,7 +96,7 @@
                 <tr>
                     <td>{{ dept.name }} ({{ dept.code }})</td>
                     <td>
-                        <form action="{% url 'deletedepartment' dept.id %}" method="post">
+                        <form action="{% url 'deletedepartment' dept.id %}" method="post" data-confirm-saved-impact data-item-kind="department">
                             {% csrf_token %}
                             <button class="delete-btn">Delete</button>
                         </form>

@@ -3119,6 +3119,20 @@ function filterByDept(code, label) {
         window.saveTimetable = function(idx) {
             var url = "{% url 'save_timetable' 0 %}".replace('/0/', '/' + idx + '/');
           Swal.fire({
+            icon: 'warning',
+            title: 'Save SmartScheduler Timetable?',
+            html: '<div style="font-size:15px;line-height:1.7;color:#475569;text-align:left;">Saved timetables are meant to stay available, but if you later delete departments, rooms, teachers, subjects, sections, or slots used inside them, that saved timetable can be affected.<br><br><strong style="color:#0f172a;">Recommendation:</strong> after saving, also download PDF/Excel if you want a permanent copy before deleting any master data.</div>',
+            showCancelButton: true,
+            confirmButtonText: 'Continue to Save',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#5b21ed',
+            customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+            buttonsStyling: false,
+          }).then(function(warnResult) {
+            if (!warnResult.isConfirmed) {
+              return;
+            }
+            Swal.fire({
             title: 'Save Timetable',
             input: 'text',
             inputLabel: 'Name this saved timetable',
@@ -3200,7 +3214,8 @@ function filterByDept(code, label) {
             .catch(function() {
               Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not reach the server.', customClass: { popup: 'plan-alert-popup' } });
             });
-            });
+          });
+          });
         };
     });
 </script>
@@ -3562,7 +3577,7 @@ function filterByDept(code, label) {
                 {% for lab in cell.labs %}
                   <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %} {% if lab.is_elective %}is-elective{% endif %} draggable-slot-item" style="grid-column: {{ lab.display_grid_start|default:1 }} / span {{ lab.display_grid_span|default:cell.colspan }};" data-drag-source="slot" data-move-type="lab" data-section-id="{{ table.section.section_id }}" data-day="{{ row.day }}" data-slot="{{ lab.display_slot_number|default:cell.slot_number }}">
                     <strong style="font-size: 14px; color: #0d47a1;">{{ lab.subject.subject_name }} Lab</strong>
-                    <strong style="color: #1565c0; font-size: 13px;">Batch {{ lab.batch }}/{{ lab.total_batches }}</strong>
+                    {% if lab.total_batches > 1 %}<strong style="color: #1565c0; font-size: 13px;">Group {{ lab.batch }}</strong>{% endif %}
                     <strong style="color: #283593; font-size: 13px;">{{ lab.instructor.name }}</strong>
                     {% for co_teacher in lab.co_instructors %}<strong style="color: #283593; font-size: 13px;">+ {{ co_teacher.name }}</strong>{% endfor %}
                     {% if lab.second_instructor %}<strong style="color: #5d4037; font-size: 13px;">{{ lab.second_instructor.name }}</strong>{% endif %}
@@ -3595,9 +3610,9 @@ function filterByDept(code, label) {
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
-                    <strong style="color: #1565c0; font-size: 13px;">
-                      Batch {{ lab.batch }}/{{ lab.total_batches }}
-                    </strong>
+                    {% if lab.total_batches > 1 %}<strong style="color: #1565c0; font-size: 13px;">
+                      Group {{ lab.batch }}
+                    </strong>{% endif %}
                     <strong style="color: #283593; font-size: 13px;">
                       {{ lab.instructor.name }}
                     </strong>
@@ -4026,9 +4041,9 @@ function filterByDept(code, label) {
                     <strong style="font-size: 14px; color: #0d47a1;">
                       {{ lab.subject.subject_name }} Lab
                     </strong>
-                    <strong style="color: #1565c0; font-size: 13px;">
-                      Batch {{ lab.batch }}/{{ lab.total_batches }}
-                    </strong>
+                    {% if lab.total_batches > 1 %}<strong style="color: #1565c0; font-size: 13px;">
+                      Group {{ lab.batch }}
+                    </strong>{% endif %}
                     <span style="color: #424242;">
                       Section: {{ lab.section }}
                     </span><br>

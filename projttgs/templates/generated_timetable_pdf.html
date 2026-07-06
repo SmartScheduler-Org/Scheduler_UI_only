@@ -5,14 +5,14 @@
 <style>
 @page {
     size: A4 landscape;
-    margin: 2.9cm 0.9cm 1.5cm 0.9cm;
+    margin: 2.9cm 0.45cm 1.5cm 0.45cm;
     @frame header_frame {
         -pdf-frame-content: headerContent;
-        top: 0.3cm; left: 0.9cm; width: 27.9cm; height: 2.2cm;
+        top: 0.3cm; left: 0.45cm; width: 28.8cm; height: 2.2cm;
     }
     @frame footer_frame {
         -pdf-frame-content: footerContent;
-        bottom: 0.3cm; left: 0.9cm; width: 27.9cm; height: 0.8cm;
+        bottom: 0.3cm; left: 0.45cm; width: 28.8cm; height: 0.8cm;
     }
 }
 body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
@@ -44,7 +44,11 @@ body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
 /* ---- Block heading ---- */
 .block-title { text-align: center; font-size: 15px; font-weight: bold; color: #0b3d91; margin: 6px 0 2px 0; }
 .block-sub { text-align: center; font-size: 11px; color: #444; margin-bottom: 8px; }
-.block { margin-bottom: 14px; }
+.block { margin-bottom: 14px; page-break-inside: avoid; }
+.block.compact .block-title { font-size: 13px; margin: 4px 0 1px 0; }
+.block.compact .block-sub { font-size: 10px; margin-bottom: 6px; }
+.block.compact .grid th, .block.compact .grid td { padding: 3px; font-size: 8px; }
+.block.compact .entry { margin-bottom: 2px; }
 
 /* ---- Timetable grid ---- */
 table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -53,7 +57,8 @@ table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
     vertical-align: middle; word-wrap: break-word; font-size: 9px;
 }
 .grid th { background-color: #dbefff; }
-.grid th:first-child, .grid td:first-child { width: 70px; }
+.grid .day-col { width: 6%; }
+.grid .slot-col { width: 10.44%; }
 .lunch { background-color: #f2f2f2; font-weight: bold; }
 .lab { background-color: #cfe8ff; }
 .cls { background-color: #eef6ff; }
@@ -118,27 +123,39 @@ table.wl { width: 100%; border-collapse: collapse; }
     </table>
 {% else %}
     {% for block in blocks %}
-    <div class="block">
+    <div class="block{% if block.compact %} compact{% endif %}">
         <div class="block-title">{{ block.title }}</div>
         {% if block.subtitle %}<div class="block-sub">{{ block.subtitle }}</div>{% endif %}
         <table class="grid">
+        <colgroup>
+            <col class="day-col">
+            <col class="slot-col"><col class="slot-col"><col class="slot-col"><col class="slot-col"><col class="slot-col">
+            <col class="slot-col"><col class="slot-col"><col class="slot-col"><col class="slot-col">
+        </colgroup>
         <thead>
         <tr>
-            <th width="90">Day</th>
-            <th>8:30–9:30</th><th>9:30–10:30</th><th>10:30–11:30</th><th>11:30–12:30</th>
-            <th>12:30–1:30</th><th>1:30–2:30</th><th>2:30–3:30</th><th>3:30–4:30</th><th>4:30–5:30</th>
+            <th>Day</th>
+            <th>{{ slot_labels.1|default:"9:00 - 9:55" }}</th>
+            <th>{{ slot_labels.2|default:"9:55 - 10:50" }}</th>
+            <th>{{ slot_labels.3|default:"10:50 - 11:45" }}</th>
+            <th>{{ slot_labels.4|default:"11:45 - 12:40" }}</th>
+            <th>{{ slot_labels.5|default:"12:40 - 1:35" }}</th>
+            <th>{{ slot_labels.6|default:"1:35 - 2:30" }}</th>
+            <th>{{ slot_labels.7|default:"2:30 - 3:25" }}</th>
+            <th>{{ slot_labels.8|default:"3:25 - 4:20" }}</th>
+            <th>{{ slot_labels.9|default:"4:20 - 5:15" }}</th>
         </tr>
         </thead>
         <tbody>
         {% for row in block.rows %}
         <tr>
-            <th width="90">{{ row.day }}</th>
+            <th>{{ row.day }}</th>
             {% for cell in row.cells %}
                 {% if cell.type == "skip" %}
                 {% elif cell.type == "lunch" %}
-                    <td width="{{ cell.width }}" class="lunch">LUNCH</td>
+                    <td colspan="{{ cell.colspan }}" class="lunch">LUNCH</td>
                 {% elif cell.type == "lab" %}
-                    <td colspan="{{ cell.colspan }}" width="{{ cell.width }}" class="lab">
+                    <td colspan="{{ cell.colspan }}" class="lab">
                         {% for e in cell.entries %}
                         <div class="entry">
                             {% for line in e.lines %}{% if forloop.first %}<span class="head">{{ line }}</span>{% else %}<br>{{ line }}{% endif %}{% endfor %}
@@ -146,7 +163,7 @@ table.wl { width: 100%; border-collapse: collapse; }
                         {% endfor %}
                     </td>
                 {% elif cell.type == "class" %}
-                    <td colspan="{{ cell.colspan }}" width="{{ cell.width }}" class="cls">
+                    <td colspan="{{ cell.colspan }}" class="cls">
                         {% for e in cell.entries %}
                         <div class="entry">
                             {% for line in e.lines %}{% if forloop.first %}<span class="head">{{ line }}</span>{% else %}<br>{{ line }}{% endif %}{% endfor %}
@@ -154,7 +171,7 @@ table.wl { width: 100%; border-collapse: collapse; }
                         {% endfor %}
                     </td>
                 {% else %}
-                    <td width="{{ cell.width }}"></td>
+                    <td colspan="{{ cell.colspan }}"></td>
                 {% endif %}
             {% endfor %}
         </tr>
@@ -162,6 +179,7 @@ table.wl { width: 100%; border-collapse: collapse; }
         </tbody>
         </table>
     </div>
+    {% if not forloop.last %}<pdf:nextpage />{% endif %}
     {% endfor %}
 {% endif %}
 
