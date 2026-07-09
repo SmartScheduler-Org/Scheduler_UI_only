@@ -7539,30 +7539,40 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
                     elif cell_type == "class":
                         class_items = cell_data.get("classes", [])
                         if class_items:
-                            cls = class_items[0]
-                            subj = getattr(cls, "subject", None)
-                            instructor = getattr(cls, "instructor", None)
-                            room = getattr(cls, "room", None)
-
-                            xl_cell.value = "\n".join([
-                                str(_safe_get(subj, "subject_number", "subject_name", default="Class")),
-                                str(_safe_get(instructor, "name", "uid", default="TBD")),
-                                str(_safe_get(room, "r_number", default="Room TBD")),
-                            ])
+                            blocks = []
+                            for cls in class_items:
+                                subj = getattr(cls, "subject", None)
+                                instructor = getattr(cls, "instructor", None)
+                                room = getattr(cls, "room", None)
+                                blocks.append("\n".join([
+                                    str(_safe_get(subj, "subject_number", "subject_name", default="Class")),
+                                    str(_safe_get(instructor, "name", "uid", default="TBD")),
+                                    str(_safe_get(room, "r_number", default="Room TBD")),
+                                ]))
+                            xl_cell.value = "\n----------\n".join(blocks)
 
                     elif cell_type == "lab":
                         lab_items = cell_data.get("labs", [])
                         if lab_items:
-                            lab = lab_items[0]
-                            subj = getattr(lab, "subject", None)
-                            instructor = getattr(lab, "instructor", None)
-                            room = getattr(lab, "room", None)
-
-                            xl_cell.value = "\n".join([
-                                f"{_safe_get(subj, 'subject_number', 'subject_name', default='Lab')} (Lab)",
-                                str(_safe_get(instructor, "name", "uid", default="TBD")),
-                                str(_safe_get(room, "r_number", default="Room TBD")),
-                            ])
+                            total_batches = len(lab_items)
+                            blocks = []
+                            for lab in lab_items:
+                                subj = getattr(lab, "subject", None)
+                                instructor = getattr(lab, "instructor", None)
+                                room = getattr(lab, "room", None)
+                                batch = getattr(lab, "batch", None) or 0
+                                lab_total = getattr(lab, "total_batches", None) or total_batches
+                                subject_label = _safe_get(subj, "subject_number", "subject_name", default="Lab")
+                                if lab_total and int(lab_total) > 1 and batch:
+                                    header = f"{subject_label} (Lab Batch {batch}/{lab_total})"
+                                else:
+                                    header = f"{subject_label} (Lab)"
+                                blocks.append("\n".join([
+                                    header,
+                                    str(_safe_get(instructor, "name", "uid", default="TBD")),
+                                    str(_safe_get(room, "r_number", default="Room TBD")),
+                                ]))
+                            xl_cell.value = "\n----------\n".join(blocks)
 
                 row += 1
 

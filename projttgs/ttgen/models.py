@@ -500,7 +500,7 @@ class ScheduledSlot(models.Model):
         blank=True,
         related_name="shared_lab_slots",
     )
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
     meeting_time = models.ForeignKey(MeetingTime, on_delete=models.CASCADE)
 
     is_lab = models.BooleanField(default=False)
@@ -533,6 +533,9 @@ class ScheduledSlot(models.Model):
         if self.is_lab:
             if self.subject.room_required != "Lab":
                 raise ValidationError({"subject": "Only lab subjects can be scheduled as labs."})
+
+            if not self.room:
+                return
 
             required_categories = _parse_lab_categories(self.subject.required_lab_category)
             room_category = _normalize_single_lab_category(self.room.lab_category)

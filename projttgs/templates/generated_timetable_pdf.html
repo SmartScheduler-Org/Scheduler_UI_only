@@ -5,59 +5,59 @@
 <style>
 @page {
     size: A4 landscape;
-    margin: 2.9cm 0.9cm 1.5cm 0.9cm;
+    margin: 1.5cm 10px 20px 10px;
     @frame header_frame {
         -pdf-frame-content: headerContent;
-        top: 0.3cm; left: 0.9cm; width: 27.9cm; height: 2.2cm;
+        top: 0.25cm; left: 10px; width: 28.4cm; height: 1.15cm;
     }
     @frame footer_frame {
         -pdf-frame-content: footerContent;
-        bottom: 0.3cm; left: 0.9cm; width: 27.9cm; height: 0.8cm;
+        bottom: 0.15cm; left: 10px; width: 28.4cm; height: 0.5cm;
     }
 }
-body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
+body { font-family: Arial, sans-serif; font-size: 8px; color: #111; }
 
 /* ---- Running header (every page) ---- */
 #headerContent { text-align: center; }
 .brand-row { width: 100%; border: none; }
 .brand-row td { border: none; vertical-align: middle; }
-.college-logo { width: 48px; height: 49px; }
-.brand-logo { width: 30px; height: 30px; }
-.college-name { font-size: 13px; font-weight: bold; color: #0b3d91; }
-.smart-name { font-size: 11px; font-weight: bold; }
+.college-logo { width: 30px; height: 31px; }
+.brand-logo { width: 18px; height: 18px; }
+.college-name { font-size: 10px; font-weight: bold; color: #0b3d91; }
+.smart-name { font-size: 8px; font-weight: bold; }
 .smart-name .a { color: #0060d0; }
 .smart-name .b { color: #0090c8; }
 .sih-badge {
-    font-size: 8px; font-weight: bold; color: #7a5a00;
+    font-size: 6px; font-weight: bold; color: #7a5a00;
     background: #fff3c4; border: 0.5px solid #e6c84a; border-radius: 6px;
-    padding: 1px 5px;
+    padding: 0px 3px;
 }
-.view-tag { font-size: 9px; color: #555; }
-.brand-rule { border: 0; border-top: 1.5px solid #0b3d91; margin: 4px 0 0 0; }
+.view-tag { font-size: 7px; color: #555; }
+.brand-rule { border: 0; border-top: 1px solid #0b3d91; margin: 2px 0 0 0; }
 
 /* ---- Footer ---- */
 #footerContent {
-    text-align: center; font-size: 8px; color: #777;
-    border-top: 0.5px solid #ccc; padding-top: 2px;
+    text-align: center; font-size: 7px; color: #777;
+    border-top: 0.5px solid #ccc; padding-top: 1px;
 }
 
 /* ---- Block heading ---- */
-.block-title { text-align: center; font-size: 15px; font-weight: bold; color: #0b3d91; margin: 6px 0 2px 0; }
-.block-sub { text-align: center; font-size: 11px; color: #444; margin-bottom: 8px; }
-.block { margin-bottom: 14px; }
+.block-title { text-align: center; font-size: 12px; font-weight: bold; color: #0b3d91; margin: 2px 0 1px 0; }
+.block-sub { text-align: center; font-size: 8px; color: #444; margin-bottom: 4px; }
+.block { margin-bottom: 0; page-break-inside: avoid; }
 
 /* ---- Timetable grid ---- */
 table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .grid th, .grid td {
-    border: 1px solid #000; padding: 4px; text-align: center;
-    vertical-align: middle; word-wrap: break-word; font-size: 9px;
+    border: 0.75px solid #000; padding: 1px 1px; text-align: center;
+    vertical-align: middle; word-wrap: break-word; font-size: 6.5px;
 }
 .grid th { background-color: #dbefff; }
-.grid th:first-child, .grid td:first-child { width: 70px; }
+.grid th:first-child, .grid td:first-child { width: 55px; }
 .lunch { background-color: #f2f2f2; font-weight: bold; }
 .lab { background-color: #cfe8ff; }
 .cls { background-color: #eef6ff; }
-.entry { margin-bottom: 4px; }
+.entry { margin-bottom: 1px; line-height: 1.1; }
 .entry .head { font-weight: bold; }
 
 /* ---- Workload summary ---- */
@@ -125,8 +125,8 @@ table.wl { width: 100%; border-collapse: collapse; }
         <thead>
         <tr>
             <th width="90">Day</th>
-            <th>8:30–9:30</th><th>9:30–10:30</th><th>10:30–11:30</th><th>11:30–12:30</th>
-            <th>12:30–1:30</th><th>1:30–2:30</th><th>2:30–3:30</th><th>3:30–4:30</th><th>4:30–5:30</th>
+            <th>9:00 - 9:55</th><th>9:55 - 10:50</th><th>10:50 - 11:45</th><th>11:45 - 12:40</th>
+            <th>12:40 - 1:35</th><th>1:35 - 2:30</th><th>2:30 - 3:25</th><th>3:25 - 4:20</th><th>4:20 - 5:15</th>
         </tr>
         </thead>
         <tbody>
@@ -162,6 +162,7 @@ table.wl { width: 100%; border-collapse: collapse; }
         </tbody>
         </table>
     </div>
+    {% if not forloop.last %}<pdf:nextpage />{% endif %}
     {% endfor %}
 {% endif %}
 
