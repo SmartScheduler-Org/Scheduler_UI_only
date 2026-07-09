@@ -800,6 +800,10 @@ def get_valid_start_slots(duration):
             for index, slot in enumerate(usable_slots)
             if len(usable_slots[index:index + duration]) == duration
         ]
+    if duration == 2:
+        # Align 2-hour blocks to fixed non-overlapping pairs:
+        # 1->(1,2), 3->(3,4), 6->(6,7), 8->(8,9). Never crosses lunch (slot 5).
+        return ["1", "3", "6", "8"]
     pre_lunch = [str(s) for s in range(1, 5) if s + duration - 1 <= 4]
     post_lunch = [str(s) for s in range(6, 10) if s + duration - 1 <= 9]
     return pre_lunch + post_lunch
@@ -2564,7 +2568,8 @@ if "build_section_tables" not in globals():
                 section_map[sec_key] = {"classes": [], "labs": [], "section": None, "dept": lab.department}
             section_map[sec_key]["labs"].append(lab)
 
-        lecture_rooms_qs = Room.objects.exclude(room_type="Lab")
+        lecture_room_types = ["Lecture Hall", "Common Lecture Hall", "SP Lecture Hall", "Seminar Room"]
+        lecture_rooms_qs = Room.objects.filter(room_type__in=lecture_room_types)
         lab_rooms_qs = Room.objects.filter(room_type="Lab")
         if user is not None:
             lecture_rooms_qs = lecture_rooms_qs.filter(user=user)
@@ -2628,10 +2633,28 @@ if "build_section_tables" not in globals():
             if not instructors or section_obj is None:
                 return []
 
-            candidate_rooms = [
-                room for room in lecture_rooms
-                if room.department == section_obj.department
-            ] or lecture_rooms
+            required_room_type = (getattr(subject, "room_required", "") or "").strip()
+            required_room_type_cf = required_room_type.casefold()
+            if required_room_type_cf == "common lecture hall":
+                candidate_rooms = [
+                    room for room in lecture_rooms
+                    if (getattr(room, "room_type", "") or "").strip().casefold() == "common lecture hall"
+                ]
+            else:
+                candidate_rooms = [
+                    room for room in lecture_rooms
+                    if room.department == section_obj.department
+                ] or lecture_rooms
+            if required_room_type_cf == "sp lecture hall":
+                candidate_rooms = [
+                    room for room in candidate_rooms
+                    if (getattr(room, "room_type", "") or "").strip().casefold() == "sp lecture hall"
+                ]
+            elif required_room_type_cf == "common lecture hall":
+                candidate_rooms = [
+                    room for room in candidate_rooms
+                    if (getattr(room, "room_type", "") or "").strip().casefold() == "common lecture hall"
+                ]
 
             suggestions = []
             seen = set()
@@ -3308,11 +3331,13 @@ def _subject_room_candidates(user, section_obj, subject, classes, labs):
         if is_lab:
             room_qs = Room.objects.filter(user=user, room_type="Lab")
         elif required_room_type:
-            room_qs = Room.objects.filter(user=user, room_type=required_room_type)
+            room_qs = Room.objects.filter(user=user, room_type__iexact=required_room_type)
         else:
-            room_qs = Room.objects.filter(user=user, room_type="Lecture Hall")
+            room_qs = Room.objects.filter(user=user, room_type__iexact="Lecture Hall")
 
-        if section_obj is not None and getattr(section_obj, "department", None) is not None:
+        if (required_room_type or "").strip().casefold() == "common lecture hall":
+            rooms = list(Room.objects.filter(user=user, room_type__iexact="Common Lecture Hall").select_related("department"))
+        elif section_obj is not None and getattr(section_obj, "department", None) is not None:
             local_rooms = list(room_qs.filter(department=section_obj.department).select_related("department"))
             rooms = local_rooms or list(room_qs.select_related("department"))
         else:
@@ -4838,14 +4863,19 @@ def addSubjects(request):
             subject = form.save(commit=False)
             subject.user = request.user
             raw_room = (subject.room_required or "").strip().lower()
-            subject.room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room, subject.room_required)
+            subject.room_required = {
+                "lab": "Lab",
+                "lecture hall": "Lecture Hall",
+                "common lecture hall": "Common Lecture Hall",
+                "sp lecture hall": "SP Lecture Hall",
+            }.get(raw_room, subject.room_required)
             subject.required_lab_category = normalize_lab_categories_value(subject.required_lab_category)
             subject.specific_rooms = normalize_specific_rooms(subject.specific_rooms)
 
             if subject.room_required == "Lab" and not subject.required_lab_category:
                 messages.error(request, "Lab subjects must have a Required Lab Category.")
                 return redirect("addSubjects")
-            if subject.room_required not in {"Lab", "Lecture Hall"}:
+            if subject.room_required not in {"Lab", "Lecture Hall", "Common Lecture Hall", "SP Lecture Hall"}:
                 subject.required_lab_category = ""
 
             subject.save()
@@ -4927,7 +4957,12 @@ def addSubjects(request):
                         _csv_issue(issues, row_number, f"classes_per_week is blank for subject '{subject_number}'")
                         continue
 
-                    room_required = {"lab": "Lab", "lecture hall": "Lecture Hall"}.get(raw_room.lower(), raw_room)
+                    room_required = {
+                        "lab": "Lab",
+                        "lecture hall": "Lecture Hall",
+                        "common lecture hall": "Common Lecture Hall",
+                        "sp lecture hall": "SP Lecture Hall",
+                    }.get(raw_room.lower(), raw_room)
                     required_lab_category = normalize_lab_categories_value(
                         row.get("required_lab_category") or row.get("lab_category_required")
                     )
@@ -4956,7 +4991,7 @@ def addSubjects(request):
                         skipped_count += 1
                         _csv_issue(issues, row_number, f"subject '{subject_number}' is Lab but required_lab_category is blank")
                         continue
-                    if room_required not in {"Lab", "Lecture Hall"}:
+                    if room_required not in {"Lab", "Lecture Hall", "Common Lecture Hall", "SP Lecture Hall"}:
                         required_lab_category = ""
 
                     try:
@@ -6035,6 +6070,9 @@ def addRooms(request):
             raw_room_type = (room.room_type or "").strip().lower()
             room.room_type = {
                 "lecture hall": "Lecture Hall",
+                "common lecture hall": "Common Lecture Hall",
+                "sp lecture hall": "SP Lecture Hall",
+                "ground": "Ground",
                 "lab": "Lab",
                 "seminar room": "Seminar Room",
             }.get(raw_room_type, room.room_type)
@@ -6117,6 +6155,9 @@ def addRooms(request):
 
             room_map = {
                 "lecture hall": "Lecture Hall",
+                "common lecture hall": "Common Lecture Hall",
+                "sp lecture hall": "SP Lecture Hall",
+                "ground": "Ground",
                 "lab": "Lab",
                 "seminar room": "Seminar Room",
             }
@@ -7224,7 +7265,6 @@ def download_saved_timetable_pdf(request, tid, view_type='section'):
         "is_workload": is_workload,
         "workload_rows": workload_rows,
         "view_label": view_label,
-        "slot_labels": SLOT_LABELS,
         "college_name": COLLEGE_NAME,
         "college_logo": settings.STATIC_URL + "img/college_logo.png",
         "brand_logo": settings.STATIC_URL + "img/logo_email.png",
@@ -7322,28 +7362,6 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
     def write_timetable(ws, tables, title_func):
         row = 1
 
-        def _format_class_entry(cls):
-            subj = getattr(cls, "subject", None)
-            instructor = getattr(cls, "instructor", None)
-            room = getattr(cls, "room", None)
-            lines = [
-                str(_safe_get(subj, "subject_number", "subject_name", default="Class")),
-                str(_safe_get(instructor, "name", "uid", default="TBD")),
-                str(_safe_get(room, "r_number", default="Room TBD")),
-            ]
-            return "\n".join(lines)
-
-        def _format_lab_entry(lab):
-            subj = getattr(lab, "subject", None)
-            instructor = getattr(lab, "instructor", None)
-            room = getattr(lab, "room", None)
-            lines = [
-                f"{_safe_get(subj, 'subject_number', 'subject_name', default='Lab')} (Lab)",
-                str(_safe_get(instructor, "name", "uid", default="TBD")),
-                str(_safe_get(room, "r_number", default="Room TBD")),
-            ]
-            return "\n".join(lines)
-
         for table in tables:
             # ---- TITLE ----
             ws[f"A{row}"] = title_func(table)
@@ -7388,16 +7406,30 @@ def _build_timetable_excel_response(classes, labs, user, filename, view_type='se
                     elif cell_type == "class":
                         class_items = cell_data.get("classes", [])
                         if class_items:
-                            xl_cell.value = "\n\n".join(
-                                _format_class_entry(cls) for cls in class_items
-                            )
+                            cls = class_items[0]
+                            subj = getattr(cls, "subject", None)
+                            instructor = getattr(cls, "instructor", None)
+                            room = getattr(cls, "room", None)
+
+                            xl_cell.value = "\n".join([
+                                str(_safe_get(subj, "subject_number", "subject_name", default="Class")),
+                                str(_safe_get(instructor, "name", "uid", default="TBD")),
+                                str(_safe_get(room, "r_number", default="Room TBD")),
+                            ])
 
                     elif cell_type == "lab":
                         lab_items = cell_data.get("labs", [])
                         if lab_items:
-                            xl_cell.value = "\n\n".join(
-                                _format_lab_entry(lab) for lab in lab_items
-                            )
+                            lab = lab_items[0]
+                            subj = getattr(lab, "subject", None)
+                            instructor = getattr(lab, "instructor", None)
+                            room = getattr(lab, "room", None)
+
+                            xl_cell.value = "\n".join([
+                                f"{_safe_get(subj, 'subject_number', 'subject_name', default='Lab')} (Lab)",
+                                str(_safe_get(instructor, "name", "uid", default="TBD")),
+                                str(_safe_get(room, "r_number", default="Room TBD")),
+                            ])
 
                 row += 1
 
@@ -7638,30 +7670,6 @@ def _pdf_cell_width(cell):
     return 85 * cell.get("colspan", 1)
 
 
-def _pdf_block_is_compact(rows):
-    max_entries_in_cell = 0
-    max_lines_in_entry = 0
-    total_lines = 0
-    for row in rows:
-        for cell in row.get("cells", []):
-            entries = cell.get("entries", []) or []
-            if entries:
-                max_entries_in_cell = max(max_entries_in_cell, len(entries))
-            for entry in entries:
-                lines = len(entry.get("lines", []) or [])
-                max_lines_in_entry = max(max_lines_in_entry, lines)
-                total_lines += lines
-    return max_entries_in_cell >= 2 or max_lines_in_entry >= 5 or total_lines >= 55
-
-
-def _lab_group_label(lab):
-    total_batches = int(getattr(lab, "total_batches", 1) or 1)
-    if total_batches <= 1:
-        return ""
-    batch = int(getattr(lab, "batch", 1) or 1)
-    return f"Group {batch}"
-
-
 def _section_pdf_block(table):
     """Build a PDF block (grid of cells with text entries) for a section table."""
     rows = []
@@ -7676,11 +7684,7 @@ def _section_pdf_block(table):
             entries = []
             if ctype == "lab":
                 for lab in cell.get("labs", []):
-                    group_label = _lab_group_label(lab)
-                    title = f"{lab.subject.subject_name} Lab"
-                    if group_label:
-                        title = f"{title} ({group_label})"
-                    lines = [title]
+                    lines = [f"{lab.subject.subject_name} Lab (Batch {lab.batch}/{lab.total_batches})"]
                     lines.append(lab.instructor.name if lab.instructor else "")
                     if getattr(lab, "second_instructor", None):
                         lines.append(lab.second_instructor.name)
@@ -7709,7 +7713,6 @@ def _section_pdf_block(table):
         "title": str(table["section"].section_id),
         "subtitle": subtitle,
         "rows": rows,
-        "compact": _pdf_block_is_compact(rows),
     }
 
 
@@ -7749,7 +7752,6 @@ def _room_pdf_block(table):
         "title": f"Room {room.r_number} ({room.room_type})",
         "subtitle": subtitle,
         "rows": rows,
-        "compact": _pdf_block_is_compact(rows),
     }
 
 
@@ -7785,7 +7787,6 @@ def _teacher_pdf_block(table):
         "title": teacher.name,
         "subtitle": subtitle,
         "rows": rows,
-        "compact": _pdf_block_is_compact(rows),
     }
 
 
@@ -7890,7 +7891,6 @@ def download_generated_timetable_pdf(request, index, view_type='section'):
         "is_workload": is_workload,
         "workload_rows": workload_rows,
         "view_label": view_label,
-        "slot_labels": SLOT_LABELS,
         "college_name": COLLEGE_NAME,
         "college_logo": settings.STATIC_URL + "img/college_logo.png",
         "brand_logo": settings.STATIC_URL + "img/logo_email.png",

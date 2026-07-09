@@ -54,7 +54,7 @@
       <div style="margin-top:14px;" class="muted">Timetable: {{ timetable_title }}</div>
       <div style="margin-top:8px;" class="code">{{ saved.publish_code }}</div>
       <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
-        <a href="{% url 'saved_timetable' saved.id %}" class="btn btn-muted">Back to Saved Timetable</a>
+        <a href="{% if manual_mode %}{% url 'manual_edited_timetable' saved.id %}{% else %}{% url 'saved_timetable' saved.id %}{% endif %}" class="btn btn-muted">Back to {% if manual_mode %}Manual Timetable{% else %}Saved Timetable{% endif %}</a>
       </div>
     </div>
 
@@ -62,7 +62,7 @@
       <div class="panel">
         <h2>Notify All Teachers</h2>
         <div class="meta"><span class="count">{{ teacher_count }}</span> teacher emails are available in this timetable.</div>
-        <form method="post" action="{% url 'publish_notify_all_teachers' saved.id %}">
+        <form method="post" action="{% if manual_mode %}{% url 'manual_publish_notify_all_teachers' saved.id %}{% else %}{% url 'publish_notify_all_teachers' saved.id %}{% endif %}">
           {% csrf_token %}
           <button type="submit" class="btn btn-primary">Notify All Teachers</button>
         </form>
@@ -85,7 +85,7 @@
       <div class="panel">
         <h2>Notify One Teacher</h2>
         <div class="meta">Search the central teacher directory and send the publish code to any selected teacher only. <span class="count">{{ search_teacher_count }}</span> central teachers are available.</div>
-        <form method="post" action="{% url 'publish_notify_single_teacher' saved.id %}" class="stack">
+        <form method="post" action="{% if manual_mode %}{% url 'manual_publish_notify_single_teacher' saved.id %}{% else %}{% url 'publish_notify_single_teacher' saved.id %}{% endif %}" class="stack">
           {% csrf_token %}
           <input type="text" id="teacherSearch" class="field" placeholder="Search teacher by name or email">
           <select name="teacher_id" id="teacherSelect" class="field" required>
@@ -101,7 +101,7 @@
       <div class="panel" style="grid-column: 1 / -1;">
         <h2>Notify All Timetable Coordinators</h2>
         <div class="meta"><span class="count">{{ coordinator_count }}</span> appointed coordinator emails are available.</div>
-        <form method="post" action="{% url 'publish_notify_all_coordinators' saved.id %}" style="margin-bottom:14px;">
+        <form method="post" action="{% if manual_mode %}{% url 'manual_publish_notify_all_coordinators' saved.id %}{% else %}{% url 'publish_notify_all_coordinators' saved.id %}{% endif %}" style="margin-bottom:14px;">
           {% csrf_token %}
           <button type="submit" class="btn btn-primary">Notify All Timetable Coordinators</button>
         </form>

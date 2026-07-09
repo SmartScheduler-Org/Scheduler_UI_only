@@ -23,6 +23,8 @@ DAYS_OF_WEEK = (
 
 LAB_CATEGORY_CHOICES = (
     ("Lecture Hall", "Lecture Hall"),
+    ("Common Lecture Hall", "Common Lecture Hall"),
+    ("SP Lecture Hall", "SP Lecture Hall"),
     ("General", "General"),
     ("Electronics Lab", "Electronics Lab"),
     ("Electrical Lab", "Electrical Lab"),
@@ -40,6 +42,11 @@ def _normalize_single_lab_category(raw_value):
     aliases = {
         "lecture": "Lecture Hall",
         "lecture hall": "Lecture Hall",
+        "common lecture": "Common Lecture Hall",
+        "common lecture hall": "Common Lecture Hall",
+        "sp lecture": "SP Lecture Hall",
+        "sp lecture hall": "SP Lecture Hall",
+        "special lecture hall": "SP Lecture Hall",
         "computer": "Computer Lab",
         "computer lab": "Computer Lab",
         "electronics": "Electronics Lab",
@@ -117,6 +124,9 @@ class Room(models.Model):
         max_length=20,
         choices=[
             ("Lecture Hall", "Lecture Hall"),
+            ("Common Lecture Hall", "Common Lecture Hall"),
+            ("SP Lecture Hall", "SP Lecture Hall"),
+            ("Ground", "Ground"),
             ("Lab", "Lab"),
             ("Seminar Room", "Seminar Room"),
         ],
@@ -267,6 +277,8 @@ class Subject(models.Model):
         max_length=20,
         choices=[
             ("Lecture Hall", "Lecture Hall"),
+            ("Common Lecture Hall", "Common Lecture Hall"),
+            ("SP Lecture Hall", "SP Lecture Hall"),
             ("Lab", "Lab"),
         ],
     )
@@ -464,6 +476,32 @@ class SavedTimetable(models.Model):
         return f"Timetable{dept_label} ({self.created_at.strftime('%d %b %Y %H:%M')})"
 
 
+class ManualEditedTimetable(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="manual_edited_timetables",
+    )
+    name = models.CharField(max_length=120, blank=True, default="")
+    source_saved_timetable_id = models.PositiveIntegerField(null=True, blank=True)
+    source_saved_timetable_name = models.CharField(max_length=120, blank=True, default="")
+    snapshot = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_published = models.BooleanField(default=False)
+    publish_code = models.CharField(max_length=50, blank=True, default="")
+
+    class Meta:
+        ordering = ["-updated_at", "-created_at"]
+
+    def __str__(self):
+        if self.name:
+            return self.name
+        if self.source_saved_timetable_name:
+            return f"Manual Edit - {self.source_saved_timetable_name}"
+        return f"Manual Edit ({self.updated_at.strftime('%d %b %Y %H:%M')})"
+
+
 class SavedPrefill(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -500,7 +538,7 @@ class ScheduledSlot(models.Model):
         blank=True,
         related_name="shared_lab_slots",
     )
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True)
     meeting_time = models.ForeignKey(MeetingTime, on_delete=models.CASCADE)
 
     is_lab = models.BooleanField(default=False)
@@ -528,6 +566,8 @@ class ScheduledSlot(models.Model):
 
         # COMMON: instructor must exist
         if not self.instructor or not self.subject:
+            return
+        if not self.room:
             return
 
         if self.is_lab:

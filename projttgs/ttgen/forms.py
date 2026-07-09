@@ -45,6 +45,9 @@ class RoomForm(ModelForm):
             "department": forms.Select(),
             "room_type": forms.Select(choices=[
                 ('Lecture Hall', 'Lecture Hall'),
+                ('Common Lecture Hall', 'Common Lecture Hall'),
+                ('SP Lecture Hall', 'SP Lecture Hall'),
+                ('Ground', 'Ground'),
                 ('Lab', 'Lab'),
                 ('Seminar Room', 'Seminar Room'),
             ]),
@@ -168,6 +171,8 @@ class SubjectForm(ModelForm):
             "department": forms.Select(),
             "room_required": forms.Select(choices=[
                 ('Lecture Hall', 'Lecture Hall'),
+                ('Common Lecture Hall', 'Common Lecture Hall'),
+                ('SP Lecture Hall', 'SP Lecture Hall'),
                 ('Lab', 'Lab'),
             ]),
             "required_lab_category": forms.TextInput(attrs={"placeholder": "e.g. Computer Lab or Lab A;Lab B"}),

@@ -1,0 +1,2253 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartScheduler | Manual Edit</title>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+body {
+    background: #f5f7f7;
+    font-family: "Segoe UI", sans-serif;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 10% 12%, rgba(91, 33, 237, 0.10), transparent 18%),
+        radial-gradient(circle at 88% 18%, rgba(56, 189, 248, 0.08), transparent 18%);
+    opacity: 0.9;
+    z-index: 0;
+}
+
+.me-page {
+    width: min(2100px, calc(100% - 18px));
+    margin: 0 auto;
+    padding: 34px 0 88px;
+    position: relative;
+    z-index: 1;
+}
+
+.me-page::before {
+    content: none;
+}
+
+.me-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+
+.me-topbar__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.me-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(56,189,248,0.12);
+    border: 1px solid rgba(56,189,248,0.22);
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.me-title-input {
+    width: min(720px, 100%);
+    border: 1px solid rgba(148,163,184,0.24);
+    border-radius: 18px;
+    background: rgba(15,23,42,0.82);
+    color: #f8fafc;
+    padding: 16px 18px;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.me-sub {
+    color: rgba(226,232,240,0.72);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 760px;
+}
+
+.me-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.me-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.me-btn:hover {
+    text-decoration: none;
+}
+
+.me-btn--ghost {
+    background: rgba(15,23,42,0.74);
+    border-color: rgba(148,163,184,0.18);
+    color: #e2e8f0;
+}
+
+.me-btn--save {
+    background: linear-gradient(135deg, #0f766e, #14b8a6);
+    color: #f8fafc;
+    box-shadow: 0 14px 34px rgba(20,184,166,0.24);
+}
+
+.me-btn--download {
+    background: rgba(59,130,246,0.16);
+    border-color: rgba(59,130,246,0.28);
+    color: #bfdbfe;
+}
+
+.me-btn--eval {
+    background: rgba(245,158,11,0.14);
+    border-color: rgba(245,158,11,0.28);
+    color: #fde68a;
+}
+
+.me-save-hint {
+    color: rgba(226,232,240,0.66);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.me-alert {
+    margin-bottom: 18px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(34,197,94,0.32);
+    background: rgba(34,197,94,0.12);
+    color: #bbf7d0;
+    font-weight: 700;
+}
+
+.me-section {
+    margin-bottom: 28px;
+    padding: 20px;
+    border-radius: 24px;
+    background: rgba(15,23,42,0.72);
+    border: 1px solid rgba(148,163,184,0.14);
+    box-shadow: 0 24px 48px rgba(2,6,23,0.24);
+}
+
+.me-section__head {
+    display: grid;
+    grid-template-columns: minmax(200px, 1.2fr) minmax(180px, 0.8fr);
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.me-inline-input,
+.me-cell-input {
+    width: 100%;
+    border: 1px solid rgba(148,163,184,0.22);
+    border-radius: 12px;
+    background: rgba(2,6,23,0.38);
+    color: #f8fafc;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.me-table-wrap {
+    overflow-x: visible;
+}
+
+.table2.me-table {
+    margin: 30px auto;
+    width: 95%;
+    border-collapse: collapse;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.me-table th,
+.me-table td {
+    border: 1px solid #e0e0e0;
+    vertical-align: top;
+}
+
+.me-table th {
+    background: #e3f2fd;
+    color: #1b4f72;
+    padding: 8px;
+    text-align: center;
+    font-size: 13px;
+    border: 1px solid #d0d7de;
+}
+
+.me-day-cell {
+    min-width: 120px;
+    background: #ffffff;
+}
+
+.me-slot-input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #1b4f72;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.me-table td {
+    height: 120px;
+    background: #fafcfc;
+    padding: 0;
+    font-size: 13px;
+}
+
+.me-cell--lunch {
+    background: #ffffff;
+}
+
+.slot-cell {
+    position: relative;
+    overflow: visible;
+    padding: 10px;
+}
+
+.labs-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.lab-box {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #2196f3;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 600;
+    min-width: 0;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    width: 100% !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px;
+}
+
+.lab-box.shared-lab,
+.class-box.shared-teacher {
+    background: linear-gradient(135deg, #fff8d6 0%, #ffe082 100%);
+    border-color: #f9a825;
+    box-shadow: 0 2px 8px rgba(249, 168, 37, 0.25);
+}
+
+.lab-box.short-duration,
+.class-box.short-duration {
+    background: linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%) !important;
+    border: 2px solid #43a047 !important;
+    box-shadow: 0 2px 8px rgba(67, 160, 71, 0.25) !important;
+}
+
+.class-box {
+    background: #f5f5f5;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.slot-text-subject {
+    font-size: 14px;
+    color: #0d47a1;
+    font-weight: 700;
+}
+
+.slot-text-group {
+    color: #1565c0;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.slot-text-teacher {
+    color: #283593;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.slot-text-room,
+.slot-text-section {
+    color: #424242;
+    font-size: 12px;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.action-button {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: all 0.2s ease-in-out;
+    border: 0;
+    cursor: pointer;
+}
+
+.btn-update {
+    background: #9bd0c1;
+}
+
+.btn-delete {
+    background: #f4a6a6;
+}
+
+.btn-add {
+    background: #c7cffc;
+}
+
+.action-button:hover {
+    transform: translateY(-1px);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.lunch-chip {
+    background: #9ca3af;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: inline-flex;
+}
+
+.me-slot-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.me-empty {
+    min-height: 72px;
+    border: 1px dashed rgba(148,163,184,0.3);
+    border-radius: 12px;
+    background: rgba(241,245,249,0.78);
+}
+
+.me-entry-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.me-entry.is-dragging {
+    opacity: 0.58;
+}
+
+.slot-cell.drag-over,
+.parking-dropzone.drag-over {
+    outline: 2px dashed #38bdf8;
+    outline-offset: -4px;
+    background: rgba(240, 249, 255, 0.92);
+}
+
+.me-parked-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.me-parked-list .me-entry {
+    cursor: grab;
+}
+
+.me-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.me-entry[data-kind="lab"] {
+    background: transparent;
+}
+
+.me-entry[data-kind="class"] {
+    background: transparent;
+}
+
+.me-entry-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.me-entry-fields {
+    display: none;
+}
+
+.me-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.me-field label {
+    color: #475569;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.page-utility-bar {
+    position: sticky;
+    top: 14px;
+    z-index: 60;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    width: min(1380px, calc(100% - 36px));
+    margin: 0 auto 18px;
+}
+
+.utility-btn {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.78);
+    color: #f8fafc;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.24);
+    backdrop-filter: blur(14px);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.utility-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+.utility-btn.is-close {
+    background: rgba(127, 29, 29, 0.88);
+}
+
+.me-hero {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 22px;
+}
+
+.me-hero__brand {
+    margin: 0 0 10px;
+    text-align: center;
+    font-size: 2rem;
+    color: #257a7a;
+    font-weight: 700;
+}
+
+.saved-meta {
+    text-align: center;
+    margin: 8px 0 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4f6f6f;
+}
+
+.export-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.fullpage-pdf-btn,
+.eval-dl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.fullpage-pdf-btn {
+    background: linear-gradient(135deg, #6d28d9, #7c3aed, #4f46e5);
+    box-shadow: 0 18px 34px rgba(109, 40, 217, 0.22);
+}
+
+.eval-dl-btn {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    box-shadow: 0 18px 34px rgba(245, 158, 11, 0.22);
+}
+
+.fullpage-pdf-btn.is-disabled,
+.eval-dl-btn.is-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.me-title-panel {
+    max-width: 1100px;
+    margin: 0 auto 16px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.me-title-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.me-title-input {
+    width: min(420px, 100%);
+    border: 1px solid rgba(148,163,184,0.24);
+    border-radius: 999px;
+    background: #ffffff;
+    color: #0f3d56;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.me-sub {
+    color: #4f6f6f;
+    max-width: none;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.me-save-hint {
+    margin: 12px auto 0;
+    max-width: 1100px;
+    color: #7c5f00;
+    background: #fff8db;
+    border: 1px solid #f6d365;
+    border-radius: 14px;
+    padding: 10px 14px;
+}
+
+.command-bar {
+    width: min(1380px, calc(100% - 12px));
+    margin: 0 auto 20px;
+    padding: 14px 18px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(148,163,184,0.18);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.dept-select-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dept-select-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1f4d6b;
+    letter-spacing: 0.08em;
+}
+
+.dept-select {
+    min-width: 220px;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #12344d;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.view-switcher {
+    width: min(1380px, calc(100% - 12px));
+    margin: 0 auto 24px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.view-toggle {
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 18px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    opacity: 0.74;
+    transform: translateY(0);
+}
+
+.view-toggle.is-active {
+    opacity: 1;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+    transform: translateY(-1px);
+}
+
+.view-toggle--section { background: linear-gradient(135deg, #2563eb, #0ea5e9); }
+.view-toggle--room { background: linear-gradient(135deg, #16873f, #33b25b); }
+.view-toggle--workload { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.view-toggle--teacher { background: linear-gradient(135deg, #1186a2, #2eb5d4); }
+
+.ta-toolbar { display:flex; flex-direction:column; align-items:center; gap:12px; margin:6px 0 22px; }
+.ta-btn {
+    display:inline-flex;
+    align-items:center;
+    gap:2px;
+    padding:10px 18px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    background:linear-gradient(135deg, #1d4ed8, #3b82f6);
+    color:#fff;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:0.02em;
+    box-shadow:0 10px 22px rgba(29, 78, 216, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ta-btn:hover { transform: translateY(-2px); box-shadow:0 14px 26px rgba(29, 78, 216, 0.32); }
+.ta-btn.is-open { background:linear-gradient(135deg, #475569, #64748b); }
+.ta-panel {
+    width:min(560px, 92%);
+    background:#f8fbff;
+    border:1px solid #cfe0f2;
+    border-radius:14px;
+    padding:16px 18px;
+    box-shadow:0 12px 30px rgba(15, 53, 99, 0.10);
+}
+.ta-panel__row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.ta-panel__row:last-child { margin-bottom:0; }
+.ta-panel__label { font-size:13px; font-weight:700; color:#28506e; min-width:90px; }
+.ta-select {
+    flex:1;
+    min-width:180px;
+    padding:9px 12px;
+    border:1px solid #b7d0e8;
+    border-radius:9px;
+    background:#fff;
+    font-size:13px;
+    color:#1b3a57;
+    font-weight:600;
+}
+.ta-panel__modes { gap:8px; }
+.ta-mode-btn {
+    padding:8px 14px;
+    border:1px solid #b7d0e8;
+    border-radius:9px;
+    cursor:pointer;
+    background:#fff;
+    color:#28506e;
+    font-size:13px;
+    font-weight:700;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.ta-mode-btn:hover { border-color:#3b82f6; }
+.ta-mode-btn.is-active { background:#1d4ed8; color:#fff; border-color:#1d4ed8; }
+.ta-mode-btn--reset { margin-left:auto; }
+.ta-mode-btn--reset.is-active { background:#475569; border-color:#475569; }
+.ta-summary { font-size:12.5px; color:#3a5b78; font-weight:600; min-height:16px; }
+.ta-card.ta-hidden { display:none !important; }
+
+.secHead {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 1.9rem;
+    color: #257a7a;
+    font-weight: 700;
+}
+
+.me-section {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 34px;
+}
+
+.me-section-shell,
+.room-card,
+.workload-card,
+.teacher-card {
+    width: min(100%, 2100px);
+    margin: 0 auto 26px;
+    padding: 18px 18px 22px;
+    border-radius: 24px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.me-section-bucket,
+.me-subject-panel {
+    max-width: 1100px;
+    margin: 0 auto 14px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff, #f8fbff);
+    border: 1px solid #dbe8f3;
+}
+
+.me-section-bucket .parking-dropzone {
+    min-height: 96px;
+}
+
+.section-card-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 12px 0 6px;
+}
+
+.btn-save-tt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    background: #1b5e20;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.me-section__head {
+    max-width: 1100px;
+    margin: 0 auto 18px;
+    grid-template-columns: minmax(220px, 1.2fr) minmax(180px, 0.8fr);
+}
+
+.me-inline-input,
+.me-cell-input {
+    background: #ffffff;
+    color: #103b55;
+    border-color: rgba(148,163,184,0.28);
+}
+
+.me-day-cell {
+    min-width: 120px;
+    background: #ffffff;
+    font-weight: 700;
+}
+
+.room-view-toolbar {
+    width: min(100%, 1380px);
+    margin: 0 auto 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, #ffffff, #eef7ff);
+    border: 1px solid rgba(31, 77, 107, 0.1);
+    border-radius: 22px;
+    box-shadow: 0 14px 32px rgba(27, 79, 114, 0.08);
+}
+
+.room-view-title {
+    margin: 0;
+    font-size: 2.1rem;
+    color: #1f4d6b;
+}
+
+.room-view-toolbar__hint {
+    color: #567083;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.room-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    overflow: hidden;
+    border: 1px solid #d9e5ee;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.96);
+}
+
+.room-table thead th {
+    padding: 14px 10px;
+    background: linear-gradient(180deg, #f8fbff, #e8f1f8);
+    color: #29485f;
+    font-size: 13px;
+    font-weight: 800;
+    border-right: 1px solid #d8e2ea;
+    border-bottom: 1px solid #d8e2ea;
+    text-align: center;
+}
+
+.room-table tbody td {
+    padding: 8px;
+    height: 108px;
+    border-right: 1px solid #e1e8ee;
+    border-bottom: 1px solid #e1e8ee;
+    text-align: center;
+    vertical-align: middle;
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.room-day-cell {
+    min-width: 120px;
+    padding: 14px 10px !important;
+    background: linear-gradient(180deg, #ffffff, #f5f9fc);
+    color: #22384a;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.room-lunch-cell {
+    background: linear-gradient(180deg, #fbfbfb, #f0f0f0) !important;
+    color: #343434;
+    font-weight: 800;
+}
+
+.room-empty-cell {
+    background: linear-gradient(135deg, rgba(17,103,216,0.03), rgba(17,103,216,0.01));
+}
+
+.room-slot-card {
+    height: 100%;
+    min-height: 108px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 12px;
+    text-align: center;
+    border-radius: 18px;
+    border: 1px solid rgba(70,103,125,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 18px rgba(27,79,114,0.06);
+}
+
+.room-slot-card--lab { background: linear-gradient(135deg, rgba(227,242,253,0.92), rgba(209,231,255,0.96)); }
+.room-slot-card--class { background: linear-gradient(135deg, rgba(234,255,234,0.92), rgba(220,245,223,0.96)); }
+
+.room-slot-card strong {
+    display: block;
+    font-size: 15px;
+    line-height: 1.25;
+}
+
+.room-slot-card__section {
+    color: #334f63;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.room-slot-card__teacher {
+    color: #476375;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.teacher-card .secHead,
+.workload-card .secHead {
+    margin-top: 6px;
+}
+
+.me-empty-state {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 18px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    text-align: center;
+    color: #64748b;
+    font-weight: 700;
+}
+
+@media (max-width: 900px) {
+    .me-section__head,
+    .me-entry-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .me-page {
+        width: min(100%, calc(100% - 18px));
+    }
+
+    .me-title-row {
+        grid-template-columns: 1fr;
+    }
+
+    .room-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="me-page">
+    {% if saved_flag %}
+    <div class="me-alert">Manual edit saved independently. This copy is separate from the original saved timetable.</div>
+    {% endif %}
+
+    <form id="manualEditForm" method="post">
+        {% csrf_token %}
+        <input type="hidden" id="snapshotJson" name="snapshot_json">
+
+        <div class="page-utility-bar">
+            <button type="button" class="utility-btn" id="openFullScreenButton" title="Open full screen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                </svg>
+            </button>
+            <a href="{% if source_saved %}{% url 'saved_timetable' source_saved.id %}{% else %}{% url 'saved_timetable_list' %}{% endif %}" class="utility-btn is-close" title="Back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </a>
+        </div>
+
+                <div class="me-hero">
+                        <h1 style="display:flex; align-items:center; justify-content:center; gap:12px;">
+                            <span style="line-height:0; filter:drop-shadow(0 0 8px rgba(0,144,200,0.45));">
+                                <svg viewBox="0 0 200 200" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="lg_t_sv_manual" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient>
+                                        <linearGradient id="lg_l_sv_manual" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient>
+                                        <linearGradient id="lg_r_sv_manual" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient>
+                                    </defs>
+                                    <path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_t_sv_manual)"/>
+                                    <path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_l_sv_manual)"/>
+                                    <path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_r_sv_manual)"/>
+                                    <path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818"/>
+                                </svg>
+                            </span>
+                            SmartScheduler
+                        </h1>
+                        <div class="saved-meta">
+                                Manual Edit Timetable &mdash;
+                                {% if manual_record %}
+                                {{ manual_record.updated_at|date:"d M Y" }} at {{ manual_record.updated_at|date:"h:i A" }}
+                                {% elif source_saved %}
+                                {{ source_saved.created_at|date:"d M Y" }} at {{ source_saved.created_at|date:"h:i A" }}
+                                {% else %}
+                                Editable Manual Copy
+                                {% endif %}
+                        </div>
+
+                            {% if manual_record %}
+                            <div style="text-align:center; margin-bottom: 20px;" class="export-exclude">
+                                {% if manual_record.is_published %}
+                                    <div style="padding: 10px 18px; background: #e8f5e9; border: 1px solid #66bb6a; border-radius: 8px; display: inline-block;">
+                                        <strong style="color:#2e7d32;">Published</strong> &mdash; Code: <code style="font-size:15px; font-weight:700; letter-spacing:1px;">{{ manual_record.publish_code }}</code>
+                                        <a href="{% url 'manual_timetable_publish_notifications' manual_record.id %}" style="display:inline-block; margin-left:10px; background:#1565c0; color:white; text-decoration:none; border:none; border-radius:6px; padding:5px 14px; cursor:pointer; font-weight:600; font-size:13px;">Notify</a>
+                                        <button type="button" data-manual-unpublish-url="{% url 'unpublish_manual_timetable' manual_record.id %}" style="display:inline-block; margin-left:10px; background:#ef5350; color:white; border:none; border-radius:6px; padding:5px 14px; cursor:pointer; font-weight:600; font-size:13px;">Unpublish</button>
+                                    </div>
+                                {% else %}
+                                    <div style="display:inline-flex; gap:8px; align-items:center;">
+                                        <input type="text" id="manualPublishCodeInput" placeholder="Enter publish code" required style="padding:8px 14px; border-radius:8px; border:1px solid #ccc; font-size:14px;">
+                                        <button type="button" data-manual-publish-url="{% url 'publish_manual_timetable' manual_record.id %}" style="background:#43a047; color:white; border:none; border-radius:8px; padding:8px 18px; font-weight:600; cursor:pointer; font-size:14px;">Publish</button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+            <div class="export-group">
+                {% if manual_record %}
+                <a href="{% url 'manual_edited_timetable_download_center' manual_record.id %}" class="fullpage-pdf-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Proceed to Download</span>
+                </a>
+                <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation(document.querySelector('.view-toggle.is-active')?.getAttribute('data-view') || 'section')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>Download for Evaluation</span>
+                </button>
+                {% else %}
+                <span class="fullpage-pdf-btn is-disabled">Proceed to Download</span>
+                <span class="eval-dl-btn is-disabled">Download for Evaluation</span>
+                {% endif %}
+            </div>
+
+            <div class="me-title-panel">
+                <div class="me-title-row export-exclude">
+                    <input type="hidden" name="name" value="{{ snapshot.title }}" data-manual-path="{{ snapshot.title_path }}">
+                    <button type="submit" class="me-btn me-btn--save">Save Manual Copy</button>
+                </div>
+                <div class="me-sub">
+                    {% if manual_record %}
+                    Standalone manual copy last updated on {{ manual_record.updated_at|date:"d M Y h:i A" }}. These edits stay independent from the original saved timetable.
+                    {% elif source_saved %}
+                    Started from {{ source_saved.name|default:"Saved Timetable" }} on {{ source_saved.created_at|date:"d M Y h:i A" }}. Save after edits to unlock publish, download, room, and teacher views for this manual copy.
+                    {% else %}
+                    This page is a standalone manual copy. Save after edits to unlock publish and keep the section, room, and teacher views in sync.
+                    {% endif %}
+                </div>
+                {% if not manual_record %}
+                <div class="me-save-hint">Save this manual copy once to unlock publish and download options.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if department_options %}
+        <div class="command-bar">
+            <div class="dept-select-wrap">
+                <span class="dept-select-label">FILTER:</span>
+                <select class="dept-select" onchange="filterByDepartmentSelect(this)">
+                    <option value="all" {% if active_department == 'all' %}selected{% endif %}>All Departments</option>
+                    {% for dept in department_options %}
+                    <option value="{{ dept.code }}" {% if active_department == dept.code %}selected{% endif %}>{{ dept.name }} ({{ dept.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="view-switcher">
+            <button class="view-toggle view-toggle--section is-active" type="button" data-view="section" onclick="showView('section')" aria-pressed="true">Section Timetable</button>
+            <button class="view-toggle view-toggle--room" type="button" data-view="room" onclick="showView('room')" aria-pressed="false">Room Timetable</button>
+            <button class="view-toggle view-toggle--workload" type="button" data-view="workload" onclick="showView('workload')" aria-pressed="false">Teacher Workload</button>
+            <button class="view-toggle view-toggle--teacher" type="button" data-view="teacher" onclick="showView('teacher')" aria-pressed="false">Teacher Timetable</button>
+        </div>
+
+        <div id="section-view">
+        {% for section in render_snapshot.sections %}
+        <section id="section-tt-{{ forloop.counter }}" class="me-section export-surface">
+            <div class="me-section-shell">
+            <h2 class="secHead">{{ section.section_name }} - {{ section.department_name }}</h2>
+
+            <div class="me-section-bucket export-exclude">
+                <div class="parking-panel__head">
+                    <div class="parking-panel__eyebrow">Section Bucket</div>
+                    <h3>Parking for {{ section.section_name }}</h3>
+                    <p>Drag a filled slot here to park it above this section, just like the saved timetable view.</p>
+                </div>
+                <div class="parking-dropzone" data-section-index="{{ section.snapshot_index }}">
+                    <div class="parking-dropzone__hint">Drag a filled slot here to park it above this section.</div>
+                    {% if section.parked_entries %}
+                    <div class="me-parked-list">
+                        {% for entry in section.parked_entries %}
+                        <article class="me-entry" data-kind="{{ entry.kind }}" draggable="true">
+                            <div class="{% if entry.kind == 'lab' %}lab-box{% else %}class-box{% endif %}">
+                                <div class="slot-text-subject" data-display-key="subject_name">{% for field in entry.fields %}{% if field.key == 'subject_name' %}{{ field.value }}{% endif %}{% endfor %}</div>
+                                {% for field in entry.fields %}
+                                    {% if field.key == 'group_label' %}<div class="slot-text-group" data-display-key="group_label">{{ field.value }}</div>{% endif %}
+                                    {% if field.key == 'teacher_name' %}<div class="slot-text-teacher" data-display-key="teacher_name">{{ field.value }}</div>{% endif %}
+                                    {% if field.key == 'second_teacher_name' %}<div class="slot-text-teacher" data-display-key="second_teacher_name">{{ field.value }}</div>{% endif %}
+                                    {% if field.key == 'co_teacher_names' %}<div class="slot-text-teacher" data-display-key="co_teacher_names">{{ field.value }}</div>{% endif %}
+                                    {% if field.key == 'room_name' %}<div class="slot-text-room" data-display-key="room_name">{{ field.value }}</div>{% endif %}
+                                    {% if field.key == 'section_name' %}<div class="slot-text-section" data-display-key="section_name">{{ field.value }}</div>{% endif %}
+                                {% endfor %}
+                                <div class="action-buttons">
+                                    <button type="button" class="action-button btn-update" data-manual-edit-entry>Edit</button>
+                                    <button type="button" class="action-button btn-delete" data-manual-delete-entry>Delete</button>
+                                </div>
+                            </div>
+                            <div class="me-entry-fields">
+                                {% for field in entry.fields %}
+                                <input type="hidden" value="{{ field.key }}" data-entry-meta="field-key">
+                                <input type="hidden" class="me-entry-field" data-field-key="{{ field.key }}" data-field-label="{{ field.label }}" value="{{ field.value|default:'' }}">
+                                {% endfor %}
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="parking-empty-state">Bucket empty for this section.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="me-subject-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+                    <div style="font-weight:700; color:#0d47a1;">Subjects Scheduled</div>
+                    <div style="font-size:13px; font-weight:700; color:#c62828; background:#fff3f3; border:1px solid #ffcdd2; border-radius:999px; padding:5px 10px;">
+                        M.T.C: {{ section.total_missing_classes }}
+                    </div>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    {% if section.subject_counts %}
+                        {% for subject in section.subject_counts %}
+                        <span style="display:inline-block; padding:6px 10px; background:#ffffff; border:1px solid #bbdefb; border-radius:16px; color:#1565c0; font-size:13px; font-weight:600; max-width:340px;">
+                            {{ subject.name }}: {{ subject.count }}/{{ subject.required }}
+                        </span>
+                        {% endfor %}
+                    {% else %}
+                        <span style="display:inline-block; padding:6px 10px; background:#ffffff; border:1px solid #dbe8f3; border-radius:16px; color:#64748b; font-size:13px; font-weight:600;">No slots added yet</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="me-section__head export-exclude">
+                <input type="text" class="me-inline-input" value="{{ section.section_name }}" data-section-index="{{ section.snapshot_index }}" data-manual-role="section-name" aria-label="Section name">
+                <input type="text" class="me-inline-input" value="{{ section.department_name }}" data-section-index="{{ section.snapshot_index }}" data-manual-role="department-name" aria-label="Department name">
+            </div>
+
+            <div class="section-card-actions export-exclude">
+                <button type="button" class="btn-save-tt" onclick="saveAsImage('section-tt-{{ forloop.counter }}', 'Section_{{ section.section_name|slugify }}')">Save as Image</button>
+            </div>
+
+            <div class="me-table-wrap">
+                <table class="table2 me-table">
+                    <thead>
+                        <tr>
+                            <th class="me-day-cell">Day</th>
+                            {% for slot_header in render_snapshot.slot_headers %}
+                            <th>
+                                <input type="text" class="me-slot-input" value="{{ slot_header.label }}" data-header-index="{{ forloop.counter0 }}" aria-label="Slot label {{ forloop.counter }}">
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in section.rows %}
+                        <tr>
+                            <th class="me-day-cell">
+                                <input type="text" class="me-slot-input" value="{{ row.day_label }}" data-section-index="{{ section.snapshot_index }}" data-row-index="{{ forloop.counter0 }}" data-manual-role="day-label" aria-label="Day label">
+                            </th>
+                            {% for cell in row.cells %}
+                            <td colspan="{{ cell.colspan }}" class="{% if cell.type == 'lunch' %}me-cell--lunch{% else %}slot-cell{% endif %}" data-section-index="{{ section.snapshot_index }}" data-row-index="{{ forloop.parentloop.counter0 }}" data-cell-index="{{ forloop.counter0 }}" data-slot-number="{{ cell.slot_number }}" data-colspan="{{ cell.colspan }}" data-cell-type="{{ cell.type }}">
+                                {% if cell.type == 'lunch' %}
+                                <div class="slot-cell" style="padding:10px;">
+                                    <input type="text" class="me-cell-input" value="{{ cell.label }}" data-section-index="{{ section.snapshot_index }}" data-row-index="{{ forloop.parentloop.counter0 }}" data-cell-index="{{ forloop.counter0 }}" data-manual-role="lunch-label" aria-label="Lunch label">
+                                </div>
+                                {% elif cell.entries %}
+                                <div class="me-entry-list">
+                                    {% for entry in cell.entries %}
+                                    <article class="me-entry" data-kind="{{ entry.kind }}" draggable="true">
+                                        <div class="{% if entry.kind == 'lab' %}lab-box{% else %}class-box{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}{% for field in entry.fields %}{% if field.key == 'second_teacher_name' and field.value %}{% if entry.kind == 'lab' %} shared-lab{% else %} shared-teacher{% endif %}{% endif %}{% if field.key == 'co_teacher_names' and field.value %}{% if entry.kind == 'lab' %} shared-lab{% else %} shared-teacher{% endif %}{% endif %}{% endfor %}">
+                                            <div class="slot-text-subject" data-display-key="subject_name">{% for field in entry.fields %}{% if field.key == 'subject_name' %}{{ field.value }}{% endif %}{% endfor %}</div>
+                                            {% for field in entry.fields %}
+                                                {% if field.key == 'group_label' %}<div class="slot-text-group" data-display-key="group_label">{{ field.value }}</div>{% endif %}
+                                                {% if field.key == 'teacher_name' %}<div class="slot-text-teacher" data-display-key="teacher_name">{{ field.value }}</div>{% endif %}
+                                                {% if field.key == 'second_teacher_name' %}<div class="slot-text-teacher" data-display-key="second_teacher_name">{{ field.value }}</div>{% endif %}
+                                                {% if field.key == 'co_teacher_names' %}<div class="slot-text-teacher" data-display-key="co_teacher_names">{{ field.value }}</div>{% endif %}
+                                                {% if field.key == 'room_name' %}<div class="slot-text-room" data-display-key="room_name">{{ field.value }}</div>{% endif %}
+                                                {% if field.key == 'section_name' %}<div class="slot-text-section" data-display-key="section_name">{{ field.value }}</div>{% endif %}
+                                            {% endfor %}
+                                            <div class="action-buttons">
+                                                <button type="button" class="action-button btn-update" data-manual-edit-entry>Edit</button>
+                                                <button type="button" class="action-button btn-delete" data-manual-delete-entry>Delete</button>
+                                            </div>
+                                        </div>
+                                        <div class="me-entry-fields">
+                                            {% for field in entry.fields %}
+                                            <input type="hidden" value="{{ field.key }}" data-entry-meta="field-key">
+                                            <input type="hidden" class="me-entry-field" data-field-key="{{ field.key }}" data-field-label="{{ field.label }}" value="{{ field.value|default:'' }}">
+                                            {% endfor %}
+                                        </div>
+                                    </article>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="me-slot-toolbar">
+                                    <button type="button" class="action-button btn-add" data-manual-add-entry>Add</button>
+                                </div>
+                                <div class="me-empty"></div>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </section>
+        {% endfor %}
+        {% if not render_snapshot.sections %}
+        <div class="me-empty-state">No sections match the selected department.</div>
+        {% endif %}
+        </div>
+
+        <div id="room-view" style="display:none;">
+            <div class="room-view-toolbar">
+                <div>
+                    <h2 class="room-view-title">Room Timetables</h2>
+                    <div class="room-view-toolbar__hint">Manual copy rendered in the same room-wise view as saved timetables.</div>
+                </div>
+                <div class="export-group" style="margin:0;">
+                    {% if manual_record %}
+                    <a href="{% url 'manual_edited_timetable_download_center' manual_record.id %}" class="fullpage-pdf-btn"><span>Proceed to Download</span></a>
+                    <button class="eval-dl-btn" type="button" onclick="downloadForEvaluation('room')"><span>Download for Evaluation</span></button>
+                    {% endif %}
+                </div>
+            </div>
+            {% for rt in room_tables %}
+            <div id="room-tt-{{ forloop.counter }}" class="room-card export-surface">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:18px; flex-wrap:wrap; margin-bottom:16px;">
+                    <div>
+                        <h3 style="margin:0; font-size:1.9rem; line-height:1.15; color:#203446;">Room {{ rt.room.r_number }} ({{ rt.room.room_type }})</h3>
+                        {% if rt.dept_names %}<div style="font-size:12px; color:#28506e; font-weight:700; margin-top:6px;">Department: {{ rt.dept_names|join:", " }}</div>{% endif %}
+                    </div>
+                    <button type="button" class="btn-save-tt" onclick="saveAsImage('room-tt-{{ forloop.counter }}', 'Room_{{ rt.room.r_number|slugify }}')">Save as Image</button>
+                </div>
+                <table class="room-table">
+                    <thead>
+                        <tr>
+                            <th style="width:120px;">Day</th>
+                            <th>{{ SLOT_LABELS.1 }}</th>
+                            <th>{{ SLOT_LABELS.2 }}</th>
+                            <th>{{ SLOT_LABELS.3 }}</th>
+                            <th>{{ SLOT_LABELS.4 }}</th>
+                            <th>{{ SLOT_LABELS.5 }}</th>
+                            <th>{{ SLOT_LABELS.6 }}</th>
+                            <th>{{ SLOT_LABELS.7 }}</th>
+                            <th>{{ SLOT_LABELS.8 }}</th>
+                            <th>{{ SLOT_LABELS.9 }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rt.rows %}
+                        <tr>
+                            <td class="room-day-cell"><b>{{ row.day }}</b></td>
+                            {% for cell in row.cells %}
+                                {% if cell.type == 'lunch' %}
+                                <td class="room-lunch-cell"><b>LUNCH</b></td>
+                                {% elif cell.type == 'lab' %}
+                                <td colspan="{{ cell.colspan }}">
+                                    <div class="room-slot-card room-slot-card--lab">
+                                        {% for lab in cell.labs %}
+                                        <strong>{{ lab.subject.subject_name }}</strong>
+                                        <div class="room-slot-card__section">{{ lab.section }}{% if lab.group %} ({{ lab.group }}){% endif %}</div>
+                                        <div class="room-slot-card__teacher">{{ lab.instructor.name }}</div>
+                                        {% if lab.second_instructor %}<div class="room-slot-card__teacher">{{ lab.second_instructor.name }}</div>{% endif %}
+                                        {% for co_teacher in lab.co_instructors %}<div class="room-slot-card__teacher">{{ co_teacher.name }}</div>{% endfor %}
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                {% elif cell.type == 'class' %}
+                                <td colspan="{{ cell.colspan }}">
+                                    <div class="room-slot-card room-slot-card--class">
+                                        {% for cls in cell.classes %}
+                                        <strong>{{ cls.subject.subject_name }}</strong>
+                                        <div class="room-slot-card__section">{{ cls.section }}</div>
+                                        <div class="room-slot-card__teacher">{{ cls.instructor.name }}</div>
+                                        {% for co_teacher in cls.co_instructors %}<div class="room-slot-card__teacher">{{ co_teacher.name }}</div>{% endfor %}
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                {% else %}
+                                <td class="room-empty-cell"></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% empty %}
+            <div class="me-empty-state">No room timetable data available for this filter.</div>
+            {% endfor %}
+        </div>
+
+        <div id="workload-view" style="display:none;">
+            <div class="workload-card export-surface">
+                <div class="export-group">
+                    {% if manual_record %}
+                    <a href="{% url 'manual_edited_timetable_download_center' manual_record.id %}" class="fullpage-pdf-btn"><span>Proceed to Download</span></a>
+                    <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('workload')"><span>Download for Evaluation</span></button>
+                    {% endif %}
+                </div>
+                <h1 class="secHead">Teacher Workload Summary</h1>
+                <table class="table2" style="width:100%; margin-bottom:0;">
+                    <thead>
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Department</th>
+                            <th>Lectures</th>
+                            <th>Lab Workload</th>
+                            <th>Shared Lab Workload</th>
+                            <th>Total Load</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if teacher_workloads %}
+                            {% for teacher, data in teacher_workloads.items %}
+                            <tr>
+                                <td><strong>{{ teacher.name }}</strong><br><span style="font-size:12px; color:#555;">({{ teacher.uid }})</span></td>
+                                <td>{{ data.departments|default:"-" }}</td>
+                                <td>{{ data.lectures }}</td>
+                                <td>{{ data.labs }}</td>
+                                <td>{{ data.shared_labs|default:0|floatformat:"-1" }}</td>
+                                <td>{{ data.total }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="6" style="text-align:center; font-weight:600;">No workload data available</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+                <div id="teacher-view" style="display:none;">
+                        <div class="export-group">
+                            {% if manual_record %}
+                            <a href="{% url 'manual_edited_timetable_download_center' manual_record.id %}" class="fullpage-pdf-btn" style="text-decoration:none;">
+                                <span>Proceed to Download</span>
+                            </a>
+                            <button type="button" class="eval-dl-btn" onclick="downloadForEvaluation('teacher')">
+                                <span>Download for Evaluation</span>
+                            </button>
+                            {% endif %}
+                        </div>
+                        <h1 class="secHead" style="margin-top: 20px;">Teacher Timetables</h1>
+
+                        <div class="ta-toolbar">
+                            <button type="button" id="taToggleBtn" class="ta-btn" onclick="toggleTeacherAnalysis()">
+                                <span>Teacher Analysis</span>
+                            </button>
+
+                            <div id="taPanel" class="ta-panel" style="display:none;">
+                                <div class="ta-panel__row">
+                                    <label class="ta-panel__label" for="taDeptSelect">Department</label>
+                                    <select id="taDeptSelect" class="ta-select" onchange="applyTeacherAnalysis()">
+                                        {% for dept in department_options %}
+                                        <option value="{{ dept.code }}">{{ dept.name }} ({{ dept.code }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="ta-panel__row ta-panel__modes">
+                                    <button type="button" class="ta-mode-btn is-active" data-ta-mode="home" onclick="setTeacherAnalysisMode('home')">Home department teachers</button>
+                                    <button type="button" class="ta-mode-btn" data-ta-mode="cross" onclick="setTeacherAnalysisMode('cross')">Cross department teachers</button>
+                                    <button type="button" class="ta-mode-btn ta-mode-btn--reset" data-ta-mode="all" onclick="setTeacherAnalysisMode('all')">Show all</button>
+                                </div>
+                                <div id="taSummary" class="ta-summary"></div>
+                            </div>
+                        </div>
+
+                        {% for ttable in teacher_tables %}
+                            <div id="teacher-tt-{{ forloop.counter }}" class="export-surface ta-card" data-dept-codes="{{ ttable.dept_codes|join:',' }}" data-home-dept="{{ ttable.home_dept_code }}" data-teach-depts="{{ ttable.dept_codes|join:',' }}">
+                            <div style="position:relative; z-index:1;">
+                            <h2 class="secHead">
+                                {{ ttable.teacher.name }} ({{ ttable.teacher.uid }})
+                                <span style="display:inline-block; margin-left:10px; padding:4px 8px; border:1px solid #b7d7ee; border-radius:6px; background:#eef7ff; color:#1b4f72; font-size:12px; vertical-align:middle;">
+                                    Load: {{ ttable.workload.total|default:0|floatformat:"-1" }}
+                                </span>
+                                <button type="button" class="btn-save-tt" style="margin-left: 12px; vertical-align: middle;" onclick="saveAsImage('teacher-tt-{{ forloop.counter }}', 'Teacher_{{ ttable.teacher.name|slugify }}')">
+                                    Save as Image
+                                </button>
+                            </h2>
+                            {% if ttable.dept_names %}
+                            <div style="text-align:center; margin:-6px 0 10px; font-size:12px; color:#28506e; font-weight:700;">Department: {{ ttable.dept_names|join:", " }}</div>
+                            {% endif %}
+                            {% if ttable.home_dept_name %}
+                            <div class="ta-home-label" style="text-align:center; margin:-4px 0 10px; font-size:11px; color:#7a5b00; font-weight:700;">Home Dept: {{ ttable.home_dept_name }}</div>
+                            {% endif %}
+
+                            <table class="table2">
+                                <thead>
+                                    <tr>
+                                        <th>DAY</th>
+                                        <th>{{ SLOT_LABELS.1 }}</th>
+                                        <th>{{ SLOT_LABELS.2 }}</th>
+                                        <th>{{ SLOT_LABELS.3 }}</th>
+                                        <th>{{ SLOT_LABELS.4 }}</th>
+                                        <th>{{ SLOT_LABELS.5 }}</th>
+                                        <th>{{ SLOT_LABELS.6 }}</th>
+                                        <th>{{ SLOT_LABELS.7 }}</th>
+                                        <th>{{ SLOT_LABELS.8 }}</th>
+                                        <th>{{ SLOT_LABELS.9 }}</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                {% for row in ttable.rows %}
+                                    <tr>
+                                        <th style="background:#ffffff; font-weight:600; color:#000;">
+                                            {{ row.day }}
+                                        </th>
+
+                                        {% for cell in row.cells %}
+                                            {% if cell.type == 'lunch' %}
+                                                <td class="lunch-cell">LUNCH</td>
+
+                                            {% elif cell.type == 'special' %}
+                                                <td class="special-cell">SPECIAL CLASS</td>
+
+                                            {% elif cell.type == 'lab' %}
+                                                <td colspan="{{ cell.colspan }}">
+                                                    <div class="labs-container">
+                                                        {% for lab in cell.labs %}
+                                                            <div class="lab-box {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %} {% if cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+                                                                <strong style="font-size: 14px; color: #0d47a1;">
+                                                                    {{ lab.subject.subject_name }} Lab
+                                                                </strong>
+                                                                <strong style="color: #1565c0; font-size: 13px;">
+                                                                    {% if lab.total_batches > 1 %}Group {{ lab.batch }}{% endif %}
+                                                                </strong>
+                                                                <span style="color: #424242;">
+                                                                    Section: {{ lab.section }}
+                                                                </span><br>
+                                                                <strong style="color: #283593; font-size: 13px;">
+                                                                    {{ lab.instructor.name }}
+                                                                </strong><br>
+                                                                {% for co_teacher in lab.co_instructors %}
+                                                                <strong style="color: #283593; font-size: 13px;">
+                                                                    + {{ co_teacher.name }}
+                                                                </strong><br>
+                                                                {% endfor %}
+                                                                {% if lab.second_instructor %}
+                                                                <strong style="color: #5d4037; font-size: 13px;">
+                                                                    + {{ lab.second_instructor.name }}
+                                                                </strong><br>
+                                                                {% endif %}
+                                                                <span style="color: #424242; font-size: 12px;">
+                                                                    {{ lab.room.r_number }}
+                                                                </span>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+
+                                            {% elif cell.type == 'class' %}
+                                                <td>
+                                                    {% for cls in cell.classes %}
+                                                        <div class="class-box {% if cls.co_instructors %}shared-teacher{% endif %} {% if cell.theory_in_lab %}theory-in-lab{% elif cell.colspan == 2 or cell.colspan == 3 %}short-duration{% endif %}">
+                                                            <strong>{{ cls.subject.subject_name }}</strong><br>
+                                                            Section: {{ cls.section }}<br>
+                                                            {{ cls.room.r_number|default:cls.room_label }}
+                                                        </div>
+                                                    {% endfor %}
+                                                </td>
+
+                                            {% else %}
+                                                <td></td>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            </div>
+                            </div>
+                        {% empty %}
+                        <div class="me-empty-state">No teacher timetable data available for this filter.</div>
+                        {% endfor %}
+                </div>
+    </form>
+</div>
+
+{{ snapshot_raw|json_script:"manual-edit-data" }}
+<script>
+(function() {
+    var form = document.getElementById('manualEditForm');
+    var target = document.getElementById('snapshotJson');
+    var initialNode = document.getElementById('manual-edit-data');
+    if (!form || !target || !initialNode) {
+        return;
+    }
+
+    function defaultFields(kind, sectionName) {
+        var fields = [
+            { key: 'subject_name', label: 'Subject', value: '' },
+            { key: 'teacher_name', label: 'Teacher', value: '' },
+            { key: 'room_name', label: 'Room', value: '' },
+            { key: 'section_name', label: 'Section', value: sectionName || '' }
+        ];
+        if (kind === 'lab') {
+            fields.push({ key: 'group_label', label: 'Group', value: '' });
+        }
+        return fields;
+    }
+
+    function fieldValue(entryEl, key) {
+        var input = entryEl.querySelector('.me-entry-field[data-field-key="' + key + '"]');
+        return input ? input.value : '';
+    }
+
+    function setFieldValue(entryEl, key, value) {
+        var input = entryEl.querySelector('.me-entry-field[data-field-key="' + key + '"]');
+        if (input) {
+            input.value = value || '';
+        }
+        var display = entryEl.querySelector('[data-display-key="' + key + '"]');
+        if (display) {
+            display.textContent = value || '';
+        }
+    }
+
+    function createEntryElement(kind, fields) {
+        var article = document.createElement('article');
+        article.className = 'me-entry';
+        article.setAttribute('data-kind', kind);
+        var box = document.createElement('div');
+        box.className = kind === 'lab' ? 'lab-box' : 'class-box';
+
+        function appendDisplay(cls, key, fallbackText) {
+            var div = document.createElement('div');
+            div.className = cls;
+            div.setAttribute('data-display-key', key);
+            div.textContent = fallbackText || '';
+            box.appendChild(div);
+        }
+
+        appendDisplay('slot-text-subject', 'subject_name', '');
+        appendDisplay('slot-text-group', 'group_label', '');
+        appendDisplay('slot-text-teacher', 'teacher_name', '');
+        appendDisplay('slot-text-teacher', 'second_teacher_name', '');
+        appendDisplay('slot-text-teacher', 'co_teacher_names', '');
+        appendDisplay('slot-text-room', 'room_name', '');
+        appendDisplay('slot-text-section', 'section_name', '');
+
+        var actions = document.createElement('div');
+        actions.className = 'action-buttons';
+        actions.innerHTML = '<button type="button" class="action-button btn-update" data-manual-edit-entry>Edit</button><button type="button" class="action-button btn-delete" data-manual-delete-entry>Delete</button>';
+        box.appendChild(actions);
+        article.appendChild(box);
+
+        var hiddenFields = document.createElement('div');
+        hiddenFields.className = 'me-entry-fields';
+        fields.forEach(function(field) {
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.className = 'me-entry-field';
+            hidden.setAttribute('data-field-key', field.key);
+            hidden.setAttribute('data-field-label', field.label);
+            hidden.value = field.value || '';
+            hiddenFields.appendChild(hidden);
+            setFieldValue(article, field.key, field.value || '');
+        });
+        article.appendChild(hiddenFields);
+        return article;
+    }
+
+    function ensureEntryList(cell) {
+        var list = cell.querySelector('.me-entry-list');
+        if (!list) {
+            list = document.createElement('div');
+            list.className = 'me-entry-list';
+            var emptyState = cell.querySelector('.me-empty');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            cell.appendChild(list);
+        }
+        return list;
+    }
+
+    function getCsrfToken() {
+        var match = document.cookie.match(/csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function submitPost(url, values) {
+        var postForm = document.createElement('form');
+        postForm.method = 'post';
+        postForm.action = url;
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = getCsrfToken();
+        postForm.appendChild(csrf);
+        Object.keys(values || {}).forEach(function(key) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = values[key];
+            postForm.appendChild(input);
+        });
+        document.body.appendChild(postForm);
+        postForm.submit();
+    }
+
+    function syncParkingEmptyState(container) {
+        if (!container) {
+            return;
+        }
+        var list = container.querySelector('.me-parked-list');
+        var empty = container.querySelector('.parking-empty-state');
+        var hasEntries = list && list.querySelector('.me-entry');
+        if (empty) {
+            empty.style.display = hasEntries ? 'none' : '';
+        }
+        if (!hasEntries && !empty) {
+            var emptyState = document.createElement('div');
+            emptyState.className = 'parking-empty-state';
+            emptyState.textContent = 'Bucket empty for this section.';
+            container.appendChild(emptyState);
+        }
+    }
+
+    function ensureParkingList(dropzone) {
+        var list = dropzone.querySelector('.me-parked-list');
+        if (!list) {
+            list = document.createElement('div');
+            list.className = 'me-parked-list';
+            var empty = dropzone.querySelector('.parking-empty-state');
+            if (empty) {
+                empty.remove();
+            }
+            dropzone.appendChild(list);
+        }
+        return list;
+    }
+
+    function syncCellEmptyState(cell) {
+        if (!cell) {
+            return;
+        }
+        var entries = cell.querySelectorAll('.me-entry');
+        var empty = cell.querySelector('.me-empty');
+        if (entries.length) {
+            if (empty) {
+                empty.remove();
+            }
+            if (!cell.querySelector('.me-entry-list')) {
+                var list = document.createElement('div');
+                list.className = 'me-entry-list';
+                Array.from(entries).forEach(function(entry) { list.appendChild(entry); });
+                cell.appendChild(list);
+            }
+        } else if (!empty) {
+            var emptyState = document.createElement('div');
+            emptyState.className = 'me-empty';
+            cell.appendChild(emptyState);
+        }
+    }
+
+    var draggedEntry = null;
+    var draggedOriginCell = null;
+    var draggedOriginParking = null;
+
+    function bindDraggableEntry(entry) {
+        entry.setAttribute('draggable', 'true');
+        entry.addEventListener('dragstart', function() {
+            draggedEntry = entry;
+            draggedOriginCell = entry.closest('td');
+            draggedOriginParking = entry.closest('.parking-dropzone');
+            entry.classList.add('is-dragging');
+        });
+        entry.addEventListener('dragend', function() {
+            entry.classList.remove('is-dragging');
+            draggedEntry = null;
+            draggedOriginCell = null;
+            draggedOriginParking = null;
+            document.querySelectorAll('.slot-cell.drag-over, .parking-dropzone.drag-over').forEach(function(node) {
+                node.classList.remove('drag-over');
+            });
+        });
+    }
+
+    function initManualDragAndDrop() {
+        document.querySelectorAll('.me-entry').forEach(bindDraggableEntry);
+
+        document.querySelectorAll('.parking-dropzone').forEach(function(zone) {
+            zone.addEventListener('dragover', function(event) {
+                if (!draggedEntry) {
+                    return;
+                }
+                var entrySection = draggedEntry.closest('[data-section-index]');
+                if (entrySection && entrySection.getAttribute('data-section-index') !== zone.getAttribute('data-section-index')) {
+                    return;
+                }
+                event.preventDefault();
+                zone.classList.add('drag-over');
+            });
+            zone.addEventListener('dragleave', function() {
+                zone.classList.remove('drag-over');
+            });
+            zone.addEventListener('drop', function(event) {
+                if (!draggedEntry) {
+                    return;
+                }
+                event.preventDefault();
+                zone.classList.remove('drag-over');
+                var list = ensureParkingList(zone);
+                list.appendChild(draggedEntry);
+                syncParkingEmptyState(zone);
+                syncCellEmptyState(draggedOriginCell);
+                syncParkingEmptyState(draggedOriginParking);
+            });
+            syncParkingEmptyState(zone);
+        });
+
+        document.querySelectorAll('td[data-section-index]').forEach(function(cell) {
+            if (cell.getAttribute('data-cell-type') === 'lunch') {
+                return;
+            }
+            cell.addEventListener('dragover', function(event) {
+                if (!draggedEntry) {
+                    return;
+                }
+                var entrySection = draggedEntry.closest('[data-section-index]');
+                if (entrySection && entrySection.getAttribute('data-section-index') !== cell.getAttribute('data-section-index')) {
+                    return;
+                }
+                event.preventDefault();
+                cell.classList.add('drag-over');
+            });
+            cell.addEventListener('dragleave', function() {
+                cell.classList.remove('drag-over');
+            });
+            cell.addEventListener('drop', function(event) {
+                if (!draggedEntry) {
+                    return;
+                }
+                event.preventDefault();
+                cell.classList.remove('drag-over');
+                ensureEntryList(cell).appendChild(draggedEntry);
+                syncCellEmptyState(cell);
+                syncCellEmptyState(draggedOriginCell);
+                syncParkingEmptyState(draggedOriginParking);
+            });
+            syncCellEmptyState(cell);
+        });
+    }
+
+    function openEntryEditor(entryEl, kind, sectionName, callback) {
+        var currentFields = entryEl
+            ? Array.from(entryEl.querySelectorAll('.me-entry-field')).map(function(input) {
+                return { key: input.getAttribute('data-field-key'), label: input.getAttribute('data-field-label'), value: input.value || '' };
+            })
+            : defaultFields(kind, sectionName);
+
+        var fieldHtml = currentFields.map(function(field) {
+            return '<label style="display:block;text-align:left;font-size:12px;font-weight:700;margin:10px 0 4px;">' + field.label + '</label>' +
+                '<input class="swal2-input" data-editor-key="' + field.key + '" value="' + String(field.value || '').replace(/"/g, '&quot;') + '" style="margin:0 0 8px;">';
+        }).join('');
+
+        Swal.fire({
+            title: entryEl ? 'Edit Slot' : 'Add Slot',
+            html: '<div style="max-height:60vh;overflow:auto;padding:0 6px;">' + fieldHtml + '</div>',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: entryEl ? 'Update' : 'Add',
+            preConfirm: function() {
+                var values = currentFields.map(function(field) {
+                    var input = document.querySelector('.swal2-container [data-editor-key="' + field.key + '"]');
+                    return { key: field.key, label: field.label, value: input ? input.value.trim() : '' };
+                });
+                if (!values.find(function(item) { return item.key === 'subject_name'; }).value) {
+                    Swal.showValidationMessage('Subject is required.');
+                    return false;
+                }
+                return values;
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed || !result.value) {
+                return;
+            }
+            callback(result.value);
+        });
+    }
+
+    document.addEventListener('click', function(event) {
+        var editBtn = event.target.closest('[data-manual-edit-entry]');
+        if (editBtn) {
+            var entry = editBtn.closest('.me-entry');
+            var cell = editBtn.closest('td');
+            var sectionNameInput = document.querySelector('[data-section-index="' + cell.getAttribute('data-section-index') + '"][data-manual-role="section-name"]');
+            openEntryEditor(entry, entry.getAttribute('data-kind'), sectionNameInput ? sectionNameInput.value : '', function(values) {
+                values.forEach(function(field) {
+                    setFieldValue(entry, field.key, field.value);
+                });
+            });
+            return;
+        }
+
+        var deleteBtn = event.target.closest('[data-manual-delete-entry]');
+        if (deleteBtn) {
+            var entryEl = deleteBtn.closest('.me-entry');
+            if (entryEl) {
+                var parkingZone = entryEl.closest('.parking-dropzone');
+                entryEl.remove();
+                var parentCell = deleteBtn.closest('td');
+                if (parentCell && !parentCell.querySelector('.me-entry')) {
+                    var emptyState = document.createElement('div');
+                    emptyState.className = 'me-empty';
+                    parentCell.appendChild(emptyState);
+                }
+                if (parkingZone) {
+                    syncParkingEmptyState(parkingZone);
+                }
+            }
+            return;
+        }
+
+        var publishBtn = event.target.closest('[data-manual-publish-url]');
+        if (publishBtn) {
+            var codeInput = document.getElementById('manualPublishCodeInput');
+            var code = codeInput ? codeInput.value.trim() : '';
+            if (!code) {
+                alert('Enter a publish code first.');
+                return;
+            }
+            submitPost(publishBtn.getAttribute('data-manual-publish-url'), { publish_code: code });
+            return;
+        }
+
+        var unpublishBtn = event.target.closest('[data-manual-unpublish-url]');
+        if (unpublishBtn) {
+            submitPost(unpublishBtn.getAttribute('data-manual-unpublish-url'), {});
+            return;
+        }
+
+        var addBtn = event.target.closest('[data-manual-add-entry]');
+        if (addBtn) {
+            var parentCellEl = addBtn.closest('td');
+            var sectionInput = document.querySelector('[data-section-index="' + parentCellEl.getAttribute('data-section-index') + '"][data-manual-role="section-name"]');
+            Swal.fire({
+                title: 'Choose Slot Type',
+                input: 'select',
+                inputOptions: { class: 'Class', lab: 'Lab' },
+                inputValue: 'class',
+                showCancelButton: true,
+                confirmButtonText: 'Continue'
+            }).then(function(typeResult) {
+                if (!typeResult.isConfirmed) {
+                    return;
+                }
+                openEntryEditor(null, typeResult.value || 'class', sectionInput ? sectionInput.value : '', function(values) {
+                    var list = ensureEntryList(parentCellEl);
+                    var newEntry = createEntryElement(typeResult.value || 'class', values);
+                    bindDraggableEntry(newEntry);
+                    list.appendChild(newEntry);
+                    var emptyState = parentCellEl.querySelector('.me-empty');
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                });
+            });
+        }
+    });
+
+    form.addEventListener('submit', function() {
+        var snapshot = JSON.parse(initialNode.textContent || '{}');
+        snapshot.title = (form.querySelector('[name="name"]') || {}).value || snapshot.title || 'Manual Edit';
+        Array.from(form.querySelectorAll('[data-header-index]')).forEach(function(input) {
+            var index = parseInt(input.getAttribute('data-header-index'), 10);
+            if (snapshot.slot_headers && snapshot.slot_headers[index]) {
+                snapshot.slot_headers[index].label = input.value;
+            }
+        });
+        Array.from(form.querySelectorAll('[data-manual-role="section-name"]')).forEach(function(input) {
+            var sectionIndex = parseInt(input.getAttribute('data-section-index'), 10);
+            if (snapshot.sections && snapshot.sections[sectionIndex]) {
+                snapshot.sections[sectionIndex].section_name = input.value;
+            }
+        });
+        Array.from(form.querySelectorAll('[data-manual-role="department-name"]')).forEach(function(input) {
+            var sectionIndex = parseInt(input.getAttribute('data-section-index'), 10);
+            if (snapshot.sections && snapshot.sections[sectionIndex]) {
+                snapshot.sections[sectionIndex].department_name = input.value;
+            }
+        });
+        Array.from(form.querySelectorAll('[data-manual-role="day-label"]')).forEach(function(input) {
+            var sectionIndex = parseInt(input.getAttribute('data-section-index'), 10);
+            var rowIndex = parseInt(input.getAttribute('data-row-index'), 10);
+            if (snapshot.sections && snapshot.sections[sectionIndex] && snapshot.sections[sectionIndex].rows[rowIndex]) {
+                snapshot.sections[sectionIndex].rows[rowIndex].day_label = input.value;
+            }
+        });
+        Array.from(form.querySelectorAll('td[data-section-index]')).forEach(function(cell) {
+            var sectionIndex = parseInt(cell.getAttribute('data-section-index'), 10);
+            var rowIndex = parseInt(cell.getAttribute('data-row-index'), 10);
+            var cellIndex = parseInt(cell.getAttribute('data-cell-index'), 10);
+            var snapshotCell = snapshot.sections[sectionIndex].rows[rowIndex].cells[cellIndex];
+            if (cell.getAttribute('data-cell-type') === 'lunch') {
+                var lunchInput = cell.querySelector('[data-manual-role="lunch-label"]');
+                snapshotCell.label = lunchInput ? lunchInput.value : 'Lunch';
+                snapshotCell.entries = [];
+                return;
+            }
+            var entries = Array.from(cell.querySelectorAll('.me-entry')).map(function(entry) {
+                return {
+                    kind: entry.getAttribute('data-kind') || 'class',
+                    fields: Array.from(entry.querySelectorAll('.me-entry-field')).map(function(fieldInput) {
+                        return {
+                            key: fieldInput.getAttribute('data-field-key'),
+                            label: fieldInput.getAttribute('data-field-label'),
+                            value: fieldInput.value || ''
+                        };
+                    })
+                };
+            });
+            snapshotCell.entries = entries;
+            if (!entries.length) {
+                snapshotCell.type = 'empty';
+            } else if (entries.length > 1) {
+                snapshotCell.type = 'parallel';
+            } else {
+                snapshotCell.type = entries[0].kind === 'lab' ? 'lab' : 'class';
+            }
+        });
+        Array.from(document.querySelectorAll('.parking-dropzone[data-section-index]')).forEach(function(zone) {
+            var sectionIndex = parseInt(zone.getAttribute('data-section-index'), 10);
+            if (!(snapshot.sections && snapshot.sections[sectionIndex])) {
+                return;
+            }
+            snapshot.sections[sectionIndex].parked_entries = Array.from(zone.querySelectorAll('.me-parked-list .me-entry')).map(function(entry) {
+                return {
+                    kind: entry.getAttribute('data-kind') || 'class',
+                    fields: Array.from(entry.querySelectorAll('.me-entry-field')).map(function(fieldInput) {
+                        return {
+                            key: fieldInput.getAttribute('data-field-key'),
+                            label: fieldInput.getAttribute('data-field-label'),
+                            value: fieldInput.value || ''
+                        };
+                    })
+                };
+            });
+        });
+        target.value = JSON.stringify(snapshot);
+    });
+
+    window.initManualDragAndDrop = initManualDragAndDrop;
+})();
+
+function _showDownloadPopup() {
+    if (!(window.Swal && Swal.fire)) {
+        return;
+    }
+    Swal.fire({
+        title: 'Preparing Download',
+        html: '<div style="font-size:15px; color:#555;">Please wait while your file is being generated...</div>',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: function() { Swal.showLoading(); }
+    });
+}
+
+function _showDownloadDone() {
+    if (!(window.Swal && Swal.fire)) {
+        return;
+    }
+    Swal.fire({
+        icon: 'success',
+        title: 'File Saved',
+        text: 'Your file has been saved successfully.',
+        timer: 2000,
+        showConfirmButton: false,
+    });
+}
+
+function downloadForEvaluation(viewName) {
+    function _proceed() { _evaluationDownload(viewName); }
+    if (window.Swal && Swal.fire) {
+        Swal.fire({
+            title: 'Evaluation Download',
+            input: 'password',
+            inputLabel: 'Enter pass key',
+            inputPlaceholder: 'Pass key',
+            showCancelButton: true,
+            confirmButtonText: 'Download',
+            inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
+            inputValidator: function(value) {
+                if (value !== 'sam7677') { return 'Incorrect pass key'; }
+            }
+        }).then(function(res) {
+            if (res && res.isConfirmed) { _proceed(); }
+        });
+    } else {
+        var key = prompt('Enter pass key for evaluation download:');
+        if (key === null) { return; }
+        if (key !== 'sam7677') { alert('Incorrect pass key'); return; }
+        _proceed();
+    }
+}
+
+function _evaluationDownload(viewName) {
+    var viewEl = document.getElementById(viewName + '-view');
+    if (!viewEl) { alert('No timetable view found.'); return; }
+
+    var allCards = Array.from(viewEl.querySelectorAll('.export-surface'));
+    if (!allCards.length) { allCards = Array.from(viewEl.querySelectorAll('.room-card')); }
+    if (!allCards.length) { allCards = [viewEl]; }
+    var cards = allCards.filter(function(card) {
+        return window.getComputedStyle(card).display !== 'none';
+    });
+    if (!cards.length) { alert('No visible sections to export.'); return; }
+
+    _showDownloadPopup();
+    var clones = cards.map(function(card) { return card.cloneNode(true); });
+    var fname = 'SmartScheduler_Section_Evaluation.pdf';
+    var opt = {
+        margin: [6, 4, 6, 4],
+        filename: fname,
+        image: { type: 'jpeg', quality: 0.92 },
+        html2canvas: { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', logging: false },
+        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' },
+        pagebreak: { mode: ['css', 'legacy'] },
+    };
+
+    var worker = html2pdf().set(opt).from(clones[0]).toContainer().toCanvas().toPdf();
+    for (var i = 1; i < clones.length; i++) {
+        (function(card) {
+            worker = worker.get('pdf').then(function(pdf) {
+                pdf.addPage();
+            }).from(card).toContainer().toCanvas().toPdf();
+        })(clones[i]);
+    }
+    worker.save()
+        .then(function() { _showDownloadDone(); })
+        .catch(function(err) {
+            console.error('Evaluation PDF generation failed:', err);
+            if (window.Swal && Swal.close) { Swal.close(); }
+        });
+}
+
+var _BRAND_SVG_IMG2 = '<svg viewBox="0 0 200 200" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg_t_im2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="50%" stop-color="#0090ff"/><stop offset="100%" stop-color="#0040c8"/></linearGradient><linearGradient id="lg_l_im2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0070ff"/><stop offset="100%" stop-color="#001a7a"/></linearGradient><linearGradient id="lg_r_im2" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00c8ff"/><stop offset="100%" stop-color="#0030a0"/></linearGradient></defs><path d="M100 18 L28 78 L44 78 L100 34 L156 78 L172 78 Z" fill="url(#lg_t_im2)"/><path d="M28 78 L28 148 Q28 168 48 172 L82 180 L82 42 L28 82 Z" fill="url(#lg_l_im2)"/><path d="M172 78 L172 148 Q172 168 152 172 L118 180 L118 42 L172 82 Z" fill="url(#lg_r_im2)"/><path d="M58 105 Q58 165 100 175 Q142 165 142 105 L142 88 Q142 78 132 74 L100 62 L68 74 Q58 78 58 88 Z" fill="#030818"/></svg>';
+
+function _buildImgBrandBar2() {
+    var bar = document.createElement('div');
+    bar.id = '_img_brand_bar2';
+    bar.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 10px; background:#f0f6ff; border-top:1px solid #dbe7f3; border-bottom:2px solid #c8dcf8; margin-bottom:4px; box-sizing:border-box;';
+    var ico = document.createElement('span');
+    ico.style.cssText = 'flex-shrink:0; filter:drop-shadow(0 0 5px rgba(0,180,255,.5)); line-height:0;';
+    ico.innerHTML = _BRAND_SVG_IMG2;
+    bar.appendChild(ico);
+    var lbl = document.createElement('span');
+    lbl.innerHTML = '<span style="font-size:11px;font-weight:800;letter-spacing:0.03em;"><span style="color:#0060d0">Smart</span><span style="color:#0090c8">Scheduler</span></span><span style="font-size:10px;color:#4a6080;font-weight:600;margin-left:6px;">· Manual timetable</span>';
+    bar.appendChild(lbl);
+    return bar;
+}
+
+function saveAsImage(elementId, filename) {
+    _showDownloadPopup();
+    var el = document.getElementById(elementId);
+    if (!el) { return; }
+    var hiddenNodes = el.querySelectorAll('.btn-save-tt, .action-buttons, .me-slot-toolbar');
+    hiddenNodes.forEach(function(node) { node.style.display = 'none'; });
+
+    var bar = _buildImgBrandBar2();
+    var tbl = el.querySelector('table');
+    if (tbl) {
+        tbl.parentNode.insertBefore(bar, tbl);
+    } else {
+        el.insertBefore(bar, el.firstChild);
+    }
+
+    html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(function(canvas) {
+        bar.remove();
+        hiddenNodes.forEach(function(node) { node.style.display = ''; });
+        var link = document.createElement('a');
+        link.download = filename + '.png';
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        _showDownloadDone();
+    }).catch(function() {
+        bar.remove();
+        hiddenNodes.forEach(function(node) { node.style.display = ''; });
+        if (window.Swal && Swal.close) { Swal.close(); }
+    });
+}
+
+function showView(view) {
+    ['section', 'room', 'workload', 'teacher'].forEach(function(name) {
+        var panel = document.getElementById(name + '-view');
+        var button = document.querySelector('.view-toggle[data-view="' + name + '"]');
+        if (panel) { panel.style.display = name === view ? 'block' : 'none'; }
+        if (button) {
+            button.classList.toggle('is-active', name === view);
+            button.setAttribute('aria-pressed', name === view ? 'true' : 'false');
+        }
+    });
+    if (window.location.hash !== '#' + view) {
+        window.history.replaceState(null, '', '#' + view);
+    }
+}
+
+function filterByDepartmentSelect(sel) {
+    var department = sel.value || 'all';
+    var url = new URL(window.location.href);
+    url.searchParams.set('department', department);
+    window.location.href = url.toString();
+}
+
+(function() {
+    var taMode = 'home';
+
+    function taCards() {
+        return Array.prototype.slice.call(document.querySelectorAll('#teacher-view .ta-card'));
+    }
+
+    function taSplit(value) {
+        return (value || '')
+            .split(',')
+            .map(function(item) { return item.trim().toLowerCase(); })
+            .filter(Boolean);
+    }
+
+    window.toggleTeacherAnalysis = function() {
+        var panel = document.getElementById('taPanel');
+        var button = document.getElementById('taToggleBtn');
+        if (!panel) {
+            return;
+        }
+        var open = panel.style.display === 'none' || panel.style.display === '';
+        panel.style.display = open ? 'block' : 'none';
+        if (button) {
+            button.classList.toggle('is-open', open);
+        }
+        if (open) {
+            window.applyTeacherAnalysis();
+        } else {
+            window.resetTeacherAnalysis();
+        }
+    };
+
+    window.setTeacherAnalysisMode = function(mode) {
+        taMode = mode;
+        document.querySelectorAll('.ta-mode-btn').forEach(function(button) {
+            button.classList.toggle('is-active', button.getAttribute('data-ta-mode') === mode);
+        });
+        window.applyTeacherAnalysis();
+    };
+
+    window.resetTeacherAnalysis = function() {
+        taCards().forEach(function(card) {
+            card.classList.remove('ta-hidden');
+        });
+        var summary = document.getElementById('taSummary');
+        if (summary) {
+            summary.textContent = '';
+        }
+    };
+
+    window.applyTeacherAnalysis = function() {
+        var select = document.getElementById('taDeptSelect');
+        var summary = document.getElementById('taSummary');
+        if (!select) {
+            return;
+        }
+
+        var selected = (select.value || '').trim().toLowerCase();
+        var visibleCount = 0;
+
+        taCards().forEach(function(card) {
+            var homeDept = (card.getAttribute('data-home-dept') || '').trim().toLowerCase();
+            var teachDepts = taSplit(card.getAttribute('data-teach-depts'));
+            var visible = true;
+
+            if (selected) {
+                if (taMode === 'home') {
+                    visible = homeDept === selected;
+                } else if (taMode === 'cross') {
+                    visible = teachDepts.indexOf(selected) !== -1 && homeDept !== selected;
+                } else {
+                    visible = teachDepts.indexOf(selected) !== -1 || homeDept === selected;
+                }
+            }
+
+            card.classList.toggle('ta-hidden', !visible);
+            if (visible) {
+                visibleCount += 1;
+            }
+        });
+
+        if (summary) {
+            if (!selected) {
+                summary.textContent = visibleCount + ' teacher timetable(s) visible.';
+            } else if (taMode === 'home') {
+                summary.textContent = visibleCount + ' home department teacher timetable(s) visible.';
+            } else if (taMode === 'cross') {
+                summary.textContent = visibleCount + ' cross department teacher timetable(s) visible.';
+            } else {
+                summary.textContent = visibleCount + ' teacher timetable(s) visible for the selected department.';
+            }
+        }
+    };
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+    var initialView = ['section', 'room', 'workload', 'teacher'].includes(window.location.hash.replace('#', ''))
+        ? window.location.hash.replace('#', '')
+        : 'section';
+    showView(initialView);
+
+    var openFullScreenButton = document.getElementById('openFullScreenButton');
+    if (openFullScreenButton) {
+        openFullScreenButton.addEventListener('click', function() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen().catch(function() {});
+            }
+        });
+    }
+
+    initManualDragAndDrop();
+});
+</script>
+</body>
+</html>

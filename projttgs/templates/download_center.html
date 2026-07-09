@@ -89,7 +89,7 @@ body{
 <body>
 <div class="shell">
 
-    <a class="back" href="{% if saved_mode %}{% url 'saved_timetable' saved_id %}{% else %}{% url 'show_timetable' index %}{% endif %}">&larr; Back to Timetable</a>
+    <a class="back" href="{% if manual_mode %}{% url 'manual_edited_timetable' manual_id %}{% elif saved_mode %}{% url 'saved_timetable' saved_id %}{% else %}{% url 'show_timetable' index %}{% endif %}">&larr; Back to Timetable</a>
 
     <div class="college-head">
         <img src="{% static 'img/college_logo.png' %}" alt="College logo">
@@ -182,8 +182,10 @@ body{
 <script>
 (function(){
     var savedMode = {{ saved_mode|yesno:"true,false" }};
+    var manualMode = {{ manual_mode|yesno:"true,false" }};
     var index = {{ index|default:'null' }};
     var savedId = {{ saved_id|default:'null' }};
+    var manualId = {{ manual_id|default:'null' }};
     var allCb = document.getElementById('all-depts');
     var allPill = document.getElementById('all-pill');
     var deptCbs = Array.prototype.slice.call(document.querySelectorAll('.dept-cb'));
@@ -225,14 +227,18 @@ body{
         return codes.length ? codes.join(',') : 'all';
     }
     function pdfUrl(inline){
-        var u = savedMode
+        var u = manualMode
+            ? '/download_manual_timetable/' + manualId + '/' + currentView() + '/?depts=' + encodeURIComponent(selectedDepts())
+            : savedMode
             ? '/download_timetable/' + savedId + '/' + currentView() + '/?depts=' + encodeURIComponent(selectedDepts())
             : '/download_generated_timetable_pdf/'+index+'/'+currentView()+'/?depts='+encodeURIComponent(selectedDepts());
         if(inline) u += '&inline=1';
         return u;
     }
     function excelUrl(){
-        return savedMode
+        return manualMode
+            ? '/download_manual_timetable_excel/' + manualId + '/' + currentView() + '/?depts=' + encodeURIComponent(selectedDepts())
+            : savedMode
             ? '/download_timetable_excel/' + savedId + '/' + currentView() + '/?depts=' + encodeURIComponent(selectedDepts())
             : '/download_generated_timetable_excel/'+index+'/'+currentView()+'/?depts='+encodeURIComponent(selectedDepts());
     }
@@ -256,7 +262,7 @@ body{
                 var blob = await resp.blob();
                 var file = new File([blob], 'timetable.pdf', {type:'application/pdf'});
                 if(navigator.canShare({files:[file]})){
-                    await navigator.share({files:[file], title:'Timetable', text:(savedMode ? 'Saved timetable' : 'Generated timetable')});
+                    await navigator.share({files:[file], title:'Timetable', text:(manualMode ? 'Manual timetable' : (savedMode ? 'Saved timetable' : 'Generated timetable'))});
                     return;
                 }
             }
