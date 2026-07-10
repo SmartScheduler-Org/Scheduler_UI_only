@@ -1,0 +1,241 @@
+record_type,section_id,move_type,subject_text,teacher_uid,second_teacher_uid,co_teacher_uids,room_number,day,start_slot,duration,manual_entry,manual_slot_uid,prefill_locked,batch,total_batches,parking,slot_span
+section,MBA 1st sem A,,,,,,,,,,,,,,,,
+section,MBA 1st sem B,,,,,,,,,,,,,,,,
+section,MBA 3rd sem A,,,,,,,,,,,,,,,,
+section,MBA 3rd sem B,,,,,,,,,,,,,,,,
+section,BBA 1st Sem,,,,,,,,,,,,,,,,
+section,BBA 3rd sem,,,,,,,,,,,,,,,,
+section,BBA 5th Sem,,,,,,,,,,,,,,,,
+slot,MBA 1st sem A,class,Moral Values,MS10,,MS11,203,Monday,1,1,false,mba1a-moral-values-1,true,,,false,1
+slot,MBA 1st sem A,class,Personality Development Classes,MS10,,MS11,203,Tuesday,1,1,false,mba1a-pdc-1-g1,true,,,false,1
+slot,MBA 1st sem A,class,Personality Development Classes,MS12,,MS13,204,Tuesday,1,1,false,mba1a-pdc-1-g2,true,,,false,1
+slot,MBA 1st sem A,class,Personality Development Classes,MS10,,MS11,203,Wednesday,1,1,false,mba1a-pdc-2-g1,true,,,false,1
+slot,MBA 1st sem A,class,Personality Development Classes,MS12,,MS13,204,Wednesday,1,1,false,mba1a-pdc-2-g2,true,,,false,1
+slot,MBA 1st sem B,class,Moral Values,MS13,,MS12,204,Monday,2,1,false,mba1b-moral-values-1,true,,,false,1
+slot,MBA 1st sem B,class,Personality Development Classes,MS10,,MS11,203,Tuesday,2,1,false,mba1b-pdc-1-g1,true,,,false,1
+slot,MBA 1st sem B,class,Personality Development Classes,MS12,,MS13,204,Tuesday,2,1,false,mba1b-pdc-1-g2,true,,,false,1
+slot,MBA 1st sem B,class,Personality Development Classes,MS10,,MS11,203,Wednesday,2,1,false,mba1b-pdc-2-g1,true,,,false,1
+slot,MBA 1st sem B,class,Personality Development Classes,MS12,,MS13,204,Wednesday,2,1,false,mba1b-pdc-2-g2,true,,,false,1
+slot,MBA 3rd sem A,class,Mangerial Skills Development,MS02,,MS05,201,Monday,1,1,false,mba3a-msd-1-g1,true,,,false,1
+slot,MBA 3rd sem A,class,Mangerial Skills Development,MS03,,MS04,202,Monday,1,1,false,mba3a-msd-1-g2,true,,,false,1
+slot,MBA 3rd sem A,class,Mangerial Skills Development,MS02,,MS05,201,Tuesday,1,1,false,mba3a-msd-2-g1,true,,,false,1
+slot,MBA 3rd sem A,class,Mangerial Skills Development,MS03,,MS04,202,Tuesday,1,1,false,mba3a-msd-2-g2,true,,,false,1
+slot,MBA 3rd sem A,class,Personality Development Classes,MS02,,MS05,201,Wednesday,1,1,false,mba3a-pdc-1-g1,true,,,false,1
+slot,MBA 3rd sem A,class,Personality Development Classes,MS03,,MS04,202,Wednesday,1,1,false,mba3a-pdc-1-g2,true,,,false,1
+slot,MBA 3rd sem A,class,Personality Development Classes,MS02,,MS05,201,Thursday,1,1,false,mba3a-pdc-2-g1,true,,,false,1
+slot,MBA 3rd sem A,class,Personality Development Classes,MS03,,MS04,202,Thursday,1,1,false,mba3a-pdc-2-g2,true,,,false,1
+slot,MBA 3rd sem B,class,Mangerial Skills Development,MS02,,MS05,201,Monday,2,1,false,mba3b-msd-1-g1,true,,,false,1
+slot,MBA 3rd sem B,class,Mangerial Skills Development,MS03,,MS04,202,Monday,2,1,false,mba3b-msd-1-g2,true,,,false,1
+slot,MBA 3rd sem B,class,Mangerial Skills Development,MS02,,MS05,201,Tuesday,2,1,false,mba3b-msd-2-g1,true,,,false,1
+slot,MBA 3rd sem B,class,Mangerial Skills Development,MS03,,MS04,202,Tuesday,2,1,false,mba3b-msd-2-g2,true,,,false,1
+slot,MBA 3rd sem B,class,Personality Development Classes,MS02,,MS05,201,Wednesday,2,1,false,mba3b-pdc-1-g1,true,,,false,1
+slot,MBA 3rd sem B,class,Personality Development Classes,MS03,,MS04,202,Wednesday,2,1,false,mba3b-pdc-1-g2,true,,,false,1
+slot,MBA 3rd sem B,class,Personality Development Classes,MS02,,MS05,201,Thursday,2,1,false,mba3b-pdc-2-g1,true,,,false,1
+slot,MBA 3rd sem B,class,Personality Development Classes,MS03,,MS04,202,Thursday,2,1,false,mba3b-pdc-2-g2,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS06,,MS09,204,Monday,1,1,false,bba1-msd-1-g1,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS07,,MS08,205,Monday,1,1,false,bba1-msd-1-g2,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS01,,MS25,206,Monday,1,1,false,bba1-msd-1-g3,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS06,,MS09,205,Tuesday,1,1,false,bba1-msd-2-g1,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS07,,MS08,206,Tuesday,1,1,false,bba1-msd-2-g2,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS01,,MS25,D-101,Tuesday,1,1,false,bba1-msd-2-g3,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS06,,MS09,205,Wednesday,1,1,false,bba1-msd-3-g1,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS07,,MS08,206,Wednesday,1,1,false,bba1-msd-3-g2,true,,,false,1
+slot,BBA 1st Sem,class,Managerail skill Development,MS01,,MS25,D-101,Wednesday,1,1,false,bba1-msd-3-g3,true,,,false,1
+slot,BBA 1st Sem,class,Personality Development Classes,MS01,,,205,Thursday,1,1,false,bba1-pdc-1-g1,true,,,false,1
+slot,BBA 1st Sem,class,Personality Development Classes,MS25,,,206,Thursday,1,1,false,bba1-pdc-1-g2,true,,,false,1
+slot,BBA 1st Sem,class,Personality Development Classes,MS01,,,205,Friday,1,1,false,bba1-pdc-2-g1,true,,,false,1
+slot,BBA 1st Sem,class,Personality Development Classes,MS25,,,206,Friday,1,1,false,bba1-pdc-2-g2,true,,,false,1
+slot,BBA 3rd sem,class,Personality Development Classes,MS07,,MS08,205,Monday,2,1,false,bba3-pdc-1-g1,true,,,false,1
+slot,BBA 3rd sem,class,Personality Development Classes,MS06,,MS09,206,Monday,2,1,false,bba3-pdc-1-g2,true,,,false,1
+slot,BBA 3rd sem,class,Personality Development Classes,MS07,,MS08,205,Tuesday,2,1,false,bba3-pdc-2-g1,true,,,false,1
+slot,BBA 3rd sem,class,Personality Development Classes,MS06,,MS09,206,Tuesday,2,1,false,bba3-pdc-2-g2,true,,,false,1
+slot,BBA 5th Sem,class,Personality Development Classes,MS07,,MS08,205,Wednesday,3,1,false,bba5-pdc-1-g1,true,,,false,1
+slot,BBA 5th Sem,class,Personality Development Classes,MS06,,MS09,206,Wednesday,3,1,false,bba5-pdc-1-g2,true,,,false,1
+slot,BBA 5th Sem,class,Personality Development Classes,MS07,,MS08,205,Thursday,3,1,false,bba5-pdc-2-g1,true,,,false,1
+slot,BBA 5th Sem,class,Personality Development Classes,MS06,,MS09,206,Thursday,3,1,false,bba5-pdc-2-g2,true,,,false,1
+slot,BBA 5th Sem,class,Interview Skills,MS01,,,205,Monday,3,1,false,bba5-interview-skills-1-g1,true,,,false,1
+slot,BBA 5th Sem,class,Interview Skills,MS25,,,206,Monday,3,1,false,bba5-interview-skills-1-g2,true,,,false,1
+slot,BBA 5th Sem,class,Interview Skills,MS01,,,205,Tuesday,3,1,false,bba5-interview-skills-2-g1,true,,,false,1
+slot,BBA 5th Sem,class,Interview Skills,MS25,,,206,Tuesday,3,1,false,bba5-interview-skills-2-g2,true,,,false,1
+slot,MBA 3rd sem B,class,Consumer Behavior,MS02,,,201,Wednesday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Product and Brand Management,MS06,,,201,Monday,9,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Strategic Human Resource Manageent,MS12,,,201,Monday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Consumer Behavior,MS02,,,201,Monday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Managing Banks and Financial Institutions,MS08,,,201,Thursday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Strategic Human Resource Manageent,MS12,,,201,Thursday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Managing Banks and Financial Institutions,MS08,,,201,Thursday,8,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Investment Analysis and Portfolio Management,MS05,,,201,Tuesday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Consumer Behavior,MS02,,,201,Tuesday,8,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Investment Analysis and Portfolio Management,MS05,,,201,Monday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Working Capital Management,MS03,,,201,Wednesday,8,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Investment Analysis and Portfolio Management,MS05,,,201,Wednesday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Strategic Human Resource Manageent,MS12,,,201,Tuesday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Working Capital Management,MS03,,,201,Tuesday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Product and Brand Management,MS06,,,201,Friday,1,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Working Capital Management,MS03,,,201,Friday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Managing Banks and Financial Institutions,MS08,,,201,Friday,2,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Product and Brand Management,MS06,,,201,Thursday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Managing Banks and Financial Institutions,MS08,,,202,Tuesday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Risk Management and Insurance,MS09,,,202,Monday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Marketing Analytics,MS01,,,203,Monday,2,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Marketing Analytics,MS01,,,202,Monday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Working Capital Management,MS03,,,201,Friday,8,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Training and Development,MS15,,,201,Friday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Investment Analysis and Portfolio Management,MS05,,,202,Wednesday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Risk Management and Insurance,MS09,,,205,Wednesday,2,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Managing Banks and Financial Institutions,MS08,,,202,Wednesday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Industrial Relations and its Legal Aspects,MS07,,,202,Wednesday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Industrial Relations and its Legal Aspects,MS07,,,202,Wednesday,9,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Risk Management and Insurance,MS09,,,202,Wednesday,8,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Training and Development,MS15,,,202,Wednesday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Working Capital Management,MS03,,,202,Thursday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Investment Analysis and Portfolio Management,MS05,,,202,Thursday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Managing Banks and Financial Institutions,MS08,,,205,Thursday,2,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Working Capital Management,MS03,,,202,Tuesday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Investment Analysis and Portfolio Management,MS05,,,202,Tuesday,9,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Marketing Analytics,MS01,,,202,Tuesday,8,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Industrial Relations and its Legal Aspects,MS07,,,202,Monday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Training and Development,MS15,,,202,Monday,9,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Legal Aspects of Business,MS14,,,202,Friday,3,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Environment,MS23,,,202,Friday,4,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Communication,MS12,,,202,Friday,1,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Environment,MS23,,,202,Friday,2,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Legal Aspects of Business,MS14,,,202,Friday,8,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Communication,MS12,,,202,Friday,6,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Managerial Economics,MS13,,,202,Friday,7,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Managerial Economics,MS13,,,202,Friday,9,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Managerial Economics,MS13,,,203,Tuesday,9,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Environment,MS23,,,203,Tuesday,7,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Communication,MS12,,,203,Tuesday,8,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Environment,MS23,,,203,Wednesday,4,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Legal Aspects of Business,MS14,,,203,Wednesday,3,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Communication,MS12,,,203,Monday,3,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Legal Aspects of Business,MS14,,,203,Monday,9,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Managerial Economics,MS13,,,203,Tuesday,3,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Environment,MS23,,,205,Monday,8,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Accounting for Decision Making,MS20,,,203,Wednesday,6,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Environment,MS23,,,203,Wednesday,9,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Legal Aspects of Business,MS13,,,203,Wednesday,8,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Environment,MS23,,,203,Wednesday,7,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Accounting for Decision Making,MS20,,,203,Friday,2,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Legal Aspects of Business,MS13,,,203,Friday,4,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Legal Aspects of Business,MS13,,,205,Monday,4,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Legal Aspects of Business,MS13,,,203,Thursday,4,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Accounting for Decision Making,MS20,,,203,Thursday,1,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Accounting for Decision Making,MS20,,,203,Friday,7,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Environment,MS23,,,203,Friday,9,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,"Communication, Mediation and Resolution",LL13,,,205,Friday,9,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,E-Business,MS20,,,205,Friday,6,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Financial Management,MS09,,,205,Friday,7,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Advanced Excel,CSE37,,,205,Friday,8,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,E-Business,MS20,,,205,Friday,4,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Advanced Excel,CSE37,,,205,Friday,3,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Advanced Excel,CSE37,,,203,Thursday,7,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Financial Management,MS09,,,206,Monday,6,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,"Communication, Mediation and Resolution",LL13,,,206,Monday,9,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Financial Management,MS09,,,206,Tuesday,4,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,E-Business,MS20,,,206,Tuesday,7,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Financial Management,MS09,,,206,Tuesday,9,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Accounting for Decision Making,MS10,,,203,Monday,8,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Accounting for Decision Making,MS10,,,203,Tuesday,4,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Accounting for Decision Making,MS10,,,206,Wednesday,7,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Accounting for Decision Making,MS10,,,204,Thursday,2,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Communication,MS08,,,204,Monday,3,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Communication,MS08,,,205,Monday,7,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Communication,MS08,,,204,Tuesday,4,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Communication,MS08,,,204,Tuesday,6,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Business Environment,MS19,,,204,Monday,4,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Business Environment,MS19,,,204,Monday,6,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Business Environment,MS19,,,205,Tuesday,4,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Business Environment,MS19,,,205,Tuesday,6,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Business Ethics and Corporate Governance,MS15,,,206,Monday,4,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Business Ethics and Corporate Governance,MS15,,,206,Monday,8,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Business Ethics and Corporate Governance,MS15,,,206,Wednesday,4,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Business Ethics and Corporate Governance,MS15,,,204,Wednesday,6,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Business Mathematics,MATH16,,,204,Monday,7,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Business Mathematics,MATH16,,,204,Monday,9,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Business Mathematics,MATH16,,,205,Tuesday,8,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Statistics and Analytics for deicision making,MS21,,,204,Tuesday,7,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Statistics and Analytics for deicision making,MS21,,,204,Tuesday,9,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Statistics and Analytics for deicision making,MS21,,,204,Wednesday,3,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Business Statistics and Analytics for deicision making,MS21,,,203,Thursday,3,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Statistics and Analytics for deicision making,MS14,,,203,Monday,6,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Statistics and Analytics for deicision making,MS14,,,205,Wednesday,8,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Statistics and Analytics for deicision making,MS14,,,204,Thursday,3,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Business Statistics and Analytics for deicision making,MS14,,,203,Thursday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Consumer Behavior,MS02,,,202,Tuesday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Consumer Behavior,MS02,,,205,Thursday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Consumer Behavior,MS02,,,202,Thursday,8,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Corporate Laws,MS14,,,204,Monday,8,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Corporate Laws,MS14,,,204,Tuesday,8,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Corporate Laws,MS14,,,206,Wednesday,9,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Corporate Laws,MS14,,,205,Thursday,7,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,English-1,LL13,,,205,Tuesday,7,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,English-1,LL13,,,204,Wednesday,4,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Entrepreneurship,MS10,,,206,Wednesday,6,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Entrepreneurship,MS10,,,206,Wednesday,8,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Entrepreneurship,MS10,,,206,Thursday,6,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Environmental Science-1,ES10,,,205,Wednesday,6,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Environmental Science-1,ES10,,,204,Wednesday,8,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Event Management,MS24,,,206,Wednesday,2,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Event Management,MS24,,,206,Thursday,2,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Event Management,MS24,,,205,Thursday,4,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Event Management,MS24,,,204,Friday,1,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Financial Accounting,MS10,,,205,Wednesday,9,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Financial Accounting,MS10,,,206,Thursday,4,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Financial Accounting,MS10,,,206,Thursday,7,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Financial Accounting,MS10,,,206,Friday,2,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Fundamentals of Management,MS15,,,204,Tuesday,3,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Fundamentals of Management,MS15,,,205,Tuesday,9,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Fundamentals of Management,MS15,,,204,Thursday,6,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Fundamentals of Management,MS15,,,205,Thursday,8,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Human Resource Management,MS24,,,206,Tuesday,6,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Human Resource Management,MS24,,,204,Wednesday,7,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Human Resource Management,MS24,,,204,Wednesday,9,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Human Resource Management,MS24,,,202,Thursday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Industrial Relations and its Legal Aspects,MS07,,,201,Tuesday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Industrial Relations and its Legal Aspects,MS07,,,203,Friday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Industrial Relations and its Legal Aspects,MS07,,,203,Friday,8,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Introduction to Analytics,MS14,,,205,Wednesday,4,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Introduction to Analytics,MS14,,,205,Wednesday,7,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Introduction to Analytics,MS14,,,204,Thursday,1,1,false,,true,,,false,1
+slot,BBA 5th Sem,class,Introduction to Analytics,MS14,,,206,Thursday,8,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Managerial Economics,MS13,,,205,Monday,6,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Managerial Economics,MS13,,,203,Thursday,2,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Managerial Economics,MS13,,,204,Thursday,7,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Managerial Economics,MS13,,,206,Friday,6,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Managment Principles and Organisational Behavior,MS07,,,205,Monday,9,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Managment Principles and Organisational Behavior,MS07,,,203,Thursday,8,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Managment Principles and Organisational Behavior,MS07,,,203,Friday,1,1,false,,true,,,false,1
+slot,MBA 1st sem A,class,Managment Principles and Organisational Behavior,MS07,,,203,Friday,3,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Managment Principles and Organisational Behavior,MS11,,,203,Monday,4,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Managment Principles and Organisational Behavior,MS11,,,203,Monday,7,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Managment Principles and Organisational Behavior,MS11,,,203,Tuesday,6,1,false,,true,,,false,1
+slot,MBA 1st sem B,class,Managment Principles and Organisational Behavior,MS11,,,204,Thursday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Marketing Analytics,MS01,,,201,Tuesday,9,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Marketing Analytics,MS01,,,201,Friday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Marketing Analytics,MS01,,,206,Friday,7,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Marketing Management,MS06,,,206,Monday,7,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Marketing Management,MS06,,,206,Tuesday,8,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Marketing Management,MS06,,,204,Thursday,8,1,false,,true,,,false,1
+slot,BBA 3rd sem,class,Marketing Management,MS06,,,205,Friday,2,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Microeconomics,MS19,,,202,Thursday,9,1,false,,true,,,false,1
+slot,BBA 1st Sem,class,Microeconomics,MS19,,,206,Friday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Performance Management Systems,MS11,,,202,Monday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Performance Management Systems,MS11,,,202,Thursday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Performance Management Systems,MS11,,,203,Thursday,9,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Performance Management Systems,MS11,,,201,Monday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Performance Management Systems,MS11,,,201,Monday,8,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Performance Management Systems,MS11,,,201,Friday,9,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Product and Brand Management,MS06,,,202,Tuesday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Product and Brand Management,MS06,,,204,Friday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Product and Brand Management,MS06,,,206,Friday,9,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Risk Management and Insurance,MS09,,,201,Wednesday,6,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Risk Management and Insurance,MS09,,,201,Thursday,9,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Sales and Distribution Management,MS04,,,204,Friday,2,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Sales and Distribution Management,MS04,,,206,Friday,4,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Sales and Distribution Management,MS04,,,201,Thursday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Strategic Human Resource Manageent,MS12,,,202,Monday,8,1,false,,true,,,false,1
+slot,MBA 3rd sem A,class,Strategic Human Resource Manageent,MS12,,,201,Friday,7,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Training and Development,MS15,,,201,Wednesday,3,1,false,,true,,,false,1
+slot,MBA 3rd sem B,class,Training and Development,MS15,,,201,Wednesday,9,1,false,,true,,,false,1
