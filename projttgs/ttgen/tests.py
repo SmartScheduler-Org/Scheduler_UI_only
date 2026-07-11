@@ -1,5 +1,7 @@
+import json
 from unittest.mock import patch
 from django.contrib.messages import get_messages
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -11,6 +13,7 @@ from .models import (
     Subject,
     Department,
     Instructor,
+    LiveTimetable,
     MeetingTime,
     Room,
     Section,
@@ -2176,6 +2179,272 @@ class SavedTimetableParkingTests(TestCase):
                 meeting_time=self.mt2,
             ).exists()
         )
+
+
+class LiveTimetableReopenProjectionTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="live_user", password="testpass123")
+        self.client.force_login(self.user)
+
+        views_other.ensure_private_generator_loaded()
+
+        self.department = Department.objects.create(name="Computer Science", code="CS", user=self.user)
+        self.section = Section.objects.create(section_id="SEC-LIVE", department=self.department, user=self.user)
+
+        self.teacher = Instructor.objects.create(
+            uid="LIVE-T1",
+            name="Live Theory Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.department,
+        )
+        self.lab_teacher = Instructor.objects.create(
+            uid="LIVE-L1",
+            name="Live Lab Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.department,
+        )
+
+        self.lecture_room = Room.objects.create(
+            r_number="LH-LIVE",
+            room_type="Lecture Hall",
+            seating_capacity=80,
+            department=self.department,
+            user=self.user,
+        )
+        self.lab_room = Room.objects.create(
+            r_number="LAB-LIVE",
+            room_type="Lab",
+            seating_capacity=30,
+            lab_category="CAT-A",
+            department=self.department,
+            user=self.user,
+        )
+
+        self.theory_subject = Subject.objects.create(
+            subject_number="TH-LIVE",
+            subject_name="Live Theory",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            duration=1,
+            user=self.user,
+        )
+        self.theory_subject.instructors.add(self.teacher)
+
+        self.lab_subject = Subject.objects.create(
+            subject_number="LAB-LIVE",
+            subject_name="Live Lab",
+            department=self.department,
+            max_numb_students=30,
+            room_required="Lab",
+            required_lab_category="CAT-A",
+            classes_per_week=1,
+            duration=2,
+            user=self.user,
+        )
+        self.lab_subject.instructors.add(self.lab_teacher)
+        self.section.allowed_subjects.add(self.theory_subject, self.lab_subject)
+
+        self.mt1 = MeetingTime.objects.create(pid="Mo1-live", day="Monday", time="1", user=self.user)
+        self.mt2 = MeetingTime.objects.create(pid="Mo2-live", day="Monday", time="2", user=self.user)
+        self.mt6 = MeetingTime.objects.create(pid="Mo6-live", day="Monday", time="6", user=self.user)
+        self.mt7 = MeetingTime.objects.create(pid="Mo7-live", day="Monday", time="7", user=self.user)
+
+        class_obj = views_other.Class(1, self.department, self.section.section_id, self.theory_subject)
+        class_obj.set_instructor(self.teacher)
+        class_obj.set_room(self.lecture_room)
+        class_obj.set_meetingTime(self.mt1)
+        class_obj.meeting_times = [self.mt1]
+        class_obj.duration = 1
+
+        lab_obj = views_other.Lab(2, self.department, self.section.section_id, self.lab_subject, batch=1, total_batches=1)
+        lab_obj.set_instructor(self.lab_teacher)
+        lab_obj.set_room(self.lab_room)
+        lab_obj.set_meetingTimes([self.mt6, self.mt7])
+        lab_obj.duration = 2
+
+        state = views_other._get_user_state(self.user.id)
+        state["schedules"] = [{
+            "classes": [class_obj],
+            "labs": [lab_obj],
+            "stats": {},
+            "reco_block": {},
+        }]
+        views_other._bind_runtime_to_schedule(state, 1)
+        state["view_mode"] = "editing"
+
+        session = self.client.session
+        session["current_index"] = 1
+        session.save()
+
+    def _assert_live_projection_context(self, context):
+        teacher_tables = context["teacher_tables"]
+        self.assertTrue(any(table["teacher"].uid == self.teacher.uid for table in teacher_tables))
+        self.assertTrue(any(table["teacher"].uid == self.lab_teacher.uid for table in teacher_tables))
+        self.assertTrue(
+            any(
+                table["teacher"].uid == self.teacher.uid
+                and any(cell.get("classes") for row in table["rows"] for cell in row["cells"])
+                for table in teacher_tables
+            )
+        )
+        self.assertTrue(
+            any(
+                table["teacher"].uid == self.lab_teacher.uid
+                and any(cell.get("labs") for row in table["rows"] for cell in row["cells"])
+                for table in teacher_tables
+            )
+        )
+
+        room_tables = context["room_tables"]
+        self.assertTrue(
+            any(
+                table["room"].r_number == self.lecture_room.r_number
+                and any(cell.get("classes") for row in table["rows"] for cell in row["cells"])
+                for table in room_tables
+            )
+        )
+        self.assertTrue(
+            any(
+                table["room"].r_number == self.lab_room.r_number
+                and any(cell.get("labs") for row in table["rows"] for cell in row["cells"])
+                for table in room_tables
+            )
+        )
+
+        workloads = context["teacher_workloads"]
+        teacher_totals = {
+            getattr(teacher, "uid", ""): data["total"]
+            for teacher, data in workloads.items()
+        }
+        self.assertEqual(teacher_totals.get(self.teacher.uid), 1)
+        self.assertEqual(teacher_totals.get(self.lab_teacher.uid), 2)
+
+        stats_by_room = {
+            row["r_number"]: row["used_slots"]
+            for row in context["room_statistics"]["overall"]["rooms"]
+        }
+        self.assertEqual(stats_by_room.get(self.lecture_room.r_number), 1)
+        self.assertEqual(stats_by_room.get(self.lab_room.r_number), 2)
+
+    def _load_live_projection_context(self, live_id):
+        request = RequestFactory().get("/")
+        request.user = self.user
+        middleware = SessionMiddleware(lambda req: None)
+        middleware.process_request(request)
+        request.session.save()
+
+        index, _live_timetable = views_other.load_live_timetable_into_runtime(request, live_id)
+        self.assertEqual(index, 1)
+
+        return self._current_live_projection_context()
+
+    def _current_live_projection_context(self):
+
+        private_views_main = getattr(views, "_views_main", None)
+        self.assertIsNotNone(private_views_main)
+        private_core = private_views_main.core
+        state = views_other._get_user_state(self.user.id)
+        classes = list(state.get("classes") or [])
+        labs = list(state.get("labs") or [])
+        statistics = private_views_main._compute_full_statistics(classes, labs, self.user)
+        return {
+            "teacher_tables": private_core.build_teacher_tables(classes, labs, user=self.user),
+            "room_tables": private_core.build_room_tables(classes, labs, user=self.user),
+            "teacher_workloads": private_core._compute_teacher_workloads(classes, labs),
+            "room_statistics": statistics,
+        }
+
+    def _move_restored_class(self, source_slot, target_slot):
+        private_views_main = getattr(views, "_views_main", None)
+        self.assertIsNotNone(private_views_main)
+        private_core = private_views_main.core
+
+        request = RequestFactory().post(
+            "/",
+            data=json.dumps({
+                "target_day": "Monday",
+                "target_slot": target_slot,
+                "move_type": "class",
+            }),
+            content_type="application/json",
+        )
+        request.user = self.user
+        middleware = SessionMiddleware(lambda req: None)
+        middleware.process_request(request)
+        request.session["current_index"] = 1
+        request.session.save()
+
+        response = private_core.move_slot_dragdrop(request, self.section.section_id, "Monday", source_slot)
+        self.assertEqual(response.status_code, 200)
+
+    def _rows_have_class_at_slot(self, rows, day, slot_number):
+        for row in rows:
+            if row.get("day") != day:
+                continue
+            for cell in row.get("cells", []):
+                if cell.get("slot_number") == slot_number and cell.get("classes"):
+                    return True
+                if cell.get("classes"):
+                    first_class = cell["classes"][0]
+                    meeting_time = getattr(first_class, "meeting_time", None)
+                    if meeting_time is not None and int(getattr(meeting_time, "time", 0) or 0) == slot_number:
+                        return True
+                if cell.get("labs"):
+                    meeting_times = list(getattr(cell["labs"][0], "meeting_times", None) or [])
+                    if meeting_times and int(getattr(meeting_times[0], "time", 0) or 0) == slot_number:
+                        return True
+        return False
+
+    def test_live_timetable_reopen_rebuilds_teacher_and_room_views_from_snapshot_runtime(self):
+        save_response = self.client.get(reverse("save_live_timetable", args=[1]))
+        self.assertEqual(save_response.status_code, 200)
+        first_live = LiveTimetable.objects.get(user=self.user)
+
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+
+        first_context = self._load_live_projection_context(first_live.id)
+        self._assert_live_projection_context(first_context)
+
+        self._move_restored_class(1, 2)
+        moved_context = self._current_live_projection_context()
+        moved_teacher_table = next(
+            table for table in moved_context["teacher_tables"]
+            if table["teacher"].uid == self.teacher.uid
+        )
+        moved_room_table = next(
+            table for table in moved_context["room_tables"]
+            if table["room"].r_number == self.lecture_room.r_number
+        )
+        self.assertTrue(self._rows_have_class_at_slot(moved_teacher_table["rows"], "Monday", 2))
+        self.assertTrue(self._rows_have_class_at_slot(moved_room_table["rows"], "Monday", 2))
+
+        second_save_response = self.client.get(reverse("save_live_timetable", args=[1]))
+        self.assertEqual(second_save_response.status_code, 200)
+        second_live = LiveTimetable.objects.filter(user=self.user).order_by("-id").first()
+        self.assertIsNotNone(second_live)
+        self.assertNotEqual(second_live.id, first_live.id)
+
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+
+        second_context = self._load_live_projection_context(second_live.id)
+        self._assert_live_projection_context(second_context)
+        moved_teacher_table = next(
+            table for table in second_context["teacher_tables"]
+            if table["teacher"].uid == self.teacher.uid
+        )
+        moved_room_table = next(
+            table for table in second_context["room_tables"]
+            if table["room"].r_number == self.lecture_room.r_number
+        )
+        self.assertTrue(self._rows_have_class_at_slot(moved_teacher_table["rows"], "Monday", 2))
+        self.assertTrue(self._rows_have_class_at_slot(moved_room_table["rows"], "Monday", 2))
 
 
 class ElectiveSchedulingTests(TestCase):

@@ -4313,6 +4313,49 @@ if "normalize_section_id_list" not in globals():
                 continue
             sections.append(normalized)
             seen.add(key)
+
+
+if "_runtime_entity_pk" not in globals():
+    def _runtime_entity_pk(value):
+        return getattr(value, "pk", None) or getattr(value, "id", None)
+
+
+if "_runtime_teacher_matches" not in globals():
+    def _runtime_teacher_matches(left, right):
+        if left is None or right is None:
+            return False
+        left_pk = _runtime_entity_pk(left)
+        right_pk = _runtime_entity_pk(right)
+        if left_pk is not None and right_pk is not None and str(left_pk) == str(right_pk):
+            return True
+        left_uid = (getattr(left, "uid", "") or "").strip().casefold()
+        right_uid = (getattr(right, "uid", "") or "").strip().casefold()
+        return bool(left_uid and right_uid and left_uid == right_uid)
+
+
+if "_runtime_room_matches" not in globals():
+    def _runtime_room_matches(left, right):
+        if left is None or right is None:
+            return False
+        left_pk = _runtime_entity_pk(left)
+        right_pk = _runtime_entity_pk(right)
+        if left_pk is not None and right_pk is not None and str(left_pk) == str(right_pk):
+            return True
+        left_number = (getattr(left, "r_number", "") or "").strip().casefold()
+        right_number = (getattr(right, "r_number", "") or "").strip().casefold()
+        if not left_number or not right_number or left_number != right_number:
+            return False
+        left_dept = getattr(left, "department", None)
+        right_dept = getattr(right, "department", None)
+        left_dept_pk = _runtime_entity_pk(left_dept)
+        right_dept_pk = _runtime_entity_pk(right_dept)
+        if left_dept_pk is not None and right_dept_pk is not None:
+            return str(left_dept_pk) == str(right_dept_pk)
+        left_dept_code = (getattr(left_dept, "code", "") or "").strip().casefold()
+        right_dept_code = (getattr(right_dept, "code", "") or "").strip().casefold()
+        if left_dept_code and right_dept_code:
+            return left_dept_code == right_dept_code
+        return True
         return ";".join(sections)
 
 
