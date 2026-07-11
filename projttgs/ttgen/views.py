@@ -801,6 +801,27 @@ def generate(request):
     return _generate_view(request)
 
 
+@login_required
+def open_live_timetable(request, tid):
+    if hasattr(public_core, "ensure_private_generator_loaded"):
+        public_core.ensure_private_generator_loaded()
+
+    try:
+        index, _live_timetable = public_core.load_live_timetable_into_runtime(request, tid)
+    except Http404:
+        raise
+    except Exception:
+        logger.exception("Failed to restore live timetable %s for user %s", tid, getattr(request.user, "id", None))
+        messages.error(request, "Could not open the live timetable snapshot.")
+        return redirect("live_timetable_list")
+
+    if not (_views_main and hasattr(_views_main, "show_timetable")):
+        messages.error(request, "Generated timetable editor is unavailable right now.")
+        return redirect("live_timetable_list")
+
+    return getattr(_views_main, "show_timetable")(request, index)
+
+
 for _view_name in _GENERATOR_VIEW_NAMES:
     if _view_name == "generate":
         continue

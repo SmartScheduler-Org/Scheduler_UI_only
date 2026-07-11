@@ -171,8 +171,13 @@ urlpatterns = [
     path('rename_instructor/', views.rename_instructor, name='rename_instructor'),
     
     path('save_timetable/<int:index>/', views.save_timetable, name='save_timetable'),
+    path('save_live_timetable/<int:index>/', views.save_live_timetable, name='save_live_timetable'),
     path('saved_timetables/', views.saved_timetable_list, name='saved_timetable_list'),
     path('saved_timetables/<int:tid>/', views.saved_timetable, name='saved_timetable'),
+    path('live_timetables/', views.live_timetable_list, name='live_timetable_list'),
+    path('live_timetables/<int:tid>/open/', views.open_live_timetable, name='open_live_timetable'),
+    path('live_timetables/<int:tid>/rename/', views.rename_live_timetable, name='rename_live_timetable'),
+    path('live_timetables/<int:tid>/delete/', views.delete_live_timetable, name='delete_live_timetable'),
     path('saved_timetables/<int:tid>/full-statistics/', views.saved_full_statistics, name='saved_full_statistics'),
     path("saved_timetable/delete/<int:tid>/", views.delete_saved_timetable, name="delete_saved_timetable"),
     path("saved_timetable/<int:tid>/rename/", views.rename_saved_timetable, name="rename_saved_timetable"),

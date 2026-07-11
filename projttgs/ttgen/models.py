@@ -483,6 +483,27 @@ class SavedPrefill(models.Model):
         return f"{label} ({self.updated_at.strftime('%d %b %Y %H:%M')})"
 
 
+class LiveTimetable(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="live_timetables",
+    )
+    name = models.CharField(max_length=120, blank=True, default="")
+    notes = models.TextField(blank=True, default="")
+    snapshot_version = models.PositiveIntegerField(default=1)
+    snapshot = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at", "-created_at"]
+
+    def __str__(self):
+        label = self.name or "Live Timetable"
+        return f"{label} ({self.updated_at.strftime('%d %b %Y %H:%M')})"
+
+
 class ScheduledSlot(models.Model):
     timetable = models.ForeignKey(
         SavedTimetable,

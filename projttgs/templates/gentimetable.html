@@ -3202,6 +3202,93 @@ function filterByDept(code, label) {
             });
             });
         };
+
+        window.saveLiveTimetable = function(idx) {
+            var url = "{% url 'save_live_timetable' 0 %}".replace('/0/', '/' + idx + '/');
+          Swal.fire({
+            title: 'Save Live Timetable',
+            input: 'text',
+            inputLabel: 'Name this live timetable snapshot',
+            inputPlaceholder: 'e.g. Live Edit Session A',
+            inputAttributes: { maxlength: 120 },
+            showCancelButton: true,
+            confirmButtonText: 'Save Live Snapshot',
+            confirmButtonColor: '#0f766e',
+            customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+            buttonsStyling: false,
+          }).then(function(nameResult) {
+            if (!nameResult.isConfirmed) {
+              return;
+            }
+
+            var saveUrl = url;
+            if (nameResult.value && nameResult.value.trim()) {
+              saveUrl += '?name=' + encodeURIComponent(nameResult.value.trim());
+            }
+
+            Swal.fire({
+              title: 'Saving Live Snapshot…',
+              html: '<div style="font-size:15px;color:#555;">Capturing your full runtime editor state…</div>',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              showConfirmButton: false,
+              didOpen: function() { Swal.showLoading(); },
+              customClass: { popup: 'plan-alert-popup' }
+            });
+
+            fetch(saveUrl, {
+              method: 'GET',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+              }
+            })
+            .then(function(r) { return r.json().then(function(d) { return {ok: r.ok, status: r.status, data: d}; }); })
+            .then(function(res) {
+              if (res.ok) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Live Timetable Saved!',
+                  text: res.data.message || 'Your live timetable snapshot has been saved successfully.',
+                  confirmButtonText: 'Open Live Timetables',
+                  confirmButtonColor: '#0f766e',
+                  customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+                  buttonsStyling: false,
+                }).then(function(result) {
+                  if (result.isConfirmed) {
+                    window.location.href = res.data.redirect || '/live_timetables/';
+                  }
+                });
+              } else if (res.status === 409) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Live Save Limit Reached',
+                  html: '<div style="color:#334155;font-size:15px;line-height:1.6;">' + res.data.message + '</div>',
+                  confirmButtonText: 'Manage Live Timetables',
+                  confirmButtonColor: '#0f766e',
+                  showCancelButton: true,
+                  cancelButtonText: 'Stay here',
+                  customClass: { popup: 'plan-alert-popup', confirmButton: 'plan-alert-button' },
+                  buttonsStyling: false,
+                }).then(function(result) {
+                  if (result.isConfirmed) {
+                    window.location.href = '/live_timetables/';
+                  }
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Live Save Failed',
+                  text: res.data.message || 'An unexpected error occurred.',
+                  customClass: { popup: 'plan-alert-popup' }
+                });
+              }
+            })
+            .catch(function() {
+              Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not reach the server.', customClass: { popup: 'plan-alert-popup' } });
+            });
+            });
+        };
     });
 </script>
 
@@ -3298,6 +3385,10 @@ function filterByDept(code, label) {
     <button class="save-tt-hero" type="button" onclick="saveTimetable({{ index }})">
         <span class="save-tt-hero__icon">✦</span>
         <span class="save-tt-hero__text">Save Timetable</span>
+    </button>
+    <button class="save-tt-hero" type="button" onclick="saveLiveTimetable({{ index }})" style="background:linear-gradient(135deg,#115e59,#14b8a6);box-shadow:0 12px 26px rgba(20,184,166,0.24);">
+      <span class="save-tt-hero__icon">⟳</span>
+      <span class="save-tt-hero__text">Save Live Timetable</span>
     </button>
     {% endif %}
     <button id="dragDropToggle" type="button" class="drag-toggle-btn">
@@ -3626,7 +3717,7 @@ function filterByDept(code, label) {
                     </span>
                     {% if not prefill_mode %}
                     <div class="action-buttons">
-                      <a href="/update_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}?batch={{ lab.batch }}"
+                       <a href="/update_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}?batch={{ lab.batch }}{% if live_readonly_dialog %}&live_readonly=1{% endif %}"
                          class="action-button btn-update">Update</a>
                       <a href="/delete_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}?batch={{ lab.batch }}"
                          class="action-button btn-delete">Delete</a>
@@ -3671,7 +3762,7 @@ function filterByDept(code, label) {
 
               {% if not prefill_mode %}
               <div class="action-buttons">
-                <a href="/update_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}"
+                 <a href="/update_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}{% if live_readonly_dialog %}?live_readonly=1{% endif %}"
                    class="action-button btn-update">Update</a>
                 <a href="/delete_slot/{{ table.section.section_id }}/{{ row.day }}/{{ cell.slot_number }}"
                    class="action-button btn-delete">Delete</a>

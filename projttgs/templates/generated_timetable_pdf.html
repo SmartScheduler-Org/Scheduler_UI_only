@@ -42,15 +42,27 @@ body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
 }
 
 /* ---- Block heading ---- */
+.block-page { page-break-inside: avoid; }
+.block-fit {
+    width: 100%;
+    height: 15.8cm;
+}
 .block-title { text-align: center; font-size: 15px; font-weight: bold; color: #0b3d91; margin: 6px 0 2px 0; }
 .block-sub { text-align: center; font-size: 11px; color: #444; margin-bottom: 8px; }
-.block { margin-bottom: 14px; page-break-inside: avoid; }
+.block { margin: 0; page-break-inside: avoid; }
 
 /* ---- Timetable grid ---- */
-table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+table.grid {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    page-break-inside: avoid;
+}
+.grid tr { page-break-inside: avoid; }
 .grid th, .grid td {
     border: 1px solid #000; padding: 4px; text-align: center;
     vertical-align: middle; word-wrap: break-word; font-size: 9px;
+    line-height: 1.15;
 }
 .grid th { background-color: #dbefff; }
 .grid th:first-child, .grid td:first-child { width: 70px; }
@@ -59,6 +71,24 @@ table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .cls { background-color: #eef6ff; }
 .entry { margin-bottom: 4px; }
 .entry .head { font-weight: bold; }
+
+.block-profile-compact .block-title { font-size: 14px; margin: 4px 0 1px 0; }
+.block-profile-compact .block-sub { font-size: 10px; margin-bottom: 6px; }
+.block-profile-compact .grid th,
+.block-profile-compact .grid td { font-size: 8px; padding: 3px; line-height: 1.08; }
+.block-profile-compact .entry { margin-bottom: 3px; }
+
+.block-profile-dense .block-title { font-size: 13px; margin: 3px 0 1px 0; }
+.block-profile-dense .block-sub { font-size: 9px; margin-bottom: 5px; }
+.block-profile-dense .grid th,
+.block-profile-dense .grid td { font-size: 7px; padding: 2px; line-height: 1.02; }
+.block-profile-dense .entry { margin-bottom: 2px; }
+
+.block-profile-ultra .block-title { font-size: 12px; margin: 2px 0 1px 0; }
+.block-profile-ultra .block-sub { font-size: 8px; margin-bottom: 4px; }
+.block-profile-ultra .grid th,
+.block-profile-ultra .grid td { font-size: 6px; padding: 1px; line-height: 1; }
+.block-profile-ultra .entry { margin-bottom: 1px; }
 
 /* ---- Workload summary ---- */
 table.wl { width: 100%; border-collapse: collapse; }
@@ -118,13 +148,16 @@ table.wl { width: 100%; border-collapse: collapse; }
     </table>
 {% else %}
     {% for block in blocks %}
-    <div class="block">
+    <pdf:keeptogether>
+    <pdf:keepinframe maxwidth="27.9cm" maxheight="15.8cm" mode="shrink" name="{{ block.title }}">
+    <div class="block-fit block-page">
+    <div class="block block-profile-{{ block.layout_profile|default:'standard' }}">
         <div class="block-title">{{ block.title }}</div>
         {% if block.subtitle %}<div class="block-sub">{{ block.subtitle }}</div>{% endif %}
         <table class="grid">
         <thead>
         <tr>
-            <th width="90">Day</th>
+            <th width="{{ block.day_width|default:90 }}">Day</th>
             <th>9:00 - 9:55</th><th>9:55 - 10:50</th><th>10:50 - 11:45</th><th>11:45 - 12:40</th>
             <th>12:40 - 1:35</th><th>1:35 - 2:30</th><th>2:30 - 3:25</th><th>3:25 - 4:20</th><th>4:20 - 5:15</th>
         </tr>
@@ -132,7 +165,7 @@ table.wl { width: 100%; border-collapse: collapse; }
         <tbody>
         {% for row in block.rows %}
         <tr>
-            <th width="90">{{ row.day }}</th>
+            <th width="{{ block.day_width|default:90 }}">{{ row.day }}</th>
             {% for cell in row.cells %}
                 {% if cell.type == "skip" %}
                 {% elif cell.type == "lunch" %}
@@ -162,6 +195,9 @@ table.wl { width: 100%; border-collapse: collapse; }
         </tbody>
         </table>
     </div>
+    </div>
+    </pdf:keepinframe>
+    </pdf:keeptogether>
     {% if not forloop.last %}<pdf:nextpage />{% endif %}
     {% endfor %}
 {% endif %}

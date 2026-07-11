@@ -26,7 +26,9 @@ import copy
 import csv
 import math
 import re
+from io import BytesIO
 from datetime import date
+from html import escape
 from smtplib import SMTPAuthenticationError
 from itertools import combinations
 from collections import defaultdict
@@ -274,6 +276,65 @@ def _reset_generated_drag_state(state, current_index=None):
     state["generated_parking_next_id"] = 1
     state["generated_manual_slot_next_id"] = 1
     state["generated_edit_index"] = current_index
+    state.pop("active_live_timetable_id", None)
+    state.pop("active_live_timetable_name", None)
+
+
+def _get_active_generated_schedule_entry(state):
+    schedules = state.get("schedules") or []
+    try:
+        current_index = int(state.get("generated_edit_index") or 0)
+    except (TypeError, ValueError):
+        return None
+    if current_index < 1 or current_index > len(schedules):
+        return None
+    return schedules[current_index - 1]
+
+
+def _set_runtime_classes(state, classes):
+    state["classes"] = classes
+    active_schedule = _get_active_generated_schedule_entry(state)
+    if active_schedule is not None:
+        active_schedule["classes"] = classes
+    _sync_legacy_runtime_globals(state)
+    return classes
+
+
+def _set_runtime_labs(state, labs):
+    state["labs"] = labs
+    active_schedule = _get_active_generated_schedule_entry(state)
+    if active_schedule is not None:
+        active_schedule["labs"] = labs
+    _sync_legacy_runtime_globals(state)
+    return labs
+
+
+def _set_runtime_entities(state, classes=None, labs=None):
+    if classes is not None:
+        _set_runtime_classes(state, classes)
+    if labs is not None:
+        _set_runtime_labs(state, labs)
+
+
+def _bind_runtime_to_schedule(state, index):
+    schedules = state.get("schedules") or []
+    idx = int(index)
+    if idx < 1 or idx > len(schedules):
+        return None
+    state["generated_edit_index"] = idx
+    active_schedule = schedules[idx - 1]
+    classes = active_schedule.get("classes")
+    labs = active_schedule.get("labs")
+    if classes is None:
+        classes = []
+        active_schedule["classes"] = classes
+    if labs is None:
+        labs = []
+        active_schedule["labs"] = labs
+    state["classes"] = classes
+    state["labs"] = labs
+    _sync_legacy_runtime_globals(state)
+    return active_schedule
 
 
 def _ensure_manual_prefill_slot_uid(state, item_obj):
@@ -322,6 +383,934 @@ def _decorate_generated_tables_with_parking(tables, state):
                 cell["reserved_room"] = reservation["room"] if reservation else None
                 cell["has_room_context"] = bool(reservation)
     return tables
+
+
+_RUNTIME_SNAPSHOT_VERSION = 1
+_RUNTIME_SNAPSHOT_CORE_STATE_KEYS = {
+    "classes",
+    "labs",
+    "schedules",
+    "view_mode",
+    "data",
+    "generated_parking_items",
+    "generated_slot_room_reservations",
+    "generated_parking_next_id",
+    "generated_manual_slot_next_id",
+    "generated_edit_index",
+    "prefill_mode",
+    "prefill_section_ids",
+    "prefill_locked_classes",
+    "prefill_locked_labs",
+}
+
+
+class RuntimeSnapshotCollection(list):
+    def all(self):
+        return list(self)
+
+    def order_by(self, *fields):
+        items = list(self)
+        if not fields:
+            return items
+        for field in reversed(fields):
+            reverse = str(field).startswith("-")
+            name = str(field)[1:] if reverse else str(field)
+            items.sort(key=lambda value: getattr(value, name, None) or "", reverse=reverse)
+        return items
+
+
+class RuntimeSnapshotDepartment:
+    pass
+
+
+class RuntimeSnapshotSubject:
+    pass
+
+
+class RuntimeSnapshotInstructor:
+    pass
+
+
+class RuntimeSnapshotRoom:
+    pass
+
+
+class RuntimeSnapshotSection:
+    pass
+
+
+class RuntimeSnapshotMeetingTime:
+    pass
+
+
+def _runtime_snapshot_is_scalar(value):
+    return value is None or isinstance(value, (str, int, float, bool))
+
+
+def _runtime_snapshot_is_plain(value):
+    if _runtime_snapshot_is_scalar(value):
+        return True
+    if isinstance(value, (list, tuple, set)):
+        return all(_runtime_snapshot_is_plain(item) for item in value)
+    if isinstance(value, dict):
+        return all(isinstance(key, (str, int, float, bool)) and _runtime_snapshot_is_plain(item) for key, item in value.items())
+    return False
+
+
+def _runtime_snapshot_clone_plain(value):
+    if _runtime_snapshot_is_scalar(value):
+        return value
+    if isinstance(value, (list, tuple, set)):
+        return [_runtime_snapshot_clone_plain(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): _runtime_snapshot_clone_plain(item) for key, item in value.items()}
+    raise TypeError(f"Unsupported snapshot value type: {type(value).__name__}")
+
+
+def _runtime_snapshot_extra_attrs(obj, handled_keys):
+    extras = {}
+    raw_values = getattr(obj, "__dict__", {}) or {}
+    for key, value in raw_values.items():
+        if key.startswith("_") or key in handled_keys:
+            continue
+        if _runtime_snapshot_is_plain(value):
+            extras[key] = _runtime_snapshot_clone_plain(value)
+    return extras
+
+
+def _runtime_snapshot_ref(ctx, kind, obj, prefix):
+    store = ctx["stores"][kind]
+    object_refs = ctx["object_refs"][kind]
+    object_id = id(obj)
+    ref = object_refs.get(object_id)
+    if ref is not None:
+        return ref
+    ref = f"{prefix}-{len(store) + 1}"
+    object_refs[object_id] = ref
+    return ref
+
+
+def _runtime_snapshot_get_store(snapshot, kind):
+    return (((snapshot or {}).get("entities") or {}).get(kind) or {})
+
+
+def _runtime_snapshot_apply_extras(target, extras):
+    for key, value in dict(extras or {}).items():
+        setattr(target, key, _runtime_snapshot_clone_plain(value))
+    return target
+
+
+def serialize_runtime_department(department, ctx):
+    if department is None:
+        return None
+    ref = _runtime_snapshot_ref(ctx, "departments", department, "department")
+    store = ctx["stores"]["departments"]
+    if ref in store:
+        return ref
+    handled = {"pk", "id", "code", "name", "dept_name"}
+    store[ref] = {
+        "ref": ref,
+        "pk": getattr(department, "pk", None),
+        "id": getattr(department, "id", None),
+        "code": getattr(department, "code", "") or "",
+        "name": getattr(department, "name", None) or getattr(department, "dept_name", "") or "",
+        "extra_attrs": _runtime_snapshot_extra_attrs(department, handled),
+    }
+    return ref
+
+
+def deserialize_runtime_department(entry, ctx):
+    if not entry:
+        return None
+    obj = RuntimeSnapshotDepartment()
+    obj.pk = entry.get("pk")
+    obj.id = entry.get("id")
+    obj.code = entry.get("code", "") or ""
+    obj.name = entry.get("name", "") or ""
+    obj.dept_name = obj.name
+    _runtime_snapshot_apply_extras(obj, entry.get("extra_attrs"))
+    return obj
+
+
+def serialize_runtime_subject(subject, ctx):
+    if subject is None:
+        return None
+    ref = _runtime_snapshot_ref(ctx, "subjects", subject, "subject")
+    store = ctx["stores"]["subjects"]
+    if ref in store:
+        return ref
+    handled = {
+        "pk",
+        "id",
+        "subject_number",
+        "subject_name",
+        "room_required",
+        "required_lab_category",
+        "specific_rooms",
+        "classes_per_week",
+        "max_numb_students",
+        "duration",
+        "credits",
+        "department",
+    }
+    store[ref] = {
+        "ref": ref,
+        "pk": getattr(subject, "pk", None),
+        "id": getattr(subject, "id", None),
+        "subject_number": getattr(subject, "subject_number", "") or "",
+        "subject_name": getattr(subject, "subject_name", "") or "",
+        "room_required": getattr(subject, "room_required", "") or "",
+        "required_lab_category": getattr(subject, "required_lab_category", "") or "",
+        "specific_rooms": getattr(subject, "specific_rooms", "") or "",
+        "classes_per_week": getattr(subject, "classes_per_week", None),
+        "max_numb_students": getattr(subject, "max_numb_students", None),
+        "duration": getattr(subject, "duration", None),
+        "credits": getattr(subject, "credits", None),
+        "department_ref": serialize_runtime_department(getattr(subject, "department", None), ctx),
+        "extra_attrs": _runtime_snapshot_extra_attrs(subject, handled),
+    }
+    return ref
+
+
+def deserialize_runtime_subject(entry, ctx):
+    if not entry:
+        return None
+    obj = RuntimeSnapshotSubject()
+    obj.pk = entry.get("pk")
+    obj.id = entry.get("id")
+    obj.subject_number = entry.get("subject_number", "") or ""
+    obj.subject_name = entry.get("subject_name", "") or ""
+    obj.room_required = entry.get("room_required", "") or ""
+    obj.required_lab_category = entry.get("required_lab_category", "") or ""
+    obj.specific_rooms = entry.get("specific_rooms", "") or ""
+    obj.classes_per_week = entry.get("classes_per_week")
+    obj.max_numb_students = entry.get("max_numb_students")
+    obj.duration = entry.get("duration")
+    obj.credits = entry.get("credits")
+    obj.department = ctx["departments"].get(entry.get("department_ref"))
+    _runtime_snapshot_apply_extras(obj, entry.get("extra_attrs"))
+    return obj
+
+
+def serialize_runtime_instructor(instructor, ctx):
+    if instructor is None:
+        return None
+    ref = _runtime_snapshot_ref(ctx, "instructors", instructor, "instructor")
+    store = ctx["stores"]["instructors"]
+    if ref in store:
+        return ref
+    handled = {"pk", "id", "uid", "name", "email", "contact_number", "designation", "max_workload", "department"}
+    store[ref] = {
+        "ref": ref,
+        "pk": getattr(instructor, "pk", None),
+        "id": getattr(instructor, "id", None),
+        "uid": getattr(instructor, "uid", "") or "",
+        "name": getattr(instructor, "name", "") or "",
+        "email": getattr(instructor, "email", "") or "",
+        "contact_number": getattr(instructor, "contact_number", "") or "",
+        "designation": getattr(instructor, "designation", "") or "",
+        "max_workload": getattr(instructor, "max_workload", None),
+        "department_ref": serialize_runtime_department(getattr(instructor, "department", None), ctx),
+        "extra_attrs": _runtime_snapshot_extra_attrs(instructor, handled),
+    }
+    return ref
+
+
+def deserialize_runtime_instructor(entry, ctx):
+    if not entry:
+        return None
+    obj = RuntimeSnapshotInstructor()
+    obj.pk = entry.get("pk")
+    obj.id = entry.get("id")
+    obj.uid = entry.get("uid", "") or ""
+    obj.name = entry.get("name", "") or ""
+    obj.email = entry.get("email", "") or ""
+    obj.contact_number = entry.get("contact_number", "") or ""
+    obj.designation = entry.get("designation", "") or ""
+    obj.max_workload = entry.get("max_workload")
+    obj.department = ctx["departments"].get(entry.get("department_ref"))
+    _runtime_snapshot_apply_extras(obj, entry.get("extra_attrs"))
+    return obj
+
+
+def serialize_runtime_room(room, ctx):
+    if room is None:
+        return None
+    ref = _runtime_snapshot_ref(ctx, "rooms", room, "room")
+    store = ctx["stores"]["rooms"]
+    if ref in store:
+        return ref
+    handled = {"pk", "id", "r_number", "room_type", "lab_category", "seating_capacity", "department"}
+    store[ref] = {
+        "ref": ref,
+        "pk": getattr(room, "pk", None),
+        "id": getattr(room, "id", None),
+        "room_number": getattr(room, "r_number", "") or "",
+        "room_type": getattr(room, "room_type", "") or "",
+        "lab_category": getattr(room, "lab_category", "") or "",
+        "capacity": getattr(room, "seating_capacity", None),
+        "department_ref": serialize_runtime_department(getattr(room, "department", None), ctx),
+        "extra_attrs": _runtime_snapshot_extra_attrs(room, handled),
+    }
+    return ref
+
+
+def deserialize_runtime_room(entry, ctx):
+    if not entry:
+        return None
+    obj = RuntimeSnapshotRoom()
+    obj.pk = entry.get("pk")
+    obj.id = entry.get("id")
+    obj.r_number = entry.get("room_number", "") or ""
+    obj.room_type = entry.get("room_type", "") or ""
+    obj.lab_category = entry.get("lab_category", "") or ""
+    obj.seating_capacity = entry.get("capacity")
+    obj.department = ctx["departments"].get(entry.get("department_ref"))
+    _runtime_snapshot_apply_extras(obj, entry.get("extra_attrs"))
+    return obj
+
+
+def serialize_runtime_meeting_time(meeting_time, ctx):
+    if meeting_time is None:
+        return None
+    ref = _runtime_snapshot_ref(ctx, "meeting_times", meeting_time, "meeting-time")
+    store = ctx["stores"]["meeting_times"]
+    if ref in store:
+        return ref
+    handled = {"pk", "id", "pid", "day", "time"}
+    store[ref] = {
+        "ref": ref,
+        "pk": getattr(meeting_time, "pk", None),
+        "id": getattr(meeting_time, "id", None),
+        "pid": getattr(meeting_time, "pid", "") or "",
+        "day": getattr(meeting_time, "day", "") or "",
+        "time": str(getattr(meeting_time, "time", "") or ""),
+        "extra_attrs": _runtime_snapshot_extra_attrs(meeting_time, handled),
+    }
+    return ref
+
+
+def deserialize_runtime_meeting_time(entry, ctx):
+    if not entry:
+        return None
+    obj = RuntimeSnapshotMeetingTime()
+    obj.pk = entry.get("pk")
+    obj.id = entry.get("id")
+    obj.pid = entry.get("pid", "") or ""
+    obj.day = entry.get("day", "") or ""
+    obj.time = str(entry.get("time", "") or "")
+    _runtime_snapshot_apply_extras(obj, entry.get("extra_attrs"))
+    return obj
+
+
+def serialize_runtime_section(section, ctx, department=None):
+    if section is None:
+        return None
+    if isinstance(section, str):
+        section_key = ("section-id", section)
+        ref = ctx["string_refs"]["sections"].get(section_key)
+        if ref is None:
+            ref = f"section-{len(ctx['stores']['sections']) + 1}"
+            ctx["string_refs"]["sections"][section_key] = ref
+        store = ctx["stores"]["sections"]
+        if ref not in store:
+            store[ref] = {
+                "ref": ref,
+                "pk": None,
+                "id": None,
+                "section_id": section,
+                "program_name": "",
+                "department_ref": serialize_runtime_department(department, ctx),
+                "allowed_subject_refs": [],
+                "extra_attrs": {},
+            }
+        elif department is not None and not store[ref].get("department_ref"):
+            store[ref]["department_ref"] = serialize_runtime_department(department, ctx)
+        return ref
+
+    ref = _runtime_snapshot_ref(ctx, "sections", section, "section")
+    store = ctx["stores"]["sections"]
+    if ref in store:
+        return ref
+    handled = {"pk", "id", "section_id", "program_name", "department", "allowed_subjects"}
+    allowed_subjects = []
+    subject_collection = getattr(section, "allowed_subjects", None)
+    if subject_collection is not None:
+        try:
+            iterable = subject_collection.all() if hasattr(subject_collection, "all") else list(subject_collection)
+        except Exception:
+            iterable = []
+        allowed_subjects = [serialize_runtime_subject(subject, ctx) for subject in list(iterable or [])]
+    store[ref] = {
+        "ref": ref,
+        "pk": getattr(section, "pk", None),
+        "id": getattr(section, "id", None),
+        "section_id": getattr(section, "section_id", "") or "",
+        "program_name": getattr(section, "program_name", "") or "",
+        "department_ref": serialize_runtime_department(getattr(section, "department", None) or department, ctx),
+        "allowed_subject_refs": allowed_subjects,
+        "extra_attrs": _runtime_snapshot_extra_attrs(section, handled),
+    }
+    return ref
+
+
+def deserialize_runtime_section(entry, ctx):
+    if not entry:
+        return None
+    obj = RuntimeSnapshotSection()
+    obj.pk = entry.get("pk")
+    obj.id = entry.get("id")
+    obj.section_id = entry.get("section_id", "") or ""
+    obj.program_name = entry.get("program_name", "") or ""
+    obj.department = ctx["departments"].get(entry.get("department_ref"))
+    obj.allowed_subjects = RuntimeSnapshotCollection(
+        [ctx["subjects"][ref] for ref in list(entry.get("allowed_subject_refs") or []) if ref in ctx["subjects"]]
+    )
+    _runtime_snapshot_apply_extras(obj, entry.get("extra_attrs"))
+    return obj
+
+
+def serialize_runtime_class(item_obj, ctx):
+    if item_obj is None:
+        return None
+    ref = _runtime_snapshot_ref(ctx, "classes", item_obj, "class")
+    store = ctx["stores"]["classes"]
+    if ref in store:
+        return ref
+    section_value = str(getattr(item_obj, "section", "") or "")
+    handled = {
+        "section_id",
+        "department",
+        "subject",
+        "instructor",
+        "co_instructors",
+        "meeting_time",
+        "meeting_times",
+        "room",
+        "section",
+        "duration",
+        "room_label",
+        "missing_room",
+        "group",
+        "manual_entry",
+        "manual_slot_uid",
+        "prefill_locked",
+        "is_elective",
+        "elective_sections",
+        "display_subject_name",
+        "display_width_percent",
+        "display_slot_number",
+        "display_base_grid_start",
+        "display_base_grid_span",
+        "display_grid_start",
+        "display_grid_span",
+        "display_lane_count",
+    }
+    store[ref] = {
+        "ref": ref,
+        "runtime_id": getattr(item_obj, "section_id", None),
+        "section": section_value,
+        "section_ref": serialize_runtime_section(section_value, ctx, department=getattr(item_obj, "department", None)),
+        "department_ref": serialize_runtime_department(getattr(item_obj, "department", None), ctx),
+        "subject_ref": serialize_runtime_subject(getattr(item_obj, "subject", None), ctx),
+        "instructor_ref": serialize_runtime_instructor(getattr(item_obj, "instructor", None), ctx),
+        "co_instructor_refs": [serialize_runtime_instructor(value, ctx) for value in list(getattr(item_obj, "co_instructors", None) or [])],
+        "meeting_time_ref": serialize_runtime_meeting_time(getattr(item_obj, "meeting_time", None), ctx),
+        "meeting_time_refs": [serialize_runtime_meeting_time(value, ctx) for value in list(getattr(item_obj, "meeting_times", None) or [])],
+        "room_ref": serialize_runtime_room(getattr(item_obj, "room", None), ctx),
+        "duration": getattr(item_obj, "duration", None),
+        "room_label": getattr(item_obj, "room_label", "") or "",
+        "missing_room": bool(getattr(item_obj, "missing_room", False)),
+        "group": getattr(item_obj, "group", None),
+        "manual_entry": bool(getattr(item_obj, "manual_entry", False)),
+        "manual_slot_uid": str(getattr(item_obj, "manual_slot_uid", "") or ""),
+        "prefill_locked": bool(getattr(item_obj, "prefill_locked", False)),
+        "is_elective": bool(getattr(item_obj, "is_elective", False)),
+        "elective_sections": _runtime_snapshot_clone_plain(list(getattr(item_obj, "elective_sections", None) or [])),
+        "display": {
+            "subject_name": getattr(item_obj, "display_subject_name", None),
+            "width_percent": getattr(item_obj, "display_width_percent", None),
+            "slot_number": getattr(item_obj, "display_slot_number", None),
+            "base_grid_start": getattr(item_obj, "display_base_grid_start", None),
+            "base_grid_span": getattr(item_obj, "display_base_grid_span", None),
+            "grid_start": getattr(item_obj, "display_grid_start", None),
+            "grid_span": getattr(item_obj, "display_grid_span", None),
+            "lane_count": getattr(item_obj, "display_lane_count", None),
+        },
+        "extra_attrs": _runtime_snapshot_extra_attrs(item_obj, handled),
+    }
+    return ref
+
+
+def deserialize_runtime_class(entry, ctx):
+    if not entry:
+        return None
+    ClassImpl = globals().get("Class")
+    if ClassImpl is None:
+        return None
+    department = ctx["departments"].get(entry.get("department_ref"))
+    subject = ctx["subjects"].get(entry.get("subject_ref"))
+    item_obj = ClassImpl(entry.get("runtime_id"), department, entry.get("section", "") or "", subject)
+    item_obj.instructor = ctx["instructors"].get(entry.get("instructor_ref"))
+    item_obj.co_instructors = [ctx["instructors"][ref] for ref in list(entry.get("co_instructor_refs") or []) if ref in ctx["instructors"]]
+    item_obj.meeting_time = ctx["meeting_times"].get(entry.get("meeting_time_ref"))
+    item_obj.meeting_times = [ctx["meeting_times"][ref] for ref in list(entry.get("meeting_time_refs") or []) if ref in ctx["meeting_times"]]
+    item_obj.room = ctx["rooms"].get(entry.get("room_ref"))
+    item_obj.duration = entry.get("duration")
+    item_obj.room_label = entry.get("room_label", "") or ""
+    item_obj.missing_room = bool(entry.get("missing_room", False))
+    item_obj.group = entry.get("group")
+    item_obj.manual_entry = bool(entry.get("manual_entry", False))
+    item_obj.manual_slot_uid = str(entry.get("manual_slot_uid", "") or "")
+    item_obj.prefill_locked = bool(entry.get("prefill_locked", False))
+    item_obj.is_elective = bool(entry.get("is_elective", False))
+    item_obj.elective_sections = list(entry.get("elective_sections") or [])
+    display = entry.get("display") or {}
+    if display.get("subject_name") is not None:
+        item_obj.display_subject_name = display.get("subject_name")
+    if display.get("width_percent") is not None:
+        item_obj.display_width_percent = display.get("width_percent")
+    if display.get("slot_number") is not None:
+        item_obj.display_slot_number = display.get("slot_number")
+    if display.get("base_grid_start") is not None:
+        item_obj.display_base_grid_start = display.get("base_grid_start")
+    if display.get("base_grid_span") is not None:
+        item_obj.display_base_grid_span = display.get("base_grid_span")
+    if display.get("grid_start") is not None:
+        item_obj.display_grid_start = display.get("grid_start")
+    if display.get("grid_span") is not None:
+        item_obj.display_grid_span = display.get("grid_span")
+    if display.get("lane_count") is not None:
+        item_obj.display_lane_count = display.get("lane_count")
+    _runtime_snapshot_apply_extras(item_obj, entry.get("extra_attrs"))
+    return item_obj
+
+
+def serialize_runtime_lab(item_obj, ctx):
+    if item_obj is None:
+        return None
+    ref = _runtime_snapshot_ref(ctx, "labs", item_obj, "lab")
+    store = ctx["stores"]["labs"]
+    if ref in store:
+        return ref
+    section_value = str(getattr(item_obj, "section", "") or "")
+    handled = {
+        "section_id",
+        "department",
+        "subject",
+        "instructor",
+        "second_instructor",
+        "co_instructors",
+        "room",
+        "section",
+        "duration",
+        "meeting_times",
+        "batch",
+        "total_batches",
+        "group",
+        "room_label",
+        "missing_room",
+        "manual_entry",
+        "manual_slot_uid",
+        "prefill_locked",
+        "is_elective",
+        "elective_sections",
+        "display_subject_name",
+        "display_width_percent",
+        "display_slot_number",
+        "display_base_grid_start",
+        "display_base_grid_span",
+        "display_grid_start",
+        "display_grid_span",
+        "display_lane_count",
+    }
+    store[ref] = {
+        "ref": ref,
+        "runtime_id": getattr(item_obj, "section_id", None),
+        "section": section_value,
+        "section_ref": serialize_runtime_section(section_value, ctx, department=getattr(item_obj, "department", None)),
+        "department_ref": serialize_runtime_department(getattr(item_obj, "department", None), ctx),
+        "subject_ref": serialize_runtime_subject(getattr(item_obj, "subject", None), ctx),
+        "instructor_ref": serialize_runtime_instructor(getattr(item_obj, "instructor", None), ctx),
+        "second_instructor_ref": serialize_runtime_instructor(getattr(item_obj, "second_instructor", None), ctx),
+        "co_instructor_refs": [serialize_runtime_instructor(value, ctx) for value in list(getattr(item_obj, "co_instructors", None) or [])],
+        "room_ref": serialize_runtime_room(getattr(item_obj, "room", None), ctx),
+        "meeting_time_refs": [serialize_runtime_meeting_time(value, ctx) for value in list(getattr(item_obj, "meeting_times", None) or [])],
+        "duration": getattr(item_obj, "duration", None),
+        "batch": getattr(item_obj, "batch", None),
+        "total_batches": getattr(item_obj, "total_batches", None),
+        "group": getattr(item_obj, "group", None),
+        "room_label": getattr(item_obj, "room_label", "") or "",
+        "missing_room": bool(getattr(item_obj, "missing_room", False)),
+        "manual_entry": bool(getattr(item_obj, "manual_entry", False)),
+        "manual_slot_uid": str(getattr(item_obj, "manual_slot_uid", "") or ""),
+        "prefill_locked": bool(getattr(item_obj, "prefill_locked", False)),
+        "is_elective": bool(getattr(item_obj, "is_elective", False)),
+        "elective_sections": _runtime_snapshot_clone_plain(list(getattr(item_obj, "elective_sections", None) or [])),
+        "display": {
+            "subject_name": getattr(item_obj, "display_subject_name", None),
+            "width_percent": getattr(item_obj, "display_width_percent", None),
+            "slot_number": getattr(item_obj, "display_slot_number", None),
+            "base_grid_start": getattr(item_obj, "display_base_grid_start", None),
+            "base_grid_span": getattr(item_obj, "display_base_grid_span", None),
+            "grid_start": getattr(item_obj, "display_grid_start", None),
+            "grid_span": getattr(item_obj, "display_grid_span", None),
+            "lane_count": getattr(item_obj, "display_lane_count", None),
+        },
+        "extra_attrs": _runtime_snapshot_extra_attrs(item_obj, handled),
+    }
+    return ref
+
+
+def deserialize_runtime_lab(entry, ctx):
+    if not entry:
+        return None
+    LabImpl = globals().get("Lab")
+    if LabImpl is None:
+        return None
+    department = ctx["departments"].get(entry.get("department_ref"))
+    subject = ctx["subjects"].get(entry.get("subject_ref"))
+    item_obj = LabImpl(
+        entry.get("runtime_id"),
+        department,
+        entry.get("section", "") or "",
+        subject,
+        entry.get("batch") or 1,
+        entry.get("total_batches") or 1,
+    )
+    item_obj.instructor = ctx["instructors"].get(entry.get("instructor_ref"))
+    item_obj.second_instructor = ctx["instructors"].get(entry.get("second_instructor_ref"))
+    item_obj.co_instructors = [ctx["instructors"][ref] for ref in list(entry.get("co_instructor_refs") or []) if ref in ctx["instructors"]]
+    item_obj.room = ctx["rooms"].get(entry.get("room_ref"))
+    item_obj.meeting_times = [ctx["meeting_times"][ref] for ref in list(entry.get("meeting_time_refs") or []) if ref in ctx["meeting_times"]]
+    item_obj.duration = entry.get("duration")
+    item_obj.batch = entry.get("batch") or 1
+    item_obj.total_batches = entry.get("total_batches") or 1
+    item_obj.group = entry.get("group")
+    item_obj.room_label = entry.get("room_label", "") or ""
+    item_obj.missing_room = bool(entry.get("missing_room", False))
+    item_obj.manual_entry = bool(entry.get("manual_entry", False))
+    item_obj.manual_slot_uid = str(entry.get("manual_slot_uid", "") or "")
+    item_obj.prefill_locked = bool(entry.get("prefill_locked", False))
+    item_obj.is_elective = bool(entry.get("is_elective", False))
+    item_obj.elective_sections = list(entry.get("elective_sections") or [])
+    display = entry.get("display") or {}
+    if display.get("subject_name") is not None:
+        item_obj.display_subject_name = display.get("subject_name")
+    if display.get("width_percent") is not None:
+        item_obj.display_width_percent = display.get("width_percent")
+    if display.get("slot_number") is not None:
+        item_obj.display_slot_number = display.get("slot_number")
+    if display.get("base_grid_start") is not None:
+        item_obj.display_base_grid_start = display.get("base_grid_start")
+    if display.get("base_grid_span") is not None:
+        item_obj.display_base_grid_span = display.get("base_grid_span")
+    if display.get("grid_start") is not None:
+        item_obj.display_grid_start = display.get("grid_start")
+    if display.get("grid_span") is not None:
+        item_obj.display_grid_span = display.get("grid_span")
+    if display.get("lane_count") is not None:
+        item_obj.display_lane_count = display.get("lane_count")
+    _runtime_snapshot_apply_extras(item_obj, entry.get("extra_attrs"))
+    return item_obj
+
+
+def serialize_runtime_parking_item(parked, ctx):
+    if parked is None:
+        return None
+    move_type = str(parked.get("move_type") or "class")
+    item_obj = parked.get("item")
+    item_ref = serialize_runtime_lab(item_obj, ctx) if move_type == "lab" else serialize_runtime_class(item_obj, ctx)
+    section_id = str(parked.get("section_id") or getattr(item_obj, "section", "") or "")
+    handled = {
+        "id",
+        "section_id",
+        "move_type",
+        "item",
+        "subject_name",
+        "teacher_uid",
+        "teacher_name",
+        "secondary_teacher_uid",
+        "second_teacher_name",
+        "original_room",
+        "room_number",
+        "missing_room",
+        "duration",
+        "slot_span",
+        "manual_entry",
+        "manual_slot_uid",
+        "batch_label",
+    }
+    extra_attrs = {}
+    for key, value in dict(parked).items():
+        if key in handled:
+            continue
+        if _runtime_snapshot_is_plain(value):
+            extra_attrs[key] = _runtime_snapshot_clone_plain(value)
+    return {
+        "id": parked.get("id"),
+        "section_id": section_id,
+        "section_ref": serialize_runtime_section(section_id, ctx, department=getattr(item_obj, "department", None)),
+        "move_type": move_type,
+        "item_ref": item_ref,
+        "subject_name": parked.get("subject_name", "") or "",
+        "teacher_uid": parked.get("teacher_uid", "") or "",
+        "teacher_name": parked.get("teacher_name", "") or "",
+        "secondary_teacher_uid": parked.get("secondary_teacher_uid", "") or "",
+        "second_teacher_name": parked.get("second_teacher_name", "") or "",
+        "original_room_ref": serialize_runtime_room(parked.get("original_room"), ctx),
+        "room_number": parked.get("room_number", "") or "",
+        "missing_room": bool(parked.get("missing_room", False)),
+        "duration": parked.get("duration"),
+        "slot_span": parked.get("slot_span"),
+        "manual_entry": bool(parked.get("manual_entry", False)),
+        "manual_slot_uid": str(parked.get("manual_slot_uid", "") or ""),
+        "batch_label": parked.get("batch_label", "") or "",
+        "extra_attrs": extra_attrs,
+    }
+
+
+def deserialize_runtime_parking_item(entry, ctx):
+    if not entry:
+        return None
+    move_type = str(entry.get("move_type") or "class")
+    item_ref = entry.get("item_ref")
+    item_obj = ctx["labs"].get(item_ref) if move_type == "lab" else ctx["classes"].get(item_ref)
+    parked = {
+        "id": entry.get("id"),
+        "section_id": str(entry.get("section_id") or ""),
+        "move_type": move_type,
+        "item": item_obj,
+        "subject_name": entry.get("subject_name", "") or "",
+        "teacher_uid": entry.get("teacher_uid", "") or "",
+        "teacher_name": entry.get("teacher_name", "") or "",
+        "secondary_teacher_uid": entry.get("secondary_teacher_uid", "") or "",
+        "second_teacher_name": entry.get("second_teacher_name", "") or "",
+        "original_room": ctx["rooms"].get(entry.get("original_room_ref")),
+        "room_number": entry.get("room_number", "") or "",
+        "missing_room": bool(entry.get("missing_room", False)),
+        "duration": entry.get("duration"),
+        "slot_span": entry.get("slot_span"),
+        "manual_entry": bool(entry.get("manual_entry", False)),
+        "manual_slot_uid": str(entry.get("manual_slot_uid", "") or ""),
+        "batch_label": entry.get("batch_label", "") or "",
+    }
+    for key, value in dict(entry.get("extra_attrs") or {}).items():
+        parked[key] = _runtime_snapshot_clone_plain(value)
+    return parked
+
+
+def serialize_runtime_reservation(section_id, reservation_key, reservation_value, ctx):
+    room = None
+    if isinstance(reservation_value, dict):
+        room = reservation_value.get("room")
+    day = reservation_key[1] if len(reservation_key) > 1 else ""
+    slot = str(reservation_key[2] if len(reservation_key) > 2 else "")
+    return {
+        "section_id": str(section_id or ""),
+        "section_ref": serialize_runtime_section(str(section_id or ""), ctx, department=getattr(room, "department", None)),
+        "day": str(day or ""),
+        "slot": slot,
+        "room_ref": serialize_runtime_room(room, ctx),
+    }
+
+
+def deserialize_runtime_reservation(entry, ctx):
+    if not entry:
+        return None, None
+    key = (str(entry.get("section_id") or ""), str(entry.get("day") or ""), str(entry.get("slot") or ""))
+    value = {"room": ctx["rooms"].get(entry.get("room_ref"))}
+    return key, value
+
+
+def serialize_runtime_state_snapshot(state):
+    state = state or {}
+    ctx = {
+        "stores": {
+            "departments": {},
+            "sections": {},
+            "subjects": {},
+            "instructors": {},
+            "rooms": {},
+            "meeting_times": {},
+            "classes": {},
+            "labs": {},
+        },
+        "object_refs": {
+            "departments": {},
+            "sections": {},
+            "subjects": {},
+            "instructors": {},
+            "rooms": {},
+            "meeting_times": {},
+            "classes": {},
+            "labs": {},
+        },
+        "string_refs": {
+            "sections": {},
+        },
+    }
+    active_schedule = _get_active_generated_schedule_entry(state)
+    classes = list(state.get("classes") or [])
+    labs = list(state.get("labs") or [])
+    serialized_classes = [serialize_runtime_class(item_obj, ctx) for item_obj in classes]
+    serialized_labs = [serialize_runtime_lab(item_obj, ctx) for item_obj in labs]
+    schedules = []
+    for entry in list(state.get("schedules") or []):
+        schedules.append(
+            {
+                "classes": [serialize_runtime_class(item_obj, ctx) for item_obj in list(entry.get("classes") or [])],
+                "labs": [serialize_runtime_lab(item_obj, ctx) for item_obj in list(entry.get("labs") or [])],
+                "stats": _runtime_snapshot_clone_plain(entry.get("stats") or {}),
+                "reco_block": _runtime_snapshot_clone_plain(entry.get("reco_block") or {}),
+            }
+        )
+    reservation_entries = []
+    for reservation_key, reservation_value in dict(state.get("generated_slot_room_reservations") or {}).items():
+        reservation_entries.append(
+            serialize_runtime_reservation(
+                reservation_key[0] if isinstance(reservation_key, tuple) and reservation_key else "",
+                reservation_key,
+                reservation_value,
+                ctx,
+            )
+        )
+    serialized_parking_items = [serialize_runtime_parking_item(parked, ctx) for parked in list(state.get("generated_parking_items") or [])]
+    serialized_prefill_locked_classes = [serialize_runtime_class(item_obj, ctx) for item_obj in list(state.get("prefill_locked_classes") or [])]
+    serialized_prefill_locked_labs = [serialize_runtime_lab(item_obj, ctx) for item_obj in list(state.get("prefill_locked_labs") or [])]
+    extras = {}
+    for key, value in dict(state).items():
+        if key in _RUNTIME_SNAPSHOT_CORE_STATE_KEYS:
+            continue
+        if _runtime_snapshot_is_plain(value):
+            extras[key] = _runtime_snapshot_clone_plain(value)
+    return {
+        "version": _RUNTIME_SNAPSHOT_VERSION,
+        "entities": {
+            "departments": list(ctx["stores"]["departments"].values()),
+            "sections": list(ctx["stores"]["sections"].values()),
+            "subjects": list(ctx["stores"]["subjects"].values()),
+            "instructors": list(ctx["stores"]["instructors"].values()),
+            "rooms": list(ctx["stores"]["rooms"].values()),
+            "meeting_times": list(ctx["stores"]["meeting_times"].values()),
+            "classes": list(ctx["stores"]["classes"].values()),
+            "labs": list(ctx["stores"]["labs"].values()),
+        },
+        "state": {
+            "classes": serialized_classes,
+            "labs": serialized_labs,
+            "classes_bound_to_active_schedule": bool(active_schedule is not None and state.get("classes") is active_schedule.get("classes")),
+            "labs_bound_to_active_schedule": bool(active_schedule is not None and state.get("labs") is active_schedule.get("labs")),
+            "schedules": schedules,
+            "view_mode": state.get("view_mode"),
+            "data": _runtime_snapshot_clone_plain(state.get("data")) if _runtime_snapshot_is_plain(state.get("data")) else None,
+            "generated_parking_items": serialized_parking_items,
+            "generated_slot_room_reservations": reservation_entries,
+            "generated_parking_next_id": int(state.get("generated_parking_next_id") or 1),
+            "generated_manual_slot_next_id": int(state.get("generated_manual_slot_next_id") or 1),
+            "generated_edit_index": state.get("generated_edit_index"),
+            "prefill_mode": bool(state.get("prefill_mode", False)),
+            "prefill_section_ids": _runtime_snapshot_clone_plain(list(state.get("prefill_section_ids") or [])),
+            "prefill_locked_classes": serialized_prefill_locked_classes,
+            "prefill_locked_labs": serialized_prefill_locked_labs,
+            "extra_state": extras,
+        },
+    }
+
+
+def deserialize_runtime_state_snapshot(snapshot):
+    if not snapshot:
+        raise ValueError("snapshot is required")
+    if int(snapshot.get("version") or 0) != _RUNTIME_SNAPSHOT_VERSION:
+        raise ValueError("Unsupported runtime snapshot version")
+
+    ctx = {
+        "departments": {},
+        "sections": {},
+        "subjects": {},
+        "instructors": {},
+        "rooms": {},
+        "meeting_times": {},
+        "classes": {},
+        "labs": {},
+    }
+
+    for entry in list(_runtime_snapshot_get_store(snapshot, "departments") or []):
+        ctx["departments"][entry.get("ref")] = deserialize_runtime_department(entry, ctx)
+    for entry in list(_runtime_snapshot_get_store(snapshot, "subjects") or []):
+        ctx["subjects"][entry.get("ref")] = deserialize_runtime_subject(entry, ctx)
+    for entry in list(_runtime_snapshot_get_store(snapshot, "instructors") or []):
+        ctx["instructors"][entry.get("ref")] = deserialize_runtime_instructor(entry, ctx)
+    for entry in list(_runtime_snapshot_get_store(snapshot, "rooms") or []):
+        ctx["rooms"][entry.get("ref")] = deserialize_runtime_room(entry, ctx)
+    for entry in list(_runtime_snapshot_get_store(snapshot, "meeting_times") or []):
+        ctx["meeting_times"][entry.get("ref")] = deserialize_runtime_meeting_time(entry, ctx)
+    for entry in list(_runtime_snapshot_get_store(snapshot, "sections") or []):
+        ctx["sections"][entry.get("ref")] = deserialize_runtime_section(entry, ctx)
+    for entry in list(_runtime_snapshot_get_store(snapshot, "classes") or []):
+        ctx["classes"][entry.get("ref")] = deserialize_runtime_class(entry, ctx)
+    for entry in list(_runtime_snapshot_get_store(snapshot, "labs") or []):
+        ctx["labs"][entry.get("ref")] = deserialize_runtime_lab(entry, ctx)
+
+    snapshot_state = (snapshot.get("state") or {})
+    state = {
+        "classes": [],
+        "labs": [],
+        "schedules": [],
+        "view_mode": snapshot_state.get("view_mode"),
+        "data": snapshot_state.get("data"),
+        "generated_parking_items": [],
+        "generated_slot_room_reservations": {},
+        "generated_parking_next_id": int(snapshot_state.get("generated_parking_next_id") or 1),
+        "generated_manual_slot_next_id": int(snapshot_state.get("generated_manual_slot_next_id") or 1),
+        "generated_edit_index": snapshot_state.get("generated_edit_index"),
+        "prefill_mode": bool(snapshot_state.get("prefill_mode", False)),
+        "prefill_section_ids": list(snapshot_state.get("prefill_section_ids") or []),
+        "prefill_locked_classes": [ctx["classes"][ref] for ref in list(snapshot_state.get("prefill_locked_classes") or []) if ref in ctx["classes"]],
+        "prefill_locked_labs": [ctx["labs"][ref] for ref in list(snapshot_state.get("prefill_locked_labs") or []) if ref in ctx["labs"]],
+    }
+    for key, value in dict(snapshot_state.get("extra_state") or {}).items():
+        state[key] = _runtime_snapshot_clone_plain(value)
+
+    for schedule_entry in list(snapshot_state.get("schedules") or []):
+        state["schedules"].append(
+            {
+                "classes": [ctx["classes"][ref] for ref in list(schedule_entry.get("classes") or []) if ref in ctx["classes"]],
+                "labs": [ctx["labs"][ref] for ref in list(schedule_entry.get("labs") or []) if ref in ctx["labs"]],
+                "stats": _runtime_snapshot_clone_plain(schedule_entry.get("stats") or {}),
+                "reco_block": _runtime_snapshot_clone_plain(schedule_entry.get("reco_block") or {}),
+            }
+        )
+
+    explicit_classes = [ctx["classes"][ref] for ref in list(snapshot_state.get("classes") or []) if ref in ctx["classes"]]
+    explicit_labs = [ctx["labs"][ref] for ref in list(snapshot_state.get("labs") or []) if ref in ctx["labs"]]
+    generated_edit_index = state.get("generated_edit_index")
+    try:
+        active_index = int(generated_edit_index or 0)
+    except (TypeError, ValueError):
+        active_index = 0
+    active_schedule = state["schedules"][active_index - 1] if 1 <= active_index <= len(state["schedules"]) else None
+    classes_bound = bool(snapshot_state.get("classes_bound_to_active_schedule"))
+    labs_bound = bool(snapshot_state.get("labs_bound_to_active_schedule"))
+    if active_schedule is not None:
+        state["classes"] = active_schedule.get("classes") if classes_bound else explicit_classes
+        state["labs"] = active_schedule.get("labs") if labs_bound else explicit_labs
+    else:
+        state["classes"] = explicit_classes
+        state["labs"] = explicit_labs
+
+    state["generated_parking_items"] = [
+        deserialize_runtime_parking_item(entry, ctx)
+        for entry in list(snapshot_state.get("generated_parking_items") or [])
+    ]
+    reservations = {}
+    for entry in list(snapshot_state.get("generated_slot_room_reservations") or []):
+        key, value = deserialize_runtime_reservation(entry, ctx)
+        if key is not None:
+            reservations[key] = value
+    state["generated_slot_room_reservations"] = reservations
+    _sync_legacy_runtime_globals(state)
+    return state
 
 
 class ManualPrefillSubject:
@@ -686,9 +1675,8 @@ def _activate_prefill_snapshot(request, snapshot):
     if not section_ids:
         return False
     state = _get_user_state(request.user.id)
-    state["classes"] = []
-    state["labs"] = []
     state["schedules"] = [{"classes": [], "labs": [], "stats": {}, "reco_block": {}}]
+    _bind_runtime_to_schedule(state, 1)
     state["prefill_mode"] = True
     state["prefill_section_ids"] = section_ids
     state["prefill_locked_classes"] = []
@@ -899,8 +1887,7 @@ def restore_prefill_session_snapshot(request, state, section_ids):
         restored = _prefill_restore_lab(entry, request.user)
         if restored is not None:
             labs.append(restored)
-    state["classes"] = classes
-    state["labs"] = labs
+    _set_runtime_entities(state, classes=classes, labs=labs)
     state["prefill_locked_classes"] = list(classes)
     state["prefill_locked_labs"] = list(labs)
     state["generated_parking_items"] = []
@@ -1048,6 +2035,75 @@ def ensure_private_generator_loaded():
 _load_private_generator_rules()
 _load_private_generator_algo()
 _load_private_generator_runtime()
+
+
+def _runtime_subject_pk(subject):
+    if subject is None:
+        return None
+    value = getattr(subject, "pk", None)
+    if value in (None, ""):
+        value = getattr(subject, "id", None)
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _runtime_matches_subject_identity(candidate, subject, subject_pk=None):
+    if candidate is None or subject is None:
+        return False
+    if subject_pk is not None and getattr(candidate, "subject_id", None) == subject_pk:
+        return True
+    candidate_subject = getattr(candidate, "subject", None)
+    if candidate_subject is not None and subject_pk is not None and _runtime_subject_pk(candidate_subject) == subject_pk:
+        return True
+    return (
+        str(getattr(candidate_subject, "subject_number", "") or "").strip().lower()
+        == str(getattr(subject, "subject_number", "") or "").strip().lower()
+        and str(getattr(candidate_subject, "subject_name", "") or "").strip().lower()
+        == str(getattr(subject, "subject_name", "") or "").strip().lower()
+    )
+
+
+def get_section_subject_group_count(section, subject):
+    section_obj = section if hasattr(section, "pk") else None
+    if section_obj is None:
+        section_id = section.section_id if hasattr(section, "section_id") else str(section)
+        section_obj = Section.objects.filter(section_id=section_id).first()
+    if section_obj is None or subject is None:
+        return 1
+
+    subject_pk = _runtime_subject_pk(subject)
+    prefetched = getattr(section_obj, "_prefetched_objects_cache", {}) or {}
+    mappings = prefetched.get("subject_mappings")
+    section_group_count = 1
+    if mappings is not None:
+        for mapping in mappings:
+            if _runtime_matches_subject_identity(mapping, subject, subject_pk):
+                section_group_count = max(1, getattr(mapping, "group_count", 1) or 1)
+                break
+
+    if section_group_count == 1 and subject_pk is not None:
+        mapping = SectionSubjectMapping.objects.filter(section=section_obj, subject_id=subject_pk).only("group_count").first()
+        if mapping:
+            section_group_count = max(1, getattr(mapping, "group_count", 1) or 1)
+
+    teacher_mapping = None
+    if subject_pk is not None:
+        teacher_mapping = SectionSubjectInstructor.objects.filter(section=section_obj, subject_id=subject_pk).only(
+            "group_instructor_ids",
+            "group_second_instructor_ids",
+        ).first()
+
+    if not teacher_mapping:
+        return section_group_count
+
+    if section_group_count <= 1:
+        return 1
+
+    primary_slots = len(getattr(teacher_mapping, "group_instructor_ids", []) or [])
+    secondary_slots = len(getattr(teacher_mapping, "group_second_instructor_ids", []) or [])
+    return max(section_group_count, primary_slots, secondary_slots, 1)
 
 def ensure_cs_department(user=None):
     if user:
@@ -2497,6 +3553,7 @@ def admindash(request):
         'teacher_count': Instructor.objects.filter(user=request.user).count(),
         'department_count': Department.objects.filter(user=request.user).count(),
         'class_count': Section.objects.filter(user=request.user).count(),
+        'live_timetable_count': LiveTimetable.objects.filter(user=request.user).count(),
         'teacher_onboarding_count': TeacherOnboarding.objects.count(),
     }
     return render(request, 'admindashboard.html', context)
@@ -3748,7 +4805,7 @@ def _apply_generated_missing_subject_placement(request, section_obj, subject):
         new_lab.set_room(placement["room"])
         new_lab.set_meetingTimes(placement["meeting_times"])
         labs.append(new_lab)
-        state["labs"] = labs
+        _set_runtime_labs(state, labs)
         return {"kind": "lab", "slot": placement["meeting_times"][0]}, ""
 
     new_class = Class(
@@ -3763,7 +4820,7 @@ def _apply_generated_missing_subject_placement(request, section_obj, subject):
     new_class.meeting_times = placement["meeting_times"]
     new_class.duration = len(placement["meeting_times"])
     classes.append(new_class)
-    state["classes"] = classes
+    _set_runtime_classes(state, classes)
     return {"kind": "class", "slot": placement["meeting_times"][0]}, ""
 
 
@@ -4295,6 +5352,208 @@ def _clear_saved_slot_room_reservations(saved_t, section, meeting_times):
         section=section,
         meeting_time__in=meeting_times,
     ).delete()
+
+
+def _live_timetable_save_limit():
+    try:
+        limit = int(globals().get("_SAVE_LIMIT") or 15)
+    except (TypeError, ValueError):
+        limit = 15
+    return max(limit, 1)
+
+
+def _live_timetable_accepts_json(request):
+    return (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.accepts("application/json")
+    )
+
+
+def _live_timetable_snapshot_mismatch_message(original_snapshot, restored_snapshot):
+    for key in ("version", "entities", "state"):
+        if original_snapshot.get(key) != restored_snapshot.get(key):
+            return f"Snapshot round-trip mismatch in '{key}'."
+    return "Snapshot round-trip mismatch."
+
+
+def _validate_live_timetable_snapshot(state):
+    snapshot = serialize_runtime_state_snapshot(state)
+    try:
+        snapshot_json = json.dumps(snapshot, sort_keys=True)
+    except TypeError as exc:
+        raise ValueError(f"Snapshot is not JSON serializable: {exc}") from exc
+
+    restored_state = deserialize_runtime_state_snapshot(json.loads(snapshot_json))
+    restored_snapshot = serialize_runtime_state_snapshot(restored_state)
+    if restored_snapshot != snapshot:
+        raise ValueError(_live_timetable_snapshot_mismatch_message(snapshot, restored_snapshot))
+    return snapshot
+
+
+def _normalize_live_runtime_state(state):
+    schedules = list(state.get("schedules") or [])
+    if not schedules:
+        classes = list(state.get("classes") or [])
+        labs = list(state.get("labs") or [])
+        schedules = [{
+            "classes": classes,
+            "labs": labs,
+            "stats": {},
+            "reco_block": {},
+        }]
+        state["schedules"] = schedules
+        state["generated_edit_index"] = 1
+        state["classes"] = schedules[0]["classes"]
+        state["labs"] = schedules[0]["labs"]
+
+    try:
+        index = int(state.get("generated_edit_index") or 0)
+    except (TypeError, ValueError):
+        index = 0
+    if index < 1 or index > len(schedules):
+        index = 1
+        state["generated_edit_index"] = index
+
+    active_schedule = _bind_runtime_to_schedule(state, index)
+    if active_schedule is None:
+        raise ValueError("Snapshot does not contain an editable schedule.")
+
+    state["view_mode"] = "editing"
+    _sync_legacy_runtime_globals(state)
+    return index
+
+
+def load_live_timetable_into_runtime(request, tid):
+    live_timetable = LiveTimetable.objects.filter(id=tid, user=request.user).first()
+    if live_timetable is None:
+        raise Http404("Live timetable not found")
+
+    snapshot = copy.deepcopy(live_timetable.snapshot or {})
+    state = deserialize_runtime_state_snapshot(snapshot)
+    index = _normalize_live_runtime_state(state)
+    state["active_live_timetable_id"] = live_timetable.id
+    state["active_live_timetable_name"] = live_timetable.name or ""
+    _USER_STATE[_coerce_user_state_key(request.user)] = state
+    request.session["current_index"] = index
+    request.session.modified = True
+    return index, live_timetable
+
+
+@login_required
+def save_live_timetable(request, index):
+    if hasattr(globals().get("ensure_private_generator_loaded"), "__call__"):
+        ensure_private_generator_loaded()
+
+    is_ajax = _live_timetable_accepts_json(request)
+
+    def _error(message_text, status=400):
+        if is_ajax:
+            return JsonResponse({"status": "error", "message": message_text}, status=status)
+        messages.error(request, message_text)
+        return redirect("live_timetable_list")
+
+    def _ok(message_text):
+        if is_ajax:
+            return JsonResponse({
+                "status": "ok",
+                "message": message_text,
+                "redirect": reverse("live_timetable_list"),
+            })
+        messages.success(request, message_text)
+        return redirect("live_timetable_list")
+
+    try:
+        idx = int(index)
+    except (TypeError, ValueError):
+        return _error("Invalid timetable index.")
+
+    sync_generated_state = globals().get("_sync_generated_schedule_state")
+    if not callable(sync_generated_state):
+        return _error("Live timetable save is unavailable right now.", status=503)
+
+    state = _get_user_state(request.user.id)
+    schedules = state.get("schedules") or GLOBAL_GENERATED_SCHEDULES or []
+    if idx < 1 or idx > len(schedules):
+        return _error("Invalid timetable index.")
+
+    existing_count = LiveTimetable.objects.filter(user=request.user).count()
+    save_limit = _live_timetable_save_limit()
+    if existing_count >= save_limit:
+        message_text = (
+            f"You already have {existing_count} live timetable"
+            f"{'s' if existing_count != 1 else ''}. "
+            f"The maximum is {save_limit}. "
+            "Please delete an existing live timetable before saving a new one."
+        )
+        return _error(message_text, status=409)
+
+    selected = sync_generated_state(request, idx)
+    if selected is None:
+        return _error("Invalid timetable index.")
+
+    state["generated_edit_index"] = idx
+    requested_name = (request.GET.get("name") or request.POST.get("name") or "").strip()
+    requested_notes = (request.GET.get("notes") or request.POST.get("notes") or "").strip()
+    if requested_name:
+        requested_name = requested_name[:120]
+    else:
+        requested_name = timezone.localtime(timezone.now()).strftime("Live Timetable %d %b %Y %I:%M %p")
+
+    try:
+        snapshot = _validate_live_timetable_snapshot(state)
+    except ValueError as exc:
+        return _error(f"Live snapshot validation failed: {exc}", status=422)
+
+    with transaction.atomic():
+        LiveTimetable.objects.create(
+            user=request.user,
+            name=requested_name,
+            notes=requested_notes,
+            snapshot_version=int(snapshot.get("version") or 1),
+            snapshot=snapshot,
+        )
+
+    return _ok("Live timetable snapshot saved successfully.")
+
+
+@login_required
+def live_timetable_list(request):
+    timetables = LiveTimetable.objects.filter(user=request.user)
+    count = timetables.count()
+    save_limit = _live_timetable_save_limit()
+    return render(request, "live_timetable_list.html", {
+        "timetables": timetables,
+        "timetable_count": count,
+        "save_limit": save_limit,
+        "save_usage_percent": min(100, int((count / save_limit) * 100) if save_limit else 0),
+    })
+
+
+@login_required
+def rename_live_timetable(request, tid):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+
+    live_timetable = LiveTimetable.objects.filter(id=tid, user=request.user).first()
+    if live_timetable is None:
+        raise Http404("Live timetable not found")
+
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        messages.error(request, "Enter a name before renaming the live timetable.")
+        return redirect("live_timetable_list")
+
+    live_timetable.name = name[:120]
+    live_timetable.save(update_fields=["name", "updated_at"])
+    messages.success(request, "Live timetable renamed.")
+    return redirect("live_timetable_list")
+
+
+@login_required
+def delete_live_timetable(request, tid):
+    LiveTimetable.objects.filter(id=tid, user=request.user).delete()
+    messages.success(request, "Live timetable deleted.")
+    return redirect("live_timetable_list")
 
 
 @login_required
@@ -6920,9 +8179,8 @@ def prefilled_timetable_setup(request):
             return redirect("prefilled_timetable_setup")
 
         state = _get_user_state(request.user.id)
-        state["classes"] = []
-        state["labs"] = []
         state["schedules"] = [{"classes": [], "labs": [], "stats": {}, "reco_block": {}}]
+        _bind_runtime_to_schedule(state, 1)
         state["prefill_mode"] = True
         state["prefill_section_ids"] = section_ids
         state["prefill_locked_classes"] = []
@@ -6961,20 +8219,19 @@ def prefilled_timetable_view(request):
         state["prefill_mode"] = True
         state["prefill_section_ids"] = section_ids
         if state.get("classes") is None:
-            state["classes"] = []
+            _set_runtime_classes(state, [])
         if state.get("labs") is None:
-            state["labs"] = []
+            _set_runtime_labs(state, [])
         if not state.get("schedules"):
             state["schedules"] = [{"classes": [], "labs": [], "stats": {}, "reco_block": {}}]
+            _bind_runtime_to_schedule(state, 1)
         restore_prefill_session_snapshot(request, state, section_ids)
         ensure_manual_prefill_slot_uids(state)
         state["view_mode"] = "editing"
         request.session["current_index"] = 1
 
-        global GLOBAL_CLASSES, GLOBAL_LABS, GLOBAL_GENERATED_SCHEDULES, CURRENT_VIEW_MODE
-        GLOBAL_CLASSES = state["classes"]
-        GLOBAL_LABS = state["labs"]
-        GLOBAL_GENERATED_SCHEDULES = state["schedules"]
+        global CURRENT_VIEW_MODE
+        _sync_legacy_runtime_globals(state)
         CURRENT_VIEW_MODE = "editing"
 
         tables = build_section_tables(GLOBAL_CLASSES, GLOBAL_LABS, user=request.user)
@@ -7034,8 +8291,7 @@ def prefilled_timetable_view(request):
         })
     except Exception:
         logger.exception("Failed to open prefilled timetable for user %s", request.user.id)
-        state["classes"] = []
-        state["labs"] = []
+        _set_runtime_entities(state, classes=[], labs=[])
         state["generated_parking_items"] = []
         request.session.pop("prefill_saved_slots", None)
         request.session.pop("current_index", None)
@@ -7320,14 +8576,6 @@ def saved_timetable_download_center(request, tid):
 
 @login_required
 def download_saved_timetable_pdf(request, tid, view_type='section'):
-    try:
-        from xhtml2pdf import pisa
-    except ImportError:
-        return HttpResponse(
-            "PDF generation dependencies are not installed on this machine yet.",
-            status=503,
-        )
-
     saved_t = _get_saved_timetable_or_404(tid, request.user)
     view_type = (view_type or 'section').lower()
     if view_type not in {"section", "room", "teacher", "workload"}:
@@ -7393,6 +8641,18 @@ def download_saved_timetable_pdf(request, tid, view_type='section'):
             })
         workload_rows.sort(key=lambda row: str(row["name"]).lower())
 
+    inline = request.GET.get("inline") == "1"
+    if not is_workload:
+        return _render_reportlab_evaluation_pdf(blocks, view_label, COLLEGE_NAME, f"saved_{view_type}_timetable_{tid}.pdf", inline=inline)
+
+    try:
+        from xhtml2pdf import pisa
+    except ImportError:
+        return HttpResponse(
+            "PDF generation dependencies are not installed on this machine yet.",
+            status=503,
+        )
+
     html = render_to_string("generated_timetable_pdf.html", {
         "blocks": blocks,
         "is_workload": is_workload,
@@ -7404,13 +8664,251 @@ def download_saved_timetable_pdf(request, tid, view_type='section'):
     })
 
     response = HttpResponse(content_type='application/pdf')
-    inline = request.GET.get("inline") == "1"
     disposition = "inline" if inline else "attachment"
     response['Content-Disposition'] = f'{disposition}; filename="saved_{view_type}_timetable_{tid}.pdf"'
 
     pisa_status = pisa.CreatePDF(html, dest=response, link_callback=_pdf_link_callback)
     if pisa_status.err:
         return HttpResponse("PDF creation failed.", status=500)
+    return response
+
+
+def _reportlab_pdf_dependencies():
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import cm
+    from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    return {
+        "colors": colors,
+        "TA_CENTER": TA_CENTER,
+        "A4": A4,
+        "landscape": landscape,
+        "ParagraphStyle": ParagraphStyle,
+        "getSampleStyleSheet": getSampleStyleSheet,
+        "cm": cm,
+        "KeepTogether": KeepTogether,
+        "PageBreak": PageBreak,
+        "Paragraph": Paragraph,
+        "SimpleDocTemplate": SimpleDocTemplate,
+        "Spacer": Spacer,
+        "Table": Table,
+        "TableStyle": TableStyle,
+    }
+
+
+def _evaluation_pdf_profile_settings(profile):
+    profile = (profile or "standard").lower()
+    settings_map = {
+        "standard": {"title_size": 13, "subtitle_size": 8.5, "cell_size": 7.1, "cell_leading": 8.1, "header_size": 7.2, "header_leading": 8.0, "padding": 2.6},
+        "compact": {"title_size": 12, "subtitle_size": 8.0, "cell_size": 6.5, "cell_leading": 7.2, "header_size": 6.7, "header_leading": 7.4, "padding": 2.0},
+        "dense": {"title_size": 11, "subtitle_size": 7.2, "cell_size": 5.8, "cell_leading": 6.4, "header_size": 6.1, "header_leading": 6.8, "padding": 1.5},
+        "ultra": {"title_size": 10, "subtitle_size": 6.5, "cell_size": 5.1, "cell_leading": 5.6, "header_size": 5.5, "header_leading": 6.0, "padding": 1.0},
+    }
+    return settings_map.get(profile, settings_map["standard"])
+
+
+def _evaluation_pdf_scale_candidates():
+    return [1.0, 0.96, 0.92, 0.88, 0.84, 0.8, 0.76, 0.72, 0.68, 0.64, 0.6, 0.56, 0.52, 0.48, 0.44, 0.4]
+
+
+def _evaluation_pdf_scaled_profile(profile, scale):
+    base = _evaluation_pdf_profile_settings(profile)
+    return {
+        "title_size": max(base["title_size"] * scale, 6.0),
+        "subtitle_size": max(base["subtitle_size"] * scale, 5.0),
+        "cell_size": max(base["cell_size"] * scale, 3.6),
+        "cell_leading": max(base["cell_leading"] * scale, 4.0),
+        "header_size": max(base["header_size"] * scale, 4.0),
+        "header_leading": max(base["header_leading"] * scale, 4.4),
+        "padding": max(base["padding"] * scale, 0.2),
+        "rule_width": max(0.6 * scale, 0.2),
+        "subtitle_gap": max(5 * scale, 1.4),
+        "title_gap": max(3 * scale, 0.9),
+        "fallback_gap": max(0.08 * scale, 0.02),
+    }
+
+
+def _evaluation_pdf_timeslot_labels():
+    return ["9:00 - 9:55", "9:55 - 10:50", "10:50 - 11:45", "11:45 - 12:40", "12:40 - 1:35", "1:35 - 2:30", "2:30 - 3:25", "3:25 - 4:20", "4:20 - 5:15"]
+
+
+def _evaluation_pdf_paragraph(text, style, paragraph_cls):
+    return paragraph_cls(text or "", style)
+
+
+def _evaluation_pdf_cell_markup(entries):
+    chunks = []
+    for entry in list(entries or []):
+        lines = [str(line or "").strip() for line in list(entry.get("lines") or []) if str(line or "").strip()]
+        if not lines:
+            continue
+        markup = [f"<b>{escape(lines[0])}</b>"]
+        for line in lines[1:]:
+            markup.append(escape(line))
+        chunks.append("<br/>".join(markup))
+    return "<br/><br/>".join(chunks)
+
+
+def _evaluation_pdf_header_footer(canvas, doc, college_name, view_label):
+    page_width, page_height = doc.pagesize
+    canvas.saveState()
+    canvas.setStrokeColorRGB(0.043, 0.239, 0.568)
+    canvas.setLineWidth(1)
+    canvas.setFont("Helvetica-Bold", 12)
+    canvas.setFillColorRGB(0.043, 0.239, 0.568)
+    canvas.drawCentredString(page_width / 2.0, page_height - 0.95 * doc.topMargin / 2.9, str(college_name or ""))
+    canvas.setFont("Helvetica-Bold", 9)
+    canvas.setFillColorRGB(0.0, 0.376, 0.816)
+    canvas.drawCentredString(page_width / 2.0, page_height - 1.45 * doc.topMargin / 2.9, f"SmartScheduler | {view_label} Timetable")
+    line_y = page_height - doc.topMargin + 0.35 * doc.topMargin / 2.9
+    canvas.line(doc.leftMargin, line_y, page_width - doc.rightMargin, line_y)
+    footer_y = doc.bottomMargin - 0.45 * doc.bottomMargin / 1.5
+    canvas.setFont("Helvetica", 7.5)
+    canvas.setFillColorRGB(0.45, 0.45, 0.45)
+    canvas.drawCentredString(page_width / 2.0, footer_y, f"{college_name} | {view_label} | Page {doc.page}")
+    canvas.restoreState()
+
+
+def _build_reportlab_timetable_flowables(block, dependencies, content_width, scale, allow_split=False):
+    colors = dependencies["colors"]
+    TA_CENTER = dependencies["TA_CENTER"]
+    ParagraphStyle = dependencies["ParagraphStyle"]
+    getSampleStyleSheet = dependencies["getSampleStyleSheet"]
+    Paragraph = dependencies["Paragraph"]
+    Spacer = dependencies["Spacer"]
+    Table = dependencies["Table"]
+    TableStyle = dependencies["TableStyle"]
+
+    profile = _evaluation_pdf_scaled_profile(block.get("layout_profile"), scale)
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("EvalPdfTitle", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=profile["title_size"], leading=profile["title_size"] + 0.9, alignment=TA_CENTER, textColor=colors.HexColor("#0b3d91"), spaceAfter=profile["title_gap"])
+    subtitle_style = ParagraphStyle("EvalPdfSubtitle", parent=styles["BodyText"], fontName="Helvetica", fontSize=profile["subtitle_size"], leading=profile["subtitle_size"] + 0.8, alignment=TA_CENTER, textColor=colors.HexColor("#444444"), spaceAfter=profile["subtitle_gap"])
+    header_style = ParagraphStyle("EvalPdfHeader", parent=styles["BodyText"], fontName="Helvetica-Bold", fontSize=profile["header_size"], leading=profile["header_leading"], alignment=TA_CENTER)
+    day_style = ParagraphStyle("EvalPdfDay", parent=header_style, fontSize=max(profile["header_size"], profile["cell_size"]), leading=max(profile["header_leading"], profile["cell_leading"]))
+    cell_style = ParagraphStyle("EvalPdfCell", parent=styles["BodyText"], fontName="Helvetica", fontSize=profile["cell_size"], leading=profile["cell_leading"], alignment=TA_CENTER)
+
+    day_width = float(block.get("day_width") or 90)
+    total_ratio = day_width + (9 * 85)
+    col_widths = [content_width * (day_width / total_ratio)]
+    slot_width = content_width * (85 / total_ratio)
+    col_widths.extend([slot_width] * 9)
+
+    header_row = [_evaluation_pdf_paragraph("DAY", header_style, Paragraph)]
+    header_row.extend(_evaluation_pdf_paragraph(label, header_style, Paragraph) for label in _evaluation_pdf_timeslot_labels())
+    table_data = [header_row]
+    table_style = [("GRID", (0, 0), (-1, -1), profile["rule_width"], colors.black), ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#dbefff")), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("ALIGN", (0, 0), (-1, -1), "CENTER"), ("LEFTPADDING", (0, 0), (-1, -1), profile["padding"]), ("RIGHTPADDING", (0, 0), (-1, -1), profile["padding"]), ("TOPPADDING", (0, 0), (-1, -1), profile["padding"]), ("BOTTOMPADDING", (0, 0), (-1, -1), profile["padding"])]
+
+    for row_index, row in enumerate(list(block.get("rows") or []), start=1):
+        row_cells = [_evaluation_pdf_paragraph(escape(str(row.get("day") or "")), day_style, Paragraph)] + [""] * 9
+        for logical_index, cell in enumerate(list(row.get("cells") or [])):
+            cell_type = cell.get("type")
+            if cell_type == "skip":
+                continue
+            col_index = logical_index + 1
+            colspan = max(int(cell.get("colspan") or 1), 1)
+            if cell_type == "lunch":
+                paragraph = _evaluation_pdf_paragraph("<b>LUNCH</b>", cell_style, Paragraph)
+                table_style.append(("BACKGROUND", (col_index, row_index), (col_index + colspan - 1, row_index), colors.HexColor("#f2f2f2")))
+            elif cell_type == "lab":
+                paragraph = _evaluation_pdf_paragraph(_evaluation_pdf_cell_markup(cell.get("entries")), cell_style, Paragraph)
+                table_style.append(("BACKGROUND", (col_index, row_index), (col_index + colspan - 1, row_index), colors.HexColor("#cfe8ff")))
+            elif cell_type == "class":
+                paragraph = _evaluation_pdf_paragraph(_evaluation_pdf_cell_markup(cell.get("entries")), cell_style, Paragraph)
+                table_style.append(("BACKGROUND", (col_index, row_index), (col_index + colspan - 1, row_index), colors.HexColor("#eef6ff")))
+            else:
+                paragraph = _evaluation_pdf_paragraph("", cell_style, Paragraph)
+            row_cells[col_index] = paragraph
+            if colspan > 1:
+                table_style.append(("SPAN", (col_index, row_index), (col_index + colspan - 1, row_index)))
+        table_data.append(row_cells)
+
+    table = Table(
+        table_data,
+        colWidths=col_widths,
+        repeatRows=1,
+        splitByRow=1 if allow_split else 0,
+        splitInRow=1 if allow_split else 0,
+    )
+    table.setStyle(TableStyle(table_style))
+    flowables = [_evaluation_pdf_paragraph(escape(str(block.get("title") or "")), title_style, Paragraph)]
+    if block.get("subtitle"):
+        flowables.append(_evaluation_pdf_paragraph(escape(str(block.get("subtitle") or "")), subtitle_style, Paragraph))
+    else:
+        flowables.append(Spacer(1, profile["fallback_gap"] * dependencies["cm"]))
+    flowables.append(table)
+    return flowables
+
+
+def _measure_reportlab_flowables(flowables, content_width, content_height):
+    total_height = 0
+    max_width = 0
+    for flowable in flowables:
+        width, height = flowable.wrap(content_width, max(content_height - total_height, 1))
+        total_height += height
+        total_height += getattr(flowable, "getSpaceBefore", lambda: 0)() or 0
+        total_height += getattr(flowable, "getSpaceAfter", lambda: 0)() or 0
+        max_width = max(max_width, width)
+    return max_width, total_height
+
+
+def _fit_reportlab_timetable_page(block, dependencies, content_width, content_height):
+    for scale in _evaluation_pdf_scale_candidates():
+        flowables = _build_reportlab_timetable_flowables(block, dependencies, content_width, scale, allow_split=False)
+        measured_width, measured_height = _measure_reportlab_flowables(flowables, content_width, content_height)
+        if measured_width <= content_width + 0.5 and measured_height <= content_height - 1:
+            return {
+                "flowables": flowables,
+                "scale": scale,
+                "fits": True,
+                "allow_split": False,
+                "measured_height": measured_height,
+            }
+
+    minimum_scale = _evaluation_pdf_scale_candidates()[-1]
+    overflow_flowables = _build_reportlab_timetable_flowables(block, dependencies, content_width, minimum_scale, allow_split=True)
+    measured_width, measured_height = _measure_reportlab_flowables(overflow_flowables, content_width, content_height)
+    return {
+        "flowables": overflow_flowables,
+        "scale": minimum_scale,
+        "fits": False,
+        "allow_split": True,
+        "measured_height": measured_height,
+        "measured_width": measured_width,
+    }
+
+
+def _render_reportlab_evaluation_pdf(blocks, view_label, college_name, filename, inline=False):
+    dependencies = _reportlab_pdf_dependencies()
+    KeepTogether = dependencies["KeepTogether"]
+    cm = dependencies["cm"]
+    page_size = dependencies["landscape"](dependencies["A4"])
+    left_margin = 0.9 * cm
+    right_margin = 0.9 * cm
+    top_margin = 2.9 * cm
+    bottom_margin = 1.5 * cm
+    content_width = page_size[0] - left_margin - right_margin
+    content_height = page_size[1] - top_margin - bottom_margin
+    buffer = BytesIO()
+    document = dependencies["SimpleDocTemplate"](buffer, pagesize=page_size, leftMargin=left_margin, rightMargin=right_margin, topMargin=top_margin, bottomMargin=bottom_margin, allowSplitting=1)
+    story = []
+    for index, block in enumerate(list(blocks or [])):
+        layout = _fit_reportlab_timetable_page(block, dependencies, content_width, content_height)
+        if layout["fits"]:
+            story.append(KeepTogether(layout["flowables"]))
+        else:
+            story.extend(layout["flowables"])
+        if index != len(blocks) - 1:
+            story.append(dependencies["PageBreak"]())
+    if not story:
+        fallback_layout = _fit_reportlab_timetable_page({"title": f"{view_label} Timetable", "subtitle": "No timetable entries available", "rows": [], "layout_profile": "standard", "day_width": 90}, dependencies, content_width, content_height)
+        story.append(KeepTogether(fallback_layout["flowables"]))
+    document.build(story, onFirstPage=lambda canvas, doc: _evaluation_pdf_header_footer(canvas, doc, college_name, view_label), onLaterPages=lambda canvas, doc: _evaluation_pdf_header_footer(canvas, doc, college_name, view_label))
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    disposition = "inline" if inline else "attachment"
+    response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
     return response
 
 
@@ -7813,6 +9311,49 @@ def _pdf_cell_width(cell):
     return 85 * cell.get("colspan", 1)
 
 
+def _pdf_block_layout(rows):
+    total_entries = 0
+    total_lines = 0
+    max_entries_per_cell = 0
+    max_lines_per_cell = 0
+
+    for row in rows:
+        for cell in row.get("cells", []):
+            entries = list(cell.get("entries") or [])
+            if not entries:
+                continue
+            total_entries += len(entries)
+            max_entries_per_cell = max(max_entries_per_cell, len(entries))
+            cell_line_count = 0
+            for entry in entries:
+                line_count = len(list(entry.get("lines") or []))
+                total_lines += line_count
+                cell_line_count += line_count
+            max_lines_per_cell = max(max_lines_per_cell, cell_line_count)
+
+    profile = "standard"
+    if max_lines_per_cell >= 15 or max_entries_per_cell >= 4 or total_lines >= 72:
+        profile = "ultra"
+    elif max_lines_per_cell >= 11 or max_entries_per_cell >= 3 or total_lines >= 56:
+        profile = "dense"
+    elif max_lines_per_cell >= 8 or total_lines >= 42:
+        profile = "compact"
+
+    day_width = 90
+    if profile == "compact":
+        day_width = 82
+    elif profile == "dense":
+        day_width = 76
+    elif profile == "ultra":
+        day_width = 70
+
+    return {
+        "profile": profile,
+        "day_width": day_width,
+        "use_shrink": profile in {"dense", "ultra"},
+    }
+
+
 def _section_pdf_block(table):
     """Build a PDF block (grid of cells with text entries) for a section table."""
     rows = []
@@ -7852,10 +9393,14 @@ def _section_pdf_block(table):
     program = getattr(table.get("section"), "program_name", "")
     if program:
         subtitle = f"{subtitle} · {program}" if subtitle else program
+    layout = _pdf_block_layout(rows)
     return {
         "title": str(table["section"].section_id),
         "subtitle": subtitle,
         "rows": rows,
+        "layout_profile": layout["profile"],
+        "day_width": layout["day_width"],
+        "use_shrink": layout["use_shrink"],
     }
 
 
@@ -7891,10 +9436,14 @@ def _room_pdf_block(table):
     util = table.get("optimization_percentage", "")
     if util != "":
         subtitle = f"{subtitle} · Utilization {util}%" if subtitle else f"Utilization {util}%"
+    layout = _pdf_block_layout(rows)
     return {
         "title": f"Room {room.r_number} ({room.room_type})",
         "subtitle": subtitle,
         "rows": rows,
+        "layout_profile": layout["profile"],
+        "day_width": layout["day_width"],
+        "use_shrink": layout["use_shrink"],
     }
 
 
@@ -7926,10 +9475,14 @@ def _teacher_pdf_block(table):
     teacher = table["teacher"]
     wl = table.get("workload", {})
     subtitle = f"UID: {getattr(teacher, 'uid', '')} · Total Load: {wl.get('total', '')}"
+    layout = _pdf_block_layout(rows)
     return {
         "title": teacher.name,
         "subtitle": subtitle,
         "rows": rows,
+        "layout_profile": layout["profile"],
+        "day_width": layout["day_width"],
+        "use_shrink": layout["use_shrink"],
     }
 
 
@@ -7950,14 +9503,6 @@ def timetable_download_center(request, index):
 
 @login_required
 def download_generated_timetable_pdf(request, index, view_type='section'):
-    try:
-        from xhtml2pdf import pisa
-    except ImportError:
-        return HttpResponse(
-            "PDF generation dependencies are not installed on this machine yet.",
-            status=503,
-        )
-
     view_type = (view_type or "section").lower()
     if view_type not in {"section", "room", "teacher", "workload"}:
         view_type = "section"
@@ -8029,6 +9574,18 @@ def download_generated_timetable_pdf(request, index, view_type='section'):
             })
         workload_rows.sort(key=lambda w: str(w["name"]).lower())
 
+    inline = request.GET.get("inline") == "1"
+    if not is_workload:
+        return _render_reportlab_evaluation_pdf(blocks, view_label, COLLEGE_NAME, f"{view_type}_timetable_{idx}.pdf", inline=inline)
+
+    try:
+        from xhtml2pdf import pisa
+    except ImportError:
+        return HttpResponse(
+            "PDF generation dependencies are not installed on this machine yet.",
+            status=503,
+        )
+
     html = render_to_string("generated_timetable_pdf.html", {
         "blocks": blocks,
         "is_workload": is_workload,
@@ -8040,7 +9597,6 @@ def download_generated_timetable_pdf(request, index, view_type='section'):
     })
 
     response = HttpResponse(content_type='application/pdf')
-    inline = request.GET.get("inline") == "1"
     disposition = "inline" if inline else "attachment"
     response['Content-Disposition'] = f'{disposition}; filename="{view_type}_timetable_{idx}.pdf"'
 

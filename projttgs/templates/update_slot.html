@@ -22,8 +22,42 @@
   {% endfor %}
 {% endif %}
 
+{% if live_readonly_dialog %}
+  <div class="card-soft p-3 mb-3">
+    <h5 class="mb-3">Live Timetable Slot Details</h5>
+    <p class="hint mb-3">This dialog is read-only for live timetable snapshots. Drag and drop remains available in the editor and still uses the existing validation rules.</p>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="font-weight-bold d-block">Section</label>
+        <div>{{ readonly_details.section }}</div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="font-weight-bold d-block">Department</label>
+        <div>{{ readonly_details.department }}</div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="font-weight-bold d-block">Subject</label>
+        <div>{{ readonly_details.subject }}</div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="font-weight-bold d-block">Teacher</label>
+        <div>{{ readonly_details.teacher }}</div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="font-weight-bold d-block">Room</label>
+        <div>{{ readonly_details.room }}</div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="font-weight-bold d-block">Slot / Time</label>
+        <div>{{ readonly_details.slot_time }}</div>
+      </div>
+    </div>
+    <a class="btn btn-secondary" href="{% url 'show_timetable' index=request.session.current_index %}">Back to Timetable</a>
+  </div>
+{% else %}
+
 <form method="POST"
-      {% if saved_id %}action="{% url 'saved_update_slot' tid=saved_id section=section_id day=day slot=slot %}"{% else %}action="{% url 'update_slot' section=section_id day=day slot=slot %}"{% endif %}>
+      {% if saved_id %}action="{% url 'saved_update_slot' tid=saved_id section=section_id day=day slot=slot %}"{% else %}action="{% url 'update_slot' section=section_id day=day slot=slot %}{% if batch or live_readonly_dialog %}?{% endif %}{% if batch %}batch={{ batch }}{% endif %}{% if batch and live_readonly_dialog %}&{% endif %}{% if live_readonly_dialog %}live_readonly=1{% endif %}"{% endif %}>
   {% csrf_token %}
 
   <div class="custom-toggle-wrap mb-3">
@@ -97,24 +131,37 @@
   <p class="hint mb-2">Created a dummy teacher? Rename it here &mdash; the new name updates everywhere.</p>
   <form method="POST" action="{% url 'rename_instructor' %}" class="form-row align-items-end">
     {% csrf_token %}
-    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <input type="hidden" name="next" value="{{ rename_next_url|default:request.get_full_path }}">
     <div class="form-group col-md-5">
-      <label>Teacher</label>
-      <select name="instructor_id" class="form-control">
+      <label>Teacher Name or Code</label>
+      <input type="text" name="teacher_lookup" class="form-control" list="teacher-lookup-list" placeholder="e.g. Dr. Sharma or ECE014">
+      <datalist id="teacher-lookup-list">
         {% for t in teachers %}
-          <option value="{{ t.pk }}">{{ t.name }}</option>
+          <option value="{{ t.uid }}">{{ t.name }}</option>
+          <option value="{{ t.name }}">{{ t.uid }}</option>
+        {% endfor %}
+      </datalist>
+      <small class="hint">You can enter either the teacher code or the teacher name.</small>
+    </div>
+    <div class="form-group col-md-3">
+      <label>Teacher ID</label>
+      <select name="instructor_id" class="form-control">
+        <option value="">Select by unique ID</option>
+        {% for t in teachers %}
+          <option value="{{ t.pk }}">{{ t.uid }}{% if t.name %} - {{ t.name }}{% endif %}</option>
         {% endfor %}
       </select>
     </div>
-    <div class="form-group col-md-5">
+    <div class="form-group col-md-3">
       <label>New name</label>
       <input type="text" name="new_name" class="form-control" placeholder="Real teacher name">
     </div>
-    <div class="form-group col-md-2">
+    <div class="form-group col-md-1">
       <button class="btn btn-outline-secondary btn-block">Rename</button>
     </div>
   </form>
 </div>
+{% endif %}
 
 <script>
   (function () {

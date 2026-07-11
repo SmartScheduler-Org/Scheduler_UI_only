@@ -1,0 +1,331 @@
+{% extends "mainbase.html" %}
+{% load static %}
+{% block title %}SmartScheduler | Live Timetables{% endblock %}
+
+{% block content %}
+<style>
+.stl-page {
+    width: min(900px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 48px 0 80px;
+}
+
+.stl-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.stl-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #5eead4;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+.stl-eyebrow::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0f766e, #2dd4bf);
+    box-shadow: 0 0 8px rgba(45,212,191,0.5);
+}
+
+.stl-title {
+    font-size: clamp(26px, 4vw, 40px);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--text, #f1f5f9);
+    margin: 0 0 8px;
+}
+
+.stl-sub {
+    color: var(--muted, rgba(226,232,240,0.65));
+    font-size: 14px;
+}
+
+.stl-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.stl-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 22px 26px;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148,163,184,0.1);
+    box-shadow: 0 8px 32px rgba(2,6,23,0.32);
+    backdrop-filter: blur(12px);
+    transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+}
+
+.stl-card:hover {
+    border-color: rgba(20,184,166,0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(2,6,23,0.42);
+}
+
+.stl-card__left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stl-card__index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #115e59, #2dd4bf);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    box-shadow: 0 4px 14px rgba(20,184,166,0.3);
+}
+
+.stl-card__date {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text, #f1f5f9);
+}
+
+.stl-card__time {
+    font-size: 12px;
+    color: var(--muted, rgba(226,232,240,0.6));
+}
+
+.stl-card__note {
+    max-width: 560px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: rgba(226,232,240,0.78);
+}
+
+.stl-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(45,212,191,0.12);
+    border: 1px solid rgba(45,212,191,0.28);
+    color: #99f6e4;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+    width: fit-content;
+}
+
+.stl-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    white-space: nowrap;
+}
+
+.stl-btn:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.stl-btn--view {
+    background: linear-gradient(135deg, #115e59, #2dd4bf);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(20,184,166,0.28);
+}
+
+.stl-btn--view:hover {
+    box-shadow: 0 10px 28px rgba(45,212,191,0.24);
+    color: #fff;
+}
+
+.stl-btn--delete {
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.28);
+    color: #fca5a5;
+}
+
+.stl-btn--delete:hover {
+    background: rgba(239,68,68,0.22);
+    color: #fecaca;
+}
+
+.stl-btn--rename {
+    background: rgba(45,212,191,0.16);
+    border: 1px solid rgba(45,212,191,0.32);
+    color: #99f6e4;
+}
+
+.stl-rename {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.stl-rename input {
+    min-width: min(100%, 260px);
+    border: 1px solid rgba(148,163,184,0.28);
+    border-radius: 999px;
+    padding: 9px 14px;
+    background: rgba(15, 23, 42, 0.5);
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.stl-progress {
+    width: min(420px, calc(100% - 32px));
+    height: 10px;
+    border-radius: 999px;
+    margin-top: 14px;
+    background: rgba(148,163,184,0.18);
+    overflow: hidden;
+}
+
+.stl-progress__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #115e59, #2dd4bf);
+    transition: width 0.3s ease;
+}
+
+.stl-empty {
+    text-align: center;
+    padding: 72px 24px;
+}
+
+.stl-empty__icon {
+    font-size: 52px;
+    margin-bottom: 16px;
+    opacity: 0.35;
+}
+
+.stl-empty__text {
+    font-size: 16px;
+    color: var(--muted, rgba(226,232,240,0.6));
+    margin-bottom: 24px;
+}
+
+.stl-empty__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #115e59, #2dd4bf);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(20,184,166,0.28);
+    transition: transform 0.22s, box-shadow 0.22s;
+}
+
+.stl-empty__cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(45,212,191,0.24);
+    color: #fff;
+    text-decoration: none;
+}
+</style>
+
+<div class="stl-page">
+    <div class="stl-header">
+        <div class="stl-eyebrow">Runtime Snapshots</div>
+        <h1 class="stl-title">Live Timetables</h1>
+        <p class="stl-sub">Open a saved live snapshot and continue editing from the exact runtime state.</p>
+
+        <div class="stl-progress">
+            <div class="stl-progress__fill" style="width: {{ save_usage_percent|default:0 }}%;"></div>
+        </div>
+        <div style="margin-top:10px; font-size:12px; font-weight:700; color:{% if timetable_count >= save_limit %}#f87171{% else %}#94a3b8{% endif %}; letter-spacing:0.04em;">
+            {{ timetable_count }}&nbsp;/&nbsp;{{ save_limit }} live snapshots saved
+        </div>
+        {% if timetable_count >= save_limit %}
+        <div style="margin:12px auto 0; max-width:520px; padding:10px 16px; border-radius:14px; background:rgba(239,68,68,0.10); border:1px solid rgba(239,68,68,0.28); color:#fca5a5; font-size:13px; font-weight:600; text-align:center;">
+            Live timetable save limit reached. Delete a snapshot below before saving another one.
+        </div>
+        {% endif %}
+    </div>
+
+    {% if timetables %}
+    <div class="stl-list">
+        {% for t in timetables %}
+        <div class="stl-card">
+            <div class="stl-card__left">
+                <div class="stl-card__index">{{ forloop.counter }}</div>
+                <div class="stl-card__date">{{ t.name|default:"Live Timetable" }}</div>
+                <div class="stl-card__time">Saved on {{ t.created_at|date:"d M Y" }}</div>
+                <div class="stl-card__time">at {{ t.created_at|date:"h:i A" }}</div>
+                <div class="stl-badge">Snapshot v{{ t.snapshot_version }}</div>
+                {% if t.notes %}
+                <div class="stl-card__note">{{ t.notes }}</div>
+                {% endif %}
+                <form class="stl-rename" method="post" action="{% url 'rename_live_timetable' t.id %}">
+                    {% csrf_token %}
+                    <input type="text" name="name" value="{{ t.name|default:'Live Timetable' }}" maxlength="120" aria-label="Live timetable name" required>
+                    <button type="submit" class="stl-btn stl-btn--rename">Rename</button>
+                </form>
+            </div>
+
+            <div class="stl-card__actions">
+                <a href="{% url 'open_live_timetable' t.id %}" class="stl-btn stl-btn--view">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Open Live Editor
+                </a>
+                <a href="{% url 'delete_live_timetable' t.id %}" class="stl-btn stl-btn--delete">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    Delete
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="stl-empty">
+        <div class="stl-empty__icon">🧭</div>
+        <p class="stl-empty__text">No live timetable snapshots yet. Open a generated timetable and use Save Live Timetable to capture the current runtime state.</p>
+        <a href="{% url 'generate' %}" class="stl-empty__cta">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Generate Timetable
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

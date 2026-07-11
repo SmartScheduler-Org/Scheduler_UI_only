@@ -107,6 +107,14 @@
             <p>View History</p>
         </a>
 
+        <a href="{% url 'live_timetable_list' %}" class="dash-card" style="background:linear-gradient(135deg,rgba(20,184,166,.18),rgba(15,118,110,.08));border-color:rgba(45,212,191,.42);">
+          <div class="dash-icon-wrap" style="background:rgba(20,184,166,.18);border-color:rgba(45,212,191,.4);">
+            <i class="icon fas fa-rotate" style="color:#99f6e4;"></i>
+          </div>
+          <h3 style="color:#99f6e4;">Live Timetables</h3>
+          <p>{{ live_timetable_count }} snapshot{{ live_timetable_count|pluralize }}</p>
+        </a>
+
         <!-- CSV CONVERTER -->
         <a href="{% url 'convert_csv' %}" class="dash-card">
             <div class="dash-icon-wrap">
