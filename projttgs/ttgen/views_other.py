@@ -4322,6 +4322,7 @@ if "normalize_section_id_list" not in globals():
                 continue
             sections.append(normalized)
             seen.add(key)
+        return ";".join(sections)
 
 
 if "_runtime_entity_pk" not in globals():

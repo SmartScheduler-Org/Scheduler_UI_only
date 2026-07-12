@@ -822,6 +822,55 @@ def open_live_timetable(request, tid):
     return getattr(_views_main, "show_timetable")(request, index)
 
 
+def _restore_live_runtime_for_analysis(request, tid):
+    if hasattr(public_core, "ensure_private_generator_loaded"):
+        public_core.ensure_private_generator_loaded()
+
+    try:
+        index, _live_timetable = public_core.load_live_timetable_into_runtime(request, tid)
+    except Http404:
+        raise
+    except Exception:
+        logger.exception("Failed to restore live timetable %s for utilization analysis for user %s", tid, getattr(request.user, "id", None))
+        messages.error(request, "Could not open the live timetable snapshot for room utilization analysis.")
+        return None
+
+    return index
+
+
+@login_required
+def live_room_utilization_analysis(request, tid):
+    index = _restore_live_runtime_for_analysis(request, tid)
+    if index is None:
+        return redirect("live_timetable_list")
+    if not (_views_main and hasattr(_views_main, "render_room_utilization_analysis")):
+        messages.error(request, "Room utilization analysis is unavailable right now.")
+        return redirect("live_timetable_list")
+    return getattr(_views_main, "render_room_utilization_analysis")(request, index, live_timetable_id=tid)
+
+
+@login_required
+def live_room_utilization_excel(request, tid):
+    index = _restore_live_runtime_for_analysis(request, tid)
+    if index is None:
+        return redirect("live_timetable_list")
+    if not (_views_main and hasattr(_views_main, "build_room_utilization_excel_response")):
+        messages.error(request, "Room utilization Excel export is unavailable right now.")
+        return redirect("live_timetable_list")
+    return getattr(_views_main, "build_room_utilization_excel_response")(request, index, live_timetable_id=tid)
+
+
+@login_required
+def live_room_utilization_pdf(request, tid):
+    index = _restore_live_runtime_for_analysis(request, tid)
+    if index is None:
+        return redirect("live_timetable_list")
+    if not (_views_main and hasattr(_views_main, "build_room_utilization_pdf_response")):
+        messages.error(request, "Room utilization PDF export is unavailable right now.")
+        return redirect("live_timetable_list")
+    return getattr(_views_main, "build_room_utilization_pdf_response")(request, index, live_timetable_id=tid)
+
+
 for _view_name in _GENERATOR_VIEW_NAMES:
     if _view_name == "generate":
         continue

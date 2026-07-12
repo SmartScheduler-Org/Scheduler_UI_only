@@ -3575,6 +3575,12 @@ function filterByDept(code, label) {
   <a class="view-toggle view-toggle--statistics" href="{% url 'full_statistics' index %}" style="text-decoration:none;">
     <span class="view-toggle__label">📈 Full Statistics</span>
   </a>
+
+  {% if active_live_timetable_id %}
+  <a class="view-toggle view-toggle--statistics" href="{% url 'live_room_utilization_analysis' active_live_timetable_id %}" style="text-decoration:none;">
+    <span class="view-toggle__label">🏫 Room Utilization Analysis</span>
+  </a>
+  {% endif %}
 </div>
 {% endif %}
 

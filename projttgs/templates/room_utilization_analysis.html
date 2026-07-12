@@ -1,0 +1,456 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartScheduler | Room Utilization Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --surface-soft: #f8fafc;
+    --border: #dbe5f1;
+    --text: #0f172a;
+    --muted: #64748b;
+    --brand: #1d4ed8;
+    --brand-soft: #dbeafe;
+    --good: #16a34a;
+    --mid: #0284c7;
+    --low: #f59e0b;
+    --none: #ef4444;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: "Poppins", "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #eef4ff 0%, #f8fafc 100%);
+    color: var(--text);
+}
+.shell {
+    width: min(1320px, calc(100vw - 32px));
+    margin: 0 auto;
+    padding: 28px 0 52px;
+}
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+.back-link, .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    border-radius: 14px;
+    padding: 11px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+}
+.back-link {
+    background: var(--surface);
+    color: var(--muted);
+}
+.back-link:hover { color: var(--text); }
+.title-block h1 {
+    margin: 0;
+    font-size: 30px;
+    color: var(--brand);
+}
+.title-block p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: var(--muted);
+}
+.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.action-btn {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: #fff;
+    border-color: rgba(37, 99, 235, 0.4);
+}
+.section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 22px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+}
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.section-head h2 {
+    margin: 0;
+    font-size: 24px;
+}
+.section-head p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 6px 11px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 800;
+}
+.kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.kpi, .category-card {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+}
+.kpi .label, .category-card .label {
+    font-size: 11px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+}
+.kpi .value, .category-card .value {
+    margin-top: 8px;
+    font-size: 28px;
+    font-weight: 800;
+}
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.category-card.good .value { color: var(--good); }
+.category-card.high .value { color: var(--mid); }
+.category-card.low .value { color: var(--low); }
+.category-card.none .value { color: var(--none); }
+.charts-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+}
+.chart-card {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+}
+.chart-card h3 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--muted);
+}
+.chart-wrap {
+    position: relative;
+    height: 250px;
+}
+.summary-table-wrap, .details-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: #fff;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+th, td {
+    padding: 12px 14px;
+    border-top: 1px solid #edf2f7;
+    text-align: left;
+    font-size: 13px;
+}
+thead th {
+    border-top: none;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+    background: #f8fbff;
+}
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+}
+.status-pill.fully { background: rgba(22,163,74,.14); color: var(--good); }
+.status-pill.high { background: rgba(2,132,199,.14); color: var(--mid); }
+.status-pill.low { background: rgba(245,158,11,.14); color: var(--low); }
+.status-pill.none { background: rgba(239,68,68,.14); color: var(--none); }
+.util-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+    min-width: 88px;
+}
+.util-bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #1d4ed8, #38bdf8);
+}
+.util-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+@media (max-width: 1080px) {
+    .charts-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+    <div class="topbar">
+        <div>
+            <a class="back-link" href="{% if live_timetable_id %}{% url 'open_live_timetable' live_timetable_id %}{% else %}{% url 'show_timetable' index %}{% endif %}">&larr; Back to Live Timetable</a>
+            <div class="title-block" style="margin-top:14px;">
+                <h1>Room Utilization Analysis</h1>
+                <p>Read-only analytics from the current live timetable runtime. Generated on {{ analysis.generated_at }}.</p>
+            </div>
+        </div>
+        <div class="actions">
+            {% if live_timetable_id %}
+            <a class="action-btn" href="{% url 'live_room_utilization_pdf' live_timetable_id %}">Export PDF</a>
+            <a class="action-btn" href="{% url 'live_room_utilization_excel' live_timetable_id %}">Export Excel</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2>Page 1 – University Overview</h2>
+                <p>Overall room usage across the current live timetable.</p>
+            </div>
+            <span class="badge">All Departments</span>
+        </div>
+
+        <div class="kpis">
+            <div class="kpi"><div class="label">Total Rooms</div><div class="value">{{ analysis.overview.total_rooms }}</div></div>
+            <div class="kpi"><div class="label">Total Used Rooms</div><div class="value">{{ analysis.overview.total_used_rooms }}</div></div>
+            <div class="kpi"><div class="label">Total Unused Rooms</div><div class="value">{{ analysis.overview.total_unused_rooms }}</div></div>
+            <div class="kpi"><div class="label">Overall Utilization %</div><div class="value">{{ analysis.overview.overall_utilization_percentage }}%</div></div>
+            <div class="kpi"><div class="label">Occupied Slots</div><div class="value">{{ analysis.overview.occupied_slots }}</div></div>
+            <div class="kpi"><div class="label">Free Slots</div><div class="value">{{ analysis.overview.free_slots }}</div></div>
+        </div>
+
+        <div class="charts-3">
+            <div class="chart-card"><h3>Used vs Unused Rooms</h3><div class="chart-wrap"><canvas id="overview-used-unused"></canvas></div></div>
+            <div class="chart-card"><h3>Utilization by Room Type</h3><div class="chart-wrap"><canvas id="overview-type-util"></canvas></div></div>
+            <div class="chart-card"><h3>Rooms Used per Type</h3><div class="chart-wrap"><canvas id="overview-type-used"></canvas></div></div>
+        </div>
+
+        <div class="summary-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Room Type</th>
+                        <th>Total Rooms</th>
+                        <th>Rooms Used</th>
+                        <th>Rooms Never Used</th>
+                        <th>Usage Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in analysis.overview.room_type_summary %}
+                    <tr>
+                        <td><strong>{{ item.room_type }}</strong></td>
+                        <td>{{ item.total_rooms }}</td>
+                        <td>{{ item.rooms_used }}</td>
+                        <td>{{ item.rooms_unused }}</td>
+                        <td>{{ item.usage_percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {% for dept in analysis.departments %}
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2>Page {{ forloop.counter|add:1 }} – {{ dept.name }}</h2>
+                <p>Department-wise room utilization and room-level occupancy.</p>
+            </div>
+            <span class="badge">{{ dept.code }}</span>
+        </div>
+
+        <div class="kpis">
+            <div class="kpi"><div class="label">Total Rooms</div><div class="value">{{ dept.total_rooms }}</div></div>
+            <div class="kpi"><div class="label">Used Rooms</div><div class="value">{{ dept.used_rooms }}</div></div>
+            <div class="kpi"><div class="label">Unused Rooms</div><div class="value">{{ dept.unused_rooms }}</div></div>
+            <div class="kpi"><div class="label">Utilization %</div><div class="value">{{ dept.overall_utilization_percentage }}%</div></div>
+            <div class="kpi"><div class="label">Occupied Slots</div><div class="value">{{ dept.occupied_slots }}</div></div>
+            <div class="kpi"><div class="label">Free Slots</div><div class="value">{{ dept.free_slots }}</div></div>
+        </div>
+
+        <div class="category-grid">
+            {% for item in dept.status_counts %}
+            <div class="category-card {% if item.label == 'Fully Utilized' %}good{% elif item.label == 'Highly Utilized' %}high{% elif item.label == 'Low Utilization' %}low{% else %}none{% endif %}">
+                <div class="label">{{ item.label }}</div>
+                <div class="value">{{ item.count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="charts-3">
+            <div class="chart-card"><h3>Utilization Categories</h3><div class="chart-wrap"><canvas id="dept-pie-{{ forloop.counter0 }}"></canvas></div></div>
+            <div class="chart-card"><h3>Room Utilization Percentages</h3><div class="chart-wrap"><canvas id="dept-bar-{{ forloop.counter0 }}"></canvas></div></div>
+            <div class="chart-card"><h3>Room Utilization Ranking</h3><div class="chart-wrap"><canvas id="dept-rank-{{ forloop.counter0 }}"></canvas></div></div>
+        </div>
+
+        <div class="details-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Room Number</th>
+                        <th>Room Type</th>
+                        <th>Department</th>
+                        <th>Total Available Slots</th>
+                        <th>Occupied Slots</th>
+                        <th>Free Slots</th>
+                        <th>Utilization %</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in dept.rooms %}
+                    <tr>
+                        <td><strong>{{ room.room_number }}</strong></td>
+                        <td>{{ room.room_type_label }}</td>
+                        <td>{{ room.department_code|default:room.department_name }}</td>
+                        <td>{{ room.total_available_slots }}</td>
+                        <td>{{ room.occupied_slots }}</td>
+                        <td>{{ room.free_slots }}</td>
+                        <td>
+                            <div class="util-cell">
+                                <div class="util-bar"><span style="width: {{ room.utilization_percentage }}%"></span></div>
+                                <span>{{ room.utilization_percentage }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-pill {% if room.status == 'Fully Utilized' %}fully{% elif room.status == 'Highly Utilized' %}high{% elif room.status == 'Low Utilization' %}low{% else %}none{% endif %}">{{ room.status }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endfor %}
+</div>
+
+<script id="analysis-json" type="application/json">{{ analysis_json|safe }}</script>
+<script>
+const ANALYSIS = JSON.parse(document.getElementById('analysis-json').textContent);
+const COLORS = ['#1d4ed8', '#38bdf8', '#16a34a', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9', '#14b8a6'];
+
+function destroyIfNeeded(canvasId) {
+    const existing = Chart.getChart(canvasId);
+    if (existing) existing.destroy();
+}
+
+function pieChart(canvasId, labels, values) {
+    destroyIfNeeded(canvasId);
+    new Chart(document.getElementById(canvasId), {
+        type: 'pie',
+        data: { labels, datasets: [{ data: values, backgroundColor: COLORS.slice(0, values.length), borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+}
+
+function barChart(canvasId, labels, values, horizontal = false) {
+    destroyIfNeeded(canvasId);
+    new Chart(document.getElementById(canvasId), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{ data: values, backgroundColor: labels.map((_, idx) => COLORS[idx % COLORS.length]), borderRadius: 8, maxBarThickness: 34 }],
+        },
+        options: {
+            indexAxis: horizontal ? 'y' : 'x',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: horizontal
+                    ? { ticks: { color: '#334155' }, grid: { color: 'rgba(148,163,184,.15)' } }
+                    : { beginAtZero: true, max: 100, ticks: { callback: value => value + '%', color: '#334155' }, grid: { color: 'rgba(148,163,184,.15)' } },
+                x: horizontal
+                    ? { beginAtZero: true, max: 100, ticks: { callback: value => value + '%', color: '#334155' }, grid: { color: 'rgba(148,163,184,.15)' } }
+                    : { ticks: { color: '#334155' }, grid: { display: false } },
+            },
+        },
+    });
+}
+
+pieChart('overview-used-unused', ['Used Rooms', 'Unused Rooms'], [ANALYSIS.overview.total_used_rooms, ANALYSIS.overview.total_unused_rooms]);
+barChart(
+    'overview-type-util',
+    ANALYSIS.overview.room_type_summary.map(item => item.room_type),
+    ANALYSIS.overview.room_type_summary.map(item => item.usage_percentage),
+    false,
+);
+barChart(
+    'overview-type-used',
+    ANALYSIS.overview.room_type_summary.map(item => item.room_type),
+    ANALYSIS.overview.room_type_summary.map(item => item.rooms_used),
+    true,
+);
+
+ANALYSIS.departments.forEach((dept, idx) => {
+    pieChart(
+        'dept-pie-' + idx,
+        dept.status_counts.map(item => item.label),
+        dept.status_counts.map(item => item.count),
+    );
+
+    barChart(
+        'dept-bar-' + idx,
+        dept.rooms.map(room => room.room_number),
+        dept.rooms.map(room => room.utilization_percentage),
+        false,
+    );
+
+    const ranked = [...dept.rooms].sort((left, right) => right.utilization_percentage - left.utilization_percentage);
+    barChart(
+        'dept-rank-' + idx,
+        ranked.map(room => room.room_number),
+        ranked.map(room => room.utilization_percentage),
+        true,
+    );
+});
+</script>
+</body>
+</html>

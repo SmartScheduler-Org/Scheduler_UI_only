@@ -2704,6 +2704,152 @@ class LiveTimetableLockTests(TestCase):
         self.assertFalse(LiveTimetable.objects.filter(id=self.live.id, user=self.user).exists())
 
 
+class LiveRoomUtilizationAnalysisTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="live_room_util_user", password="testpass123")
+        self.client.force_login(self.user)
+
+        views_other.ensure_private_generator_loaded()
+        self.private_views_main = getattr(views, "_views_main", None)
+        self.assertIsNotNone(self.private_views_main)
+
+        self.cse = Department.objects.create(name="Computer Science", code="CSE", user=self.user)
+        self.ece = Department.objects.create(name="Electronics", code="ECE", user=self.user)
+        self.section = Section.objects.create(section_id="SEC-RU", department=self.cse, user=self.user)
+        self.teacher = Instructor.objects.create(
+            uid="RU-T1",
+            name="Room Util Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.cse,
+        )
+        self.room_lt = Room.objects.create(
+            r_number="LT-101",
+            room_type="Lecture Hall",
+            seating_capacity=80,
+            department=self.cse,
+            user=self.user,
+        )
+        self.room_lab = Room.objects.create(
+            r_number="LAB-201",
+            room_type="Lab",
+            lab_category="Computer Lab",
+            seating_capacity=40,
+            department=self.ece,
+            user=self.user,
+        )
+        self.room_unused = Room.objects.create(
+            r_number="LT-102",
+            room_type="Lecture Hall",
+            seating_capacity=80,
+            department=self.cse,
+            user=self.user,
+        )
+        self.subject = Subject.objects.create(
+            subject_number="RU-101",
+            subject_name="Room Utilization",
+            department=self.cse,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            duration=1,
+            user=self.user,
+        )
+        self.subject.instructors.add(self.teacher)
+        self.section.allowed_subjects.add(self.subject)
+
+        self.mt1 = MeetingTime.objects.create(pid="Mo1-ru", day="Monday", time="1", user=self.user)
+        self.mt2 = MeetingTime.objects.create(pid="Tu2-ru", day="Tuesday", time="2", user=self.user)
+        self.mt3 = MeetingTime.objects.create(pid="We1-ru", day="Wednesday", time="1", user=self.user)
+        self.mt4 = MeetingTime.objects.create(pid="We2-ru", day="Wednesday", time="2", user=self.user)
+
+        class_obj = views_other.Class(1, self.cse, self.section.section_id, self.subject)
+        class_obj.set_instructor(self.teacher)
+        class_obj.set_room(self.room_lt)
+        class_obj.set_meetingTime(self.mt1)
+        class_obj.meeting_times = [self.mt1]
+        class_obj.duration = 1
+
+        state = views_other._get_user_state(self.user.id)
+        state["schedules"] = [{
+            "classes": [class_obj],
+            "labs": [],
+            "stats": {},
+            "reco_block": {},
+        }]
+        views_other._bind_runtime_to_schedule(state, 1)
+        state["view_mode"] = "editing"
+
+        snapshot = views_other._validate_live_timetable_snapshot(state)
+        self.live = LiveTimetable.objects.create(
+            user=self.user,
+            name="Room Util Snapshot",
+            snapshot_version=int(snapshot.get("version") or 1),
+            snapshot=snapshot,
+        )
+
+    def _class_entry(self, room, meeting_time):
+        return SimpleNamespace(
+            room=room,
+            meeting_time=meeting_time,
+            meeting_times=[meeting_time],
+            duration=1,
+        )
+
+    def _lab_entry(self, room, meeting_times, duration=2):
+        return SimpleNamespace(
+            room=room,
+            meeting_times=meeting_times,
+            duration=duration,
+        )
+
+    def test_analysis_counts_unique_room_slots_without_parallel_overcount(self):
+        classes = [
+            self._class_entry(self.room_lt, self.mt1),
+            self._class_entry(self.room_lt, self.mt1),
+            self._class_entry(self.room_lt, self.mt2),
+        ]
+        labs = [self._lab_entry(self.room_lab, [self.mt3, self.mt4], duration=2)]
+
+        analysis = self.private_views_main._build_room_utilization_analysis(classes, labs, self.user)
+        room_map = {row["room_number"]: row for row in analysis["overview"]["rooms"]}
+        dept_map = {dept["code"]: dept for dept in analysis["departments"]}
+        type_map = {item["room_type"]: item for item in analysis["overview"]["room_type_summary"]}
+
+        self.assertEqual(analysis["overview"]["total_rooms"], 3)
+        self.assertEqual(analysis["overview"]["total_used_rooms"], 2)
+        self.assertEqual(analysis["overview"]["total_unused_rooms"], 1)
+        self.assertEqual(room_map["LT-101"]["occupied_slots"], 2)
+        self.assertEqual(room_map["LAB-201"]["occupied_slots"], 2)
+        self.assertEqual(room_map["LT-102"]["occupied_slots"], 0)
+        self.assertEqual(room_map["LT-102"]["status"], "Unused")
+        self.assertEqual(dept_map["CSE"]["total_rooms"], 2)
+        self.assertEqual(dept_map["CSE"]["used_rooms"], 1)
+        self.assertEqual(dept_map["ECE"]["used_rooms"], 1)
+        self.assertEqual(type_map["Lecture Room"]["total_rooms"], 2)
+        self.assertEqual(type_map["Lecture Room"]["rooms_used"], 1)
+
+    def test_live_room_utilization_routes_render_and_export(self):
+        page_response = self.client.get(reverse("live_room_utilization_analysis", args=[self.live.id]))
+        self.assertEqual(page_response.status_code, 200)
+        self.assertContains(page_response, "Room Utilization Analysis")
+
+        pdf_response = self.client.get(reverse("live_room_utilization_pdf", args=[self.live.id]))
+        self.assertEqual(pdf_response.status_code, 200)
+        self.assertEqual(pdf_response["Content-Type"], "application/pdf")
+        self.assertGreater(len(pdf_response.content), 0)
+
+        excel_response = self.client.get(reverse("live_room_utilization_excel", args=[self.live.id]))
+        self.assertEqual(excel_response.status_code, 200)
+        self.assertEqual(
+            excel_response["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        self.assertGreater(len(excel_response.content), 0)
+
+
 class TeacherWorkloadSlotCountingTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
