@@ -2923,6 +2923,126 @@ class TeacherTimetableDepartmentFilterTests(TestCase):
         self.assertTrue(any(cell.get("classes") for row in ece_visible[0]["rows"] for cell in row["cells"]))
 
 
+class PdfSlotMappingTests(TestCase):
+    def test_reportlab_slot_layout_uses_slot_numbers_like_excel_export(self):
+        row = {
+            "day": "Monday",
+            "cells": [
+                {"type": "empty", "colspan": 1, "slot_number": 1},
+                {"type": "empty", "colspan": 1, "slot_number": 2},
+                {"type": "class", "colspan": 2, "slot_number": 3, "entries": [{"lines": ["Class at slot 3-4"]}]},
+                {"type": "lunch", "colspan": 1, "slot_number": 5},
+                {"type": "class", "colspan": 1, "slot_number": 6, "entries": [{"lines": ["Class at slot 6"]}]},
+            ],
+        }
+
+        placements = views_other._reportlab_slot_layout(row["cells"])
+
+        self.assertEqual(
+            [(item["cell"].get("type"), item["start_slot"], item["end_slot"]) for item in placements],
+            [
+                ("empty", 1, 1),
+                ("empty", 2, 2),
+                ("class", 3, 4),
+                ("lunch", 5, 5),
+                ("class", 6, 6),
+            ],
+        )
+        self.assertEqual(views_other._pick_slot_cell([row], "Monday", 5).get("type"), "lunch")
+        self.assertEqual(views_other._pick_slot_cell([row], "Monday", 6).get("type"), "class")
+
+
+class EvaluationDownloadFilenameTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="download_filename_user", password="testpass123")
+        self.cse = Department.objects.create(name="Computer Science", code="CSE", user=self.user)
+        self.ece = Department.objects.create(name="Electronics", code="ECE", user=self.user)
+        self.saved = SavedTimetable.objects.create(user=self.user, name="Saved Eval")
+        self.client.force_login(self.user)
+
+        state = views_other._get_user_state(self.user.id)
+        state["schedules"] = [{"classes": [], "labs": []}]
+
+    def tearDown(self):
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+
+    def test_filename_helper_formats_specific_and_all_department_names(self):
+        self.assertEqual(
+            views_other._evaluation_download_filename(self.user, "section", "pdf", {"CSE"}),
+            "CSE_Section_SmartScheduler.pdf",
+        )
+        self.assertEqual(
+            views_other._evaluation_download_filename(self.user, "teacher", "pdf", {"ECE"}),
+            "ECE_Teacher_SmartScheduler.pdf",
+        )
+        self.assertEqual(
+            views_other._evaluation_download_filename(self.user, "room", "xlsx", None),
+            "All_Departments_Room_SmartScheduler.xlsx",
+        )
+        self.assertEqual(
+            views_other._evaluation_download_filename(self.user, "section", "pdf", {"Civil Engg & Design"}),
+            "Civil_Engg_Design_Section_SmartScheduler.pdf",
+        )
+
+    def test_generated_pdf_download_uses_department_name_for_section_export(self):
+        def fake_render(blocks, view_label, college_name, filename, inline=False):
+            response = views_other.HttpResponse(content_type="application/pdf")
+            disposition = "inline" if inline else "attachment"
+            response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
+            return response
+
+        with patch.object(views_other, "_render_reportlab_evaluation_pdf", side_effect=fake_render):
+            response = self.client.get(
+                reverse("download_generated_timetable_pdf_view", args=[1, "section"]) + "?depts=CSE"
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Disposition"],
+            'attachment; filename="CSE_Section_SmartScheduler.pdf"',
+        )
+
+    def test_generated_excel_download_uses_all_departments_name_for_room_export(self):
+        def fake_excel_response(*, filename, **kwargs):
+            response = views_other.HttpResponse(
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+
+        with patch.object(views_other, "_build_timetable_excel_response", side_effect=fake_excel_response):
+            response = self.client.get(
+                reverse("download_generated_timetable_excel", args=[1, "room"]) + "?depts=all"
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Disposition"],
+            'attachment; filename="All_Departments_Room_SmartScheduler.xlsx"',
+        )
+
+    def test_saved_pdf_download_uses_department_name_for_teacher_export(self):
+        def fake_render(blocks, view_label, college_name, filename, inline=False):
+            response = views_other.HttpResponse(content_type="application/pdf")
+            disposition = "inline" if inline else "attachment"
+            response["Content-Disposition"] = f'{disposition}; filename="{filename}"'
+            return response
+
+        with patch.object(views_other, "_saved_filtered_entities_for_request", return_value=([], [], "all", "all")), patch.object(
+            views_other, "_render_reportlab_evaluation_pdf", side_effect=fake_render
+        ):
+            response = self.client.get(
+                reverse("download_timetable_view", args=[self.saved.id, "teacher"]) + "?depts=ECE"
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Disposition"],
+            'attachment; filename="ECE_Teacher_SmartScheduler.pdf"',
+        )
+
+
 class ElectiveSchedulingTests(TestCase):
     def setUp(self):
         user_model = get_user_model()

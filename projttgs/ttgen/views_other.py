@@ -8761,6 +8761,7 @@ def download_saved_timetable_pdf(request, tid, view_type='section'):
     dept_filter = _parse_dept_filter(request)
     if not dept_filter and selected_department and selected_department != "all":
         dept_filter = {selected_department}
+    download_filename = _evaluation_download_filename(request.user, view_type, "pdf", dept_filter)
     blocks = []
     is_workload = False
     workload_rows = []
@@ -8819,7 +8820,7 @@ def download_saved_timetable_pdf(request, tid, view_type='section'):
 
     inline = request.GET.get("inline") == "1"
     if not is_workload:
-        return _render_reportlab_evaluation_pdf(blocks, view_label, COLLEGE_NAME, f"saved_{view_type}_timetable_{tid}.pdf", inline=inline)
+        return _render_reportlab_evaluation_pdf(blocks, view_label, COLLEGE_NAME, download_filename, inline=inline)
 
     try:
         from xhtml2pdf import pisa
@@ -8841,7 +8842,7 @@ def download_saved_timetable_pdf(request, tid, view_type='section'):
 
     response = HttpResponse(content_type='application/pdf')
     disposition = "inline" if inline else "attachment"
-    response['Content-Disposition'] = f'{disposition}; filename="saved_{view_type}_timetable_{tid}.pdf"'
+    response['Content-Disposition'] = f'{disposition}; filename="{download_filename}"'
 
     pisa_status = pisa.CreatePDF(html, dest=response, link_callback=_pdf_link_callback)
     if pisa_status.err:
@@ -8928,24 +8929,108 @@ def _evaluation_pdf_cell_markup(entries):
     return "<br/><br/>".join(chunks)
 
 
+def _evaluation_pdf_static_path(relative_path):
+    candidate_roots = [getattr(settings, "STATIC_ROOT", None)] + list(getattr(settings, "STATICFILES_DIRS", []))
+    normalized = str(relative_path or "").lstrip("/")
+    for root in candidate_roots:
+        if not root:
+            continue
+        path = os.path.join(str(root), normalized)
+        if os.path.isfile(path):
+            return os.path.abspath(path)
+    return None
+
+
 def _evaluation_pdf_header_footer(canvas, doc, college_name, view_label):
     page_width, page_height = doc.pagesize
+    content_left = doc.leftMargin
+    content_right = page_width - doc.rightMargin
+    content_center = (content_left + content_right) / 2.0
+    college_logo_path = _evaluation_pdf_static_path("img/college_logo.png")
+    brand_logo_path = _evaluation_pdf_static_path("img/logo_email.png")
+
     canvas.saveState()
     canvas.setStrokeColorRGB(0.043, 0.239, 0.568)
     canvas.setLineWidth(1)
+
+    logo_top = page_height - 0.36 * doc.topMargin
+    if college_logo_path:
+        try:
+            canvas.drawImage(
+                college_logo_path,
+                content_left,
+                logo_top - 34,
+                width=58,
+                height=34,
+                preserveAspectRatio=True,
+                mask='auto',
+                anchor='sw',
+            )
+        except Exception:
+            logger.warning("Could not render college logo in evaluation PDF header", exc_info=True)
+
+    if brand_logo_path:
+        try:
+            canvas.drawImage(
+                brand_logo_path,
+                content_center - 84,
+                logo_top - 19,
+                width=18,
+                height=18,
+                preserveAspectRatio=True,
+                mask='auto',
+                anchor='sw',
+            )
+        except Exception:
+            logger.warning("Could not render SmartScheduler logo in evaluation PDF header", exc_info=True)
+
     canvas.setFont("Helvetica-Bold", 12)
     canvas.setFillColorRGB(0.043, 0.239, 0.568)
-    canvas.drawCentredString(page_width / 2.0, page_height - 0.95 * doc.topMargin / 2.9, str(college_name or ""))
+    canvas.drawCentredString(content_center, page_height - 0.95 * doc.topMargin / 2.9, str(college_name or ""))
+
     canvas.setFont("Helvetica-Bold", 9)
     canvas.setFillColorRGB(0.0, 0.376, 0.816)
-    canvas.drawCentredString(page_width / 2.0, page_height - 1.45 * doc.topMargin / 2.9, f"SmartScheduler | {view_label} Timetable")
+    canvas.drawString(content_center - 62, page_height - 1.45 * doc.topMargin / 2.9, "SmartScheduler")
+    canvas.setFillColorRGB(0.573, 0.251, 0.055)
+    canvas.setFont("Helvetica-Bold", 7.5)
+    canvas.roundRect(content_center + 34, page_height - 1.68 * doc.topMargin / 2.9, 72, 12, 4, fill=1, stroke=0)
+    canvas.setFillColorRGB(1, 1, 1)
+    canvas.drawCentredString(content_center + 70, page_height - 1.45 * doc.topMargin / 2.9, "SIH WINNER 2025")
+    canvas.setFillColorRGB(0.0, 0.376, 0.816)
+    canvas.setFont("Helvetica-Bold", 9)
+    canvas.drawCentredString(content_center, page_height - 1.9 * doc.topMargin / 2.9, f"{view_label} Timetable")
+
     line_y = page_height - doc.topMargin + 0.35 * doc.topMargin / 2.9
-    canvas.line(doc.leftMargin, line_y, page_width - doc.rightMargin, line_y)
+    canvas.line(content_left, line_y, content_right, line_y)
     footer_y = doc.bottomMargin - 0.45 * doc.bottomMargin / 1.5
     canvas.setFont("Helvetica", 7.5)
     canvas.setFillColorRGB(0.45, 0.45, 0.45)
     canvas.drawCentredString(page_width / 2.0, footer_y, f"{college_name} | {view_label} | Page {doc.page}")
     canvas.restoreState()
+
+
+def _reportlab_slot_layout(row_cells):
+    placements = []
+    next_slot = 1
+    for cell in list(row_cells or []):
+        cell_type = cell.get("type")
+        if cell_type == "skip":
+            continue
+        colspan = max(int(cell.get("colspan") or 1), 1)
+        try:
+            start_slot = int(cell.get("slot_number"))
+        except (TypeError, ValueError):
+            start_slot = next_slot
+        start_slot = max(1, min(start_slot, 9))
+        end_slot = max(start_slot, min(start_slot + colspan - 1, 9))
+        placements.append({
+            "cell": cell,
+            "start_slot": start_slot,
+            "end_slot": end_slot,
+            "colspan": end_slot - start_slot + 1,
+        })
+        next_slot = end_slot + 1
+    return placements
 
 
 def _build_reportlab_timetable_flowables(block, dependencies, content_width, scale, allow_split=False):
@@ -8979,12 +9064,11 @@ def _build_reportlab_timetable_flowables(block, dependencies, content_width, sca
 
     for row_index, row in enumerate(list(block.get("rows") or []), start=1):
         row_cells = [_evaluation_pdf_paragraph(escape(str(row.get("day") or "")), day_style, Paragraph)] + [""] * 9
-        for logical_index, cell in enumerate(list(row.get("cells") or [])):
+        for placement in _reportlab_slot_layout(row.get("cells") or []):
+            cell = placement["cell"]
             cell_type = cell.get("type")
-            if cell_type == "skip":
-                continue
-            col_index = logical_index + 1
-            colspan = max(int(cell.get("colspan") or 1), 1)
+            col_index = placement["start_slot"]
+            colspan = placement["colspan"]
             if cell_type == "lunch":
                 paragraph = _evaluation_pdf_paragraph("<b>LUNCH</b>", cell_style, Paragraph)
                 table_style.append(("BACKGROUND", (col_index, row_index), (col_index + colspan - 1, row_index), colors.HexColor("#f2f2f2")))
@@ -9369,7 +9453,7 @@ def download_timetable_excel(request, tid, view_type='section'):
         classes=classes,
         labs=labs,
         user=request.user,
-        filename=f"timetable_{tid}.xlsx",
+        filename=_evaluation_download_filename(request.user, view_type, "xlsx", dept_filter),
         view_type=view_type,
         dept_filter=dept_filter,
     )
@@ -9392,13 +9476,15 @@ def download_generated_timetable_excel(request, index, view_type='section'):
     classes = list(selected.get("classes", []))
     labs = list(selected.get("labs", []))
 
+    dept_filter = _parse_dept_filter(request)
+
     return _build_timetable_excel_response(
         classes=classes,
         labs=labs,
         user=request.user,
-        filename=f"generated_timetable_{idx}.xlsx",
+        filename=_evaluation_download_filename(request.user, view_type, "xlsx", dept_filter),
         view_type=view_type,
-        dept_filter=_parse_dept_filter(request),
+        dept_filter=dept_filter,
     )
 
 
@@ -9481,6 +9567,43 @@ def _parse_dept_filter(request):
     if not raw or raw.lower() == "all":
         return None
     return {code.strip() for code in raw.split(",") if code.strip()}
+
+
+def _sanitize_filename_token(value):
+    cleaned = re.sub(r"[^A-Za-z0-9]+", "_", str(value or "").strip())
+    cleaned = re.sub(r"_+", "_", cleaned).strip("_")
+    return cleaned or "All_Departments"
+
+
+def _evaluation_download_department_label(user, dept_filter=None):
+    if not dept_filter:
+        return "All_Departments"
+
+    labels = []
+    codes = {
+        str(code or "").strip()
+        for code in dept_filter
+        if str(code or "").strip()
+    }
+    for raw_code in sorted(codes, key=str.lower):
+        dept = Department.objects.filter(user=user, code__iexact=raw_code).only("code", "name").first()
+        label = (getattr(dept, "code", "") or getattr(dept, "name", "") or raw_code).strip()
+        labels.append(_sanitize_filename_token(label))
+
+    return "_".join(labels) if labels else "All_Departments"
+
+
+def _evaluation_download_filename(user, view_type, extension, dept_filter=None):
+    view_label_map = {
+        "section": "Section",
+        "teacher": "Teacher",
+        "room": "Room",
+        "workload": "Workload",
+    }
+    view_label = view_label_map.get((view_type or "section").lower(), "Section")
+    dept_label = _evaluation_download_department_label(user, dept_filter)
+    ext = str(extension or "").lstrip(".") or "pdf"
+    return f"{dept_label}_{view_label}_SmartScheduler.{ext}"
 
 
 def _pdf_cell_width(cell):
@@ -9693,6 +9816,7 @@ def download_generated_timetable_pdf(request, index, view_type='section'):
     labs = list(selected.get("labs", []))
 
     dept_filter = _parse_dept_filter(request)
+    download_filename = _evaluation_download_filename(request.user, view_type, "pdf", dept_filter)
 
     def _dept_code_of(section):
         try:
@@ -9752,7 +9876,7 @@ def download_generated_timetable_pdf(request, index, view_type='section'):
 
     inline = request.GET.get("inline") == "1"
     if not is_workload:
-        return _render_reportlab_evaluation_pdf(blocks, view_label, COLLEGE_NAME, f"{view_type}_timetable_{idx}.pdf", inline=inline)
+        return _render_reportlab_evaluation_pdf(blocks, view_label, COLLEGE_NAME, download_filename, inline=inline)
 
     try:
         from xhtml2pdf import pisa
@@ -9774,7 +9898,7 @@ def download_generated_timetable_pdf(request, index, view_type='section'):
 
     response = HttpResponse(content_type='application/pdf')
     disposition = "inline" if inline else "attachment"
-    response['Content-Disposition'] = f'{disposition}; filename="{view_type}_timetable_{idx}.pdf"'
+    response['Content-Disposition'] = f'{disposition}; filename="{download_filename}"'
 
     pisa_status = pisa.CreatePDF(html, dest=response, link_callback=_pdf_link_callback)
     if pisa_status.err:
