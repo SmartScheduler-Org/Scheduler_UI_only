@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 from unittest.mock import patch
 from django.contrib.messages import get_messages
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -2384,6 +2385,17 @@ class LiveTimetableReopenProjectionTests(TestCase):
         response = private_core.move_slot_dragdrop(request, self.section.section_id, "Monday", source_slot)
         self.assertEqual(response.status_code, 200)
 
+    def _load_live_state(self, live_id):
+        request = RequestFactory().get("/")
+        request.user = self.user
+        middleware = SessionMiddleware(lambda req: None)
+        middleware.process_request(request)
+        request.session.save()
+
+        index, _live_timetable = views_other.load_live_timetable_into_runtime(request, live_id)
+        self.assertEqual(index, 1)
+        return views_other._get_user_state(self.user.id)
+
     def _rows_have_class_at_slot(self, rows, day, slot_number):
         for row in rows:
             if row.get("day") != day:
@@ -2445,6 +2457,470 @@ class LiveTimetableReopenProjectionTests(TestCase):
         )
         self.assertTrue(self._rows_have_class_at_slot(moved_teacher_table["rows"], "Monday", 2))
         self.assertTrue(self._rows_have_class_at_slot(moved_room_table["rows"], "Monday", 2))
+
+    def test_live_timetable_move_updates_current_snapshot_for_reload_and_reopen(self):
+        save_response = self.client.get(reverse("save_live_timetable", args=[1]))
+        self.assertEqual(save_response.status_code, 200)
+        live = LiveTimetable.objects.get(user=self.user)
+
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+        self._load_live_state(live.id)
+
+        self._move_restored_class(1, 2)
+
+        live.refresh_from_db()
+        restored_state = views_other.deserialize_runtime_state_snapshot(live.snapshot)
+        restored_classes = list(restored_state.get("classes") or [])
+        moved_class = next(
+            cls for cls in restored_classes
+            if getattr(cls, "section", "") == self.section.section_id
+            and getattr(getattr(cls, "subject", None), "subject_name", "") == self.theory_subject.subject_name
+        )
+        self.assertEqual(getattr(getattr(moved_class, "meeting_time", None), "day", None), "Monday")
+        self.assertEqual(int(getattr(getattr(moved_class, "meeting_time", None), "time", 0) or 0), 2)
+
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+        reopened_state = self._load_live_state(live.id)
+        reopened_classes = list(reopened_state.get("classes") or [])
+        reopened_class = next(
+            cls for cls in reopened_classes
+            if getattr(cls, "section", "") == self.section.section_id
+            and getattr(getattr(cls, "subject", None), "subject_name", "") == self.theory_subject.subject_name
+        )
+        self.assertEqual(getattr(getattr(reopened_class, "meeting_time", None), "day", None), "Monday")
+        self.assertEqual(int(getattr(getattr(reopened_class, "meeting_time", None), "time", 0) or 0), 2)
+
+        reopened_context = self._current_live_projection_context()
+        reopened_teacher_table = next(
+            table for table in reopened_context["teacher_tables"]
+            if table["teacher"].uid == self.teacher.uid
+        )
+        reopened_room_table = next(
+            table for table in reopened_context["room_tables"]
+            if table["room"].r_number == self.lecture_room.r_number
+        )
+        self.assertTrue(self._rows_have_class_at_slot(reopened_teacher_table["rows"], "Monday", 2))
+        self.assertTrue(self._rows_have_class_at_slot(reopened_room_table["rows"], "Monday", 2))
+
+    def test_live_timetable_add_slot_updates_current_snapshot_for_reload_and_reopen(self):
+        save_response = self.client.get(reverse("save_live_timetable", args=[1]))
+        self.assertEqual(save_response.status_code, 200)
+        live = LiveTimetable.objects.get(user=self.user)
+
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+        self._load_live_state(live.id)
+
+        response = self.client.post(
+            reverse("add_slot", args=[self.section.section_id]),
+            {
+                "day": "Monday",
+                "slot": "2",
+                "subject": str(self.theory_subject.pk),
+                "teacher": str(self.teacher.pk),
+                "room": str(self.lecture_room.pk),
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+
+        live.refresh_from_db()
+        restored_state = views_other.deserialize_runtime_state_snapshot(live.snapshot)
+        restored_classes = list(restored_state.get("classes") or [])
+        monday_slots = sorted(
+            int(getattr(getattr(cls, "meeting_time", None), "time", 0) or 0)
+            for cls in restored_classes
+            if getattr(cls, "section", "") == self.section.section_id
+            and getattr(getattr(cls, "meeting_time", None), "day", None) == "Monday"
+            and getattr(getattr(cls, "subject", None), "subject_name", "") == self.theory_subject.subject_name
+        )
+        self.assertEqual(monday_slots, [1, 2])
+
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+        reopened_state = self._load_live_state(live.id)
+        reopened_classes = list(reopened_state.get("classes") or [])
+        reopened_slots = sorted(
+            int(getattr(getattr(cls, "meeting_time", None), "time", 0) or 0)
+            for cls in reopened_classes
+            if getattr(cls, "section", "") == self.section.section_id
+            and getattr(getattr(cls, "meeting_time", None), "day", None) == "Monday"
+            and getattr(getattr(cls, "subject", None), "subject_name", "") == self.theory_subject.subject_name
+        )
+        self.assertEqual(reopened_slots, [1, 2])
+
+    def test_live_timetable_manual_bucket_create_updates_current_snapshot_for_reload_and_reopen(self):
+        save_response = self.client.get(reverse("save_live_timetable", args=[1]))
+        self.assertEqual(save_response.status_code, 200)
+        live = LiveTimetable.objects.get(user=self.user)
+
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+        self._load_live_state(live.id)
+
+        response = self.client.post(
+            reverse("generated_create_parking_slot", args=[self.section.section_id]),
+            data=json.dumps(
+                {
+                    "subject_text": "Manual Live Slot",
+                    "teacher_uid": self.teacher.uid,
+                    "room_number": self.lecture_room.r_number,
+                    "duration": 1,
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        live.refresh_from_db()
+        restored_state = views_other.deserialize_runtime_state_snapshot(live.snapshot)
+        restored_parking = list(restored_state.get("generated_parking_items") or [])
+        self.assertEqual(len(restored_parking), 1)
+        restored_item = restored_parking[0].get("item")
+        self.assertEqual(getattr(getattr(restored_item, "subject", None), "subject_name", ""), "Manual Live Slot")
+
+        views_other._USER_STATE.pop(views_other._coerce_user_state_key(self.user.id), None)
+        reopened_state = self._load_live_state(live.id)
+        reopened_parking = list(reopened_state.get("generated_parking_items") or [])
+        self.assertEqual(len(reopened_parking), 1)
+        reopened_item = reopened_parking[0].get("item")
+        self.assertEqual(getattr(getattr(reopened_item, "subject", None), "subject_name", ""), "Manual Live Slot")
+
+
+class LiveTimetableLockTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="live_lock_user", password="testpass123")
+        self.client.force_login(self.user)
+
+        views_other.ensure_private_generator_loaded()
+
+        self.department = Department.objects.create(name="Computer Science", code="CS", user=self.user)
+        self.section = Section.objects.create(section_id="SEC-LOCK", department=self.department, user=self.user)
+        self.teacher = Instructor.objects.create(
+            uid="LOCK-T1",
+            name="Lock Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.department,
+        )
+        self.room = Room.objects.create(
+            r_number="LH-LOCK",
+            room_type="Lecture Hall",
+            seating_capacity=80,
+            department=self.department,
+            user=self.user,
+        )
+        self.subject = Subject.objects.create(
+            subject_number="TH-LOCK",
+            subject_name="Lock Theory",
+            department=self.department,
+            max_numb_students=60,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            duration=1,
+            user=self.user,
+        )
+        self.subject.instructors.add(self.teacher)
+        self.section.allowed_subjects.add(self.subject)
+        self.mt1 = MeetingTime.objects.create(pid="Mo1-lock", day="Monday", time="1", user=self.user)
+
+        class_obj = views_other.Class(1, self.department, self.section.section_id, self.subject)
+        class_obj.set_instructor(self.teacher)
+        class_obj.set_room(self.room)
+        class_obj.set_meetingTime(self.mt1)
+        class_obj.meeting_times = [self.mt1]
+        class_obj.duration = 1
+
+        state = views_other._get_user_state(self.user.id)
+        state["schedules"] = [{
+            "classes": [class_obj],
+            "labs": [],
+            "stats": {},
+            "reco_block": {},
+        }]
+        views_other._bind_runtime_to_schedule(state, 1)
+        state["view_mode"] = "editing"
+
+        snapshot = views_other._validate_live_timetable_snapshot(state)
+        self.live = LiveTimetable.objects.create(
+            user=self.user,
+            name="Locked Snapshot",
+            snapshot_version=int(snapshot.get("version") or 1),
+            snapshot=snapshot,
+        )
+
+    def _message_texts(self, response):
+        return [message.message for message in get_messages(response.wsgi_request)]
+
+    def test_lock_persists_and_blocks_delete(self):
+        lock_response = self.client.post(reverse("lock_live_timetable", args=[self.live.id]), follow=True)
+        self.assertEqual(lock_response.status_code, 200)
+
+        self.live.refresh_from_db()
+        self.assertTrue(views_other._live_timetable_is_locked(self.live))
+        self.assertTrue(any("locked" in message.lower() for message in self._message_texts(lock_response)))
+
+        list_response = self.client.get(reverse("live_timetable_list"))
+        self.assertContains(list_response, "Delete Locked")
+        self.assertContains(list_response, "Locked")
+
+        delete_response = self.client.get(reverse("delete_live_timetable", args=[self.live.id]), follow=True)
+        self.assertEqual(delete_response.status_code, 200)
+        self.assertTrue(LiveTimetable.objects.filter(id=self.live.id, user=self.user).exists())
+        self.assertTrue(any("unlock it before deleting" in message.lower() for message in self._message_texts(delete_response)))
+
+    def test_unlock_requires_exact_code_and_open_still_works(self):
+        self.client.post(reverse("lock_live_timetable", args=[self.live.id]), follow=True)
+
+        wrong_response = self.client.post(
+            reverse("unlock_live_timetable", args=[self.live.id]),
+            {"unlock_code": "wrong-code"},
+            follow=True,
+        )
+        self.assertEqual(wrong_response.status_code, 200)
+        self.live.refresh_from_db()
+        self.assertTrue(views_other._live_timetable_is_locked(self.live))
+        self.assertTrue(any("incorrect unlock code" in message.lower() for message in self._message_texts(wrong_response)))
+
+        request = RequestFactory().get("/")
+        request.user = self.user
+        middleware = SessionMiddleware(lambda req: None)
+        middleware.process_request(request)
+        request.session.save()
+        index, loaded_live = views_other.load_live_timetable_into_runtime(request, self.live.id)
+        self.assertEqual(index, 1)
+        self.assertEqual(loaded_live.id, self.live.id)
+
+        unlock_response = self.client.post(
+            reverse("unlock_live_timetable", args=[self.live.id]),
+            {"unlock_code": "asdfgh985258"},
+            follow=True,
+        )
+        self.assertEqual(unlock_response.status_code, 200)
+        self.live.refresh_from_db()
+        self.assertFalse(views_other._live_timetable_is_locked(self.live))
+        self.assertTrue(any("unlocked" in message.lower() for message in self._message_texts(unlock_response)))
+
+        delete_response = self.client.get(reverse("delete_live_timetable", args=[self.live.id]), follow=True)
+        self.assertEqual(delete_response.status_code, 200)
+        self.assertFalse(LiveTimetable.objects.filter(id=self.live.id, user=self.user).exists())
+
+
+class TeacherWorkloadSlotCountingTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="workload_user", password="testpass123")
+        self.department = Department.objects.create(name="Computer Science", code="CS", user=self.user)
+
+        self.teacher_a = Instructor.objects.create(
+            uid="WA1",
+            name="Teacher A",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.department,
+        )
+        self.teacher_b = Instructor.objects.create(
+            uid="WB1",
+            name="Teacher B",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.department,
+        )
+
+        views_other.ensure_private_generator_loaded()
+
+    def _meeting_time(self, day, slot, key_prefix="mt"):
+        return SimpleNamespace(day=day, time=str(slot), pk=f"{key_prefix}-{day}-{slot}", id=f"{key_prefix}-{day}-{slot}")
+
+    def _room(self, number, pk=1):
+        return SimpleNamespace(r_number=number, pk=pk, id=pk, department=self.department)
+
+    def _subject(self, name, pk=1):
+        return SimpleNamespace(subject_name=name, pk=pk, id=pk)
+
+    def _class(self, teacher, day, slot, *, duration=1, section="S1", room=None, subject=None, co_instructors=None, elective=False):
+        meeting_time = self._meeting_time(day, slot, key_prefix=f"cls-{section}")
+        meeting_times = [self._meeting_time(day, int(slot) + offset, key_prefix=f"cls-{section}") for offset in range(duration)]
+        return SimpleNamespace(
+            instructor=teacher,
+            co_instructors=list(co_instructors or []),
+            meeting_time=meeting_time,
+            meeting_times=meeting_times,
+            duration=duration,
+            section=section,
+            room=room or self._room("LT-01", 101),
+            subject=subject or self._subject("Theory", 201),
+            department=self.department,
+            second_instructor=None,
+            is_elective=elective,
+        )
+
+    def _lab(self, teacher, slots, *, second_instructor=None, co_instructors=None, section="S1", room=None, subject=None, elective=False):
+        meeting_times = [self._meeting_time(day, slot, key_prefix=f"lab-{section}") for day, slot in slots]
+        return SimpleNamespace(
+            instructor=teacher,
+            second_instructor=second_instructor,
+            co_instructors=list(co_instructors or []),
+            meeting_times=meeting_times,
+            duration=len(meeting_times),
+            section=section,
+            room=room or self._room("LAB-01", 301),
+            subject=subject or self._subject("Lab", 401),
+            department=self.department,
+            is_elective=elective,
+        )
+
+    def _summary_for(self, teacher, classes=None, labs=None):
+        workloads = views_other._compute_teacher_workloads(classes or [], labs or [])
+        return workloads.get(teacher, {"lectures": 0, "labs": 0, "shared_labs": 0, "total": 0})
+
+    def _teacher_table_workload_for(self, teacher, classes=None, labs=None):
+        tables = views_other.build_teacher_tables(classes or [], labs or [], user=self.user)
+        matching = next(table for table in tables if table["teacher"].pk == teacher.pk)
+        return matching["workload"]
+
+    def test_workload_counts_unique_occupied_slots_across_all_paths(self):
+        shared_room = self._room("LT-01", 501)
+        shared_subject = self._subject("Shared Session", 601)
+
+        one_class = [self._class(self.teacher_a, "Monday", 1)]
+        self.assertEqual(self._summary_for(self.teacher_a, one_class)["total"], 1)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, one_class)["total"], 1)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, one_class, []), 1)
+
+        two_slots = [
+            self._class(self.teacher_a, "Monday", 1),
+            self._class(self.teacher_a, "Monday", 2),
+        ]
+        self.assertEqual(self._summary_for(self.teacher_a, two_slots)["total"], 2)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, two_slots)["total"], 2)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, two_slots, []), 2)
+
+        same_session_two_sections = [
+            self._class(self.teacher_a, "Monday", 1, section="CE31", room=shared_room, subject=shared_subject),
+            self._class(self.teacher_a, "Monday", 1, section="CE32", room=shared_room, subject=shared_subject),
+        ]
+        self.assertEqual(self._summary_for(self.teacher_a, same_session_two_sections)["total"], 1)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, same_session_two_sections)["total"], 1)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, same_session_two_sections, []), 1)
+
+        elective_duplicate_records = [
+            self._class(self.teacher_a, "Monday", 3, section="CE31", room=shared_room, subject=shared_subject, elective=True),
+            self._class(self.teacher_a, "Monday", 3, section="CE32", room=shared_room, subject=shared_subject, elective=True),
+        ]
+        self.assertEqual(self._summary_for(self.teacher_a, elective_duplicate_records)["total"], 1)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, elective_duplicate_records)["total"], 1)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, elective_duplicate_records, []), 1)
+
+        repeated_records_same_slot = [
+            self._class(self.teacher_a, "Tuesday", 4, section="CE31", room=shared_room, subject=shared_subject),
+            self._class(self.teacher_a, "Tuesday", 4, section="CE31", room=shared_room, subject=shared_subject),
+        ]
+        self.assertEqual(self._summary_for(self.teacher_a, repeated_records_same_slot)["total"], 1)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, repeated_records_same_slot)["total"], 1)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, repeated_records_same_slot, []), 1)
+
+        two_slot_class = [self._class(self.teacher_a, "Wednesday", 3, duration=2)]
+        self.assertEqual(self._summary_for(self.teacher_a, two_slot_class)["lectures"], 2)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, two_slot_class)["lectures"], 2)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, two_slot_class, []), 2)
+
+        three_slot_lab = [self._lab(self.teacher_a, [("Thursday", 1), ("Thursday", 2), ("Thursday", 3)])]
+        self.assertEqual(self._summary_for(self.teacher_a, labs=three_slot_lab)["labs"], 3)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, labs=three_slot_lab)["labs"], 3)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, [], three_slot_lab), 3)
+
+        parallel_lab_same_session = [
+            self._lab(self.teacher_a, [("Friday", 1), ("Friday", 2)], section="CE31", room=self._room("LAB-01", 701), subject=self._subject("Parallel Lab", 801)),
+            self._lab(self.teacher_a, [("Friday", 1), ("Friday", 2)], section="CE32", room=self._room("LAB-01", 701), subject=self._subject("Parallel Lab", 801)),
+        ]
+        self.assertEqual(self._summary_for(self.teacher_a, labs=parallel_lab_same_session)["labs"], 2)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, labs=parallel_lab_same_session)["labs"], 2)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, [], parallel_lab_same_session), 2)
+
+        co_instructor_class = [self._class(self.teacher_b, "Monday", 6, co_instructors=[self.teacher_a])]
+        self.assertEqual(self._summary_for(self.teacher_a, co_instructor_class)["lectures"], 1)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, co_instructor_class)["lectures"], 1)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, co_instructor_class, []), 1)
+
+        second_instructor_lab = [self._lab(self.teacher_b, [("Tuesday", 7), ("Tuesday", 8)], second_instructor=self.teacher_a)]
+        self.assertEqual(self._summary_for(self.teacher_a, labs=second_instructor_lab)["shared_labs"], 2)
+        self.assertEqual(self._teacher_table_workload_for(self.teacher_a, labs=second_instructor_lab)["shared_labs"], 2)
+        self.assertEqual(views_other._compute_teacher_workload(self.teacher_a, [], second_instructor_lab), 2)
+
+
+class TeacherTimetableDepartmentFilterTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="teacher_filter_user", password="testpass123")
+        self.cse = Department.objects.create(name="Computer Science", code="CSE", user=self.user)
+        self.ece = Department.objects.create(name="Electronics", code="ECE", user=self.user)
+
+        self.cse_teacher = Instructor.objects.create(
+            uid="CSE-T1",
+            name="CSE Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.cse,
+        )
+        self.ece_teacher = Instructor.objects.create(
+            uid="ECE-T1",
+            name="ECE Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.ece,
+        )
+
+        views_other.ensure_private_generator_loaded()
+
+    def _meeting_time(self, day, slot, key_prefix="mt"):
+        return SimpleNamespace(day=day, time=str(slot), pk=f"{key_prefix}-{day}-{slot}", id=f"{key_prefix}-{day}-{slot}")
+
+    def _room(self, number, department, pk=1):
+        return SimpleNamespace(r_number=number, pk=pk, id=pk, department=department)
+
+    def _subject(self, name, pk=1):
+        return SimpleNamespace(subject_name=name, pk=pk, id=pk)
+
+    def _class(self, teacher, department, day, slot, *, section="S1", room=None, subject=None):
+        meeting_time = self._meeting_time(day, slot, key_prefix=f"cls-{section}")
+        return SimpleNamespace(
+            instructor=teacher,
+            co_instructors=[],
+            second_instructor=None,
+            meeting_time=meeting_time,
+            meeting_times=[meeting_time],
+            duration=1,
+            section=section,
+            room=room or self._room("LT-01", department, 101),
+            subject=subject or self._subject("Theory", 201),
+            department=department,
+        )
+
+    def test_teacher_department_filter_uses_home_department_not_taught_department(self):
+        classes = [
+            self._class(self.cse_teacher, self.cse, "Monday", 1, section="CSE-1"),
+            self._class(self.ece_teacher, self.cse, "Monday", 2, section="CSE-2"),
+        ]
+        teacher_tables = views_other.build_teacher_tables(classes, [], user=self.user)
+        fallback_map = views_other._teacher_home_dept_fallback(classes, [])
+
+        cse_table = next(table for table in teacher_tables if table["teacher"].pk == self.cse_teacher.pk)
+        ece_table = next(table for table in teacher_tables if table["teacher"].pk == self.ece_teacher.pk)
+
+        self.assertEqual(cse_table["home_dept_code"], "CSE")
+        self.assertEqual(ece_table["home_dept_code"], "ECE")
+        self.assertIn("CSE", ece_table["dept_codes"])
+        self.assertTrue(any(cell.get("classes") for row in ece_table["rows"] for cell in row["cells"]))
+
+        cse_visible = views_other._filter_teacher_tables_by_department(teacher_tables, "CSE", fallback_map)
+        ece_visible = views_other._filter_teacher_tables_by_department(teacher_tables, "ECE", fallback_map)
+
+        self.assertEqual([table["teacher"].pk for table in cse_visible], [self.cse_teacher.pk])
+        self.assertEqual([table["teacher"].pk for table in ece_visible], [self.ece_teacher.pk])
+        self.assertTrue(any(cell.get("classes") for row in ece_visible[0]["rows"] for cell in row["cells"]))
 
 
 class ElectiveSchedulingTests(TestCase):

@@ -1521,9 +1521,14 @@ def save_prefill_session_snapshot(request, state=None):
     if not request or not getattr(request, "user", None) or not request.user.is_authenticated:
         return None
     state = state or _get_user_state(request.user.id)
+    ensure_manual_prefill_slot_uids(state)
+    if state.get("active_live_timetable_id"):
+        try:
+            _persist_active_live_timetable_snapshot(state, request.user)
+        except ValueError:
+            pass
     if not state.get("prefill_mode"):
         return None
-    ensure_manual_prefill_slot_uids(state)
     snapshot = {
         "section_ids": list(state.get("prefill_section_ids") or request.session.get("prefill_section_ids") or []),
         "classes": [_serialize_prefill_class(cls) for cls in list(state.get("classes") or [])],
@@ -4027,22 +4032,26 @@ if "build_teacher_tables" not in globals():
     def build_teacher_tables(all_classes, all_labs, user=None):
         from collections import OrderedDict
 
-        def _lab_slot_count(lab):
-            return len(lab.meeting_times) if lab.meeting_times else getattr(lab, 'duration', LAB_DURATION)
-
         def _format_load(value):
             return int(value) if isinstance(value, float) and value.is_integer() else value
 
         def _teacher_workload(items):
-            lectures = sum(getattr(cls, 'duration', 1) for cls in items["classes"])
-            labs = 0
-            shared_labs = 0
+            lecture_slots = set()
+            lab_slots = set()
+            shared_lab_slots = set()
+
+            for cls in items["classes"]:
+                lecture_slots.update(_teacher_workload_slot_keys(cls))
+
             for lab in items["labs"]:
-                slot_count = _lab_slot_count(lab)
                 if getattr(lab, "second_instructor", None):
-                    shared_labs += slot_count
+                    shared_lab_slots.update(_teacher_workload_slot_keys(lab))
                 else:
-                    labs += slot_count
+                    lab_slots.update(_teacher_workload_slot_keys(lab))
+
+            lectures = len(lecture_slots)
+            labs = len(lab_slots)
+            shared_labs = len(shared_lab_slots)
             total = lectures + labs + shared_labs
             return {
                 "lectures": _format_load(lectures),
@@ -4356,6 +4365,59 @@ if "_runtime_room_matches" not in globals():
         if left_dept_code and right_dept_code:
             return left_dept_code == right_dept_code
         return True
+
+
+if "_teacher_workload_slot_keys" not in globals():
+    def _teacher_workload_slot_keys(item_obj):
+        meeting_times = list(getattr(item_obj, "meeting_times", None) or [])
+        if meeting_times:
+            return {
+                (getattr(mt, "day", None), str(getattr(mt, "time", "") or ""))
+                for mt in meeting_times
+                if getattr(mt, "day", None) and str(getattr(mt, "time", "") or "")
+            }
+
+        meeting_time = getattr(item_obj, "meeting_time", None)
+        if meeting_time is not None:
+            day = getattr(meeting_time, "day", None)
+            start_time = getattr(meeting_time, "time", None)
+            if day and start_time is not None:
+                try:
+                    start_slot = int(start_time)
+                except (TypeError, ValueError):
+                    return {(day, str(start_time))}
+                duration = max(int(getattr(item_obj, "duration", 1) or 1), 1)
+                return {(day, str(start_slot + offset)) for offset in range(duration)}
+
+        return set()
+
+
+if "_teacher_workload_assignees" not in globals():
+    def _teacher_workload_assignees(item_obj):
+        teachers = []
+        for candidate in [
+            getattr(item_obj, "instructor", None),
+            getattr(item_obj, "second_instructor", None),
+            *(list(getattr(item_obj, "co_instructors", []) or [])),
+        ]:
+            if not candidate:
+                continue
+            if any(_runtime_teacher_matches(candidate, existing) for existing in teachers):
+                continue
+            teachers.append(candidate)
+        return teachers
+
+
+if "_compute_teacher_workload" not in globals():
+    def _compute_teacher_workload(teacher, classes, labs):
+        if teacher is None:
+            return 0
+
+        occupied_slots = set()
+        for item_obj in list(classes or []) + list(labs or []):
+            if any(_runtime_teacher_matches(teacher, assigned_teacher) for assigned_teacher in _teacher_workload_assignees(item_obj)):
+                occupied_slots.update(_teacher_workload_slot_keys(item_obj))
+        return len(occupied_slots)
         return ";".join(sections)
 
 
@@ -5011,68 +5073,41 @@ def _compute_teacher_workloads(classes, labs):
         if dept_name:
             data["departments"].add(str(dept_name))
 
-    # Elective sessions are taught once physically but exist as one object per
-    # shared section. Track seen (teacher, physical-session) pairs so an elective
-    # adds to a teacher's load only once instead of once per section.
-    seen_elective = set()
+    teacher_slot_buckets = {}
 
-    def _is_dup_elective(item_obj, kind, first_mt, assigned_teacher):
-        if not getattr(item_obj, "is_elective", False):
-            return False
-        key = (
-            getattr(assigned_teacher, "pk", None) or id(assigned_teacher),
-            kind,
-            getattr(getattr(item_obj, "subject", None), "pk", None),
-            getattr(getattr(item_obj, "room", None), "pk", None),
-            getattr(first_mt, "day", None),
-            getattr(first_mt, "time", None),
-            getattr(item_obj, "group", None),
-        )
-        if key in seen_elective:
-            return True
-        seen_elective.add(key)
-        return False
+    def _ensure_teacher_slots(teacher):
+        data = _ensure_teacher(teacher)
+        slot_data = teacher_slot_buckets.get(teacher)
+        if slot_data is None:
+            slot_data = {
+                "lectures": set(),
+                "labs": set(),
+                "shared_labs": set(),
+            }
+            teacher_slot_buckets[teacher] = slot_data
+        return data, slot_data
 
     for cls in classes:
-        teacher = cls.instructor
-        cls_dur = getattr(cls, 'duration', 1)
-        teachers = [teacher] + list(getattr(cls, "co_instructors", []) or [])
-        for assigned_teacher in teachers:
-            if not assigned_teacher:
-                continue
-            if _is_dup_elective(cls, "class", getattr(cls, "meeting_time", None), assigned_teacher):
-                continue
-            data = _ensure_teacher(assigned_teacher)
-            data["lectures"] += cls_dur
-            data["total"] += cls_dur
+        slot_keys = _teacher_workload_slot_keys(cls)
+        for assigned_teacher in _teacher_workload_assignees(cls):
+            _, slot_data = _ensure_teacher_slots(assigned_teacher)
+            slot_data["lectures"].update(slot_keys)
             _add_department(assigned_teacher, cls)
+
     for lab in labs:
-        teacher = lab.instructor
-        lab_slot_count = len(lab.meeting_times) if lab.meeting_times else getattr(lab, 'duration', LAB_DURATION)
-        second_teacher = getattr(lab, "second_instructor", None)
-        co_teachers = list(getattr(lab, "co_instructors", []) or [])
-        _lab_first_mt = (lab.meeting_times or [None])[0]
-        if second_teacher:
-            shared_load = lab_slot_count
-            for assigned_teacher in [teacher, second_teacher] + co_teachers:
-                if not assigned_teacher:
-                    continue
-                if _is_dup_elective(lab, "lab", _lab_first_mt, assigned_teacher):
-                    continue
-                data = _ensure_teacher(assigned_teacher)
-                data["shared_labs"] += shared_load
-                data["total"] += shared_load
-                _add_department(assigned_teacher, lab)
-        else:
-            for assigned_teacher in [teacher] + co_teachers:
-                if not assigned_teacher:
-                    continue
-                if _is_dup_elective(lab, "lab", _lab_first_mt, assigned_teacher):
-                    continue
-                data = _ensure_teacher(assigned_teacher)
-                data["labs"] += lab_slot_count
-                data["total"] += lab_slot_count
-                _add_department(assigned_teacher, lab)
+        slot_keys = _teacher_workload_slot_keys(lab)
+        bucket = "shared_labs" if getattr(lab, "second_instructor", None) else "labs"
+        for assigned_teacher in _teacher_workload_assignees(lab):
+            _, slot_data = _ensure_teacher_slots(assigned_teacher)
+            slot_data[bucket].update(slot_keys)
+            _add_department(assigned_teacher, lab)
+
+    for teacher, slot_data in teacher_slot_buckets.items():
+        data = _ensure_teacher(teacher)
+        data["lectures"] = len(slot_data["lectures"])
+        data["labs"] = len(slot_data["labs"])
+        data["shared_labs"] = len(slot_data["shared_labs"])
+        data["total"] = len(slot_data["lectures"] | slot_data["labs"] | slot_data["shared_labs"])
 
     for data in workloads.values():
         data["departments"] = ", ".join(sorted(data["departments"])) or "-"
@@ -5482,6 +5517,53 @@ def load_live_timetable_into_runtime(request, tid):
     return index, live_timetable
 
 
+_LIVE_TIMETABLE_META_KEY = "__live_timetable_meta__"
+_LIVE_TIMETABLE_UNLOCK_CODE = "asdfgh985258"
+
+
+def _live_timetable_snapshot_meta(snapshot):
+    meta = (snapshot or {}).get(_LIVE_TIMETABLE_META_KEY)
+    return meta if isinstance(meta, dict) else {}
+
+
+def _merge_live_timetable_snapshot_meta(snapshot, live_timetable=None, *, locked=None):
+    merged = copy.deepcopy(snapshot or {})
+    meta = dict(_live_timetable_snapshot_meta(merged))
+    if live_timetable is not None:
+        meta.update(_live_timetable_snapshot_meta(getattr(live_timetable, "snapshot", None) or {}))
+    if locked is not None:
+        meta["locked"] = bool(locked)
+    if meta:
+        merged[_LIVE_TIMETABLE_META_KEY] = meta
+    else:
+        merged.pop(_LIVE_TIMETABLE_META_KEY, None)
+    return merged
+
+
+def _live_timetable_is_locked(live_timetable):
+    return bool(_live_timetable_snapshot_meta(getattr(live_timetable, "snapshot", None) or {}).get("locked"))
+
+
+def _persist_active_live_timetable_snapshot(state, user):
+    if not state or user is None:
+        return None
+
+    live_timetable_id = state.get("active_live_timetable_id")
+    if not live_timetable_id:
+        return None
+
+    live_timetable = LiveTimetable.objects.filter(id=live_timetable_id, user=user).first()
+    if live_timetable is None:
+        raise ValueError("Active live timetable not found.")
+
+    snapshot = _validate_live_timetable_snapshot(state)
+    snapshot = _merge_live_timetable_snapshot_meta(snapshot, live_timetable=live_timetable)
+    live_timetable.snapshot_version = int(snapshot.get("version") or 1)
+    live_timetable.snapshot = snapshot
+    live_timetable.save()
+    return live_timetable
+
+
 @login_required
 def save_live_timetable(request, index):
     if hasattr(globals().get("ensure_private_generator_loaded"), "__call__"):
@@ -5547,6 +5629,8 @@ def save_live_timetable(request, index):
     except ValueError as exc:
         return _error(f"Live snapshot validation failed: {exc}", status=422)
 
+    snapshot = _merge_live_timetable_snapshot_meta(snapshot, locked=False)
+
     with transaction.atomic():
         LiveTimetable.objects.create(
             user=request.user,
@@ -5561,8 +5645,10 @@ def save_live_timetable(request, index):
 
 @login_required
 def live_timetable_list(request):
-    timetables = LiveTimetable.objects.filter(user=request.user)
-    count = timetables.count()
+    timetables = list(LiveTimetable.objects.filter(user=request.user))
+    for timetable in timetables:
+        timetable.is_locked = _live_timetable_is_locked(timetable)
+    count = len(timetables)
     save_limit = _live_timetable_save_limit()
     return render(request, "live_timetable_list.html", {
         "timetables": timetables,
@@ -5593,8 +5679,55 @@ def rename_live_timetable(request, tid):
 
 
 @login_required
+def lock_live_timetable(request, tid):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+
+    live_timetable = LiveTimetable.objects.filter(id=tid, user=request.user).first()
+    if live_timetable is None:
+        raise Http404("Live timetable not found")
+
+    if not _live_timetable_is_locked(live_timetable):
+        live_timetable.snapshot = _merge_live_timetable_snapshot_meta(live_timetable.snapshot, locked=True)
+        live_timetable.save(update_fields=["snapshot", "updated_at"])
+        messages.success(request, "Live timetable locked. Delete is now protected.")
+    else:
+        messages.info(request, "Live timetable is already locked.")
+    return redirect("live_timetable_list")
+
+
+@login_required
+def unlock_live_timetable(request, tid):
+    if request.method != "POST":
+        return HttpResponseForbidden("Invalid request method.")
+
+    live_timetable = LiveTimetable.objects.filter(id=tid, user=request.user).first()
+    if live_timetable is None:
+        raise Http404("Live timetable not found")
+
+    unlock_code = request.POST.get("unlock_code") or ""
+    if unlock_code != _LIVE_TIMETABLE_UNLOCK_CODE:
+        messages.error(request, "Incorrect unlock code. Live timetable remains locked.")
+        return redirect("live_timetable_list")
+
+    if _live_timetable_is_locked(live_timetable):
+        live_timetable.snapshot = _merge_live_timetable_snapshot_meta(live_timetable.snapshot, locked=False)
+        live_timetable.save(update_fields=["snapshot", "updated_at"])
+        messages.success(request, "Live timetable unlocked. Delete is available again.")
+    else:
+        messages.info(request, "Live timetable is already unlocked.")
+    return redirect("live_timetable_list")
+
+
+@login_required
 def delete_live_timetable(request, tid):
-    LiveTimetable.objects.filter(id=tid, user=request.user).delete()
+    live_timetable = LiveTimetable.objects.filter(id=tid, user=request.user).first()
+    if live_timetable is None:
+        raise Http404("Live timetable not found")
+    if _live_timetable_is_locked(live_timetable):
+        messages.error(request, "This live timetable is locked. Unlock it before deleting.")
+        return redirect("live_timetable_list")
+    live_timetable.delete()
     messages.success(request, "Live timetable deleted.")
     return redirect("live_timetable_list")
 

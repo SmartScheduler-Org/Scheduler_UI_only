@@ -2226,19 +2226,148 @@ body.drag-drop-active .slot-cell.drop-target.drag-over {
         }
     }
 
+const timetableUiStateKey = "smartSchedulerTimetableUiState";
+
+function currentVisibleTimetableView() {
+  const views = ["section", "room", "workload", "teacher"];
+  for (const name of views) {
+    const panel = document.getElementById(name + "-view");
+    if (panel && panel.style.display !== "none") {
+      return name;
+    }
+  }
+  return window.location.hash.replace("#", "") || "section";
+}
+
+function restoreOptionValue(select, value) {
+  if (!select || !value) return false;
+  const target = String(value).toLowerCase();
+  for (const option of Array.from(select.options || [])) {
+    if (String(option.value || "").toLowerCase() === target) {
+      select.value = option.value;
+      return true;
+    }
+  }
+  return false;
+}
+
+function findTopVisibleCard(view) {
+  const panel = document.getElementById(view + "-view");
+  if (!panel) return null;
+  const cards = Array.from(panel.querySelectorAll(".export-surface"));
+  const visibleCards = cards.filter(function(card) {
+    return card.style.display !== "none";
+  });
+  if (!visibleCards.length) return null;
+  return visibleCards
+    .map(function(card) { return { card: card, top: Math.abs(card.getBoundingClientRect().top) }; })
+    .sort(function(left, right) { return left.top - right.top; })[0].card;
+}
+
+function describeTimetableFocus(view) {
+  const focusCard = findTopVisibleCard(view);
+  if (!focusCard) return null;
+  if (view === "section") {
+    return { kind: "section", value: focusCard.dataset.sectionId || "" };
+  }
+  if (view === "room") {
+    return { kind: "room", value: focusCard.dataset.roomNumber || "" };
+  }
+  if (view === "teacher") {
+    return { kind: "teacher", value: focusCard.dataset.teacherUid || "" };
+  }
+  return { kind: view, value: "" };
+}
+
+function findTimetableFocusCard(focus) {
+  if (!focus || !focus.kind || !focus.value) return null;
+  const value = String(focus.value).replace(/"/g, '\\"');
+  if (focus.kind === "section") {
+    return document.querySelector('#section-view .export-surface[data-section-id="' + value + '"]');
+  }
+  if (focus.kind === "room") {
+    return document.querySelector('#room-view .export-surface[data-room-number="' + value + '"]');
+  }
+  if (focus.kind === "teacher") {
+    return document.querySelector('#teacher-view .ta-card[data-teacher-uid="' + value + '"]');
+  }
+  return null;
+}
+
+function saveTimetableUiState(extraState) {
+  const deptSelect = document.getElementById("dept-filter-select");
+  const programSelect = document.getElementById("program-filter-select");
+  const view = currentVisibleTimetableView();
+  const state = Object.assign({
+    path: window.location.pathname,
+    search: window.location.search,
+    view: view,
+    dept: deptSelect ? deptSelect.value : "all",
+    program: programSelect ? programSelect.value : "all",
+    scrollY: window.scrollY,
+    focus: describeTimetableFocus(view),
+  }, extraState || {});
+  window.sessionStorage.setItem(timetableUiStateKey, JSON.stringify(state));
+}
+
+function reloadTimetablePreservingUi(extraState) {
+  saveTimetableUiState(extraState);
+  window.location.reload();
+}
+
+function restoreTimetableUiState() {
+  const rawState = window.sessionStorage.getItem(timetableUiStateKey);
+  if (!rawState) return;
+  let state = null;
+  try {
+    state = JSON.parse(rawState);
+  } catch (error) {
+    window.sessionStorage.removeItem(timetableUiStateKey);
+    return;
+  }
+  if (!state || state.path !== window.location.pathname) {
+    window.sessionStorage.removeItem(timetableUiStateKey);
+    return;
+  }
+
+  const deptSelect = document.getElementById("dept-filter-select");
+  const programSelect = document.getElementById("program-filter-select");
+  if (state.program && programSelect) {
+    restoreOptionValue(programSelect, state.program);
+  }
+  if (state.view && ["section", "room", "workload", "teacher"].includes(state.view)) {
+    showView(state.view);
+  }
+  if (state.dept && deptSelect && restoreOptionValue(deptSelect, state.dept)) {
+    filterByDeptSelect(deptSelect);
+  }
+
+  window.requestAnimationFrame(function() {
+    const focusCard = findTimetableFocusCard(state.focus);
+    if (focusCard) {
+      focusCard.scrollIntoView({ behavior: "auto", block: "start" });
+    }
+    if (typeof state.scrollY === "number") {
+      window.scrollTo({ top: state.scrollY, left: 0, behavior: "auto" });
+    }
+    window.sessionStorage.removeItem(timetableUiStateKey);
+  });
+}
+
 function filterByDept(code, label) {
+    code = (code || '').toLowerCase();
         document.querySelectorAll('.dept-filter-btn').forEach(function(btn) {
-            btn.classList.toggle('is-active', btn.dataset.filter === code);
+      btn.classList.toggle('is-active', ((btn.dataset.filter || '').toLowerCase()) === code);
         });
         document.querySelectorAll('#section-view .export-surface[data-dept-code]').forEach(function(card) {
-            card.style.display = (code === 'all' || card.dataset.deptCode === code) ? '' : 'none';
+      card.style.display = (code === 'all' || ((card.dataset.deptCode || '').toLowerCase()) === code) ? '' : 'none';
         });
-        document.querySelectorAll('#teacher-view .export-surface[data-dept-codes]').forEach(function(card) {
-            var codes = (card.dataset.deptCodes || '').split(',').filter(Boolean);
-            card.style.display = (code === 'all' || codes.indexOf(code) !== -1) ? '' : 'none';
+        document.querySelectorAll('#teacher-view .ta-card[data-home-dept]').forEach(function(card) {
+          var home = (card.dataset.homeDept || '').trim().toLowerCase();
+          card.style.display = (code === 'all' || home === code) ? '' : 'none';
         });
         document.querySelectorAll('#room-view .export-surface[data-dept-codes]').forEach(function(card) {
-            var codes = (card.dataset.deptCodes || '').split(',').filter(Boolean);
+      var codes = (card.dataset.deptCodes || '').split(',').map(function(value) { return value.toLowerCase(); }).filter(Boolean);
             card.style.display = (code === 'all' || codes.indexOf(code) !== -1) ? '' : 'none';
         });
 
@@ -2401,7 +2530,7 @@ function filterByDept(code, label) {
           if (!response.ok || !payload.ok) {
             throw new Error(payload.message || 'Unable to create a valid slot for this subject.');
           }
-          window.location.reload();
+          reloadTimetablePreservingUi();
         } catch (error) {
           Swal.fire({
             icon: 'error',
@@ -2536,7 +2665,7 @@ function filterByDept(code, label) {
                   Swal.fire({ icon: "error", title: "Delete Blocked", text: result.message || "Could not delete this slot.", confirmButtonColor: "#4e73df" });
                   return;
                 }
-                Swal.fire({ icon: "success", title: "Deleted", text: result.message || "Slot deleted.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
+                Swal.fire({ icon: "success", title: "Deleted", text: result.message || "Slot deleted.", timer: 900, showConfirmButton: false }).then(() => reloadTimetablePreservingUi());
               } catch (error) {
                 Swal.fire({ icon: "error", title: "Request Failed", text: "Could not delete this slot right now.", confirmButtonColor: "#4e73df" });
               } finally {
@@ -2584,7 +2713,7 @@ function filterByDept(code, label) {
                   return;
                 }
 
-                Swal.fire({ icon: "success", title: "Bucket Updated", text: result.message || "Slot moved to bucket.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
+                Swal.fire({ icon: "success", title: "Bucket Updated", text: result.message || "Slot moved to bucket.", timer: 900, showConfirmButton: false }).then(() => reloadTimetablePreservingUi());
               } catch (error) {
                 Swal.fire({ icon: "error", title: "Request Failed", text: "Could not move this block right now.", confirmButtonColor: "#4e73df" });
               } finally {
@@ -2757,7 +2886,7 @@ function filterByDept(code, label) {
                   Swal.fire({ icon: "error", title: "Edit Failed", text: payload.message || "Could not update slot.", confirmButtonColor: "#4e73df" });
                   return;
                 }
-                Swal.fire({ icon: "success", title: "Slot Updated", text: payload.message || "Slot updated.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
+                Swal.fire({ icon: "success", title: "Slot Updated", text: payload.message || "Slot updated.", timer: 900, showConfirmButton: false }).then(() => reloadTimetablePreservingUi());
               } catch (error) {
                 Swal.fire({ icon: "error", title: "Network Error", text: "Could not update slot right now.", confirmButtonColor: "#4e73df" });
               }
@@ -2844,7 +2973,7 @@ function filterByDept(code, label) {
                         text: result.message || "Slot updated successfully.",
                         timer: 900,
                         showConfirmButton: false
-                    }).then(() => window.location.reload());
+                    }).then(() => reloadTimetablePreservingUi());
                 } catch (error) {
                     Swal.fire({
                         icon: "error",
@@ -3009,7 +3138,7 @@ function filterByDept(code, label) {
                 Swal.fire({ icon: "error", title: "Create Slot Failed", text: payload.message || "Could not create slot.", confirmButtonColor: "#4e73df" });
                 return;
               }
-              Swal.fire({ icon: "success", title: "Slot Created", text: payload.message || "Slot saved to bucket.", timer: 900, showConfirmButton: false }).then(() => window.location.reload());
+              Swal.fire({ icon: "success", title: "Slot Created", text: payload.message || "Slot saved to bucket.", timer: 900, showConfirmButton: false }).then(() => reloadTimetablePreservingUi());
             } catch (error) {
               Swal.fire({ icon: "error", title: "Network Error", text: "Could not create slot right now.", confirmButtonColor: "#4e73df" });
             }
@@ -3074,6 +3203,7 @@ function filterByDept(code, label) {
         initDragAndDrop();
         initPrefillGenerateAnimation();
         {% if active_dept %}filterByDept('{{ active_dept|escapejs }}', '{{ active_dept|escapejs }}');{% endif %}
+        restoreTimetableUiState();
 
         document.querySelectorAll(".btn-add, .btn-update, .btn-delete").forEach((link) => {
             link.addEventListener("click", function(event) {
@@ -3465,7 +3595,7 @@ function filterByDept(code, label) {
 </div>
 {% endif %}
 {% for table in tables %}
-  <div id="section-tt-{{ forloop.counter }}" class="export-surface demo-preview-card {% if demo_mode and table.demo_locked %}is-locked{% endif %}" data-dept-code="{{ table.section_department_code }}">
+  <div id="section-tt-{{ forloop.counter }}" class="export-surface demo-preview-card {% if demo_mode and table.demo_locked %}is-locked{% endif %}" data-dept-code="{{ table.section_department_code }}" data-section-id="{{ table.section.section_id }}">
   <div class="export-watermark">
     <div class="export-watermark__grid">
       <span>SmartScheduler</span>
@@ -3837,7 +3967,7 @@ function filterByDept(code, label) {
 </div>
 
 {% for rt in room_tables %}
-  <div id="room-tt-{{ forloop.counter }}" class="room-card export-surface" data-dept-codes="{{ rt.dept_codes|join:',' }}">
+  <div id="room-tt-{{ forloop.counter }}" class="room-card export-surface" data-dept-codes="{{ rt.dept_codes|join:',' }}" data-room-number="{{ rt.room.r_number }}">
     <div class="export-watermark">
       <div class="export-watermark__grid">
         <span>SmartScheduler</span>
@@ -4055,7 +4185,7 @@ function filterByDept(code, label) {
 </div>
 
 {% for ttable in teacher_tables %}
-  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface ta-card" data-dept-codes="{{ ttable.dept_codes|join:',' }}" data-home-dept="{{ ttable.home_dept_code }}" data-teach-depts="{{ ttable.dept_codes|join:',' }}">
+  <div id="teacher-tt-{{ forloop.counter }}" class="export-surface ta-card" data-dept-codes="{{ ttable.dept_codes|join:',' }}" data-home-dept="{{ ttable.home_dept_code }}" data-teach-depts="{{ ttable.dept_codes|join:',' }}" data-teacher-uid="{{ ttable.teacher.uid }}">
   <div class="export-watermark">
     <div class="export-watermark__grid">
       <span>SmartScheduler</span>
