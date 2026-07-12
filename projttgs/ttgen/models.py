@@ -117,6 +117,7 @@ class Room(models.Model):
         max_length=20,
         choices=[
             ("Lecture Hall", "Lecture Hall"),
+            ("Common Lecture Hall", "Common Lecture Hall"),
             ("Lab", "Lab"),
             ("Seminar Room", "Seminar Room"),
         ],
@@ -127,6 +128,7 @@ class Room(models.Model):
         blank=True,
         default="",
     )
+    lab_for_lecture = models.BooleanField(default=True)
     seating_capacity = models.PositiveIntegerField()
 
     department = models.ForeignKey(

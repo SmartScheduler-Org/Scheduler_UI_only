@@ -45,6 +45,7 @@ class RoomForm(ModelForm):
             "department": forms.Select(),
             "room_type": forms.Select(choices=[
                 ('Lecture Hall', 'Lecture Hall'),
+                ('Common Lecture Hall', 'Common Lecture Hall'),
                 ('Lab', 'Lab'),
                 ('Seminar Room', 'Seminar Room'),
             ]),

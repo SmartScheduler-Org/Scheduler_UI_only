@@ -891,6 +891,72 @@ class SchedulerInitializationTests(TestCase):
         self.assertLess(room_numbers.index("CC06"), room_numbers.index("CC05"))
         self.assertEqual(room_numbers[-1], "CC05")
 
+    def test_theory_room_priority_prefers_department_then_common_then_eligible_lab(self):
+        common_hall = Room.objects.create(
+            r_number="CLH-1",
+            room_type="Common Lecture Hall",
+            seating_capacity=55,
+            department=self.department,
+            user=self.user,
+        )
+        eligible_lab = Room.objects.create(
+            r_number="LAB-ELIG",
+            room_type="Lab",
+            seating_capacity=52,
+            lab_category="CAT-A",
+            lab_for_lecture=True,
+            department=self.department,
+            user=self.user,
+        )
+        blocked_lab = Room.objects.create(
+            r_number="LAB-BLOCK",
+            room_type="Lab",
+            seating_capacity=50,
+            lab_category="CAT-A",
+            lab_for_lecture=False,
+            department=self.department,
+            user=self.user,
+        )
+        subject = Subject.objects.create(
+            subject_number="TH101",
+            subject_name="Theory Priority",
+            department=self.department,
+            max_numb_students=54,
+            room_required="Lecture Hall",
+            classes_per_week=1,
+            user=self.user,
+        )
+
+        home_room = Room.objects.get(r_number="LH-1")
+        extra_room = Room.objects.create(
+            r_number="LH-3",
+            room_type="Lecture Hall",
+            seating_capacity=70,
+            department=self.department,
+            user=self.user,
+        )
+
+        fake_data = SimpleNamespace(
+            _sci_map={},
+            get_subject_specific_rooms=lambda _subject: [],
+            get_lecture_rooms=lambda: [common_hall, home_room, extra_room],
+            get_department_lab_rooms=lambda _department: [eligible_lab],
+            get_subject_instructors=lambda _subject: [],
+            get_section=lambda _section_id: None,
+            is_elective_member=lambda _section_id, _subject: False,
+        )
+        original_data = views_other.data
+        views_other.data = fake_data
+        schedule = views_other.Schedule()
+        ordered = schedule._build_recheck_theory_room_candidates(self.section, subject)
+        room_numbers = [room.r_number for room in ordered]
+
+        views_other.data = original_data
+
+        self.assertLess(room_numbers.index("LH-1"), room_numbers.index("CLH-1"))
+        self.assertLess(room_numbers.index("CLH-1"), room_numbers.index("LAB-ELIG"))
+        self.assertNotIn("LAB-BLOCK", room_numbers)
+
     def test_saved_drag_room_candidates_prefer_original_then_usage(self):
         subject = Subject.objects.create(
             subject_number="DROP101",
@@ -3069,6 +3135,67 @@ class TeacherTimetableDepartmentFilterTests(TestCase):
         self.assertTrue(any(cell.get("classes") for row in ece_visible[0]["rows"] for cell in row["cells"]))
 
 
+class TimetableDisplaySlotMappingTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="display_slot_user", password="testpass123")
+        self.department = Department.objects.create(name="Computer Science", code="CSE", user=self.user)
+        self.teacher = Instructor.objects.create(
+            uid="CSE-D1",
+            name="Display Slot Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+            user=self.user,
+            department=self.department,
+        )
+        self.room = Room.objects.create(
+            r_number="LH-11",
+            room_type="Lecture Hall",
+            seating_capacity=60,
+            department=self.department,
+            user=self.user,
+        )
+
+    def _meeting_time(self, day, slot, key_prefix="mt"):
+        return SimpleNamespace(day=day, time=str(slot), pk=f"{key_prefix}-{day}-{slot}", id=f"{key_prefix}-{day}-{slot}")
+
+    def _subject(self, name="Theory", pk=1):
+        return SimpleNamespace(subject_name=name, pk=pk, id=pk)
+
+    def _class(self, *, day="Monday", slot=6, display_slot=4, section="S1"):
+        meeting_time = self._meeting_time(day, slot, key_prefix=f"cls-{section}")
+        return SimpleNamespace(
+            instructor=self.teacher,
+            co_instructors=[],
+            second_instructor=None,
+            meeting_time=meeting_time,
+            meeting_times=[meeting_time],
+            duration=1,
+            section=section,
+            room=self.room,
+            subject=self._subject(),
+            department=self.department,
+            display_slot_number=display_slot,
+        )
+
+    def test_teacher_and_room_tables_use_authoritative_display_slot_number(self):
+        shifted_class = self._class()
+
+        teacher_table = views_other.build_teacher_tables([shifted_class], [], user=self.user)[0]
+        room_table = views_other.build_room_tables([shifted_class], [], user=self.user)[0]
+
+        teacher_rows = teacher_table["rows"]
+        room_rows = room_table["rows"]
+
+        self.assertEqual(views_other._pick_slot_cell(teacher_rows, "Monday", 4).get("type"), "class")
+        self.assertEqual(views_other._pick_slot_cell(teacher_rows, "Monday", 5).get("type"), "lunch")
+        self.assertEqual(views_other._pick_slot_cell(teacher_rows, "Monday", 6).get("type"), "empty")
+
+        self.assertEqual(views_other._pick_slot_cell(room_rows, "Monday", 4).get("type"), "class")
+        self.assertEqual(views_other._pick_slot_cell(room_rows, "Monday", 5).get("type"), "lunch")
+        self.assertEqual(views_other._pick_slot_cell(room_rows, "Monday", 6).get("type"), "empty")
+
+
 class PdfSlotMappingTests(TestCase):
     def test_reportlab_slot_layout_uses_slot_numbers_like_excel_export(self):
         row = {
@@ -3396,6 +3523,391 @@ class ElectiveSchedulingTests(TestCase):
         schedule = views_other.Schedule()
 
         self.assertEqual(schedule._expected_theory_count(), 4)
+
+
+class TheoryRepeatSchedulingTests(TestCase):
+    def setUp(self):
+        class HashableNamespace(SimpleNamespace):
+            __hash__ = object.__hash__
+
+        self.department = HashableNamespace(id=1, code="TH", name="Theory")
+        self.room = HashableNamespace(
+            pk=1,
+            id=1,
+            r_number="TH-LH-1",
+            room_type="Lecture Hall",
+            seating_capacity=60,
+            department=self.department,
+            department_id=self.department.id,
+            lab_category="",
+        )
+        self.section = HashableNamespace(
+            section_id="TH-A",
+            department=self.department,
+            student_strength=60,
+        )
+        self.teacher = HashableNamespace(
+            pk=1,
+            id=1,
+            uid="TH001",
+            name="Theory Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+        )
+        self.subject = HashableNamespace(
+            pk=1,
+            id=1,
+            subject_number="TH101",
+            subject_name="Core Theory",
+            department=self.department,
+            department_id=self.department.id,
+            room_required="Lecture Hall",
+            required_lab_category="",
+            classes_per_week=2,
+            duration=1,
+        )
+        self.monday1 = HashableNamespace(pid="Mo1", day="Monday", time="1")
+        self.monday2 = HashableNamespace(pid="Mo2", day="Monday", time="2")
+        self.monday4 = HashableNamespace(pid="Mo4", day="Monday", time="4")
+        self.tuesday1 = HashableNamespace(pid="Tu1", day="Tuesday", time="1")
+        self._entity_type = HashableNamespace
+
+    def _make_data(self, *, allowed_subjects=None, elective_subjects=None, group_counts=None, meeting_times=None):
+        allowed_subjects = allowed_subjects or [self.subject]
+        elective_subjects = elective_subjects or []
+        group_counts = group_counts or {}
+        meeting_times = meeting_times or [self.monday1, self.monday2, self.monday4, self.tuesday1]
+        sections = [self.section]
+        section_by_id = {self.section.section_id: self.section}
+        allowed_by_section = {self.section.section_id: list(allowed_subjects)}
+        elective_keys = {(self.section.section_id, subject.pk) for subject in elective_subjects}
+        subject_groups = {(self.section.section_id, subject.pk): group_counts.get(subject.pk, 1) for subject in allowed_subjects}
+
+        class FakeData:
+            _sci_map = {}
+
+            def __init__(self):
+                self._subject_group_counts = dict(subject_groups)
+
+            def get_section(self, section_id):
+                return section_by_id.get(section_id)
+
+            def is_elective_member(self, section_id, subject):
+                return (section_id, getattr(subject, "pk", None)) in elective_keys
+
+            def get_subject_group_count(self, section, subject):
+                return self._subject_group_counts.get((section.section_id, getattr(subject, "pk", None)), 1)
+
+            def get_subject_specific_rooms(self, subject):
+                return []
+
+            def get_sections(self):
+                return list(sections)
+
+            def get_allowed_subjects(self, section):
+                return list(allowed_by_section.get(section.section_id, []))
+
+            def get_non_elective_allowed_subjects(self, section):
+                return [
+                    subject for subject in allowed_by_section.get(section.section_id, [])
+                    if not self.is_elective_member(section.section_id, subject)
+                ]
+
+            def get_meetingTimes(self):
+                return list(meeting_times)
+
+            def get_meeting_times_for_day(self, day):
+                return [mt for mt in meeting_times if mt.day == day]
+
+            def get_subject_instructors(self, subject):
+                return [self_teacher]
+
+            def get_department_lecture_rooms(self, department):
+                return [self_room] if getattr(department, "id", None) == self_department.id else []
+
+            def get_department_lab_rooms(self, department):
+                return []
+
+            def get_reserved_specific_room_pks(self):
+                return set()
+
+            def get_elective_bundles(self):
+                return []
+
+        self_department = self.department
+        self_room = self.room
+        self_teacher = self.teacher
+        return FakeData()
+
+    def _make_schedule(self, **kwargs):
+        views_other.data = self._make_data(**kwargs)
+        return views_other.Schedule()
+
+    def _scheduled_class(self, subject, meeting_time, *, group=None):
+        cls = views_other.Class(0, self.department, self.section.section_id, subject)
+        cls.set_instructor(self.teacher)
+        cls.set_meetingTime(meeting_time)
+        cls.meeting_times = [meeting_time]
+        cls.set_room(self.room)
+        cls.group = group
+        cls.total_groups = 2 if group else 1
+        return cls
+
+    def test_plain_theory_prefers_new_day_then_adjacent_repeat_and_blocks_split_repeat(self):
+        schedule = self._make_schedule()
+        schedule._classes = [self._scheduled_class(self.subject, self.monday1)]
+
+        new_day_pref = schedule._meeting_time_preference(
+            self.tuesday1,
+            self.section.section_id,
+            self.subject,
+            self.teacher,
+            set(),
+            None,
+            set(),
+            {"Monday": 1, "Tuesday": 0},
+        )
+        adjacent_pref = schedule._meeting_time_preference(
+            self.monday2,
+            self.section.section_id,
+            self.subject,
+            self.teacher,
+            set(),
+            None,
+            set(),
+            {"Monday": 1},
+        )
+        split_pref = schedule._meeting_time_preference(
+            self.monday4,
+            self.section.section_id,
+            self.subject,
+            self.teacher,
+            set(),
+            None,
+            set(),
+            {"Monday": 1},
+        )
+
+        self.assertLess(new_day_pref, adjacent_pref)
+        self.assertLess(adjacent_pref, split_pref)
+        self.assertFalse(
+            schedule._conflicts_if_assign_class(
+                self.monday2,
+                self.room,
+                self.teacher,
+                self.section.section_id,
+                self.subject,
+            )
+        )
+        self.assertTrue(
+            schedule._conflicts_if_assign_class(
+                self.monday4,
+                self.room,
+                self.teacher,
+                self.section.section_id,
+                self.subject,
+            )
+        )
+
+    def test_elective_and_grouped_theory_remain_exempt_from_split_repeat_rule(self):
+        elective_subject = self._entity_type(
+            pk=2,
+            id=2,
+            subject_number="TH201",
+            subject_name="Elective Theory",
+            department=self.department,
+            department_id=self.department.id,
+            room_required="Lecture Hall",
+            required_lab_category="",
+            classes_per_week=2,
+            duration=1,
+        )
+        grouped_subject = self._entity_type(
+            pk=3,
+            id=3,
+            subject_number="TH202",
+            subject_name="Grouped Theory",
+            department=self.department,
+            department_id=self.department.id,
+            room_required="Lecture Hall",
+            required_lab_category="",
+            classes_per_week=2,
+            duration=1,
+        )
+        schedule = self._make_schedule(
+            allowed_subjects=[self.subject, elective_subject, grouped_subject],
+            elective_subjects=[elective_subject],
+            group_counts={grouped_subject.pk: 2},
+        )
+        schedule._classes = [
+            self._scheduled_class(elective_subject, self.monday1),
+            self._scheduled_class(grouped_subject, self.monday1, group="Batch1"),
+        ]
+
+        self.assertFalse(
+            schedule._conflicts_if_assign_class(
+                self.monday4,
+                self.room,
+                self.teacher,
+                self.section.section_id,
+                elective_subject,
+            )
+        )
+        self.assertFalse(
+            schedule._conflicts_if_assign_class(
+                self.monday4,
+                self.room,
+                self.teacher,
+                self.section.section_id,
+                grouped_subject,
+                group="Batch1",
+                max_parallel=2,
+            )
+        )
+
+
+class TheoryRepeatFallbackTests(TestCase):
+    def setUp(self):
+        class HashableNamespace(SimpleNamespace):
+            __hash__ = object.__hash__
+
+        self.department = HashableNamespace(id=2, code="FB", name="Fallback")
+        self.room = HashableNamespace(
+            pk=2,
+            id=2,
+            r_number="FB-LH-1",
+            room_type="Lecture Hall",
+            seating_capacity=60,
+            department=self.department,
+            department_id=self.department.id,
+            lab_category="",
+        )
+        self.section = HashableNamespace(
+            section_id="FB-A",
+            department=self.department,
+            student_strength=60,
+        )
+        self.teacher = HashableNamespace(
+            pk=2,
+            id=2,
+            uid="FB001",
+            name="Fallback Teacher",
+            designation="Assistant Professor",
+            max_workload=25,
+        )
+        self.subject = HashableNamespace(
+            pk=4,
+            id=4,
+            subject_number="FB101",
+            subject_name="Fallback Theory",
+            department=self.department,
+            department_id=self.department.id,
+            room_required="Lecture Hall",
+            required_lab_category="",
+            classes_per_week=2,
+            duration=1,
+        )
+        self.meeting_times = [
+            HashableNamespace(pid="Mo1", day="Monday", time="1"),
+            HashableNamespace(pid="Mo4", day="Monday", time="4"),
+        ]
+
+    def _make_schedule(self):
+        section = self.section
+        subject = self.subject
+        room = self.room
+        teacher = self.teacher
+        department = self.department
+        meeting_times = list(self.meeting_times)
+
+        class FakeData:
+            _sci_map = {}
+
+            def __init__(self):
+                self._subject_group_counts = {(section.section_id, subject.pk): 1}
+
+            def get_sections(self):
+                return [section]
+
+            def get_section(self, section_id):
+                return section if section_id == section.section_id else None
+
+            def get_allowed_subjects(self, current_section):
+                return [subject] if current_section.section_id == section.section_id else []
+
+            def get_non_elective_allowed_subjects(self, current_section):
+                return self.get_allowed_subjects(current_section)
+
+            def is_elective_member(self, section_id, current_subject):
+                return False
+
+            def get_subject_group_count(self, current_section, current_subject):
+                return 1
+
+            def get_subject_specific_rooms(self, current_subject):
+                return []
+
+            def get_subject_instructors(self, current_subject):
+                return [teacher]
+
+            def get_department_lecture_rooms(self, current_department):
+                return [room] if getattr(current_department, "id", None) == department.id else []
+
+            def get_lecture_rooms(self):
+                return [room]
+
+            def get_department_lab_rooms(self, current_department):
+                return []
+
+            def get_meetingTimes(self):
+                return list(meeting_times)
+
+            def get_meeting_times_for_day(self, day):
+                return [mt for mt in meeting_times if mt.day == day]
+
+            def get_reserved_specific_room_pks(self):
+                return set()
+
+            def get_elective_bundles(self):
+                return []
+
+        views_other.data = FakeData()
+        return views_other.Schedule()
+
+    def test_initialize_classes_records_split_repeat_only_when_fallback_is_needed(self):
+        schedule = self._make_schedule()
+
+        with patch.object(views_other, "SECTION_LOAD_RULES", {self.section.section_id: (2, 0)}), patch.object(
+            views_other.rnd, "shuffle", side_effect=lambda seq: None
+        ):
+            schedule.initialize_classes_v2()
+
+        classes = [
+            cls for cls in schedule.get_classes()
+            if cls.section == self.section.section_id and cls.subject == self.subject
+        ]
+
+        self.assertEqual(len(classes), 2)
+        self.assertEqual(
+            {(cls.meeting_time.day, cls.meeting_time.time) for cls in classes},
+            {("Monday", "1"), ("Monday", "4")},
+        )
+        self.assertEqual(len(schedule._theory_repeat_fallback_logs), 1)
+        self.assertEqual(schedule._theory_repeat_fallback_logs[0]["existing_slots"], ["1"])
+        self.assertEqual(schedule._theory_repeat_fallback_logs[0]["assigned_slots"], ["4"])
+
+        with patch("builtins.print") as print_mock:
+            schedule._log_schedule_summary()
+
+        self.assertTrue(
+            any(
+                "[TheoryRepeatFallback]" in call.args[0]
+                and "section=FB-A" in call.args[0]
+                and "existing=1" in call.args[0]
+                and "assigned=4" in call.args[0]
+                for call in print_mock.call_args_list
+            )
+        )
 
 
 class RecheckScheduleTests(TestCase):
@@ -3750,6 +4262,35 @@ class AddDepartmentViewTests(TestCase):
         self.assertIn("1 room(s) added from CSV! 2 skipped.", message_texts)
         self.assertIn("Row 3: department 'UNKNOWN' not found", message_texts)
         self.assertIn("Row 4: seating_capacity 'abc' is not a whole number", message_texts)
+
+    def test_add_rooms_csv_supports_optional_lab_for_lecture_and_common_halls(self):
+        self.client.login(username="deptadmin", password="testpass123")
+        department = Department.objects.create(name="Chemistry", code="CHE", user=self.user)
+
+        csv_content = (
+            "r_number,department,seating_capacity,room_type,lab_category,lab_for_lecture\n"
+            "CLH-1,CHE,80,Common Lecture Hall,,\n"
+            "LAB-OK,CHE,30,Lab,CAT-A,\n"
+            "LAB-NO,CHE,30,Lab,CAT-A,FALSE\n"
+        )
+        upload = SimpleUploadedFile("rooms.csv", csv_content.encode("utf-8"), content_type="text/csv")
+
+        response = self.client.post(
+            reverse("addRooms"),
+            {"csv_upload": "1", "csv_file": upload},
+            follow=True,
+        )
+
+        common_room = Room.objects.get(user=self.user, r_number="CLH-1", department=department)
+        allowed_lab = Room.objects.get(user=self.user, r_number="LAB-OK", department=department)
+        blocked_lab = Room.objects.get(user=self.user, r_number="LAB-NO", department=department)
+
+        self.assertEqual(common_room.room_type, "Common Lecture Hall")
+        self.assertTrue(allowed_lab.lab_for_lecture)
+        self.assertFalse(blocked_lab.lab_for_lecture)
+
+        message_texts = [message.message for message in get_messages(response.wsgi_request)]
+        self.assertIn("3 room(s) added from CSV! 0 skipped.", message_texts)
 
     def test_add_sections_csv_accepts_section_strength_header_without_500(self):
         self.client.login(username="deptadmin", password="testpass123")

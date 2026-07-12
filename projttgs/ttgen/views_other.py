@@ -640,7 +640,7 @@ def serialize_runtime_room(room, ctx):
     store = ctx["stores"]["rooms"]
     if ref in store:
         return ref
-    handled = {"pk", "id", "r_number", "room_type", "lab_category", "seating_capacity", "department"}
+    handled = {"pk", "id", "r_number", "room_type", "lab_category", "lab_for_lecture", "seating_capacity", "department"}
     store[ref] = {
         "ref": ref,
         "pk": getattr(room, "pk", None),
@@ -648,6 +648,7 @@ def serialize_runtime_room(room, ctx):
         "room_number": getattr(room, "r_number", "") or "",
         "room_type": getattr(room, "room_type", "") or "",
         "lab_category": getattr(room, "lab_category", "") or "",
+        "lab_for_lecture": bool(getattr(room, "lab_for_lecture", True)),
         "capacity": getattr(room, "seating_capacity", None),
         "department_ref": serialize_runtime_department(getattr(room, "department", None), ctx),
         "extra_attrs": _runtime_snapshot_extra_attrs(room, handled),
@@ -664,6 +665,7 @@ def deserialize_runtime_room(entry, ctx):
     obj.r_number = entry.get("room_number", "") or ""
     obj.room_type = entry.get("room_type", "") or ""
     obj.lab_category = entry.get("lab_category", "") or ""
+    obj.lab_for_lecture = bool(entry.get("lab_for_lecture", True))
     obj.seating_capacity = entry.get("capacity")
     obj.department = ctx["departments"].get(entry.get("department_ref"))
     _runtime_snapshot_apply_extras(obj, entry.get("extra_attrs"))
@@ -788,8 +790,6 @@ def serialize_runtime_class(item_obj, ctx):
         "meeting_times",
         "room",
         "section",
-        "duration",
-        "room_label",
         "missing_room",
         "group",
         "manual_entry",
@@ -1355,6 +1355,7 @@ class ManualPrefillRoom:
         self.r_number = clean_label
         self.room_type = room_type
         self.lab_category = ""
+        self.lab_for_lecture = True
         self.seating_capacity = 0
         self.department = department
 
@@ -3743,6 +3744,37 @@ if "Lab" not in globals():
 
 
 if "build_section_tables" not in globals():
+    def _timetable_item_start_cell(item_obj):
+        day = None
+        base_slot = None
+
+        meeting_time = getattr(item_obj, "meeting_time", None)
+        if meeting_time is not None and getattr(meeting_time, "day", None):
+            day = meeting_time.day
+            try:
+                base_slot = int(getattr(meeting_time, "time", None))
+            except (TypeError, ValueError):
+                base_slot = None
+
+        if day is None or base_slot is None:
+            meeting_times = [
+                mt for mt in list(getattr(item_obj, "meeting_times", None) or [])
+                if getattr(mt, "day", None) and getattr(mt, "time", None) is not None
+            ]
+            if meeting_times:
+                first_mt = min(meeting_times, key=lambda mt: int(mt.time))
+                day = first_mt.day
+                base_slot = int(first_mt.time)
+
+        display_slot = getattr(item_obj, "display_slot_number", None)
+        if display_slot is not None:
+            try:
+                return day, int(display_slot)
+            except (TypeError, ValueError):
+                pass
+
+        return day, base_slot
+
     def build_section_tables(all_classes, all_labs, user=None):
         from collections import OrderedDict
 
@@ -3876,20 +3908,15 @@ if "build_section_tables" not in globals():
         for sec_id, data in section_map.items():
             grid = {day: {} for day in DAYS}
             for cls in data["classes"]:
-                if cls.meeting_time:
-                    day = cls.meeting_time.day
-                    slot = int(cls.meeting_time.time)
-                    if day in grid:
-                        grid[day].setdefault(slot, {"classes": [], "labs": []})
-                        grid[day][slot]["classes"].append(cls)
+                day, slot = _timetable_item_start_cell(cls)
+                if day in grid and slot is not None:
+                    grid[day].setdefault(slot, {"classes": [], "labs": []})
+                    grid[day][slot]["classes"].append(cls)
             for lab in data["labs"]:
-                if lab.meeting_times:
-                    first_mt = lab.meeting_times[0]
-                    day = first_mt.day
-                    slot = int(first_mt.time)
-                    if day in grid:
-                        grid[day].setdefault(slot, {"classes": [], "labs": []})
-                        grid[day][slot]["labs"].append(lab)
+                day, slot = _timetable_item_start_cell(lab)
+                if day in grid and slot is not None:
+                    grid[day].setdefault(slot, {"classes": [], "labs": []})
+                    grid[day][slot]["labs"].append(lab)
 
             rows = []
             for day in DAYS:
@@ -4081,20 +4108,15 @@ if "build_teacher_tables" not in globals():
             for day in DAYS:
                 grid[day] = {}
             for cls in data["classes"]:
-                if cls.meeting_time:
-                    day = cls.meeting_time.day
-                    slot = int(cls.meeting_time.time)
-                    if day in grid:
-                        grid[day].setdefault(slot, {"classes": [], "labs": []})
-                        grid[day][slot]["classes"].append(cls)
+                day, slot = _timetable_item_start_cell(cls)
+                if day in grid and slot is not None:
+                    grid[day].setdefault(slot, {"classes": [], "labs": []})
+                    grid[day][slot]["classes"].append(cls)
             for lab in data["labs"]:
-                if lab.meeting_times:
-                    first_mt = lab.meeting_times[0]
-                    day = first_mt.day
-                    slot = int(first_mt.time)
-                    if day in grid:
-                        grid[day].setdefault(slot, {"classes": [], "labs": []})
-                        grid[day][slot]["labs"].append(lab)
+                day, slot = _timetable_item_start_cell(lab)
+                if day in grid and slot is not None:
+                    grid[day].setdefault(slot, {"classes": [], "labs": []})
+                    grid[day][slot]["labs"].append(lab)
 
             rows = []
             for day in DAYS:
@@ -4156,20 +4178,15 @@ if "build_room_tables" not in globals():
             for day in DAYS:
                 grid[day] = {}
             for cls in data["classes"]:
-                if cls.meeting_time:
-                    day = cls.meeting_time.day
-                    slot = int(cls.meeting_time.time)
-                    if day in grid:
-                        grid[day].setdefault(slot, {"classes": [], "labs": []})
-                        grid[day][slot]["classes"].append(cls)
+                day, slot = _timetable_item_start_cell(cls)
+                if day in grid and slot is not None:
+                    grid[day].setdefault(slot, {"classes": [], "labs": []})
+                    grid[day][slot]["classes"].append(cls)
             for lab in data["labs"]:
-                if lab.meeting_times:
-                    first_mt = lab.meeting_times[0]
-                    day = first_mt.day
-                    slot = int(first_mt.time)
-                    if day in grid:
-                        grid[day].setdefault(slot, {"classes": [], "labs": []})
-                        grid[day][slot]["labs"].append(lab)
+                day, slot = _timetable_item_start_cell(lab)
+                if day in grid and slot is not None:
+                    grid[day].setdefault(slot, {"classes": [], "labs": []})
+                    grid[day][slot]["labs"].append(lab)
 
             total_slots = sum(1 for d in grid.values() for s, v in d.items() if v["classes"] or v["labs"])
             max_slots = len(DAYS) * 8
@@ -7627,6 +7644,7 @@ def addRooms(request):
             raw_room_type = (room.room_type or "").strip().lower()
             room.room_type = {
                 "lecture hall": "Lecture Hall",
+                "common lecture hall": "Common Lecture Hall",
                 "lab": "Lab",
                 "seminar room": "Seminar Room",
             }.get(raw_room_type, room.room_type)
@@ -7685,6 +7703,7 @@ def addRooms(request):
                     messages.error(request, "Missing required column: lab_category")
                     return redirect("addRooms")
                 category_index = header.index("lab_category")
+                lab_for_lecture_index = header.index("lab_for_lecture") if "lab_for_lecture" in header else None
                 continue
 
             if len(row) < 5:
@@ -7697,6 +7716,7 @@ def addRooms(request):
             seating_capacity = row[cap_index].strip()
             room_type = row[type_index].strip()
             lab_category = normalize_lab_category(row[category_index].strip()) if category_index < len(row) else ""
+            raw_lab_for_lecture = row[lab_for_lecture_index].strip() if lab_for_lecture_index is not None and lab_for_lecture_index < len(row) else ""
 
             if not r_number:
                 skipped += 1
@@ -7709,10 +7729,12 @@ def addRooms(request):
 
             room_map = {
                 "lecture hall": "Lecture Hall",
+                "common lecture hall": "Common Lecture Hall",
                 "lab": "Lab",
                 "seminar room": "Seminar Room",
             }
             room_type = room_map.get(room_type.lower(), room_type)
+            lab_for_lecture = True
             if room_type != "Lab":
                 lab_category = ""
             elif not lab_category:
@@ -7720,6 +7742,12 @@ def addRooms(request):
                 skipped += 1
                 _csv_issue(issues, row_number, f"lab_category is blank for lab room '{r_number}'")
                 continue
+            else:
+                if raw_lab_for_lecture and raw_lab_for_lecture.strip().casefold() not in {"true", "false"}:
+                    skipped += 1
+                    _csv_issue(issues, row_number, f"lab_for_lecture '{raw_lab_for_lecture}' must be TRUE, FALSE, or blank")
+                    continue
+                lab_for_lecture = raw_lab_for_lecture.strip().casefold() != "false"
 
             if not seating_capacity.isdigit():
                 skipped += 1
@@ -7745,6 +7773,7 @@ def addRooms(request):
                     seating_capacity=seating_capacity,
                     room_type=room_type,
                     lab_category=lab_category,
+                    lab_for_lecture=lab_for_lecture,
                     department=department
                 )
                 added += 1

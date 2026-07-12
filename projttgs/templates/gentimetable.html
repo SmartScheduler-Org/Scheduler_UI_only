@@ -4224,6 +4224,15 @@ function filterByDept(code, label) {
   {% if ttable.home_dept_name %}
   <div class="ta-home-label" style="text-align:center; margin:-4px 0 10px; font-size:11px; color:#7a5b00; font-weight:700;">Home Dept: {{ ttable.home_dept_name }}</div>
   {% endif %}
+  {% if ttable.conflicts %}
+  <div style="margin: 0 auto 12px; max-width: 980px; border: 1px solid rgba(185, 28, 28, 0.28); background: linear-gradient(135deg, #fff1f2, #fff7ed); color: #7f1d1d; border-radius: 12px; padding: 10px 14px; font-size: 12px; font-weight: 700;">
+    Existing live conflict detected for this teacher:
+    {% for conflict in ttable.conflicts %}
+      {{ conflict.day }} slot {{ conflict.slot }}
+      ({% for entry in conflict.entries %}{{ entry.type|title }}: {{ entry.section }}{% if not forloop.last %}, {% endif %}{% endfor %}){% if not forloop.last %}; {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
 
   <table class="table2">
     <thead>
@@ -4285,6 +4294,29 @@ function filterByDept(code, label) {
                     <span style="color: #424242; font-size: 12px;">
                       {{ lab.room.r_number }}
                     </span>
+                  </div>
+                {% endfor %}
+              </div>
+            </td>
+
+          {% elif cell.type == "conflict" %}
+            <td colspan="{{ cell.colspan }}" class="slot-cell drop-target" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" style="background: linear-gradient(135deg, rgba(254,226,226,0.92), rgba(255,237,213,0.96)); box-shadow: inset 0 0 0 2px rgba(220,38,38,0.18);">
+              <div style="font-size:11px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; color:#b91c1c; margin-bottom:8px;">Teacher Conflict</div>
+              <div class="labs-container" style="display:flex; flex-direction:column; gap:8px;">
+                {% for lab in cell.labs %}
+                  <div class="lab-box draggable-slot-item {% if lab.second_instructor or lab.co_instructors %}shared-lab{% endif %}" data-drag-source="slot" data-move-type="lab" data-section-id="{{ lab.section }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" style="border-color: rgba(220,38,38,0.28);">
+                    <strong style="font-size: 14px; color: #991b1b;">{{ lab.display_subject_name|default:lab.subject.subject_name }} Lab</strong><br>
+                    <span style="color: #7f1d1d;">Section: {{ lab.section }}</span><br>
+                    <strong style="color: #7f1d1d; font-size: 13px;">{{ lab.instructor.name }}</strong><br>
+                    <span style="color: #7f1d1d; font-size: 12px;">{{ lab.room.r_number }}</span>
+                  </div>
+                {% endfor %}
+                {% for cls in cell.classes %}
+                  <div class="class-box draggable-slot-item {% if cls.co_instructors %}shared-teacher{% endif %}" data-drag-source="slot" data-move-type="class" data-section-id="{{ cls.section }}" data-day="{{ row.day }}" data-slot="{{ cell.slot_number }}" style="border-color: rgba(220,38,38,0.28);">
+                    <strong style="color:#991b1b;">{{ cls.subject.subject_name }}</strong><br>
+                    Section: {{ cls.section }}<br>
+                    {{ cls.instructor.name }}<br>
+                    <span style="font-size: 12px; color:#7f1d1d;">{{ cls.room.r_number }}</span>
                   </div>
                 {% endfor %}
               </div>
